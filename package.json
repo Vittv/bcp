@@ -1,0 +1,32 @@
+{
+  "name": "bcp",
+  "description": "The Book of Common Prayer (1979, The Episcopal Church) Daily Office. Lightweight Expo + React PWA.",
+  "license": "MIT",
+  "version": "0.1.0",
+  "main": "index.ts",
+  "private": true,
+  "dependencies": {
+    "@expo/metro-runtime": "~57.0.9",
+    "expo": "~57.0.12",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-web": "^0.21.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.8",
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "export:web": "expo export -p web",
+    "test": "bun test",
+    "check": "biome check .",
+    "format": "biome format --write ."
+  }
+}
