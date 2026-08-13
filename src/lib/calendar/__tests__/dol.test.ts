@@ -1,12 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { toDays } from "../date";
-import {
-  dolYear,
-  holyDayFor,
-  properIndex,
-  resolve,
-  thanksgivingDay,
-} from "../dol";
+import { dolYear, holyDayFor, properIndex, resolve } from "../dol";
 
 describe("dolYear", () => {
   test("Year One begins on Advent 1 preceding odd-numbered years", () => {
@@ -175,20 +168,9 @@ describe("properIndex (Season after Pentecost)", () => {
     expect(properIndex({ year: 2038, month: 6, day: 14 })).toBe(6);
   });
 
-  test("thanksgiving day is the 4th Thursday of November", () => {
-    expect(thanksgivingDay(2025)).toBe(
-      toDays({ year: 2025, month: 11, day: 27 }),
-    );
-    expect(thanksgivingDay(2024)).toBe(
-      toDays({ year: 2024, month: 11, day: 28 }),
-    );
-  });
-
   test("holyDayFor fixed dates", () => {
     expect(holyDayFor({ year: 2025, month: 11, day: 30 })).toBe("st-andrew");
-    expect(holyDayFor({ year: 2025, month: 11, day: 27 })).toBe(
-      "thanksgiving-day",
-    );
+    expect(holyDayFor({ year: 2025, month: 11, day: 27 })).toBeUndefined();
     expect(holyDayFor({ year: 2025, month: 3, day: 25 })).toBe("annunciation");
     expect(holyDayFor({ year: 2025, month: 8, day: 6 })).toBe(
       "transfiguration",

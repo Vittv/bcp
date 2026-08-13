@@ -35,7 +35,6 @@ export const HOLY_DAYS: Array<{ month: number; day: number; name: string }> = [
   { month: 6, day: 11, name: "st-barnabas" },
   { month: 6, day: 24, name: "nativity-of-st-john-the-baptist" },
   { month: 6, day: 29, name: "peter-and-paul" },
-  { month: 7, day: 4, name: "independence-day" },
   { month: 7, day: 22, name: "st-mary-magdalene" },
   { month: 7, day: 25, name: "st-james" },
   { month: 8, day: 6, name: "transfiguration" },
@@ -50,18 +49,10 @@ export const HOLY_DAYS: Array<{ month: number; day: number; name: string }> = [
   { month: 11, day: 1, name: "all-saints" },
 ];
 
-export function thanksgivingDay(year: number): number {
-  const nov1 = daysFromCivil(year, 11, 1);
-  const w = (((nov1 + 4) % 7) + 7) % 7;
-  return nov1 + ((4 - w + 7) % 7) + 21;
-}
-
 export function holyDayFor(date: CalendarDate): string | undefined {
   for (const h of HOLY_DAYS) {
     if (h.month === date.month && h.day === date.day) return h.name;
   }
-  if (date.month === 11 && toDays(date) === thanksgivingDay(date.year))
-    return "thanksgiving-day";
   return undefined;
 }
 

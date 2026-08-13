@@ -70,7 +70,7 @@ describe("seasonFor", () => {
     ["2025-05-29", "easter"], // Ascension
     ["2025-06-08", "pentecost"], // Pentecost 2025
     ["2025-06-15", "after-pentecost"], // Trinity 2025
-    ["2025-11-27", "after-pentecost"], // Thanksgiving
+    ["2025-11-27", "after-pentecost"], // 4th Thursday of November
   ];
   for (const [date, season] of cases) {
     test(`${date} -> ${season}`, () => {
