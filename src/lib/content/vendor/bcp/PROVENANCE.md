@@ -15,13 +15,15 @@ The text of the 1979 Book of Common Prayer is additionally licensed for
 reproduction by the Church Pension Fund, but the E-text edition above is
 the redistribution basis used here.
 
-Each file records its extraction script and checksum in this note.
+Each file records its extraction script (in tools/bcp-extract, run against
+the E-text sources in a scratch directory; see tools/bcp-extract/README.md)
+and checksum in this note.
 
 ## Extraction notes
 
 - psalter.min.json: extracted from BCPSALT1/BCPSALT2 by
-  tools/bcp-extract/extract_psalter.py. 150 psalms, 2507 verses. Latin incipits
-  were not captured (part titles are null).
+  tools/bcp-extract/extract_psalter.py. 150 psalms, 2507 verses. Latin
+  incipits were not captured (part titles are null).
 - canticles.min.json: extracted from BCPOFFCE by
   tools/bcp-extract/extract_canticles.py. Canticles 1-21. Known E-text
   transcription quirks preserved verbatim: canticle 6 line reads "good will
@@ -29,9 +31,9 @@ Each file records its extraction script and checksum in this note.
   line in the source, so the BCP title "A Song of Praise" was supplied;
   canticle 12 note text is captured in the "note" field.
 - collects.min.json: extracted from BCPCOLCT by
-  tools/bcp-extract/parse_pdf_collects.py and repaired against the printed 2007
-  BCP (bcp2007.pdf, pdftotext -layout) and Wikisource by
-  tools/bcp-extract/gen_patches.py -> tools/bcp-extract/patches.json applied via
+  tools/bcp-extract/parse_pdf_collects.py and repaired against the printed
+  2007 BCP (bcp2007.pdf, pdftotext -layout) and Wikisource by
+  tools/bcp-extract/gen_patches.py -> patches.json applied via
   tools/bcp-extract/patch_collects.py, then cleaned by
   tools/bcp-extract/gen_collects_min.py. 284 collects (142 per rite across
   church-year, holy-days, common-of-saints, various-occasions). Corrections
@@ -43,3 +45,24 @@ Each file records its extraction script and checksum in this note.
   carry the printed wording; the 141 already-correct E-text entries are
   preserved verbatim, with the source edition's "=...=" emphasis markers
   resolved to plain text in this file.
+- offices.min.json: extracted from BCPOFFCE by
+  tools/bcp-extract/extract_offices.py (verifying reconstruction, 0
+  problems).
+  The seven Daily Office forms: Daily Morning Prayer and Daily Evening
+  Prayer in both Rites, An Order of Service for Noonday, An Order of
+  Worship for the Evening, and An Order for Compline. Items carry speakers
+  (officiant/people/all) resolved from the source's *italic* speaker
+  labels and versicle/response pairings; sections mirror the printed
+  headings; embedded canticle headings were normalized from
+  canticles.min.json to the printed "N Title Latin" form (the E-text adds
+  the word "Canticle" and drops canticle 13's title "A Song of Praise").
+  Corrections against the printed 2007 BCP (bcp2007.txt): removed the
+  doxology "For thine is the kingdom..." from the Noonday and Compline
+  Lord's Prayers (the E-text adds it; the printed book omits it there),
+  and fixed fifteen E-text transcription typos (e.g. "Pslam", "Almighty
+  god", "boundries", "Pleides", "tresspasses", "statues"). The Noonday and
+  Compline offices print the Lord's Prayer in two-column traditional and
+  contemporary forms; the E-text parallel-column markers are skipped, so
+  only the traditional form is captured. Office psalm texts (Noonday,
+  Compline) use the RSV translation and are not compared against the BCP
+  psalter.
