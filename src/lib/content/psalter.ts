@@ -18,6 +18,21 @@ export function psalmVerseCount(psalm: number): number {
   return Math.max(0, ...Object.keys(last.verses).map(Number));
 }
 
+// the BCP psalter marks psalm-book divisions and the daily-office schedule
+// (e.g. "<Book Two>", "*Fourteenth Day: Evening Prayer*") on the last verse
+// of certain psalms; strip them before display.
+const PSALTER_MARKERS = [
+  /<Book [A-Za-z]+>/g,
+  /\*[^*]*Day: (?:Morning|Evening|Noonday) Prayer\*/g,
+  /\s*-{3,}\(end of BCPSALTER\.TXT\)\s*-{0,}\s*$/,
+];
+
+function cleanVerse(text: string): string {
+  let t = text;
+  for (const re of PSALTER_MARKERS) t = t.replace(re, "");
+  return t.trim();
+}
+
 // flatten the parts of a psalm into a single verse list, carrying the
 // Hebrew stanza letter (Psalm 119) onto the verse it begins.
 function versesOf(psalm: Psalm): PsalmPassage["verses"] {
@@ -26,7 +41,7 @@ function versesOf(psalm: Psalm): PsalmPassage["verses"] {
     for (const [number, text] of Object.entries(part.verses)) {
       out.push({
         number: Number(number),
-        text,
+        text: cleanVerse(text),
         stanza: part.stanzas?.[number],
       });
     }
@@ -35,15 +50,20 @@ function versesOf(psalm: Psalm): PsalmPassage["verses"] {
 }
 
 // render the verses selected by a citation. an unqualified citation yields
-// the whole psalm; a verse range clips it.
+// the whole psalm; a verse range clips it, and the lengthen/extend parts of
+// a citation are appended so the full appointed passage is available.
 export function psalmPassage(
   citation: PsalmCitation,
 ): PsalmPassage | undefined {
   const psalm = psalms[String(citation.psalm)];
   if (!psalm) return undefined;
   const all = versesOf(psalm);
-  if (!citation.verses) return { psalm: citation.psalm, verses: all };
-  const { start, end } = citation.verses;
-  const verses = all.filter((v) => v.number >= start && v.number <= end);
+  const ranges = [citation.verses, citation.lengthen, citation.extend].filter(
+    (r): r is NonNullable<typeof r> => r !== undefined,
+  );
+  if (ranges.length === 0) return { psalm: citation.psalm, verses: all };
+  const verses = all.filter((v) =>
+    ranges.some((r) => v.number >= r.start && v.number <= r.end),
+  );
   return { psalm: citation.psalm, verses };
 }
