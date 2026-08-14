@@ -117,3 +117,52 @@ export type CollectPassage = {
   text: string;
   notes?: string | null;
 };
+
+export type OfficeId =
+  | "morning-rite-one"
+  | "morning-rite-two"
+  | "evening-rite-one"
+  | "evening-rite-two"
+  | "noonday"
+  | "owe"
+  | "compline";
+
+export type OfficeSpeaker = "officiant" | "people" | "all";
+
+export type OfficeItem =
+  | { kind: "heading"; text: string; citation?: string }
+  | { kind: "season"; text: string }
+  | { kind: "rubric"; text: string }
+  | { kind: "text"; text: string; speaker?: OfficeSpeaker; citation?: string }
+  | { kind: "option"; text: string };
+
+export type OfficeSectionKey =
+  | "opening"
+  | "confession"
+  | "invitatory"
+  | "psalms"
+  | "lessons"
+  | "creed"
+  | "prayers"
+  | "suffrages-a"
+  | "suffrages-b"
+  | "selection-from-the-psalter"
+  | "bible-reading"
+  | "canticle"
+  | "blessing-or-dismissal";
+
+export type OfficeSection = {
+  key: OfficeSectionKey;
+  heading?: string | null;
+  items: OfficeItem[];
+};
+
+export type Office = {
+  id: OfficeId;
+  name: string;
+  rite?: "One" | "Two" | null;
+  sections: OfficeSection[];
+};
+
+// an office to render: its id resolves to its full text.
+export type OfficePassage = Office;
