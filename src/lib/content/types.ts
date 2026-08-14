@@ -58,3 +58,62 @@ export type DolEntry = {
   };
   notes?: string[];
 };
+
+export type PsalmPart = {
+  title?: string | null;
+  stanzas?: Record<string, string>;
+  verses: Record<string, string>;
+};
+
+export type Psalm = {
+  parts: PsalmPart[];
+};
+
+// a passage to render: a single psalm citation resolves to verses.
+export type PsalmPassage = {
+  psalm: number;
+  verses: { number: number; text: string; stanza?: string }[];
+};
+
+export type CanticleSection = {
+  title?: string | null;
+  verses: string[];
+};
+
+export type Canticle = {
+  title: string;
+  latin?: string | null;
+  source?: string | null;
+  note?: string | null;
+  sections: CanticleSection[];
+};
+
+// a passage to render: a single canticle, optionally clipped to sections.
+export type CanticlePassage = {
+  number: number;
+  title: string;
+  sections: CanticleSection[];
+};
+
+export type CollectRite = "traditional" | "contemporary";
+
+export type CollectSection =
+  | "church-year"
+  | "holy-days"
+  | "common-of-saints"
+  | "various-occasions";
+
+export type Collect = {
+  title: string;
+  text: string;
+  notes?: string | null;
+};
+
+// a collect to render: a rite/section/title resolves to its full text.
+export type CollectPassage = {
+  rite: CollectRite;
+  section: CollectSection;
+  title: string;
+  text: string;
+  notes?: string | null;
+};
