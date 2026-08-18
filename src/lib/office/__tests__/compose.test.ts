@@ -454,4 +454,42 @@ describe("composeOffice: preferences and other offices", () => {
       "Song of Simeon Nunc Dimittis",
     ]);
   });
+
+  test("personal mode is on by default: no speaker labels", () => {
+    const doc = composeOffice(
+      { year: 2026, month: 11, day: 29 },
+      "morning-rite-two",
+    );
+    const speakers = doc.sections
+      .flatMap((s) => s.nodes)
+      .filter((n) => n.kind === "text" && n.speaker);
+    expect(speakers).toHaveLength(0);
+  });
+
+  test("personal mode strips the absolution from the confession", () => {
+    const doc = composeOffice(
+      { year: 2026, month: 11, day: 29 },
+      "morning-rite-two",
+    );
+    expect(
+      hasText(doc, "Almighty God have mercy on you, forgive you all your sins"),
+    ).toBe(false);
+    // but the confession prayer itself remains
+    expect(hasText(doc, "Most merciful God, we confess")).toBe(true);
+  });
+
+  test("turning personal mode off restores speakers and absolution", () => {
+    const doc = composeOffice(
+      { year: 2026, month: 11, day: 29 },
+      "morning-rite-two",
+      { ...DEFAULT_PREFS, personalMode: false },
+    );
+    const speakers = doc.sections
+      .flatMap((s) => s.nodes)
+      .filter((n) => n.kind === "text" && n.speaker);
+    expect(speakers.length).toBeGreaterThan(0);
+    expect(
+      hasText(doc, "Almighty God have mercy on you, forgive you all your sins"),
+    ).toBe(true);
+  });
 });

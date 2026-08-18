@@ -8,12 +8,14 @@ import type {
 } from "../content/types";
 
 // how a reader prefers the office composed. rite selects Morning/Evening
-// Prayer Rite One vs Two; collectRite the language of the Collect of the Day.
+// Prayer Rite One vs Two; collectRite the language of the Collect of the Day;
+// personalMode strips speaker labels and the priestly absolution for solo prayer.
 export type OfficePrefs = {
   rite: "One" | "Two";
   collectRite: "traditional" | "contemporary";
   showRubrics: boolean;
   showAlternates: boolean;
+  personalMode: boolean;
 };
 
 export const DEFAULT_PREFS: OfficePrefs = {
@@ -21,6 +23,7 @@ export const DEFAULT_PREFS: OfficePrefs = {
   collectRite: "contemporary",
   showRubrics: true,
   showAlternates: false,
+  personalMode: true,
 };
 
 // the offices offered in the Today view, keyed by rite.
