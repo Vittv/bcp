@@ -58,9 +58,6 @@ function NodeView({ node }: { node: ComposedNode }) {
               <Text style={styles.lessonRef}>{lesson.ref}</Text>
             </View>
           ))}
-          <Text style={styles.lessonHint}>
-            Scripture text is on its way (M6).
-          </Text>
         </View>
       );
     case "collect":
@@ -204,13 +201,6 @@ const styles = StyleSheet.create({
     fontFamily: "serif",
     fontSize: 17,
     color: "#1c1c1c",
-  },
-  lessonHint: {
-    fontFamily: "sans-serif",
-    fontSize: 12,
-    fontStyle: "italic",
-    color: "#999",
-    marginTop: 8,
   },
   collectBlock: {
     marginTop: 6,

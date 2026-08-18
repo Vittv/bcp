@@ -270,6 +270,12 @@ function keepOccasionalCollect(title: string, weekdayOfDate: number): boolean {
   );
 }
 
+// personal mode suppresses rubrics by default — they are liturgical
+// instructions for a service, not spoken text in solo prayer.
+function showRubrics(prefs: OfficePrefs): boolean {
+  return prefs.showRubrics && !prefs.personalMode;
+}
+
 // generalized section composer (opening sentences, confession, creed,
 // suffrages-a, and the single opening section of Noonday and Compline, which
 // carries the whole service):
@@ -286,7 +292,9 @@ function composeOpening(
   let inOption = false;
   let inCollectMenu = false;
   let collectKept = false;
+  let skipAbsolution = false;
   for (const item of section.items) {
+    if (skipAbsolution) continue;
     if (item.kind === "season") {
       keep = keepSeasonGroup(item.text, ctx);
       if (keep) nodes.push({ kind: "heading", text: item.text });
@@ -308,6 +316,14 @@ function composeOpening(
     if (item.kind === "rubric") {
       inOption = false;
       const text = item.text;
+      if (
+        ctx.prefs.personalMode &&
+        section.key === "confession" &&
+        /Priest.*stands and says/i.test(text)
+      ) {
+        skipAbsolution = true;
+        continue;
+      }
       if (
         /(one or more of the following Collect|one of the following Collects?|one of the following prayers?)/i.test(
           text,
@@ -401,13 +417,13 @@ function composeInvitatory(
       if (item.text.startsWith("In Easter Week")) continue;
       if (item.text.startsWith("Except in Lent, add")) {
         keep = ctx.season !== "lent" && ctx.season !== "holy-week";
-        if (ctx.prefs.showRubrics)
+        if (showRubrics(ctx.prefs))
           nodes.push({ kind: "rubric", text: item.text });
         continue;
       }
       if (isAntiphonMarker(item.text)) {
         keep = ANTIPHON_GROUPS[item.text](ctx);
-        if (keep && ctx.prefs.showRubrics)
+        if (keep && showRubrics(ctx.prefs))
           nodes.push({ kind: "rubric", text: item.text });
         continue;
       }
@@ -517,7 +533,7 @@ function composeSuffragesB(
     if (item.kind === "rubric") {
       const text = item.text;
       if (text === "The Collect of the Day") {
-        if (ctx.prefs.showRubrics)
+        if (showRubrics(ctx.prefs))
           nodes.push({ kind: "rubric", text: item.text });
         if (collect) nodes.push(collect);
         continue;
@@ -719,11 +735,15 @@ function convert(
     case "heading":
       return { kind: "heading", text: item.text, citation: item.citation };
     case "rubric":
-      return prefs.showRubrics
+      return showRubrics(prefs)
         ? { kind: "rubric", text: item.text }
         : undefined;
     case "text":
-      return { kind: "text", text: item.text, speaker: item.speaker };
+      return {
+        kind: "text",
+        text: item.text,
+        speaker: prefs.personalMode ? undefined : item.speaker,
+      };
     case "option":
       return undefined;
     case "season":
