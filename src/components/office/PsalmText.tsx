@@ -1,7 +1,9 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { PsalmPassage } from "../../lib/content/types";
 
-const MEDIANT = "\u2009"; // thin space for the pointing asterisk
+const MEDIANT = "\u2009";
+
+const SERIF = '"Crimson Text", Georgia, "Times New Roman", serif';
 
 function Verse({ verse }: { verse: PsalmPassage["verses"][number] }) {
   return (
@@ -26,26 +28,28 @@ export function PsalmText({ passage }: { passage: PsalmPassage }) {
 const styles = StyleSheet.create({
   block: {
     marginTop: 4,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   verse: {
-    fontFamily: "serif",
+    fontFamily: SERIF,
     fontSize: 17,
-    lineHeight: 27,
-    color: "#1c1c1c",
+    lineHeight: 29,
+    color: "var(--text, #2c2020)",
   },
   verseNumber: {
-    fontSize: 10,
-    lineHeight: 14,
-    color: "#8a8a8a",
-    marginRight: 4,
+    fontFamily: SERIF,
+    fontSize: 9,
+    lineHeight: 16,
+    color: "var(--text-secondary, #7a6e64)",
+    marginRight: 3,
     fontWeight: "400",
+    opacity: 0.7,
   },
   mediant: {
     fontSize: 17,
   },
   stanza: {
     fontStyle: "italic",
-    color: "#444",
+    color: "var(--text-secondary, #7a6e64)",
   },
 });
