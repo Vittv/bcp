@@ -7,26 +7,39 @@ import type {
 } from "../../lib/office/types";
 import { PsalmText } from "./PsalmText";
 
+const SERIF = '"Crimson Text", Georgia, "Times New Roman", serif';
+const SANS =
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
 const SPEAKER_LABEL: Record<OfficeSpeaker, string> = {
   officiant: "Officiant",
   people: "People",
   all: "All",
 };
 
+type NodeViewProps = {
+  node: ComposedNode;
+  showRubrics: boolean;
+  showSpeakers: boolean;
+};
+
 function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
   return <Text style={styles.speaker}>{SPEAKER_LABEL[speaker]} </Text>;
 }
 
-function NodeView({ node }: { node: ComposedNode }) {
+function NodeView({ node, showRubrics, showSpeakers }: NodeViewProps) {
   switch (node.kind) {
     case "heading":
       return <Text style={styles.heading}>{node.text}</Text>;
     case "rubric":
+      if (!showRubrics) return null;
       return <Text style={styles.rubric}>{node.text}</Text>;
     case "text":
       return (
         <Text style={styles.text}>
-          {node.speaker ? <SpeakerLabel speaker={node.speaker} /> : null}
+          {node.speaker && showSpeakers ? (
+            <SpeakerLabel speaker={node.speaker} />
+          ) : null}
           {node.text}
         </Text>
       );
@@ -46,49 +59,23 @@ function NodeView({ node }: { node: ComposedNode }) {
         </View>
       );
     }
-    case "lessons":
+    case "lesson":
       return (
         <View style={styles.lessonBlock}>
-          {node.lessons.map((lesson) => (
-            <View
-              key={`${lesson.ref}-${lesson.label}`}
-              style={styles.lessonRow}
-            >
-              <Text style={styles.lessonLabel}>{lesson.label}</Text>
-              <Text style={styles.lessonRef}>{lesson.ref}</Text>
-            </View>
-          ))}
+          <Text style={styles.lessonRef}>{node.citation}</Text>
         </View>
       );
     case "collect":
       return (
         <View style={styles.collectBlock}>
-          <Text style={styles.collectTitle}>{node.passage.title}</Text>
-          <Text style={styles.text}>{node.passage.text}</Text>
+          <Text style={styles.collectTitle}>A Collect</Text>
+          <Text style={styles.text}>{node.text}</Text>
         </View>
       );
   }
 }
 
-function nodeKey(node: ComposedNode): string {
-  switch (node.kind) {
-    case "psalm":
-      return `${node.kind}:${node.citation}`;
-    case "lessons":
-      return `${node.kind}:${node.lessons.map((l) => l.ref).join(",")}`;
-    case "collect":
-      return `${node.kind}:${node.passage.title}`;
-    case "heading":
-    case "rubric":
-    case "text":
-      return `${node.kind}:${node.text}`;
-  }
-}
-
-// duplicate text (e.g. the doxology after every canticle, repeated "Amen.")
-// would collide as React keys and corrupt reconciliation across tab switches;
-// disambiguate with an occurrence count.
-function sectionKeys(nodes: ComposedNode[]): string[] {
+function sectionKeys(nodes: readonly ComposedNode[]) {
   const seen = new Map<string, number>();
   return nodes.map((node) => {
     const base = nodeKey(node);
@@ -98,7 +85,15 @@ function sectionKeys(nodes: ComposedNode[]): string[] {
   });
 }
 
-function SectionView({ section }: { section: ComposedSection }) {
+function SectionView({
+  section,
+  showRubrics,
+  showSpeakers,
+}: {
+  section: ComposedSection;
+  showRubrics: boolean;
+  showSpeakers: boolean;
+}) {
   if (section.nodes.length === 0) return null;
   const keys = sectionKeys(section.nodes);
   return (
@@ -107,20 +102,55 @@ function SectionView({ section }: { section: ComposedSection }) {
         <Text style={styles.sectionHeading}>{section.heading}</Text>
       ) : null}
       {section.nodes.map((node, i) => (
-        <NodeView key={keys[i]} node={node} />
+        <NodeView
+          key={keys[i]}
+          node={node}
+          showRubrics={showRubrics}
+          showSpeakers={showSpeakers}
+        />
       ))}
     </View>
   );
 }
 
-export function OfficeView({ document }: { document: OfficeDocument }) {
+export function OfficeView({
+  document,
+  showRubrics,
+  showSpeakers,
+}: {
+  document: OfficeDocument;
+  showRubrics: boolean;
+  showSpeakers: boolean;
+}) {
   return (
     <View>
       {document.sections.map((section) => (
-        <SectionView key={section.key} section={section} />
+        <SectionView
+          key={section.key}
+          section={section}
+          showRubrics={showRubrics}
+          showSpeakers={showSpeakers}
+        />
       ))}
     </View>
   );
+}
+
+function nodeKey(node: ComposedNode): string {
+  switch (node.kind) {
+    case "heading":
+      return `h:${node.text}`;
+    case "rubric":
+      return `r:${node.text}`;
+    case "text":
+      return `t:${node.speaker ?? ""}:${node.text}`;
+    case "psalm":
+      return `p:${node.citation}`;
+    case "lesson":
+      return `l:${node.citation}`;
+    case "collect":
+      return `c:${node.text}`;
+  }
 }
 
 const styles = StyleSheet.create({
@@ -128,90 +158,85 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionHeading: {
-    fontFamily: "sans-serif",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 1.2,
+    fontFamily: SANS,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 1.5,
     textTransform: "uppercase",
-    color: "#7a5c3a",
-    marginBottom: 10,
-    marginTop: 4,
+    color: "var(--accent, #7a3040)",
+    marginBottom: 12,
+    marginTop: 8,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border, #d2cbbf)",
   },
   heading: {
-    fontFamily: "serif",
-    fontSize: 20,
+    fontFamily: SERIF,
+    fontSize: 22,
     fontWeight: "600",
-    marginTop: 10,
-    marginBottom: 6,
-    color: "#1c1c1c",
+    marginTop: 28,
+    marginBottom: 8,
+    color: "var(--text, #2c2020)",
   },
   rubric: {
-    fontFamily: "serif",
+    fontFamily: SERIF,
     fontStyle: "italic",
     fontSize: 15,
-    lineHeight: 23,
-    color: "#6f6f6f",
+    lineHeight: 25,
+    color: "var(--text-secondary, #7a6e64)",
     marginTop: 4,
     marginBottom: 4,
   },
   text: {
-    fontFamily: "serif",
-    fontSize: 17,
-    lineHeight: 27,
-    color: "#1c1c1c",
-    marginTop: 4,
+    fontFamily: SERIF,
+    fontSize: 18,
+    lineHeight: 30,
+    color: "var(--text, #2c2020)",
+    marginTop: 8,
   },
   speaker: {
-    fontFamily: "sans-serif",
-    fontWeight: "700",
-    fontSize: 12,
-    color: "#7a5c3a",
+    fontFamily: SANS,
+    fontWeight: "600",
+    fontSize: 11,
+    letterSpacing: 0.4,
+    color: "var(--accent, #7a3040)",
   },
   psalmBlock: {
-    marginTop: 6,
+    marginTop: 10,
+    marginBottom: 4,
+    paddingLeft: 4,
   },
   psalmTitle: {
-    fontFamily: "serif",
+    fontFamily: SERIF,
     fontSize: 15,
     fontStyle: "italic",
-    color: "#444",
-    marginBottom: 2,
-  },
-  lessonBlock: {
-    marginTop: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: "#d8c8a8",
-    paddingLeft: 12,
-    paddingVertical: 4,
-  },
-  lessonRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    marginTop: 6,
-    gap: 10,
-  },
-  lessonLabel: {
-    fontFamily: "sans-serif",
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#7a5c3a",
-    minWidth: 96,
-  },
-  lessonRef: {
-    fontFamily: "serif",
-    fontSize: 17,
-    color: "#1c1c1c",
-  },
-  collectBlock: {
-    marginTop: 6,
+    color: "var(--text-secondary, #7a6e64)",
     marginBottom: 6,
   },
-  collectTitle: {
-    fontFamily: "sans-serif",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    color: "#7a5c3a",
+  lessonBlock: {
+    marginTop: 10,
     marginBottom: 4,
+    borderLeftWidth: 2,
+    borderLeftColor: "var(--accent, #7a3040)",
+    paddingLeft: 14,
+    paddingVertical: 6,
+  },
+  lessonRef: {
+    fontFamily: SERIF,
+    fontSize: 18,
+    color: "var(--text, #2c2020)",
+  },
+  collectBlock: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  collectTitle: {
+    fontFamily: SANS,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: "var(--accent, #7a3040)",
+    marginBottom: 6,
   },
 });
