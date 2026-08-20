@@ -75,17 +75,21 @@ function persistFontScale(scale: number) {
 const LightPalette = {
   bg: "#e0dbd0",
   border: "#d2cbbf",
+  borderContent: "#b5aa9e",
   text: "#2c2020",
   textSecondary: "#7a6e64",
   accent: "#7a3040",
+  scrollbar: "#a09589",
 };
 
 const DarkPalette = {
   bg: "#1b191a",
   border: "#282628",
+  borderContent: "#484547",
   text: "#d4d0d3",
   textSecondary: "#848083",
-  accent: "#985870",
+  accent: "#a45888",
+  scrollbar: "#5a5759",
 };
 
 function applyPalette(theme: ResolvedTheme) {
@@ -94,10 +98,28 @@ function applyPalette(theme: ResolvedTheme) {
   const r = document.documentElement.style;
   r.setProperty("--bg", p.bg);
   r.setProperty("--border", p.border);
+  r.setProperty("--border-content", p.borderContent);
   r.setProperty("--text", p.text);
   r.setProperty("--text-secondary", p.textSecondary);
   r.setProperty("--accent", p.accent);
   r.setProperty("--bg-page", p.bg);
+  r.setProperty("--scrollbar", p.scrollbar);
+
+  const id = "scrollbar-style";
+  // SAFETY: we only create <style> elements with this id in applyPalette.
+  let el = document.getElementById(id) as HTMLStyleElement | null;
+  if (!el) {
+    el = document.createElement("style");
+    el.id = id;
+    document.head.appendChild(el);
+  }
+  el.textContent = `
+    * { scrollbar-width: thin; scrollbar-color: ${p.scrollbar} transparent; }
+    *::-webkit-scrollbar { width: 6px; height: 6px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: ${p.scrollbar}; border-radius: 3px; }
+    *::-webkit-scrollbar-thumb:hover { background: ${p.textSecondary}; }
+  `;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({

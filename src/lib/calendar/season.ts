@@ -54,3 +54,29 @@ export function colorFor(date: CalendarDate): Color {
       return "green";
   }
 }
+
+const NEXT_SEASON: Record<
+  Season,
+  { label: string; boundary: (f: FeastDays) => number }
+> = {
+  advent: { label: "Christmas", boundary: (f) => f.christmas },
+  christmas: { label: "Epiphany", boundary: (f) => f.epiphany },
+  epiphany: { label: "Lent", boundary: (f) => f.ashWednesday },
+  lent: { label: "Holy Week", boundary: (f) => f.palmSunday },
+  "holy-week": { label: "Easter", boundary: (f) => f.easter },
+  easter: { label: "Pentecost", boundary: (f) => f.pentecost },
+  pentecost: { label: "Ordinary Time", boundary: (f) => f.pentecost + 1 },
+  "after-pentecost": { label: "Advent", boundary: (f) => f.advent1Next },
+};
+
+export function daysUntilNextSeason(date: CalendarDate): {
+  days: number;
+  label: string;
+} {
+  const season = seasonFor(date);
+  const f = feastsForEasterYear(easterYear(date));
+  const info = NEXT_SEASON[season];
+  const boundary = info.boundary(f);
+  const remaining = boundary - toDays(date);
+  return { days: remaining, label: info.label };
+}

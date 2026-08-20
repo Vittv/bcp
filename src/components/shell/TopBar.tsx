@@ -1,15 +1,22 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../context/ThemeContext";
-import { addDays } from "../../lib/calendar";
-import type { CalendarDate, Color } from "../../lib/calendar/types";
-import { dayLabel } from "../../lib/office";
-import { SeasonDot } from "./SeasonDot";
+import type { Season } from "../../lib/calendar/types";
+
+const SEASON_LABEL: Record<Season, string> = {
+  advent: "Advent",
+  christmas: "Christmas",
+  epiphany: "Epiphany",
+  lent: "Lent",
+  "holy-week": "Holy Week",
+  easter: "Easter",
+  pentecost: "Pentecost",
+  "after-pentecost": "After Pentecost",
+};
 
 type TopBarProps = {
-  date: CalendarDate;
-  onDateChange: (date: CalendarDate) => void;
-  onNavigateCalendar: () => void;
-  seasonColor: Color;
+  season: Season;
+  daysUntilNext: number;
+  nextSeason: string;
 };
 
 const noSelect = {
@@ -17,12 +24,7 @@ const noSelect = {
   WebkitUserSelect: "none" as const,
 };
 
-export function TopBar({
-  date,
-  onDateChange,
-  onNavigateCalendar,
-  seasonColor,
-}: TopBarProps) {
+export function TopBar({ season, daysUntilNext, nextSeason }: TopBarProps) {
   const { mode, setMode, fontScale, setFontScale } = useTheme();
 
   const pct = `${Math.round(fontScale * 100)}%`;
@@ -31,54 +33,27 @@ export function TopBar({
     <View style={[styles.bar, noSelect]}>
       <Text style={styles.brand}>Daily Office</Text>
 
-      <View style={styles.dateNav}>
-        <Pressable
-          style={({ hovered }) => [
-            styles.navBtn,
-            hovered && styles.navBtnHover,
-          ]}
-          onPress={() => onDateChange(addDays(date, -1))}
-        >
-          <Text style={styles.navBtnText}>←</Text>
-        </Pressable>
-        <Pressable
-          style={({ hovered }) => [
-            styles.navBtn,
-            hovered && styles.navBtnHover,
-          ]}
-          onPress={() => onDateChange(addDays(date, 1))}
-        >
-          <Text style={styles.navBtnText}>→</Text>
-        </Pressable>
-        <Pressable
-          style={({ hovered }) => [
-            styles.todayBtn,
-            hovered && styles.navBtnHover,
-          ]}
-          onPress={onNavigateCalendar}
-        >
-          <SeasonDot color={seasonColor} size={6} />
-          <Text style={styles.todayText}>{dayLabel(date)}</Text>
-        </Pressable>
+      <View style={styles.seasonLabel}>
+        <Text style={styles.seasonText}>{SEASON_LABEL[season]}</Text>
+        {daysUntilNext > 0 && (
+          <Text style={styles.countdown}>
+            {" "}
+            · {daysUntilNext}d to {nextSeason}
+          </Text>
+        )}
       </View>
 
       <View style={styles.controls}>
         <View style={styles.fontControl}>
           <Text style={styles.fontPct}>{pct}</Text>
           <Pressable
-            style={({ hovered }) => [
-              styles.fontBtn,
-              hovered && styles.navBtnHover,
-            ]}
+            style={({ hovered }) => [styles.fontBtn, hovered && styles.hover]}
             onPress={() => setFontScale(fontScale - 0.05)}
           >
             <Text style={styles.controlText}>A−</Text>
           </Pressable>
           <Pressable
-            style={({ hovered }) => [
-              styles.fontBtn,
-              hovered && styles.navBtnHover,
-            ]}
+            style={({ hovered }) => [styles.fontBtn, hovered && styles.hover]}
             onPress={() => setFontScale(fontScale + 0.05)}
           >
             <Text style={styles.controlText}>A+</Text>
@@ -86,10 +61,7 @@ export function TopBar({
         </View>
 
         <Pressable
-          style={({ hovered }) => [
-            styles.themeBtn,
-            hovered && styles.navBtnHover,
-          ]}
+          style={({ hovered }) => [styles.themeBtn, hovered && styles.hover]}
           onPress={() =>
             setMode(
               mode === "light" ? "dark" : mode === "dark" ? "system" : "light",
@@ -124,37 +96,22 @@ const styles = StyleSheet.create({
     color: "var(--text, #2c2020)",
     marginRight: 16,
   },
-  dateNav: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  navBtn: {
-    width: 28,
-    height: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 4,
-  },
-  navBtnHover: {
-    backgroundColor: "var(--border, #d2cbbf)",
-  },
-  navBtnText: {
-    fontSize: 14,
-    color: "var(--text-secondary, #7a6e64)",
-  },
-  todayBtn: {
+  seasonLabel: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 8,
-    height: 28,
-    borderRadius: 4,
+    marginLeft: 4,
   },
-  todayText: {
+  seasonText: {
     fontFamily: "sans-serif",
     fontSize: 12,
-    color: "var(--text, #2c2020)",
+    color: "var(--text-secondary, #7a6e64)",
+  },
+  countdown: {
+    fontFamily: "sans-serif",
+    fontSize: 11,
+    color: "var(--text-secondary, #7a6e64)",
+    opacity: 0.7,
   },
   controls: {
     marginLeft: "auto",
@@ -181,6 +138,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 4,
+  },
+  hover: {
+    backgroundColor: "var(--border, #d2cbbf)",
   },
   themeBtn: {
     width: 28,

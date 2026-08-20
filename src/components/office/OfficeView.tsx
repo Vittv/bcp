@@ -59,10 +59,15 @@ function NodeView({ node, showRubrics, showSpeakers }: NodeViewProps) {
         </View>
       );
     }
-    case "lesson":
+    case "lessons":
       return (
         <View style={styles.lessonBlock}>
-          <Text style={styles.lessonRef}>{node.citation}</Text>
+          {node.lessons.map((l) => (
+            <Text key={l.ref} style={styles.lessonRef}>
+              {l.label}: {l.ref}
+              {l.optional ? "  (optional)" : ""}
+            </Text>
+          ))}
         </View>
       );
     case "collect":
@@ -168,7 +173,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
+    borderBottomColor: "var(--border-content, #b5aa9e)",
   },
   heading: {
     fontFamily: SERIF,
