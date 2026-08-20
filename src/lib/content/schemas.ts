@@ -1,5 +1,15 @@
 import { z } from "zod";
-import type { DolEntry, DolLessonGroup, Office, OfficeId } from "./types";
+import type {
+  Canticle,
+  Collect,
+  CollectRite,
+  CollectSection,
+  DolEntry,
+  DolLessonGroup,
+  Office,
+  OfficeId,
+  Psalm,
+} from "./types";
 
 const lessonGroupSchema = z.object({
   first: z.string().optional(),
@@ -113,3 +123,54 @@ const officeSchema = z.object({
 }) satisfies z.ZodType<Office>;
 
 export const officesSchema = z.record(z.custom<OfficeId>(), officeSchema);
+
+const psalmPartSchema = z.object({
+  title: z.string().nullable().optional(),
+  stanzas: z.record(z.string(), z.string()).optional(),
+  verses: z.record(z.string(), z.string()),
+}) satisfies z.ZodType<import("./types").PsalmPart>;
+
+export const psalterSchema = z.record(
+  z.string(),
+  z.object({ parts: z.array(psalmPartSchema) }),
+) satisfies z.ZodType<Record<string, Psalm>>;
+
+const canticleSectionSchema = z.object({
+  title: z.string().nullable().optional(),
+  verses: z.array(z.string()),
+}) satisfies z.ZodType<import("./types").CanticleSection>;
+
+export const canticlesSchema = z.record(
+  z.string(),
+  z.object({
+    title: z.string(),
+    latin: z.string().nullable().optional(),
+    source: z.string().nullable().optional(),
+    note: z.string().nullable().optional(),
+    sections: z.array(canticleSectionSchema),
+  }),
+) satisfies z.ZodType<Record<string, Canticle>>;
+
+const collectSchema = z.object({
+  title: z.string(),
+  text: z.string(),
+  notes: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
+}) satisfies z.ZodType<Collect>;
+
+export const collectsSchema = z.record(
+  // SAFETY: z.enum requires a tuple; this array is an exhaustive list of CollectRite values.
+  z.enum(["traditional", "contemporary"] as [CollectRite, ...CollectRite[]]),
+  z.record(
+    // SAFETY: z.enum requires a tuple; this array is an exhaustive list of CollectSection values.
+    z.enum([
+      "church-year",
+      "holy-days",
+      "common-of-saints",
+      "various-occasions",
+    ] as [CollectSection, ...CollectSection[]]),
+    z.array(collectSchema),
+  ),
+) satisfies z.ZodType<Record<CollectRite, Record<CollectSection, Collect[]>>>;

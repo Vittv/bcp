@@ -106,7 +106,7 @@ export type CollectSection =
 export type Collect = {
   title: string;
   text: string;
-  notes?: string | null;
+  notes?: string | string[] | null;
 };
 
 // a collect to render: a rite/section/title resolves to its full text.
@@ -115,7 +115,7 @@ export type CollectPassage = {
   section: CollectSection;
   title: string;
   text: string;
-  notes?: string | null;
+  notes?: string | string[] | null;
 };
 
 export type OfficeId =

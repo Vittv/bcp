@@ -156,6 +156,7 @@ export function parseLessonRef(input: string): LessonParse {
         tokens.push({
           type: "coord",
           verse: n,
+          // SAFETY: the regex only matches known half-verse suffixes (a/b).
           half: m[3] as Half | undefined,
         });
       i += m[0].length;

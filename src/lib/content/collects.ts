@@ -1,15 +1,8 @@
-import type {
-  Collect,
-  CollectPassage,
-  CollectRite,
-  CollectSection,
-} from "./types";
+import { collectsSchema } from "./schemas";
+import type { CollectPassage, CollectRite, CollectSection } from "./types";
 import collectsData from "./vendor/bcp/collects.min.json";
 
-const collects = collectsData as unknown as Record<
-  CollectRite,
-  Record<CollectSection, Collect[]>
->;
+const collects = collectsSchema.parse(collectsData);
 
 const SECTIONS: CollectSection[] = [
   "church-year",
