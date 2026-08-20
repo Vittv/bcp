@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     marginBottom: 28,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
+    borderBottomColor: "var(--border-content, #b5aa9e)",
   },
   officeName: {
     fontFamily: SERIF,

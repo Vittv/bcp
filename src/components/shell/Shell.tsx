@@ -3,7 +3,12 @@ import { Platform, StyleSheet, View } from "react-native";
 import type { PageId } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
 import { useTheme } from "../../context/ThemeContext";
-import { colorFor, resolve, seasonFor } from "../../lib/calendar";
+import {
+  colorFor,
+  daysUntilNextSeason,
+  resolve,
+  seasonFor,
+} from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
@@ -43,16 +48,22 @@ export function Shell() {
   );
   const [page, setPage] = useState<PageId>("today");
   const [scrollPct, setScrollPct] = useState(0);
-  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [sidebarVisible, setSidebarVisibleRaw] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("sidebarVisible") !== "false";
+    }
+    return true;
+  });
+
+  const setSidebarVisible = (v: boolean) => {
+    setSidebarVisibleRaw(v);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sidebarVisible", String(v));
+    }
+  };
   const [showRubrics, setShowRubrics] = useState(false);
   const [showSpeakers, setShowSpeakers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const handleDateChange = (d: CalendarDate) => {
-    setDate(d);
-    setPage("today");
-    scrollToTop();
-  };
 
   const handleCalendarSelect = (d: CalendarDate) => {
     setDate(d);
@@ -73,6 +84,7 @@ export function Shell() {
   const season = seasonFor(date);
   const seasonColor = colorFor(date);
   const slot = resolve(date);
+  const { days: daysUntilNext, label: nextSeason } = daysUntilNextSeason(date);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -124,12 +136,18 @@ export function Shell() {
         }}
       >
         <TopBar
-          date={date}
-          onDateChange={handleDateChange}
-          onNavigateCalendar={() => setPage("calendar")}
-          seasonColor={seasonColor}
+          season={season}
+          daysUntilNext={daysUntilNext}
+          nextSeason={nextSeason}
         />
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <div
+          style={{
+            display: "flex",
+            flex: 1,
+            overflow: "hidden",
+            position: "relative",
+          }}
+        >
           {sidebarVisible ? (
             <Sidebar
               active={page}
@@ -224,10 +242,9 @@ export function Shell() {
   return (
     <View style={styles.shell}>
       <TopBar
-        date={date}
-        onDateChange={handleDateChange}
-        onNavigateCalendar={() => setPage("calendar")}
-        seasonColor={seasonColor}
+        season={season}
+        daysUntilNext={daysUntilNext}
+        nextSeason={nextSeason}
       />
       <View style={styles.body}>
         {sidebarVisible ? (
