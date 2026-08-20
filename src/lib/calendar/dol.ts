@@ -73,6 +73,7 @@ export function resolve(date: CalendarDate): DolSlot {
   if (d >= f.advent1 && d < f.christmas) {
     const sunday = toDays(sundayOnOrBefore(date));
     const n = Math.min(4, (sunday - f.advent1) / 7 + 1);
+    // SAFETY: n is clamped to 1-4 by Math.min(4, ...) above.
     const week: DolWeek = { kind: "advent", week: n as 1 | 2 | 3 | 4 };
     if (d === f.christmasEve) {
       return {

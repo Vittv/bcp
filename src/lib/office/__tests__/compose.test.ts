@@ -20,12 +20,14 @@ function nodesOf(
 function collectOf(
   doc: OfficeDocument,
 ): Extract<ComposedNode, { kind: "collect" }> | undefined {
+  // SAFETY: nodesOf filters by kind, so every element has kind "collect".
   return nodesOf(doc, "collect")[0] as
     | Extract<ComposedNode, { kind: "collect" }>
     | undefined;
 }
 
 function psalmNumbers(doc: OfficeDocument): number[] {
+  // SAFETY: nodesOf filters by kind, so every element has kind "psalm".
   return nodesOf(doc, "psalm").map(
     (n) => (n as Extract<ComposedNode, { kind: "psalm" }>).passage.psalm,
   );
@@ -80,11 +82,13 @@ describe("composeOffice: Advent 1 2026", () => {
       kind: "psalm",
       citation: "146",
     });
+    // SAFETY: nodesOf filters by kind.
     const first = psalms?.nodes[0] as Extract<ComposedNode, { kind: "psalm" }>;
     expect(first.passage.verses[0].text).toContain("Hallelujah");
   });
 
   test("lessons render as labeled references", () => {
+    // SAFETY: nodesOf filters by kind.
     const lessons = nodesOf(doc, "lessons")[0] as Extract<
       ComposedNode,
       { kind: "lessons" }
@@ -126,6 +130,7 @@ describe("composeOffice: the evening boundary", () => {
     );
     expect(doc.entryTitle).toBe("Saint Andrew the Apostle");
     expect(psalmNumbers(doc)).toEqual([96, 100]);
+    // SAFETY: nodesOf filters by kind.
     const lessons = nodesOf(doc, "lessons")[0] as Extract<
       ComposedNode,
       { kind: "lessons" }
@@ -145,6 +150,7 @@ describe("composeOffice: the evening boundary", () => {
     expect(doc.entryTitle).toBe("Christmas Eve");
     const psalms = nodesOf(doc, "psalm");
     expect(psalms[0]).toMatchObject({ citation: "89:1–29" });
+    // SAFETY: nodesOf filters by kind.
     const lessons = nodesOf(doc, "lessons")[0] as Extract<
       ComposedNode,
       { kind: "lessons" }
@@ -166,6 +172,7 @@ describe("composeOffice: the evening boundary", () => {
     );
     expect(doc.entryTitle).toBe("Saint Mary Magdalene");
     expect(psalmNumbers(doc)).toEqual([30, 149]);
+    // SAFETY: nodesOf filters by kind.
     const lessons = nodesOf(doc, "lessons")[0] as Extract<
       ComposedNode,
       { kind: "lessons" }
@@ -196,6 +203,7 @@ describe("composeOffice: golden Sundays", () => {
     );
     expect(doc.entryTitle).toBe("The First Sunday in Lent");
     expect(psalmNumbers(doc)).toEqual([63, 98]);
+    // SAFETY: nodesOf filters by kind.
     const ps63 = nodesOf(doc, "psalm")[0] as Extract<
       ComposedNode,
       { kind: "psalm" }
@@ -269,6 +277,7 @@ describe("composeOffice: DOL special-case days", () => {
       "morning-rite-two",
     );
     expect(collectOf(doc)?.passage.title).toBe("Proper 15");
+    // SAFETY: nodesOf filters by kind.
     const ps119 = nodesOf(doc, "psalm")[0] as Extract<
       ComposedNode,
       { kind: "psalm" }
@@ -369,6 +378,7 @@ describe("composeOffice: preferences and other offices", () => {
   test("alternative lessons are hidden unless requested", () => {
     const date = { year: 2026, month: 8, day: 14 };
     const doc = composeOffice(date, "evening-rite-two");
+    // SAFETY: nodesOf filters by kind.
     const lessons = nodesOf(doc, "lessons").flatMap(
       (n) => (n as Extract<ComposedNode, { kind: "lessons" }>).lessons,
     );
@@ -378,6 +388,7 @@ describe("composeOffice: preferences and other offices", () => {
       showAlternates: true,
     });
     const altLessons = nodesOf(withAlt, "lessons").flatMap(
+      // SAFETY: nodesOf filters by kind, so every element has kind "lessons".
       (n) => (n as Extract<ComposedNode, { kind: "lessons" }>).lessons,
     );
     expect(altLessons.map((l) => l.ref)).toEqual([
@@ -432,6 +443,7 @@ describe("composeOffice: preferences and other offices", () => {
   });
 
   test("as many canticles as lessons are kept", () => {
+    // SAFETY: nodesOf filters by kind.
     const canticles = (doc: OfficeDocument) =>
       nodesOf(doc, "heading")
         .map((n) => (n as Extract<ComposedNode, { kind: "heading" }>).text)

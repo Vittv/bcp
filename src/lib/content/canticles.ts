@@ -1,7 +1,8 @@
-import type { Canticle, CanticlePassage, CanticleSection } from "./types";
+import { canticlesSchema } from "./schemas";
+import type { CanticlePassage, CanticleSection } from "./types";
 import canticlesData from "./vendor/bcp/canticles.min.json";
 
-const canticles = canticlesData as unknown as Record<string, Canticle>;
+const canticles = canticlesSchema.parse(canticlesData);
 
 export function canticleExists(number: number): boolean {
   return Object.hasOwn(canticles, String(number));

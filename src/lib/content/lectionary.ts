@@ -352,6 +352,7 @@ export function validateLectionary(): string[] {
     source: string,
     day: string,
   ) => {
+    // SAFETY: raw is validated by dolEntrySchema.parse() before reaching here.
     const entry = raw as DolEntry;
     for (const group of [
       entry.psalms.morning ?? [],

@@ -1,7 +1,8 @@
-import type { Psalm, PsalmCitation, PsalmPassage } from "./types";
+import { psalterSchema } from "./schemas";
+import type { PsalmCitation, PsalmPassage } from "./types";
 import psalterData from "./vendor/bcp/psalter.min.json";
 
-const psalms = psalterData as unknown as Record<string, Psalm>;
+const psalms = psalterSchema.parse(psalterData);
 
 export function psalmExists(psalm: number): boolean {
   return Object.hasOwn(psalms, String(psalm));
