@@ -1,5 +1,10 @@
 import { collectsSchema } from "./schemas";
-import type { CollectPassage, CollectRite, CollectSection } from "./types";
+import type {
+  Collect,
+  CollectPassage,
+  CollectRite,
+  CollectSection,
+} from "./types";
 import collectsData from "./vendor/bcp/collects.min.json";
 
 const collects = collectsSchema.parse(collectsData);

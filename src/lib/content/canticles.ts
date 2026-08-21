@@ -1,5 +1,5 @@
 import { canticlesSchema } from "./schemas";
-import type { CanticlePassage, CanticleSection } from "./types";
+import type { Canticle, CanticlePassage, CanticleSection } from "./types";
 import canticlesData from "./vendor/bcp/canticles.min.json";
 
 const canticles = canticlesSchema.parse(canticlesData);
