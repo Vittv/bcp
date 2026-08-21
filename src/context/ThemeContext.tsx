@@ -80,6 +80,8 @@ const LightPalette = {
   textSecondary: "#7a6e64",
   accent: "#7a3040",
   scrollbar: "#a09589",
+  todayBg: "rgba(122, 48, 64, 0.16)",
+  selectedBg: "rgba(44, 32, 32, 0.09)",
 };
 
 const DarkPalette = {
@@ -90,6 +92,8 @@ const DarkPalette = {
   textSecondary: "#848083",
   accent: "#a45888",
   scrollbar: "#5a5759",
+  todayBg: "rgba(164, 88, 136, 0.30)",
+  selectedBg: "rgba(212, 208, 211, 0.12)",
 };
 
 function applyPalette(theme: ResolvedTheme) {
@@ -104,6 +108,8 @@ function applyPalette(theme: ResolvedTheme) {
   r.setProperty("--accent", p.accent);
   r.setProperty("--bg-page", p.bg);
   r.setProperty("--scrollbar", p.scrollbar);
+  r.setProperty("--today-bg", p.todayBg);
+  r.setProperty("--selected-bg", p.selectedBg);
 
   const id = "scrollbar-style";
   // SAFETY: we only create <style> elements with this id in applyPalette.

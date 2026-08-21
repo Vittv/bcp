@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { Chevron } from "../../components/shell/Chevron";
 import type { PageId } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
 import { useTheme } from "../../context/ThemeContext";
@@ -172,33 +173,17 @@ export function Shell() {
               onHide={() => setSidebarVisible(false)}
             />
           ) : (
-            <button
-              type="button"
-              onClick={() => setSidebarVisible(true)}
-              style={{
-                position: "absolute",
-                left: 6,
-                top: 80,
-                width: 28,
-                height: 28,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "none",
-                border: "1px solid var(--border, #d2cbbf)",
-                borderRadius: 6,
-                cursor: "pointer",
-                fontSize: 14,
-                color: "var(--text-secondary, #7a6e64)",
-                zIndex: 10,
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "var(--border, #d2cbbf)")
-              }
-              onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+            <Pressable
+              style={({ hovered }) => [
+                styles.sidebarShowBtn,
+                hovered && styles.sidebarShowBtnHover,
+              ]}
+              onPress={() => setSidebarVisible(true)}
+              accessibilityLabel="Show sidebar"
+              accessibilityRole="button"
             >
-              &gt;
-            </button>
+              <Chevron direction="right" size={6} />
+            </Pressable>
           )}
           <div
             style={{
@@ -318,5 +303,21 @@ const styles = StyleSheet.create({
     maxWidth: 640,
     alignSelf: "center",
     padding: 24,
+  },
+  sidebarShowBtn: {
+    position: "absolute",
+    left: 6,
+    top: 80,
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "var(--border-content, #b5aa9e)",
+    zIndex: 10,
+  },
+  sidebarShowBtnHover: {
+    backgroundColor: "var(--border, #d2cbbf)",
   },
 });

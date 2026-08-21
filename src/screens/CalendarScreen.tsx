@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { COLOR_MAP } from "../components/shell/SeasonDot";
+import { Chevron } from "../components/shell/Chevron";
+import { useSeasonColorMap } from "../components/shell/SeasonDot";
 import { colorFor, daysInMonth, weekday } from "../lib/calendar";
 import type { CalendarDate } from "../lib/calendar/types";
 
@@ -31,6 +32,7 @@ type CalendarScreenProps = {
 };
 
 export function CalendarScreen({ date, onSelectDate }: CalendarScreenProps) {
+  const colorMap = useSeasonColorMap();
   const [viewMonth, setViewMonth] = useState(() => ({
     year: date.year,
     month: date.month,
@@ -71,8 +73,10 @@ export function CalendarScreen({ date, onSelectDate }: CalendarScreenProps) {
             hovered && styles.arrowBtnHover,
           ]}
           onPress={prevMonth}
+          accessibilityLabel="Previous month"
+          accessibilityRole="button"
         >
-          <Text style={styles.arrow}>←</Text>
+          <Chevron direction="left" />
         </Pressable>
         <Text style={styles.monthTitle}>
           {MONTH_NAMES[viewMonth.month - 1]} {viewMonth.year}
@@ -83,8 +87,10 @@ export function CalendarScreen({ date, onSelectDate }: CalendarScreenProps) {
             hovered && styles.arrowBtnHover,
           ]}
           onPress={nextMonth}
+          accessibilityLabel="Next month"
+          accessibilityRole="button"
         >
-          <Text style={styles.arrow}>→</Text>
+          <Chevron direction="right" />
         </Pressable>
       </View>
 
@@ -113,7 +119,7 @@ export function CalendarScreen({ date, onSelectDate }: CalendarScreenProps) {
                   month: viewMonth.month,
                   day: dayNum,
                 };
-                const seasonColor = isValid ? COLOR_MAP[colorFor(cell)] : null;
+                const seasonColor = isValid ? colorMap[colorFor(cell)] : null;
                 const isToday = isValid && isSameDay(cell, todayDate);
                 const isSelected = isValid && isSameDay(cell, date);
 
@@ -135,8 +141,6 @@ export function CalendarScreen({ date, onSelectDate }: CalendarScreenProps) {
                         style={[
                           styles.cellText,
                           seasonColor ? { color: seasonColor } : undefined,
-                          isToday && styles.cellTextToday,
-                          isSelected && styles.cellTextSelected,
                         ]}
                       >
                         {dayNum}
@@ -163,32 +167,28 @@ const styles = StyleSheet.create({
     flexDirection: "column",
   },
   monthNav: {
+    height: 30,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 20,
-    marginBottom: 12,
+    gap: 12,
   },
   arrowBtn: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 4,
   },
   arrowBtnHover: {
     backgroundColor: "var(--border, #d2cbbf)",
   },
-  arrow: {
-    fontFamily: SANS,
-    fontSize: 16,
-    color: "var(--text-secondary, #7a6e64)",
-  },
   monthTitle: {
     fontFamily: SANS,
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
-    minWidth: 160,
+    minWidth: 150,
     textAlign: "center",
   },
   grid: {
@@ -241,10 +241,10 @@ const styles = StyleSheet.create({
     borderBottomColor: "var(--border, #d2cbbf)",
   },
   cellToday: {
-    backgroundColor: "var(--accent, #7a3040)",
+    backgroundColor: "var(--today-bg, rgba(122, 48, 64, 0.16))",
   },
   cellSelected: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--selected-bg, rgba(44, 32, 32, 0.09))",
   },
   cellHover: {
     backgroundColor: "var(--border, #d2cbbf)",
@@ -254,12 +254,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: "var(--text, #2c2020)",
-  },
-  cellTextToday: {
-    color: "#f5f0e6",
-    fontWeight: "700",
-  },
-  cellTextSelected: {
-    fontWeight: "700",
   },
 });

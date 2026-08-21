@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Chevron } from "./Chevron";
 
 export type PageId = "today" | "calendar" | "offices" | "settings";
 
@@ -30,8 +31,10 @@ export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
             hovered && styles.toolBtnHover,
           ]}
           onPress={onHide}
+          accessibilityLabel="Hide sidebar"
+          accessibilityRole="button"
         >
-          <Text style={styles.toolBtnText}>&lt;</Text>
+          <Chevron direction="left" size={6} />
         </Pressable>
       </View>
       <View style={styles.nav}>
@@ -80,14 +83,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "var(--border, #d2cbbf)",
+    borderColor: "var(--border-content, #b5aa9e)",
   },
   toolBtnHover: {
     backgroundColor: "var(--border, #d2cbbf)",
-  },
-  toolBtnText: {
-    fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
   },
   nav: {
     paddingBottom: 8,
