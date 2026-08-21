@@ -1,4 +1,5 @@
 import { toDays } from "./date";
+import type { FeastDays } from "./feasts";
 import { advent1, feastsForEasterYear } from "./feasts";
 import type { CalendarDate, Color, Season } from "./types";
 

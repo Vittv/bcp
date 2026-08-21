@@ -74,7 +74,7 @@ function NodeView({ node, showRubrics, showSpeakers }: NodeViewProps) {
       return (
         <View style={styles.collectBlock}>
           <Text style={styles.collectTitle}>A Collect</Text>
-          <Text style={styles.text}>{node.text}</Text>
+          <Text style={styles.text}>{node.passage.text}</Text>
         </View>
       );
   }
@@ -151,10 +151,10 @@ function nodeKey(node: ComposedNode): string {
       return `t:${node.speaker ?? ""}:${node.text}`;
     case "psalm":
       return `p:${node.citation}`;
-    case "lesson":
-      return `l:${node.citation}`;
+    case "lessons":
+      return `l:${node.lessons.map((l) => l.ref).join("|")}`;
     case "collect":
-      return `c:${node.text}`;
+      return `c:${node.passage.text}`;
   }
 }
 

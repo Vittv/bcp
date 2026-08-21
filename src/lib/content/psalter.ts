@@ -1,5 +1,5 @@
 import { psalterSchema } from "./schemas";
-import type { PsalmCitation, PsalmPassage } from "./types";
+import type { Psalm, PsalmCitation, PsalmPassage } from "./types";
 import psalterData from "./vendor/bcp/psalter.min.json";
 
 const psalms = psalterSchema.parse(psalterData);
