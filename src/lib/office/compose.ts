@@ -123,6 +123,16 @@ const HOLY_DAY_COLLECTS: Record<string, string> = {
   "all-saints": "All Saint's Day",
 };
 
+// BCP pp. 15-18: all Sundays are feasts of our Lord, and only these fixed
+// feasts take precedence of a Sunday (All Saints as a Principal Feast may
+// always be observed on its day).
+const SUNDAY_FEASTS = new Set([
+  "holy-name",
+  "presentation",
+  "transfiguration",
+  "all-saints",
+]);
+
 type ComposeContext = {
   date: CalendarDate;
   litDate: CalendarDate;
@@ -526,7 +536,7 @@ function composeSuffragesB(
   const nodes: ComposedNode[] = [];
   // Within each option menu only the first alternative (text + its response)
   // is kept; occasional collects are trimmed to the day-appropriate ones.
-  let menu: "prayers" | "mission" | "closing" = "prayers";
+  let menu: "prayers" | "mission" | "thanksgiving" | "closing" = "prayers";
   let keepGroup = true;
   let firstKept = false;
   for (const item of section.items) {
@@ -545,12 +555,29 @@ function composeSuffragesB(
         if (node) nodes.push(node);
         continue;
       }
+      if (text.startsWith("Before the close of the Office")) {
+        // "one or both of the following may be used": keep only the first
+        // collect (the General Thanksgiving) for daily use.
+        menu = "thanksgiving";
+        firstKept = false;
+        const node = convert(item, ctx.prefs);
+        if (node) nodes.push(node);
+        continue;
+      }
       if (text.startsWith("The Officiant may then conclude")) {
         menu = "closing";
         firstKept = false;
         const node = convert(item, ctx.prefs);
         if (node) nodes.push(node);
         continue;
+      }
+      if (menu === "thanksgiving") {
+        if (text.startsWith("Then may be said")) {
+          menu = "prayers"; // dismissal: end of the thanksgiving menu
+        } else if (firstKept) {
+          continue; // later optional groups (e.g. Chrysostom) are dropped
+        }
+        // else: the kept group's own heading falls through
       }
       if (text.startsWith("A Collect for ")) {
         keepGroup = keepOccasionalCollect(text, weekday(ctx.date));
@@ -559,14 +586,16 @@ function composeSuffragesB(
         continue;
       }
       if (text === "Concerning the Service") break; // reference notes, not liturgy
-      menu = "prayers";
-      keepGroup = true;
+      if (menu !== "thanksgiving") {
+        menu = "prayers";
+        keepGroup = true;
+      }
       const node = convert(item, ctx.prefs);
       if (node) nodes.push(node);
       continue;
     }
     if (item.kind === "option") continue;
-    if (menu === "mission" || menu === "closing") {
+    if (menu === "mission" || menu === "thanksgiving" || menu === "closing") {
       if (firstKept) continue;
       const node = convert(item, ctx.prefs);
       if (node) nodes.push(node);
@@ -642,8 +671,16 @@ function collectForDate(
     }
   }
   if (slot.holyDay) {
-    const title = HOLY_DAY_COLLECTS[slot.holyDay];
-    if (title) return { title, section: "holy-days" };
+    // BCP pp. 16-18: a fixed feast yields to the Sunday proper (save the
+    // feasts that outrank a Sunday), and no fixed feast is observed in
+    // Holy Week or Easter Week.
+    const sunday = slot.day.kind === "weekday" && slot.day.weekday === 0;
+    const inHolyWeek =
+      slot.week.kind === "holy-week" || slot.week.kind === "easter-week";
+    if ((!sunday || SUNDAY_FEASTS.has(slot.holyDay)) && !inHolyWeek) {
+      const title = HOLY_DAY_COLLECTS[slot.holyDay];
+      if (title) return { title, section: "holy-days" };
+    }
   }
   if (slot.week.kind === "holy-week" && slot.day.kind === "weekday") {
     return {

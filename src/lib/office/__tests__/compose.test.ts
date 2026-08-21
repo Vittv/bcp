@@ -505,3 +505,149 @@ describe("composeOffice: preferences and other offices", () => {
     ).toBe(true);
   });
 });
+
+describe("composeOffice: daily devotions", () => {
+  const date = { year: 2026, month: 8, day: 21 };
+
+  test("morning devotion composes the fixed service", () => {
+    const doc = composeOffice(date, "devotions-morning");
+    expect(doc.office).toBe("devotions-morning");
+    expect(doc.officeName).toBe("Daily Devotion: In the Morning");
+    expect(doc.rite).toBeNull();
+    // devotions are independent of the lectionary
+    expect(doc.entryTitle).toBeNull();
+    expect(nodesOf(doc, "psalm")).toHaveLength(0);
+    expect(nodesOf(doc, "lessons")).toHaveLength(0);
+    expect(hasText(doc, "Open my lips, O Lord")).toBe(true);
+    expect(hasText(doc, "Lord God, almighty and everlasting Father")).toBe(
+      true,
+    );
+  });
+
+  test("content is date-independent", () => {
+    const a = composeOffice(
+      { year: 2025, month: 12, day: 24 },
+      "devotions-noon",
+    );
+    const b = composeOffice({ year: 2027, month: 4, day: 4 }, "devotions-noon");
+    expect(a.sections).toEqual(b.sections);
+  });
+
+  test("the Noon 'or this' collect collapses to the first alternative", () => {
+    const doc = composeOffice(date, "devotions-noon");
+    expect(hasText(doc, "Blessed Savior, at this hour")).toBe(true);
+    expect(hasText(doc, "my own peace I leave with you")).toBe(false);
+  });
+
+  test("personal mode strips speaker labels from the versicles", () => {
+    const doc = composeOffice(date, "devotions-close", DEFAULT_PREFS);
+    const speakers = doc.sections
+      .flatMap((s) => s.nodes)
+      .filter((n) => n.kind === "text" && n.speaker);
+    expect(speakers).toHaveLength(0);
+
+    const shared = composeOffice(date, "devotions-close", {
+      ...DEFAULT_PREFS,
+      personalMode: false,
+    });
+    const labeled = shared.sections
+      .flatMap((s) => s.nodes)
+      .filter((n) => n.kind === "text" && n.speaker === "all");
+    expect(labeled.length).toBeGreaterThan(0);
+  });
+
+  test("each tab maps to its matching devotion", () => {
+    const docs = [
+      composeOffice(date, "devotions-morning"),
+      composeOffice(date, "devotions-noon"),
+      composeOffice(date, "devotions-evening"),
+      composeOffice(date, "devotions-close"),
+    ];
+    expect(docs.map((d) => d.officeName)).toEqual([
+      "Daily Devotion: In the Morning",
+      "Daily Devotion: At Noon",
+      "Daily Devotion: In the Early Evening",
+      "Daily Devotion: At the Close of Day",
+    ]);
+    // every devotion ends with its collect (Close of Day adds the blessing)
+    for (const doc of docs) {
+      const texts = textOf(doc);
+      expect(texts[texts.length - 1].endsWith("Amen."), doc.officeName).toBe(
+        true,
+      );
+    }
+  });
+});
+
+describe("composeOffice: precedence of Sundays and Holy Week", () => {
+  function collectTitle(date: Parameters<typeof composeOffice>[0]): string {
+    const doc = composeOffice(date, "morning-rite-two");
+    const node = doc.sections
+      .flatMap((s) => s.nodes)
+      .find(
+        (n): n is Extract<ComposedNode, { kind: "collect" }> =>
+          n.kind === "collect",
+      );
+    return node?.passage.title ?? "";
+  }
+
+  test("a saint day falling on an ordinary Sunday yields to the Proper", () => {
+    // St. Luke (Oct 18) falls on a Sunday in 2026.
+    expect(collectTitle({ year: 2026, month: 10, day: 18 })).toBe("Proper 24");
+  });
+
+  test("feasts that outrank a Sunday keep their collect", () => {
+    expect(collectTitle({ year: 2025, month: 2, day: 2 })).toBe(
+      "The Presentation",
+    );
+    expect(collectTitle({ year: 2028, month: 8, day: 6 })).toBe(
+      "The Transfiguration",
+    );
+    expect(collectTitle({ year: 2026, month: 11, day: 1 })).toBe(
+      "All Saint's Day",
+    );
+  });
+
+  test("a special day still outranks a coinciding holy day", () => {
+    // Visitation (May 31) falls on Trinity Sunday in 2026.
+    expect(collectTitle({ year: 2026, month: 5, day: 31 })).toBe(
+      "First Sunday after Pentecost:  Trinity Sunday",
+    );
+  });
+
+  test("fixed feasts are not observed in Holy Week", () => {
+    // The Annunciation (Mar 25) falls on Maundy Thursday in 2027.
+    expect(collectTitle({ year: 2027, month: 3, day: 25 })).toBe(
+      "Maundy Thursday",
+    );
+  });
+});
+
+describe("composeOffice: Suffrages B closing menus", () => {
+  const doc = composeOffice(
+    { year: 2026, month: 8, day: 21 },
+    "evening-rite-two",
+  );
+
+  function has(fragment: string): boolean {
+    return textOf(doc).some((t) => t.includes(fragment));
+  }
+
+  test("the 'one or both' menu keeps only the General Thanksgiving", () => {
+    expect(has("Father of all mercies")).toBe(true);
+    expect(has("grace at this time with one accord")).toBe(false);
+  });
+
+  test("exactly one concluding prayer is kept", () => {
+    expect(has("grace of our Lord Jesus Christ")).toBe(true);
+    expect(has("God of hope fill us")).toBe(false);
+    expect(has("working in us, can do infinitely more")).toBe(false);
+  });
+
+  test("one intercession from the mission menu is kept", () => {
+    expect(has("O God and Father of all, whom the whole heavens adore")).toBe(
+      true,
+    );
+    expect(has("Keep watch, dear Lord, with those who work")).toBe(false);
+  });
+});
