@@ -8,6 +8,23 @@ export function psalmExists(psalm: number): boolean {
   return Object.hasOwn(psalms, String(psalm));
 }
 
+// all psalm numbers, in canonical order.
+export function psalmNumbers(): number[] {
+  return Object.keys(psalms)
+    .map(Number)
+    .sort((a, b) => a - b);
+}
+
+// opening words of verse 1, for reference-list display.
+export function psalmIncipit(psalm: number): string | undefined {
+  const first = Object.entries(
+    psalms[String(psalm)]?.parts[0]?.verses ?? {},
+  ).sort(([a], [b]) => Number(a) - Number(b))[0];
+  if (!first) return undefined;
+  const text = cleanVerse(first[1]);
+  return text.length > 60 ? `${text.slice(0, 57).trimEnd()}…` : text;
+}
+
 export function psalmTitle(psalm: number): string | undefined {
   return psalms[String(psalm)]?.parts[0]?.title ?? undefined;
 }
