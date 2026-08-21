@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     backgroundColor: "var(--bg, #e0dbd0)",
     flexShrink: 0,
+    overflow: "hidden",
   },
   brand: {
     fontFamily: "sans-serif",

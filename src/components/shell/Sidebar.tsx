@@ -64,6 +64,7 @@ export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
 const styles = StyleSheet.create({
   sidebar: {
     width: 200,
+    height: "100%",
     borderRightWidth: 1,
     borderRightColor: "var(--border, #d2cbbf)",
     backgroundColor: "var(--bg, #e0dbd0)",

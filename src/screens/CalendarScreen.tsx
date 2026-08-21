@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Chevron } from "../components/shell/Chevron";
 import { useSeasonColorMap } from "../components/shell/SeasonDot";
 import { colorFor, daysInMonth, weekday } from "../lib/calendar";
 import type { CalendarDate } from "../lib/calendar/types";
+
+const noSelect = {
+  userSelect: "none" as const,
+  WebkitUserSelect: "none" as const,
+};
 
 const MONTH_NAMES = [
   "January",
@@ -29,9 +34,14 @@ function isSameDay(a: CalendarDate, b: CalendarDate): boolean {
 type CalendarScreenProps = {
   date: CalendarDate;
   onSelectDate: (date: CalendarDate) => void;
+  leading?: ReactNode;
 };
 
-export function CalendarScreen({ date, onSelectDate }: CalendarScreenProps) {
+export function CalendarScreen({
+  date,
+  onSelectDate,
+  leading,
+}: CalendarScreenProps) {
   const colorMap = useSeasonColorMap();
   const [viewMonth, setViewMonth] = useState(() => ({
     year: date.year,
@@ -66,7 +76,8 @@ export function CalendarScreen({ date, onSelectDate }: CalendarScreenProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.monthNav}>
+      <View style={[styles.monthNav, noSelect]}>
+        {leading ? <View style={styles.leading}>{leading}</View> : null}
         <Pressable
           style={({ hovered }) => [
             styles.arrowBtn,
@@ -95,7 +106,7 @@ export function CalendarScreen({ date, onSelectDate }: CalendarScreenProps) {
       </View>
 
       <View style={styles.grid}>
-        <View style={styles.headerRow}>
+        <View style={[styles.headerRow, noSelect]}>
           {DAY_LABELS.map((d, i) => (
             <View
               key={d}
@@ -166,8 +177,14 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "column",
   },
+  leading: {
+    position: "absolute",
+    left: 4,
+    flexDirection: "row",
+  },
   monthNav: {
     height: 30,
+    position: "relative",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
