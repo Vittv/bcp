@@ -14,7 +14,11 @@ import type { CalendarDate } from "../../lib/calendar/types";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
 import { CalendarScreen } from "../../screens/CalendarScreen";
-import { OfficesScreen } from "../../screens/OfficesScreen";
+import {
+  OfficesScreen,
+  ReferenceBar,
+  ReferenceProvider,
+} from "../../screens/OfficesScreen";
 import { SettingsScreen } from "../../screens/SettingsScreen";
 import { TodayScreen } from "../../screens/TodayScreen";
 import { DEVOTIONS, OFFICES, OfficeTabs } from "./OfficeTabs";
@@ -49,6 +53,7 @@ export function Shell() {
   );
   const [page, setPage] = useState<PageId>("today");
   const [scrollPct, setScrollPct] = useState(0);
+  const [reading, setReading] = useState<string | null>(null);
   const [sidebarVisible, setSidebarVisibleRaw] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebarVisible") !== "false";
@@ -81,6 +86,12 @@ export function Shell() {
 
   const handleCalendarSelect = (d: CalendarDate) => {
     setDate(d);
+    scrollToTop();
+  };
+
+  const handlePageSelect = (p: PageId) => {
+    setPage(p);
+    setReading(null);
     scrollToTop();
   };
 
@@ -143,56 +154,128 @@ export function Shell() {
 
   if (IS_WEB) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100vh",
-          backgroundColor: resolved === "dark" ? "#1b191a" : "#e0dbd0",
-          userSelect: "none",
-          WebkitUserSelect: "none",
-        }}
-      >
+      <ReferenceProvider onReadingChange={setReading}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100vh",
+            backgroundColor: resolved === "dark" ? "#1b191a" : "#e0dbd0",
+            userSelect: "none",
+            WebkitUserSelect: "none",
+          }}
+        >
+          <TopBar
+            season={season}
+            daysUntilNext={daysUntilNext}
+            nextSeason={nextSeason}
+          />
+          <div
+            style={{
+              display: "flex",
+              flex: 1,
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
+            {sidebarVisible ? (
+              <Sidebar
+                active={page}
+                onSelect={handlePageSelect}
+                onHide={() => setSidebarVisible(false)}
+              />
+            ) : (
+              <Pressable
+                style={({ hovered }) => [
+                  styles.sidebarShowBtn,
+                  hovered && styles.sidebarShowBtnHover,
+                ]}
+                onPress={() => setSidebarVisible(true)}
+                accessibilityLabel="Show sidebar"
+                accessibilityRole="button"
+              >
+                <Chevron direction="right" size={6} />
+              </Pressable>
+            )}
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              {page === "offices" ? <ReferenceBar /> : null}
+              {page === "offices" ? <ReferenceBar /> : null}
+              {page === "today" ? (
+                <OfficeTabs
+                  active={tab}
+                  onSelect={handleTabChange}
+                  showRubrics={showRubrics}
+                  onToggleRubrics={() => setShowRubrics((v) => !v)}
+                  showSpeakers={showSpeakers}
+                  onToggleSpeakers={() => setShowSpeakers((v) => !v)}
+                  devotions={devotions}
+                  onToggleDevotions={() => setDevotions(!devotions)}
+                />
+              ) : null}
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                style={{
+                  flex: 1,
+                  overflowY: page === "calendar" ? "hidden" : "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: page === "calendar" ? "stretch" : "center",
+                  userSelect: "auto",
+                  WebkitUserSelect: "auto",
+                }}
+              >
+                <div
+                  style={{
+                    width: "100%",
+                    maxWidth: page === "calendar" ? "100%" : "46rem",
+                    padding: page === "calendar" ? "0" : "32px 40px",
+                    height: page === "calendar" ? "100%" : undefined,
+                    zoom: page !== "calendar" ? String(fontScale) : undefined,
+                  }}
+                >
+                  {content}
+                </div>
+              </div>
+              <StatusBar
+                season={season}
+                seasonColor={seasonColor}
+                slot={slot}
+                officeName={document.officeName}
+                reading={page === "offices" ? reading : null}
+                scrollPct={scrollPct}
+              />
+            </div>
+          </div>
+        </div>
+      </ReferenceProvider>
+    );
+  }
+
+  return (
+    <ReferenceProvider onReadingChange={setReading}>
+      <View style={styles.shell}>
         <TopBar
           season={season}
           daysUntilNext={daysUntilNext}
           nextSeason={nextSeason}
         />
-        <div
-          style={{
-            display: "flex",
-            flex: 1,
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
+        <View style={styles.body}>
           {sidebarVisible ? (
             <Sidebar
               active={page}
-              onSelect={setPage}
+              onSelect={handlePageSelect}
               onHide={() => setSidebarVisible(false)}
             />
-          ) : (
-            <Pressable
-              style={({ hovered }) => [
-                styles.sidebarShowBtn,
-                hovered && styles.sidebarShowBtnHover,
-              ]}
-              onPress={() => setSidebarVisible(true)}
-              accessibilityLabel="Show sidebar"
-              accessibilityRole="button"
-            >
-              <Chevron direction="right" size={6} />
-            </Pressable>
-          )}
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
+          ) : null}
+          <View style={styles.mainCol}>
             {page === "today" ? (
               <OfficeTabs
                 active={tab}
@@ -205,85 +288,23 @@ export function Shell() {
                 onToggleDevotions={() => setDevotions(!devotions)}
               />
             ) : null}
-            <div
-              ref={scrollRef}
-              onScroll={handleScroll}
-              style={{
-                flex: 1,
-                overflowY: page === "calendar" ? "hidden" : "auto",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: page === "calendar" ? "stretch" : "center",
-                userSelect: "auto",
-                WebkitUserSelect: "auto",
-              }}
+            <View
+              style={[styles.content, { transform: [{ scale: fontScale }] }]}
             >
-              <div
-                style={{
-                  width: "100%",
-                  maxWidth: page === "calendar" ? "100%" : "46rem",
-                  padding: page === "calendar" ? "0" : "32px 40px",
-                  height: page === "calendar" ? "100%" : undefined,
-                  zoom: page !== "calendar" ? String(fontScale) : undefined,
-                }}
-              >
-                {content}
-              </div>
-            </div>
+              {content}
+            </View>
             <StatusBar
               season={season}
               seasonColor={seasonColor}
               slot={slot}
               officeName={document.officeName}
+              reading={page === "offices" ? reading : null}
               scrollPct={scrollPct}
             />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <View style={styles.shell}>
-      <TopBar
-        season={season}
-        daysUntilNext={daysUntilNext}
-        nextSeason={nextSeason}
-      />
-      <View style={styles.body}>
-        {sidebarVisible ? (
-          <Sidebar
-            active={page}
-            onSelect={setPage}
-            onHide={() => setSidebarVisible(false)}
-          />
-        ) : null}
-        <View style={styles.mainCol}>
-          {page === "today" ? (
-            <OfficeTabs
-              active={tab}
-              onSelect={handleTabChange}
-              showRubrics={showRubrics}
-              onToggleRubrics={() => setShowRubrics((v) => !v)}
-              showSpeakers={showSpeakers}
-              onToggleSpeakers={() => setShowSpeakers((v) => !v)}
-              devotions={devotions}
-              onToggleDevotions={() => setDevotions(!devotions)}
-            />
-          ) : null}
-          <View style={[styles.content, { transform: [{ scale: fontScale }] }]}>
-            {content}
           </View>
-          <StatusBar
-            season={season}
-            seasonColor={seasonColor}
-            slot={slot}
-            officeName={document.officeName}
-            scrollPct={scrollPct}
-          />
         </View>
       </View>
-    </View>
+    </ReferenceProvider>
   );
 }
 

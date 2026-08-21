@@ -47,6 +47,9 @@ type StatusBarProps = {
   slot: DolSlot;
   officeName: string;
   scrollPct: number;
+  // label of the reference document currently open (e.g. "Psalm 23");
+  // replaces the office name while set
+  reading?: string | null;
 };
 
 const noSelect = {
@@ -60,6 +63,7 @@ export function StatusBar({
   slot,
   officeName,
   scrollPct,
+  reading,
 }: StatusBarProps) {
   return (
     <View style={[styles.bar, noSelect]}>
@@ -80,7 +84,7 @@ export function StatusBar({
         ) : null}
       </View>
       <View style={styles.right}>
-        <Text style={styles.text}>{officeName}</Text>
+        <Text style={styles.text}>{reading ?? officeName}</Text>
         <Text style={styles.sep}>·</Text>
         <Text style={styles.pct}>{String(scrollPct).padStart(3, " ")}%</Text>
       </View>
@@ -95,6 +99,7 @@ function formatHolyDay(slug: string): string {
 const styles = StyleSheet.create({
   bar: {
     height: 24,
+    overflow: "hidden",
     borderTopWidth: 1,
     borderTopColor: "var(--border, #d2cbbf)",
     flexDirection: "row",
@@ -108,6 +113,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    flexShrink: 1,
+    minWidth: 0,
+    overflow: "hidden",
   },
   right: {
     flexDirection: "row",
