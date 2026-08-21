@@ -125,7 +125,11 @@ export type OfficeId =
   | "evening-rite-two"
   | "noonday"
   | "owe"
-  | "compline";
+  | "compline"
+  | "devotions-morning"
+  | "devotions-noon"
+  | "devotions-evening"
+  | "devotions-close";
 
 export type OfficeSpeaker = "officiant" | "people" | "all";
 

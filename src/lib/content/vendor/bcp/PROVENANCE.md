@@ -45,6 +45,15 @@ and checksum in this note.
   carry the printed wording; the 141 already-correct E-text entries are
   preserved verbatim, with the source edition's "=...=" emphasis markers
   resolved to plain text in this file.
+- daily-devotions.min.json: hand-digitized (no E-text extraction) from the
+  Wikisource scan-backed transcription of the 1979 BCP pp. 136-140
+  ("Daily Devotions for Individuals and Families"), cross-checked against
+  bcponline.org. The four short services: In the Morning, At Noon, In the
+  Early Evening, At the Close of Day. The Lord's Prayer follows the
+  Noonday/Compline convention (traditional form, no doxology). The Noon
+  "or this" alternate collect is kept in the data; the composer collapses
+  option menus to the first alternative. The printed page's "holy Spirit"
+  (lowercase h, Psalm 51 extract) is preserved verbatim.
 - offices.min.json: extracted from BCPOFFCE by
   tools/bcp-extract/extract_offices.py (verifying reconstruction, 0
   problems).
@@ -65,4 +74,5 @@ and checksum in this note.
   contemporary forms; the E-text parallel-column markers are skipped, so
   only the traditional form is captured. Office psalm texts (Noonday,
   Compline) use the RSV translation and are not compared against the BCP
-  psalter.
+  psalter. Post-extraction correction: OWE Phos hilaron line "we sing your
+  praised, O God" fixed to the printed "we sing your praises, O God".
