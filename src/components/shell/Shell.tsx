@@ -16,7 +16,7 @@ import { CalendarScreen } from "../../screens/CalendarScreen";
 import { OfficesScreen } from "../../screens/OfficesScreen";
 import { SettingsScreen } from "../../screens/SettingsScreen";
 import { TodayScreen } from "../../screens/TodayScreen";
-import { OFFICES, OfficeTabs } from "./OfficeTabs";
+import { DEVOTIONS, OFFICES, OfficeTabs } from "./OfficeTabs";
 import { StatusBar } from "./StatusBar";
 import { TopBar } from "./TopBar";
 
@@ -63,6 +63,19 @@ export function Shell() {
   };
   const [showRubrics, setShowRubrics] = useState(false);
   const [showSpeakers, setShowSpeakers] = useState(false);
+  const [devotions, setDevotionsRaw] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("devotions") === "true";
+    }
+    return false;
+  });
+
+  const setDevotions = (v: boolean) => {
+    setDevotionsRaw(v);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("devotions", String(v));
+    }
+  };
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleCalendarSelect = (d: CalendarDate) => {
@@ -76,11 +89,15 @@ export function Shell() {
     setScrollPct(0);
   };
 
-  const document = composeOffice(date, OFFICES[tab], {
-    ...DEFAULT_PREFS,
-    personalMode: false,
-    showRubrics,
-  });
+  const document = composeOffice(
+    date,
+    devotions ? DEVOTIONS[tab] : OFFICES[tab],
+    {
+      ...DEFAULT_PREFS,
+      personalMode: false,
+      showRubrics,
+    },
+  );
   const season = seasonFor(date);
   const seasonColor = colorFor(date);
   const slot = resolve(date);
@@ -103,7 +120,7 @@ export function Shell() {
       case "today":
         return (
           <TodayScreen
-            key={`${date.year}-${date.month}-${date.day}-${tab}`}
+            key={`${date.year}-${date.month}-${date.day}-${tab}-${devotions ? "dev" : "full"}`}
             date={date}
             tab={tab}
             onTabChange={handleTabChange}
@@ -199,6 +216,8 @@ export function Shell() {
                 onToggleRubrics={() => setShowRubrics((v) => !v)}
                 showSpeakers={showSpeakers}
                 onToggleSpeakers={() => setShowSpeakers((v) => !v)}
+                devotions={devotions}
+                onToggleDevotions={() => setDevotions(!devotions)}
               />
             ) : null}
             <div
@@ -263,6 +282,8 @@ export function Shell() {
               onToggleRubrics={() => setShowRubrics((v) => !v)}
               showSpeakers={showSpeakers}
               onToggleSpeakers={() => setShowSpeakers((v) => !v)}
+              devotions={devotions}
+              onToggleDevotions={() => setDevotions(!devotions)}
             />
           ) : null}
           <View style={[styles.content, { transform: [{ scale: fontScale }] }]}>

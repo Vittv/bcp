@@ -10,6 +10,14 @@ export const OFFICES: Record<TabId, OfficeId> = {
   compline: "compline",
 };
 
+// daily devotions (BCP pp. 136-140) replace each office in devotions mode.
+export const DEVOTIONS: Record<TabId, OfficeId> = {
+  morning: "devotions-morning",
+  noonday: "devotions-noon",
+  evening: "devotions-evening",
+  compline: "devotions-close",
+};
+
 const TABS: { id: TabId; label: string }[] = [
   { id: "morning", label: "Morning" },
   { id: "noonday", label: "Noonday" },
@@ -24,6 +32,8 @@ type OfficeTabsProps = {
   onToggleRubrics: () => void;
   showSpeakers: boolean;
   onToggleSpeakers: () => void;
+  devotions: boolean;
+  onToggleDevotions: () => void;
 };
 
 export function OfficeTabs({
@@ -33,6 +43,8 @@ export function OfficeTabs({
   onToggleRubrics,
   showSpeakers,
   onToggleSpeakers,
+  devotions,
+  onToggleDevotions,
 }: OfficeTabsProps) {
   return (
     <View style={styles.bar}>
@@ -81,6 +93,18 @@ export function OfficeTabs({
             style={[styles.toggleText, showSpeakers && styles.toggleTextOn]}
           >
             Speakers
+          </Text>
+        </Pressable>
+        <Pressable
+          style={({ hovered }) => [
+            styles.toggle,
+            devotions && styles.toggleOn,
+            hovered && styles.tabHover,
+          ]}
+          onPress={onToggleDevotions}
+        >
+          <Text style={[styles.toggleText, devotions && styles.toggleTextOn]}>
+            Devotions
           </Text>
         </Pressable>
       </View>
