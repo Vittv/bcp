@@ -1,5 +1,17 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { ReactNode } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import type { OfficeId } from "../../lib/content/types";
+
+const noSelect = {
+  userSelect: "none" as const,
+  WebkitUserSelect: "none" as const,
+};
 
 type TabId = "morning" | "noonday" | "evening" | "compline";
 
@@ -18,14 +30,15 @@ export const DEVOTIONS: Record<TabId, OfficeId> = {
   compline: "devotions-close",
 };
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: "morning", label: "Morning" },
-  { id: "noonday", label: "Noonday" },
-  { id: "evening", label: "Evening" },
-  { id: "compline", label: "Compline" },
+const TABS: { id: TabId; label: string; short: string }[] = [
+  { id: "morning", label: "Morning", short: "Morn" },
+  { id: "noonday", label: "Noonday", short: "Noon" },
+  { id: "evening", label: "Evening", short: "Eve" },
+  { id: "compline", label: "Compline", short: "Comp" },
 ];
 
 type OfficeTabsProps = {
+  leading?: ReactNode;
   active: TabId;
   onSelect: (id: TabId) => void;
   showRubrics: boolean;
@@ -37,6 +50,7 @@ type OfficeTabsProps = {
 };
 
 export function OfficeTabs({
+  leading,
   active,
   onSelect,
   showRubrics,
@@ -46,9 +60,14 @@ export function OfficeTabs({
   devotions,
   onToggleDevotions,
 }: OfficeTabsProps) {
+  const { width } = useWindowDimensions();
+  // abbreviated names kick in before phone widths; tighter chrome later
+  const shortLabels = width < 640;
+  const compact = width < 500;
   return (
-    <View style={styles.bar}>
-      <View style={styles.tabsLeft}>
+    <View style={[styles.bar, noSelect, compact && styles.barCompact]}>
+      <View style={[styles.tabsLeft, compact && styles.groupCompact]}>
+        {leading}
         {TABS.map((t) => {
           const isActive = active === t.id;
           return (
@@ -57,21 +76,23 @@ export function OfficeTabs({
               onPress={() => onSelect(t.id)}
               style={({ hovered }) => [
                 styles.tab,
+                compact && styles.itemCompact,
                 isActive && styles.tabActive,
                 hovered && !isActive && styles.tabHover,
               ]}
             >
               <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
-                {t.label}
+                {shortLabels ? t.short : t.label}
               </Text>
             </Pressable>
           );
         })}
       </View>
-      <View style={styles.togglesRight}>
+      <View style={[styles.togglesRight, compact && styles.groupCompact]}>
         <Pressable
           style={({ hovered }) => [
             styles.toggle,
+            compact && styles.itemCompact,
             showRubrics && styles.toggleOn,
             hovered && styles.tabHover,
           ]}
@@ -84,6 +105,7 @@ export function OfficeTabs({
         <Pressable
           style={({ hovered }) => [
             styles.toggle,
+            compact && styles.itemCompact,
             showSpeakers && styles.toggleOn,
             hovered && styles.tabHover,
           ]}
@@ -98,6 +120,7 @@ export function OfficeTabs({
         <Pressable
           style={({ hovered }) => [
             styles.toggle,
+            compact && styles.itemCompact,
             devotions && styles.toggleOn,
             hovered && styles.tabHover,
           ]}
@@ -172,5 +195,14 @@ const styles = StyleSheet.create({
   toggleTextOn: {
     color: "var(--accent, #7a3040)",
     fontWeight: "700",
+  },
+  barCompact: {
+    paddingHorizontal: 6,
+  },
+  groupCompact: {
+    gap: 2,
+  },
+  itemCompact: {
+    paddingHorizontal: 5,
   },
 });

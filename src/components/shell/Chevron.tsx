@@ -4,7 +4,7 @@ import { StyleSheet, View } from "react-native";
 export function Chevron({
   direction,
   size = 8,
-  stroke = 2,
+  stroke = 1.5,
 }: {
   direction: "left" | "right";
   size?: number;
@@ -20,6 +20,7 @@ export function Chevron({
           height: size,
           borderLeftWidth: stroke,
           borderBottomWidth: stroke,
+          borderRadius: stroke,
           transform: [
             { translateX: direction === "left" ? bias : -bias },
             { rotate: direction === "left" ? "45deg" : "-135deg" },

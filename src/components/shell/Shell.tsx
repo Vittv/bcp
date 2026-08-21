@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Chevron } from "../../components/shell/Chevron";
 import type { PageId } from "../../components/shell/Sidebar";
@@ -52,8 +52,9 @@ export function Shell() {
     officeForHour(new Date().getHours()),
   );
   const [page, setPage] = useState<PageId>("today");
-  const [scrollPct, setScrollPct] = useState(0);
   const [reading, setReading] = useState<string | null>(null);
+  const [scrollPct, setScrollPct] = useState(0);
+
   const [sidebarVisible, setSidebarVisibleRaw] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebarVisible") !== "false";
@@ -61,12 +62,28 @@ export function Shell() {
     return true;
   });
 
-  const setSidebarVisible = (v: boolean) => {
+  const setSidebarVisible = useCallback((v: boolean) => {
     setSidebarVisibleRaw(v);
     if (typeof window !== "undefined") {
       localStorage.setItem("sidebarVisible", String(v));
     }
-  };
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(() => {
+    if (Platform.OS !== "web") return true;
+    return window.matchMedia("(max-width: 768px)").matches;
+  });
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const mq = window.matchMedia("(max-width: 768px)");
+    const onChange = (e: MediaQueryListEvent) => {
+      setIsMobile(e.matches);
+      if (e.matches) setSidebarVisible(false);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [setSidebarVisible]);
   const [showRubrics, setShowRubrics] = useState(false);
   const [showSpeakers, setShowSpeakers] = useState(false);
   const [devotions, setDevotionsRaw] = useState(() => {
@@ -92,12 +109,23 @@ export function Shell() {
   const handlePageSelect = (p: PageId) => {
     setPage(p);
     setReading(null);
+    if (isMobile) setSidebarVisible(false);
     scrollToTop();
   };
 
+  // park keyboard focus on the scroller so native arrow/space
+  // navigation works from first load without a click
+  useEffect(() => {
+    if (!IS_WEB) return;
+    scrollRef.current?.focus({ preventScroll: true });
+  }, []);
+
   const scrollToTop = () => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = 0;
+    if (el) {
+      el.scrollTop = 0;
+      el.focus({ preventScroll: true });
+    }
     setScrollPct(0);
   };
 
@@ -115,17 +143,57 @@ export function Shell() {
   const slot = resolve(date);
   const { days: daysUntilNext, label: nextSeason } = daysUntilNextSeason(date);
 
+  const scrollRafRef = useRef<number | null>(null);
   const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const max = el.scrollHeight - el.clientHeight;
-    setScrollPct(max > 0 ? Math.round((el.scrollTop / max) * 100) : 0);
+    if (scrollRafRef.current !== null) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      const el = scrollRef.current;
+      if (!el) return;
+      const max = el.scrollHeight - el.clientHeight;
+      setScrollPct(max > 0 ? Math.round((el.scrollTop / max) * 100) : 0);
+    });
   }, []);
 
   const handleTabChange = (t: TabId) => {
     setTab(t);
     scrollToTop();
   };
+
+  const sidebarShowButton = !sidebarVisible ? (
+    <Pressable
+      style={({ hovered }) => [
+        styles.auxShowBtn,
+        hovered && styles.auxShowBtnHover,
+      ]}
+      onPress={() => setSidebarVisible(true)}
+      accessibilityLabel="Show sidebar"
+      accessibilityRole="button"
+    >
+      <Chevron direction="right" size={7} />
+    </Pressable>
+  ) : null;
+
+  // every page gets the auxiliary 30px row under the TopBar: the
+  // page's own bar where one exists, otherwise a bare strip
+  const auxRow =
+    page === "offices" ? (
+      <ReferenceBar leading={sidebarShowButton} />
+    ) : page === "today" ? (
+      <OfficeTabs
+        leading={sidebarShowButton}
+        active={tab}
+        onSelect={handleTabChange}
+        showRubrics={showRubrics}
+        onToggleRubrics={() => setShowRubrics((v) => !v)}
+        showSpeakers={showSpeakers}
+        onToggleSpeakers={() => setShowSpeakers((v) => !v)}
+        devotions={devotions}
+        onToggleDevotions={() => setDevotions(!devotions)}
+      />
+    ) : page === "settings" ? (
+      <View style={styles.auxStrip}>{sidebarShowButton}</View>
+    ) : null;
 
   const content = (() => {
     switch (page) {
@@ -143,7 +211,11 @@ export function Shell() {
         );
       case "calendar":
         return (
-          <CalendarScreen date={date} onSelectDate={handleCalendarSelect} />
+          <CalendarScreen
+            date={date}
+            onSelectDate={handleCalendarSelect}
+            leading={sidebarShowButton}
+          />
         );
       case "offices":
         return <OfficesScreen />;
@@ -160,9 +232,10 @@ export function Shell() {
             display: "flex",
             flexDirection: "column",
             height: "100vh",
+            width: "100%",
+            boxSizing: "border-box",
+            overflow: "hidden",
             backgroundColor: resolved === "dark" ? "#1b191a" : "#e0dbd0",
-            userSelect: "none",
-            WebkitUserSelect: "none",
           }}
         >
           <TopBar
@@ -174,69 +247,63 @@ export function Shell() {
             style={{
               display: "flex",
               flex: 1,
+              boxSizing: "border-box",
               overflow: "hidden",
               position: "relative",
             }}
           >
             {sidebarVisible ? (
-              <Sidebar
-                active={page}
-                onSelect={handlePageSelect}
-                onHide={() => setSidebarVisible(false)}
-              />
-            ) : (
-              <Pressable
-                style={({ hovered }) => [
-                  styles.sidebarShowBtn,
-                  hovered && styles.sidebarShowBtnHover,
-                ]}
-                onPress={() => setSidebarVisible(true)}
-                accessibilityLabel="Show sidebar"
-                accessibilityRole="button"
-              >
-                <Chevron direction="right" size={6} />
-              </Pressable>
-            )}
+              <div style={isMobile ? styles.sidebarOverlay : undefined}>
+                <Sidebar
+                  active={page}
+                  onSelect={handlePageSelect}
+                  onHide={() => setSidebarVisible(false)}
+                />
+              </div>
+            ) : null}
             <div
               style={{
                 flex: 1,
                 display: "flex",
                 flexDirection: "column",
+                boxSizing: "border-box",
                 overflow: "hidden",
               }}
             >
-              {page === "offices" ? <ReferenceBar /> : null}
-              {page === "offices" ? <ReferenceBar /> : null}
-              {page === "today" ? (
-                <OfficeTabs
-                  active={tab}
-                  onSelect={handleTabChange}
-                  showRubrics={showRubrics}
-                  onToggleRubrics={() => setShowRubrics((v) => !v)}
-                  showSpeakers={showSpeakers}
-                  onToggleSpeakers={() => setShowSpeakers((v) => !v)}
-                  devotions={devotions}
-                  onToggleDevotions={() => setDevotions(!devotions)}
-                />
-              ) : null}
+              {auxRow}
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
+                /* biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be keyboard-focusable for native arrow scrolling */
+                tabIndex={0}
                 style={{
                   flex: 1,
+                  boxSizing: "border-box",
+                  outline: "none",
+                  overflowX: "hidden",
                   overflowY: page === "calendar" ? "hidden" : "auto",
                   display: "flex",
                   flexDirection: "column",
                   alignItems: page === "calendar" ? "stretch" : "center",
-                  userSelect: "auto",
-                  WebkitUserSelect: "auto",
                 }}
               >
                 <div
                   style={{
-                    width: "100%",
-                    maxWidth: page === "calendar" ? "100%" : "46rem",
-                    padding: page === "calendar" ? "0" : "32px 40px",
+                    // raw divs are content-box by default; without
+                    // this the 100% width ignores padding and bleeds
+                    boxSizing: "border-box",
+                    // zoom scales the laid-out box, so pre-divide the
+                    // width to keep the rendered size at exactly 100%;
+                    // clamp to <=100% so scales under 1 can't overflow
+                    width: `${Math.min(100, 100 / fontScale)}%`,
+                    maxWidth:
+                      page === "calendar"
+                        ? "100%"
+                        : `${(46 / fontScale).toFixed(4)}rem`,
+                    padding:
+                      page === "calendar"
+                        ? "0"
+                        : "clamp(1rem, 4vw, 32px) clamp(1rem, 5vw, 40px)",
                     height: page === "calendar" ? "100%" : undefined,
                     zoom: page !== "calendar" ? String(fontScale) : undefined,
                   }}
@@ -249,8 +316,8 @@ export function Shell() {
                 seasonColor={seasonColor}
                 slot={slot}
                 officeName={document.officeName}
-                reading={page === "offices" ? reading : null}
                 scrollPct={scrollPct}
+                reading={page === "offices" ? reading : null}
               />
             </div>
           </div>
@@ -269,25 +336,16 @@ export function Shell() {
         />
         <View style={styles.body}>
           {sidebarVisible ? (
-            <Sidebar
-              active={page}
-              onSelect={handlePageSelect}
-              onHide={() => setSidebarVisible(false)}
-            />
+            <View style={isMobile ? styles.sidebarOverlay : undefined}>
+              <Sidebar
+                active={page}
+                onSelect={handlePageSelect}
+                onHide={() => setSidebarVisible(false)}
+              />
+            </View>
           ) : null}
           <View style={styles.mainCol}>
-            {page === "today" ? (
-              <OfficeTabs
-                active={tab}
-                onSelect={handleTabChange}
-                showRubrics={showRubrics}
-                onToggleRubrics={() => setShowRubrics((v) => !v)}
-                showSpeakers={showSpeakers}
-                onToggleSpeakers={() => setShowSpeakers((v) => !v)}
-                devotions={devotions}
-                onToggleDevotions={() => setDevotions(!devotions)}
-              />
-            ) : null}
+            {auxRow}
             <View
               style={[styles.content, { transform: [{ scale: fontScale }] }]}
             >
@@ -298,8 +356,8 @@ export function Shell() {
               seasonColor={seasonColor}
               slot={slot}
               officeName={document.officeName}
-              reading={page === "offices" ? reading : null}
               scrollPct={scrollPct}
+              reading={page === "offices" ? reading : null}
             />
           </View>
         </View>
@@ -315,30 +373,46 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     flexDirection: "row",
+    position: "relative",
   },
   mainCol: {
     flex: 1,
+  },
+  auxStrip: {
+    height: 30,
+    userSelect: "none",
+    flexShrink: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--bg, #e0dbd0)",
+  },
+  auxShowBtn: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "var(--bg, #e0dbd0)",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "var(--border-content, #b5aa9e)",
+  },
+  auxShowBtnHover: {
+    backgroundColor: "var(--border, #d2cbbf)",
+  },
+  sidebarOverlay: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: 30,
   },
   content: {
     flex: 1,
     maxWidth: 640,
     alignSelf: "center",
     padding: 24,
-  },
-  sidebarShowBtn: {
-    position: "absolute",
-    left: 6,
-    top: 80,
-    width: 24,
-    height: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
-    zIndex: 10,
-  },
-  sidebarShowBtnHover: {
-    backgroundColor: "var(--border, #d2cbbf)",
   },
 });
