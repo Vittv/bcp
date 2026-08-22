@@ -57,6 +57,18 @@ export function collectPassage(
   };
 }
 
+// the same collect in the other rite; occasions pair 1:1 by title
+// across rites, so a missing counterpart means a bogus reference.
+export function counterpartCollect(
+  rite: CollectRite,
+  section: CollectSection,
+  title: string,
+): CollectPassage | null {
+  const other: CollectRite =
+    rite === "traditional" ? "contemporary" : "traditional";
+  return collectPassage(other, section, title) ?? null;
+}
+
 // all collects of a rite and section, in printed order.
 export function collectsBySection(
   rite: CollectRite,
