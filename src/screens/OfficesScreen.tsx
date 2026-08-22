@@ -277,11 +277,13 @@ function PsalmDetail({ psalm }: { psalm: number }) {
   const verses = passage?.verses.length ?? 0;
   return (
     <ScrollView style={styles.list}>
-      <Text style={styles.detailTitle}>Psalm {psalm}</Text>
-      <Text style={styles.detailSubtitle}>
-        {verses} verse{verses === 1 ? "" : "s"}
-      </Text>
-      {passage ? <PsalmText passage={passage} /> : null}
+      <View style={styles.detailPage}>
+        <Text style={styles.detailTitle}>Psalm {psalm}</Text>
+        <Text style={styles.detailSubtitle}>
+          {verses} verse{verses === 1 ? "" : "s"}
+        </Text>
+        {passage ? <PsalmText passage={passage} /> : null}
+      </View>
     </ScrollView>
   );
 }
@@ -352,7 +354,7 @@ function OfficeList({ onSelect }: { onSelect: (id: RefOfficeId) => void }) {
               <View
                 style={[styles.rowChevron, hovered && styles.rowChevronShown]}
               >
-                <Chevron direction="right" size={5} />
+                <Chevron direction="right" size={6} />
               </View>
             </View>
           )}
@@ -374,11 +376,13 @@ function OfficeDetail({ officeId }: { officeId: RefOfficeId }) {
   );
   return (
     <ScrollView style={styles.list}>
-      <Text style={styles.detailTitle}>{document.officeName}</Text>
-      <Text style={styles.detailSubtitle}>
-        as appointed for {dayLabel(document.date)}
-      </Text>
-      <OfficeView document={document} showRubrics showSpeakers />
+      <View style={styles.detailPage}>
+        <Text style={styles.detailTitle}>{document.officeName}</Text>
+        <Text style={styles.detailSubtitle}>
+          as appointed for {dayLabel(document.date)}
+        </Text>
+        <OfficeView document={document} showRubrics showSpeakers />
+      </View>
     </ScrollView>
   );
 }
@@ -393,7 +397,7 @@ const styles = StyleSheet.create({
     minHeight: 300,
   },
   bar: {
-    height: 30,
+    height: 34,
     borderBottomWidth: 1,
     borderBottomColor: "var(--border, #d2cbbf)",
     flexDirection: "row",
@@ -414,16 +418,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   search: {
-    maxWidth: 240,
-    minWidth: 120,
+    maxWidth: 300,
+    minWidth: 140,
     flexGrow: 1,
     borderWidth: 1,
     borderColor: "var(--border-content, #b5aa9e)",
     borderRadius: 4,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     fontFamily: SANS,
-    fontSize: 11,
+    fontSize: 12,
     color: "var(--text, #2c2020)",
   },
   backBtn: {
@@ -431,18 +435,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 4,
     marginLeft: 8,
   },
   backText: {
     fontFamily: SANS,
-    fontSize: 11,
+    fontSize: 12,
     color: "var(--text-secondary, #7a6e64)",
   },
   tab: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 4,
   },
   tabActive: {
@@ -453,7 +457,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontFamily: SANS,
-    fontSize: 11,
+    fontSize: 12,
     color: "var(--text-secondary, #7a6e64)",
   },
   tabTextActive: {
@@ -475,14 +479,14 @@ const styles = StyleSheet.create({
   rowInner: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 7,
-    paddingHorizontal: 10,
+    gap: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
   },
   rowMeta: {
     marginLeft: "auto",
     fontFamily: SANS,
-    fontSize: 11,
+    fontSize: 12,
     color: "var(--text-secondary, #7a6e64)",
     fontVariant: ["tabular-nums"],
   },
@@ -493,78 +497,88 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   psalmNumber: {
-    width: 34,
+    width: 52,
     textAlign: "right",
     fontFamily: SANS,
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "700",
     color: "var(--accent, #7a3040)",
     fontVariant: ["tabular-nums"],
   },
   incipit: {
     fontFamily: SERIF,
-    fontSize: 14,
+    fontSize: 18,
     color: "var(--text, #2c2020)",
     flex: 1,
   },
   empty: {
     fontFamily: SANS,
-    fontSize: 13,
+    fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
-    paddingVertical: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+  },
+  // detail views keep a readable measure but sit hard left, unlike the
+  // centered document column used by the Today page
+  detailPage: {
+    width: "100%",
+    maxWidth: 928,
+    paddingHorizontal: 40,
+    paddingTop: 28,
+    paddingBottom: 64,
   },
   detailTitle: {
     fontFamily: SERIF,
-    fontSize: 26,
+    fontSize: 30,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
     marginBottom: 4,
   },
   detailSubtitle: {
     fontFamily: SANS,
-    fontSize: 12,
+    fontSize: 13,
     color: "var(--text-secondary, #7a6e64)",
-    marginBottom: 18,
+    marginBottom: 22,
   },
   collectGroup: {
-    marginBottom: 22,
+    marginBottom: 28,
   },
   groupHeading: {
     fontFamily: SANS,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     textTransform: "uppercase",
     color: "var(--text-secondary, #7a6e64)",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   groupRule: {
     borderTopWidth: 1,
     borderTopColor: "var(--border-faint, rgba(127,127,127,0.14))",
-    paddingTop: 10,
+    paddingTop: 12,
   },
   collectCard: {
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: "var(--border-faint, rgba(127,127,127,0.14))",
   },
   collectTitle: {
     fontFamily: SANS,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
     color: "var(--accent, #7a3040)",
-    marginBottom: 3,
+    marginBottom: 4,
   },
   collectBody: {
     fontFamily: SERIF,
-    fontSize: 15,
-    lineHeight: 23,
+    fontSize: 17,
+    lineHeight: 27,
     color: "var(--text, #2c2020)",
   },
   officeRowName: {
     fontFamily: SERIF,
-    fontSize: 15,
+    fontSize: 19,
     color: "var(--text, #2c2020)",
     flex: 1,
   },

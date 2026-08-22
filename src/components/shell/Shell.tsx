@@ -284,7 +284,10 @@ export function Shell() {
                   overflowY: page === "calendar" ? "hidden" : "auto",
                   display: "flex",
                   flexDirection: "column",
-                  alignItems: page === "calendar" ? "stretch" : "center",
+                  alignItems:
+                    page === "calendar" || page === "offices"
+                      ? "stretch"
+                      : "center",
                 }}
               >
                 <div
@@ -297,13 +300,13 @@ export function Shell() {
                     // clamp to <=100% so scales under 1 can't overflow
                     width: `${Math.min(100, 100 / fontScale)}%`,
                     maxWidth:
-                      page === "calendar"
-                        ? "100%"
-                        : `${(46 / fontScale).toFixed(4)}rem`,
+                      page === "today" || page === "settings"
+                        ? `${(46 / fontScale).toFixed(4)}rem`
+                        : "100%",
                     padding:
-                      page === "calendar"
-                        ? "0"
-                        : "clamp(1rem, 4vw, 32px) clamp(1rem, 5vw, 40px)",
+                      page === "today" || page === "settings"
+                        ? "clamp(1rem, 4vw, 32px) clamp(1rem, 5vw, 40px)"
+                        : "0",
                     height: page === "calendar" ? "100%" : undefined,
                     zoom: page !== "calendar" ? String(fontScale) : undefined,
                   }}
@@ -347,7 +350,11 @@ export function Shell() {
           <View style={styles.mainCol}>
             {auxRow}
             <View
-              style={[styles.content, { transform: [{ scale: fontScale }] }]}
+              style={[
+                styles.content,
+                page === "offices" && styles.contentWide,
+                { transform: [{ scale: fontScale }] },
+              ]}
             >
               {content}
             </View>
@@ -414,5 +421,10 @@ const styles = StyleSheet.create({
     maxWidth: 640,
     alignSelf: "center",
     padding: 24,
+  },
+  contentWide: {
+    maxWidth: "100%",
+    alignSelf: "stretch",
+    padding: 0,
   },
 });
