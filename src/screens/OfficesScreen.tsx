@@ -4,9 +4,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,9 +20,17 @@ import { OfficeView } from "../components/office/OfficeView";
 import { PsalmText } from "../components/office/PsalmText";
 import { Chevron } from "../components/shell/Chevron";
 import type { CalendarDate } from "../lib/calendar/types";
-import { collectText } from "../lib/content/collects";
+import {
+  collectPassage,
+  collectText,
+  counterpartCollect,
+} from "../lib/content/collects";
 import { psalmPassage } from "../lib/content/psalter";
-import type { CollectRite, OfficeId } from "../lib/content/types";
+import type {
+  CollectRite,
+  CollectSection,
+  OfficeId,
+} from "../lib/content/types";
 import { composeOffice, dayLabel } from "../lib/office";
 import { DEFAULT_PREFS } from "../lib/office/types";
 import { searchCollects, searchPsalms } from "../lib/reference/search";
@@ -41,6 +51,30 @@ function today(): CalendarDate {
 const noSelect = {
   userSelect: "none" as const,
   WebkitUserSelect: "none" as const,
+};
+
+// split-layout pane styles: plain web CSS, since the panes are raw
+// focusable scrollers rather than RN views
+const SPLIT_STYLE: React.CSSProperties = {
+  display: "flex",
+  flex: 1,
+  height: "100%",
+  minHeight: 0,
+};
+const LIST_PANE_STYLE: React.CSSProperties = {
+  boxSizing: "border-box",
+  outline: "none",
+  width: 340,
+  flexShrink: 0,
+  overflowY: "auto",
+  borderRight: "1px solid var(--border-faint, rgba(127,127,127,0.14))",
+};
+const DETAIL_PANE_STYLE: React.CSSProperties = {
+  boxSizing: "border-box",
+  outline: "none",
+  flex: 1,
+  minWidth: 0,
+  overflowY: "auto",
 };
 
 type RefTab = "psalms" | "collects" | "offices";
@@ -74,6 +108,14 @@ const OFFICE_NAMES: Record<RefOfficeId, string> = {
 // are exactly the RefOfficeId union.
 const OFFICE_IDS = Object.keys(OFFICE_NAMES) as RefOfficeId[];
 
+// a collect picked in the index; its cross-rite counterpart renders
+// beside it in the detail pane
+type CollectSel = {
+  rite: CollectRite;
+  section: CollectSection;
+  title: string;
+};
+
 type ReferenceState = {
   tab: RefTab;
   setTab: (t: RefTab) => void;
@@ -83,6 +125,8 @@ type ReferenceState = {
   setOpenPsalm: (n: number | null) => void;
   openOffice: RefOfficeId | null;
   setOpenOffice: (id: RefOfficeId | null) => void;
+  selectedCollect: CollectSel | null;
+  setSelectedCollect: (c: CollectSel | null) => void;
 };
 
 const ReferenceContext = createContext<ReferenceState | null>(null);
@@ -108,13 +152,18 @@ export function ReferenceProvider({
   const [query, setQuery] = useState("");
   const [openPsalm, setOpenPsalm] = useState<number | null>(null);
   const [openOffice, setOpenOffice] = useState<RefOfficeId | null>(null);
+  const [selectedCollect, setSelectedCollect] = useState<CollectSel | null>(
+    null,
+  );
 
   const readingLabel =
     openPsalm !== null
       ? `Psalm ${openPsalm}`
       : openOffice !== null
         ? OFFICE_NAMES[openOffice]
-        : null;
+        : selectedCollect !== null
+          ? `${selectedCollect.title} · ${selectedCollect.rite === "traditional" ? "Rite I" : "Rite II"}`
+          : null;
 
   useEffect(() => {
     onReadingChange(readingLabel);
@@ -129,6 +178,8 @@ export function ReferenceProvider({
     setOpenPsalm,
     openOffice,
     setOpenOffice,
+    selectedCollect,
+    setSelectedCollect,
   };
 
   return (
@@ -138,29 +189,133 @@ export function ReferenceProvider({
   );
 }
 
-export function OfficesScreen() {
-  const { tab, query, openPsalm, openOffice, setOpenPsalm, setOpenOffice } =
-    useReference();
+const IS_WEB = Platform.OS === "web";
 
+export function OfficesScreen({ isMobile }: { isMobile: boolean }) {
+  if (isMobile) return <MobileOffices />;
+  return <SplitOffices />;
+}
+
+// phones: the detail replaces the index, exactly one column at a time
+function MobileOffices() {
+  const {
+    tab,
+    query,
+    openPsalm,
+    openOffice,
+    selectedCollect,
+    setOpenPsalm,
+    setOpenOffice,
+  } = useReference();
   return (
     <View style={styles.container}>
       {openPsalm !== null ? (
-        <PsalmDetail psalm={openPsalm} />
+        <DetailPage>
+          <PsalmDetailBody psalm={openPsalm} />
+        </DetailPage>
       ) : openOffice !== null ? (
-        <OfficeDetail officeId={openOffice} />
+        <DetailPage>
+          <OfficeDetailBody officeId={openOffice} />
+        </DetailPage>
+      ) : selectedCollect !== null ? (
+        <DetailPage>
+          <CollectCompare sel={selectedCollect} />
+        </DetailPage>
       ) : tab === "psalms" ? (
-        <PsalmList query={query} onSelect={setOpenPsalm} />
+        <PsalmIndex query={query} selected={null} onSelect={setOpenPsalm} />
       ) : tab === "collects" ? (
         <CollectList query={query} />
       ) : (
-        <OfficeList onSelect={setOpenOffice} />
+        <OfficeIndex selected={null} onSelect={setOpenOffice} />
       )}
     </View>
   );
 }
 
-// the 30px reference bar, rendered by Shell above the content column.
-export function ReferenceBar({ leading }: { leading?: ReactNode }) {
+// desktop: persistent index beside a detail pane; the panes scroll
+// independently and take keyboard focus as selection moves
+function SplitOffices() {
+  const {
+    tab,
+    query,
+    openPsalm,
+    openOffice,
+    selectedCollect,
+    setOpenPsalm,
+    setOpenOffice,
+    setSelectedCollect,
+  } = useReference();
+
+  const listRef = useRef<HTMLDivElement>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!IS_WEB) return;
+    listRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  const selectionKey = `${tab}-${openPsalm ?? ""}-${openOffice ?? ""}-${selectedCollect?.title ?? ""}`;
+  useEffect(() => {
+    if (!IS_WEB) return;
+    const busy =
+      openPsalm !== null || openOffice !== null || selectedCollect !== null;
+    (busy ? detailRef.current : listRef.current)?.focus({
+      preventScroll: true,
+    });
+  }, [openPsalm, openOffice, selectedCollect]);
+
+  const list =
+    tab === "psalms" ? (
+      <PsalmIndex
+        query={query}
+        selected={openPsalm}
+        onSelect={(n) => setOpenPsalm(openPsalm === n ? null : n)}
+      />
+    ) : tab === "collects" ? (
+      <CollectIndex selected={selectedCollect} onSelect={setSelectedCollect} />
+    ) : (
+      <OfficeIndex
+        selected={openOffice}
+        onSelect={(id) => setOpenOffice(openOffice === id ? null : id)}
+      />
+    );
+
+  const detail =
+    openPsalm !== null ? (
+      <PsalmDetailBody psalm={openPsalm} key={`p${openPsalm}`} />
+    ) : openOffice !== null ? (
+      <OfficeDetailBody officeId={openOffice} key={`o${openOffice}`} />
+    ) : selectedCollect !== null ? (
+      <CollectCompare sel={selectedCollect} key={selectionKey} />
+    ) : (
+      <PaneHint tab={tab} />
+    );
+
+  // biome-ignore-start lint/a11y/noNoninteractiveTabindex: each pane is a
+  // scrollable region and must be focusable for native arrow scrolling
+  return (
+    <div style={SPLIT_STYLE}>
+      <div ref={listRef} tabIndex={0} style={LIST_PANE_STYLE}>
+        {list}
+      </div>
+      <div ref={detailRef} tabIndex={0} style={DETAIL_PANE_STYLE}>
+        <View style={styles.detailPage}>{detail}</View>
+      </div>
+    </div>
+  );
+  // biome-ignore-end lint/a11y/noNoninteractiveTabindex: see above
+}
+
+// the reference bar, rendered by Shell above the content area. the
+// back button only exists on mobile, where the detail replaces the
+// index instead of sitting beside it.
+export function ReferenceBar({
+  leading,
+  isMobile,
+}: {
+  leading?: ReactNode;
+  isMobile: boolean;
+}) {
   const ref = useContext(ReferenceContext);
   if (!ref) return null;
   const {
@@ -172,8 +327,10 @@ export function ReferenceBar({ leading }: { leading?: ReactNode }) {
     setOpenPsalm,
     openOffice,
     setOpenOffice,
+    setSelectedCollect,
   } = ref;
-  const detailOpen = openPsalm !== null || openOffice !== null;
+  const detailOpen =
+    openPsalm !== null || openOffice !== null || ref.selectedCollect !== null;
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
@@ -191,6 +348,7 @@ export function ReferenceBar({ leading }: { leading?: ReactNode }) {
               setQuery("");
               setOpenPsalm(null);
               setOpenOffice(null);
+              setSelectedCollect(null);
             }}
           >
             <Text
@@ -200,7 +358,7 @@ export function ReferenceBar({ leading }: { leading?: ReactNode }) {
             </Text>
           </Pressable>
         ))}
-        {detailOpen ? (
+        {isMobile && detailOpen ? (
           <Pressable
             style={({ hovered }) => [
               styles.backBtn,
@@ -209,6 +367,7 @@ export function ReferenceBar({ leading }: { leading?: ReactNode }) {
             onPress={() => {
               setOpenPsalm(null);
               setOpenOffice(null);
+              setSelectedCollect(null);
             }}
             accessibilityLabel="Back to list"
             accessibilityRole="button"
@@ -238,11 +397,14 @@ export function ReferenceBar({ leading }: { leading?: ReactNode }) {
   );
 }
 
-function PsalmList({
+// psalm index shared by both layouts; `selected` drives the highlight
+function PsalmIndex({
   query,
+  selected,
   onSelect,
 }: {
   query: string;
+  selected: number | null;
   onSelect: (psalm: number) => void;
 }) {
   const hits = searchPsalms(query);
@@ -250,41 +412,46 @@ function PsalmList({
     return <EmptyMessage message={`No psalms match “${query}”.`} />;
   }
   return (
-    <ScrollView style={styles.list}>
-      {hits.map((hit) => (
-        <Pressable
-          key={hit.psalm}
-          style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
-          onPress={() => onSelect(hit.psalm)}
-        >
-          <View style={styles.rowInner}>
-            <Text style={styles.psalmNumber}>{hit.psalm}</Text>
-            <Text numberOfLines={1} style={styles.incipit}>
-              {hit.incipit}
-            </Text>
-            <Text style={styles.rowMeta}>
-              {hit.verses} verse{hit.verses === 1 ? "" : "s"}
-            </Text>
-          </View>
-        </Pressable>
-      ))}
-    </ScrollView>
+    <View style={styles.indexBody}>
+      {hits.map((hit) => {
+        const isSelected = hit.psalm === selected;
+        return (
+          <Pressable
+            key={hit.psalm}
+            style={({ hovered }) => [
+              styles.row,
+              isSelected && styles.rowSelected,
+              hovered && !isSelected && styles.rowHover,
+            ]}
+            onPress={() => onSelect(hit.psalm)}
+          >
+            <View style={styles.rowInner}>
+              <Text style={styles.psalmNumber}>{hit.psalm}</Text>
+              <Text numberOfLines={1} style={styles.incipit}>
+                {hit.incipit}
+              </Text>
+              <Text style={styles.rowMeta}>
+                {hit.verses} verse{hit.verses === 1 ? "" : "s"}
+              </Text>
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
-function PsalmDetail({ psalm }: { psalm: number }) {
+function PsalmDetailBody({ psalm }: { psalm: number }) {
   const passage = useMemo(() => psalmPassage({ psalm }), [psalm]);
   const verses = passage?.verses.length ?? 0;
   return (
-    <ScrollView style={styles.list}>
-      <View style={styles.detailPage}>
-        <Text style={styles.detailTitle}>Psalm {psalm}</Text>
-        <Text style={styles.detailSubtitle}>
-          {verses} verse{verses === 1 ? "" : "s"}
-        </Text>
-        {passage ? <PsalmText passage={passage} /> : null}
-      </View>
-    </ScrollView>
+    <>
+      <Text style={styles.detailTitle}>Psalm {psalm}</Text>
+      <Text style={styles.detailSubtitle}>
+        {verses} verse{verses === 1 ? "" : "s"}
+      </Text>
+      {passage ? <PsalmText passage={passage} /> : null}
+    </>
   );
 }
 
@@ -337,34 +504,50 @@ function sectionLabel(section: string): string {
   return SECTION_LABELS[section] ?? section;
 }
 
-function OfficeList({ onSelect }: { onSelect: (id: RefOfficeId) => void }) {
+function OfficeIndex({
+  selected,
+  onSelect,
+}: {
+  selected: RefOfficeId | null;
+  onSelect: (id: RefOfficeId) => void;
+}) {
   return (
-    <ScrollView style={styles.list}>
-      {OFFICE_IDS.map((id) => (
-        <Pressable
-          key={id}
-          style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
-          onPress={() => onSelect(id)}
-        >
-          {({ hovered }) => (
-            <View style={styles.rowInner}>
-              <Text numberOfLines={1} style={styles.officeRowName}>
-                {OFFICE_NAMES[id]}
-              </Text>
-              <View
-                style={[styles.rowChevron, hovered && styles.rowChevronShown]}
-              >
-                <Chevron direction="right" size={6} />
+    <View style={styles.indexBody}>
+      {OFFICE_IDS.map((id) => {
+        const isSelected = id === selected;
+        return (
+          <Pressable
+            key={id}
+            style={({ hovered }) => [
+              styles.row,
+              isSelected && styles.rowSelected,
+              hovered && !isSelected && styles.rowHover,
+            ]}
+            onPress={() => onSelect(id)}
+          >
+            {({ hovered }) => (
+              <View style={styles.rowInner}>
+                <Text numberOfLines={1} style={styles.officeRowName}>
+                  {OFFICE_NAMES[id]}
+                </Text>
+                <View
+                  style={[
+                    styles.rowChevron,
+                    (hovered || isSelected) && styles.rowChevronShown,
+                  ]}
+                >
+                  <Chevron direction="right" size={6} />
+                </View>
               </View>
-            </View>
-          )}
-        </Pressable>
-      ))}
-    </ScrollView>
+            )}
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
-function OfficeDetail({ officeId }: { officeId: RefOfficeId }) {
+function OfficeDetailBody({ officeId }: { officeId: RefOfficeId }) {
   const document = useMemo(
     () =>
       composeOffice(today(), officeId, {
@@ -375,15 +558,118 @@ function OfficeDetail({ officeId }: { officeId: RefOfficeId }) {
     [officeId],
   );
   return (
+    <>
+      <Text style={styles.detailTitle}>{document.officeName}</Text>
+      <Text style={styles.detailSubtitle}>
+        as appointed for {dayLabel(document.date)}
+      </Text>
+      <OfficeView document={document} showRubrics showSpeakers />
+    </>
+  );
+}
+
+// mobile detail wrapper: the pane scrolls the document column
+function DetailPage({ children }: { children: ReactNode }) {
+  return (
     <ScrollView style={styles.list}>
-      <View style={styles.detailPage}>
-        <Text style={styles.detailTitle}>{document.officeName}</Text>
-        <Text style={styles.detailSubtitle}>
-          as appointed for {dayLabel(document.date)}
-        </Text>
-        <OfficeView document={document} showRubrics showSpeakers />
-      </View>
+      <View style={styles.detailPage}>{children}</View>
     </ScrollView>
+  );
+}
+
+// selectable collect index for the split layout: titles only, grouped
+// by rite and section in printed order
+function CollectIndex({
+  selected,
+  onSelect,
+}: {
+  selected: CollectSel | null;
+  onSelect: (c: CollectSel | null) => void;
+}) {
+  const hits = searchCollects("");
+  const groups: { rite: CollectRite; section: string }[] = [];
+  for (const hit of hits) {
+    if (!groups.some((g) => g.rite === hit.rite && g.section === hit.section)) {
+      groups.push({ rite: hit.rite, section: hit.section });
+    }
+  }
+  return (
+    <View style={styles.indexBody}>
+      {groups.map((group) => (
+        <View
+          key={`${group.rite}:${group.section}`}
+          style={styles.collectGroup}
+        >
+          <Text style={[styles.groupHeading, styles.groupRule]}>
+            {RITE_LABELS[group.rite]} · {sectionLabel(group.section)}
+          </Text>
+          {hits
+            .filter((h) => h.rite === group.rite && h.section === group.section)
+            .map((hit) => {
+              const isSelected =
+                selected?.rite === hit.rite && selected?.title === hit.title;
+              return (
+                <Pressable
+                  key={`${hit.rite}:${hit.title}`}
+                  style={({ hovered }) => [
+                    styles.indexRow,
+                    isSelected && styles.rowSelected,
+                    hovered && !isSelected && styles.rowHover,
+                  ]}
+                  onPress={() =>
+                    onSelect(
+                      isSelected
+                        ? null
+                        : {
+                            rite: hit.rite,
+                            section: hit.section,
+                            title: hit.title,
+                          },
+                    )
+                  }
+                >
+                  <Text numberOfLines={2} style={styles.indexTitle}>
+                    {hit.title}
+                  </Text>
+                </Pressable>
+              );
+            })}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// facing pages: the chosen rite on the left, its counterpart beside it;
+// occasions pair 1:1 by title so a missing counterpart is data rot
+function CollectCompare({ sel }: { sel: CollectSel }) {
+  const primary = collectPassage(sel.rite, sel.section, sel.title);
+  const other = counterpartCollect(sel.rite, sel.section, sel.title);
+  if (!primary) return null;
+  const columns = [primary, ...(other ? [other] : [])];
+  return (
+    <>
+      <Text style={styles.detailTitle}>{sel.title}</Text>
+      <Text style={styles.detailSubtitle}>{sectionLabel(sel.section)}</Text>
+      <View style={styles.compareRow}>
+        {columns.map((c) => (
+          <View key={c.rite} style={styles.compareCol}>
+            <Text style={styles.compareRite}>{RITE_LABELS[c.rite]}</Text>
+            <Text style={styles.collectBody}>{c.text}</Text>
+          </View>
+        ))}
+      </View>
+    </>
+  );
+}
+
+function PaneHint({ tab }: { tab: RefTab }) {
+  const noun =
+    tab === "psalms" ? "psalm" : tab === "collects" ? "collect" : "office";
+  return (
+    <View style={styles.hintWrap}>
+      <Text style={styles.empty}>Select a {noun} from the index.</Text>
+    </View>
   );
 }
 
@@ -495,6 +781,50 @@ const styles = StyleSheet.create({
   },
   rowChevronShown: {
     opacity: 1,
+  },
+  rowSelected: {
+    backgroundColor: "var(--selected-bg, rgba(127,127,127,0.18))",
+  },
+  indexBody: {
+    paddingBottom: 24,
+  },
+  indexRow: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border-faint, rgba(127,127,127,0.14))",
+  },
+  indexTitle: {
+    fontFamily: SERIF,
+    fontSize: 15,
+    lineHeight: 20,
+    color: "var(--text, #2c2020)",
+  },
+  compareRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 32,
+  },
+  compareCol: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 320,
+    minWidth: 280,
+  },
+  compareRite: {
+    fontFamily: SANS,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: "var(--text-secondary, #7a6e64)",
+    marginBottom: 10,
+  },
+  hintWrap: {
+    flex: 1,
+    minHeight: 240,
+    alignItems: "center",
+    justifyContent: "center",
   },
   psalmNumber: {
     width: 52,
