@@ -178,7 +178,7 @@ export function Shell() {
   // page's own bar where one exists, otherwise a bare strip
   const auxRow =
     page === "offices" ? (
-      <ReferenceBar leading={sidebarShowButton} />
+      <ReferenceBar leading={sidebarShowButton} isMobile={isMobile} />
     ) : page === "today" ? (
       <OfficeTabs
         leading={sidebarShowButton}
@@ -218,7 +218,7 @@ export function Shell() {
           />
         );
       case "offices":
-        return <OfficesScreen />;
+        return <OfficesScreen isMobile={isMobile} />;
       case "settings":
         return <SettingsScreen />;
     }
@@ -281,7 +281,10 @@ export function Shell() {
                   boxSizing: "border-box",
                   outline: "none",
                   overflowX: "hidden",
-                  overflowY: page === "calendar" ? "hidden" : "auto",
+                  overflowY:
+                    page === "calendar" || (page === "offices" && !isMobile)
+                      ? "hidden"
+                      : "auto",
                   display: "flex",
                   flexDirection: "column",
                   alignItems:
@@ -307,7 +310,10 @@ export function Shell() {
                       page === "today" || page === "settings"
                         ? "clamp(1rem, 4vw, 32px) clamp(1rem, 5vw, 40px)"
                         : "0",
-                    height: page === "calendar" ? "100%" : undefined,
+                    height:
+                      page === "calendar" || (page === "offices" && !isMobile)
+                        ? "100%"
+                        : undefined,
                     zoom: page !== "calendar" ? String(fontScale) : undefined,
                   }}
                 >
