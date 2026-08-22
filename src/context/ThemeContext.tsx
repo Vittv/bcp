@@ -76,6 +76,8 @@ const LightPalette = {
   bg: "#e0dbd0",
   border: "#d2cbbf",
   borderContent: "#b5aa9e",
+  borderFaint: "rgba(44, 32, 32, 0.09)",
+  rowHover: "rgba(44, 32, 32, 0.06)",
   text: "#2c2020",
   textSecondary: "#7a6e64",
   accent: "#7a3040",
@@ -88,6 +90,8 @@ const DarkPalette = {
   bg: "#1b191a",
   border: "#282628",
   borderContent: "#484547",
+  borderFaint: "rgba(255, 255, 255, 0.07)",
+  rowHover: "rgba(255, 255, 255, 0.06)",
   text: "#d4d0d3",
   textSecondary: "#848083",
   accent: "#a45888",
@@ -103,6 +107,8 @@ function applyPalette(theme: ResolvedTheme) {
   r.setProperty("--bg", p.bg);
   r.setProperty("--border", p.border);
   r.setProperty("--border-content", p.borderContent);
+  r.setProperty("--border-faint", p.borderFaint);
+  r.setProperty("--row-hover", p.rowHover);
   r.setProperty("--text", p.text);
   r.setProperty("--text-secondary", p.textSecondary);
   r.setProperty("--accent", p.accent);
