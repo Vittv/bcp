@@ -1,10 +1,16 @@
 import { collectSections, collectsBySection } from "../content/collects";
-import { psalmIncipit, psalmNumbers, psalmPassage } from "../content/psalter";
+import {
+  psalmIncipit,
+  psalmNumbers,
+  psalmPassage,
+  psalmVerseCount,
+} from "../content/psalter";
 import type { CollectRite, CollectSection } from "../content/types";
 
 export type PsalmHit = {
   psalm: number;
   incipit: string;
+  verses: number;
   // null when the psalm matched by number alone
   snippet: string | null;
 };
@@ -37,6 +43,7 @@ export function searchPsalms(query: string): PsalmHit[] {
     return numbers.map((n) => ({
       psalm: n,
       incipit: psalmIncipit(n) ?? "",
+      verses: psalmVerseCount(n),
       snippet: null,
     }));
   }
@@ -54,6 +61,7 @@ export function searchPsalms(query: string): PsalmHit[] {
       hits.push({
         psalm: n,
         incipit: psalmIncipit(n) ?? "",
+        verses: psalmVerseCount(n),
         snippet: matched || null,
       });
     }

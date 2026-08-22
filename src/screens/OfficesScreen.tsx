@@ -257,8 +257,15 @@ function PsalmList({
           style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
           onPress={() => onSelect(hit.psalm)}
         >
-          <Text style={styles.psalmNumber}>{hit.psalm}</Text>
-          <Text style={styles.incipit}>{hit.incipit}</Text>
+          <View style={styles.rowInner}>
+            <Text style={styles.psalmNumber}>{hit.psalm}</Text>
+            <Text numberOfLines={1} style={styles.incipit}>
+              {hit.incipit}
+            </Text>
+            <Text style={styles.rowMeta}>
+              {hit.verses} verse{hit.verses === 1 ? "" : "s"}
+            </Text>
+          </View>
         </Pressable>
       ))}
     </ScrollView>
@@ -295,7 +302,7 @@ function CollectList({ query }: { query: string }) {
     <ScrollView style={styles.list}>
       {groups.map((group) => (
         <View key={group.key} style={styles.collectGroup}>
-          <Text style={styles.groupHeading}>
+          <Text style={[styles.groupHeading, styles.groupRule]}>
             {RITE_LABELS[group.rite]} · {sectionLabel(group.section)}
           </Text>
           {hits
@@ -337,8 +344,18 @@ function OfficeList({ onSelect }: { onSelect: (id: RefOfficeId) => void }) {
           style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
           onPress={() => onSelect(id)}
         >
-          <Text style={styles.officeRowName}>{OFFICE_NAMES[id]}</Text>
-          <Chevron direction="right" size={6} />
+          {({ hovered }) => (
+            <View style={styles.rowInner}>
+              <Text numberOfLines={1} style={styles.officeRowName}>
+                {OFFICE_NAMES[id]}
+              </Text>
+              <View
+                style={[styles.rowChevron, hovered && styles.rowChevronShown]}
+              >
+                <Chevron direction="right" size={5} />
+              </View>
+            </View>
+          )}
         </Pressable>
       ))}
     </ScrollView>
@@ -446,16 +463,34 @@ const styles = StyleSheet.create({
   list: {
     flexGrow: 1,
   },
+  // file-manager rows: full-width hover bands over faint dividers;
+  // horizontal padding lives on rowInner so the band spans the column
   row: {
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border-faint, rgba(127,127,127,0.14))",
+  },
+  rowHover: {
+    backgroundColor: "var(--row-hover, rgba(127,127,127,0.08))",
+  },
+  rowInner: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     paddingVertical: 7,
     paddingHorizontal: 10,
-    borderRadius: 4,
   },
-  rowHover: {
-    backgroundColor: "var(--border, #d2cbbf)",
+  rowMeta: {
+    marginLeft: "auto",
+    fontFamily: SANS,
+    fontSize: 11,
+    color: "var(--text-secondary, #7a6e64)",
+    fontVariant: ["tabular-nums"],
+  },
+  rowChevron: {
+    opacity: 0,
+  },
+  rowChevronShown: {
+    opacity: 1,
   },
   psalmNumber: {
     width: 34,
@@ -468,9 +503,9 @@ const styles = StyleSheet.create({
   },
   incipit: {
     fontFamily: SERIF,
-    fontSize: 15,
+    fontSize: 14,
     color: "var(--text, #2c2020)",
-    flexShrink: 1,
+    flex: 1,
   },
   empty: {
     fontFamily: SANS,
@@ -503,12 +538,16 @@ const styles = StyleSheet.create({
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 8,
   },
+  groupRule: {
+    borderTopWidth: 1,
+    borderTopColor: "var(--border-faint, rgba(127,127,127,0.14))",
+    paddingTop: 10,
+  },
   collectCard: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderLeftWidth: 2,
-    borderLeftColor: "var(--border-content, #b5aa9e)",
-    marginBottom: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border-faint, rgba(127,127,127,0.14))",
   },
   collectTitle: {
     fontFamily: SANS,

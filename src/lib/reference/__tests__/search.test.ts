@@ -8,9 +8,13 @@ describe("searchPsalms", () => {
     expect(hits[0]).toEqual({
       psalm: 1,
       incipit: hits[0].incipit,
+      verses: hits[0].verses,
       snippet: null,
     });
     expect(hits[0].incipit.length).toBeGreaterThan(0);
+    expect(hits[0].verses).toBe(6);
+    const ps119 = searchPsalms("").find((h) => h.psalm === 119);
+    expect(ps119?.verses).toBe(176);
   });
 
   test("matches by verse text, case-insensitively", () => {
