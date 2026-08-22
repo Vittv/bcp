@@ -600,7 +600,13 @@ function CollectIndex({
           key={`${group.rite}:${group.section}`}
           style={styles.collectGroup}
         >
-          <Text style={[styles.groupHeading, styles.groupRule]}>
+          <Text
+            style={[
+              styles.groupHeading,
+              styles.groupRule,
+              styles.groupHeadingIndex,
+            ]}
+          >
             {RITE_LABELS[group.rite]} · {sectionLabel(group.section)}
           </Text>
           {hits
@@ -795,9 +801,10 @@ const styles = StyleSheet.create({
     borderBottomColor: "var(--border-faint, rgba(127,127,127,0.14))",
   },
   indexTitle: {
-    fontFamily: SERIF,
-    fontSize: 15,
-    lineHeight: 20,
+    fontFamily: SANS,
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
     color: "var(--text, #2c2020)",
   },
   compareRow: {
@@ -879,13 +886,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 1.2,
     textTransform: "uppercase",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--accent, #7a3040)",
     marginBottom: 10,
   },
   groupRule: {
     borderTopWidth: 1,
     borderTopColor: "var(--border-faint, rgba(127,127,127,0.14))",
     paddingTop: 12,
+  },
+  // desktop index rows pad 14; the heading text lines up with them
+  groupHeadingIndex: {
+    paddingLeft: 14,
   },
   collectCard: {
     paddingVertical: 14,
@@ -897,7 +908,7 @@ const styles = StyleSheet.create({
     fontFamily: SANS,
     fontSize: 13,
     fontWeight: "600",
-    color: "var(--accent, #7a3040)",
+    color: "var(--text, #2c2020)",
     marginBottom: 4,
   },
   collectBody: {
