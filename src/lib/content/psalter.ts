@@ -67,6 +67,11 @@ function versesOf(psalm: Psalm): PsalmPassage["verses"] {
   return out;
 }
 
+// full verse lists cached per psalm: search scans every passage on
+// each keystroke and re-running the marker regexes there made typing
+// crawl. ranged citations clip fresh; they're rare and cheap.
+const allVersesCache = new Map<number, PsalmPassage["verses"]>();
+
 // render the verses selected by a citation. an unqualified citation yields
 // the whole psalm; a verse range clips it, and the lengthen/extend parts of
 // a citation are appended so the full appointed passage is available.
@@ -75,7 +80,11 @@ export function psalmPassage(
 ): PsalmPassage | undefined {
   const psalm = psalms[String(citation.psalm)];
   if (!psalm) return undefined;
-  const all = versesOf(psalm);
+  let all = allVersesCache.get(citation.psalm);
+  if (!all) {
+    all = versesOf(psalm);
+    allVersesCache.set(citation.psalm, all);
+  }
   const ranges = [citation.verses, citation.lengthen, citation.extend].filter(
     (r): r is NonNullable<typeof r> => r !== undefined,
   );

@@ -67,9 +67,11 @@ export function TopBar({ season, daysUntilNext, nextSeason }: TopBarProps) {
               mode === "light" ? "dark" : mode === "dark" ? "system" : "light",
             )
           }
+          accessibilityRole="button"
+          accessibilityLabel={`Theme: ${mode}. Switch theme`}
         >
           <Text style={styles.controlText}>
-            {mode === "light" ? "☀" : mode === "dark" ? "☾" : "Auto"}
+            {mode === "light" ? "L" : mode === "dark" ? "D" : "S"}
           </Text>
         </Pressable>
       </View>

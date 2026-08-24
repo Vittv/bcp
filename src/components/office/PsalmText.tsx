@@ -38,12 +38,11 @@ const styles = StyleSheet.create({
   },
   verseNumber: {
     fontFamily: SERIF,
-    fontSize: 9,
+    fontSize: 12,
     lineHeight: 16,
     color: "var(--text-secondary, #7a6e64)",
     marginRight: 3,
     fontWeight: "400",
-    opacity: 0.7,
   },
   mediant: {
     fontSize: 17,
