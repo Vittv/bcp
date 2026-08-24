@@ -74,6 +74,7 @@ function persistFontScale(scale: number) {
 
 const LightPalette = {
   bg: "#e0dbd0",
+  bgRaised: "#ece7dd",
   border: "#d2cbbf",
   borderContent: "#b5aa9e",
   borderFaint: "rgba(44, 32, 32, 0.09)",
@@ -88,6 +89,7 @@ const LightPalette = {
 
 const DarkPalette = {
   bg: "#1b191a",
+  bgRaised: "#262425",
   border: "#282628",
   borderContent: "#484547",
   borderFaint: "rgba(255, 255, 255, 0.07)",
@@ -100,11 +102,21 @@ const DarkPalette = {
   selectedBg: "rgba(212, 208, 211, 0.12)",
 };
 
+// literal popover surface colors, keyed by resolved theme. applied as an
+// inline style (not a stylesheet class) so the sheet can never end up
+// unpainted — class-based backgrounds were reported showing content
+// through the dropdowns
+export const SHEET_BG: Record<ResolvedTheme, string> = {
+  light: LightPalette.bg,
+  dark: DarkPalette.bg,
+};
+
 function applyPalette(theme: ResolvedTheme) {
   if (Platform.OS !== "web" || typeof document === "undefined") return;
   const p = theme === "dark" ? DarkPalette : LightPalette;
   const r = document.documentElement.style;
   r.setProperty("--bg", p.bg);
+  r.setProperty("--bg-raised", p.bgRaised);
   r.setProperty("--border", p.border);
   r.setProperty("--border-content", p.borderContent);
   r.setProperty("--border-faint", p.borderFaint);

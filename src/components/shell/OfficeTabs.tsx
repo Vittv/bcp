@@ -206,3 +206,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
 });
+
+// exported so the reference offices bar derives its chrome from these
+// exact tokens instead of retyping them and drifting apart
+export const officeBarStyles = styles;

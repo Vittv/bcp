@@ -1,11 +1,11 @@
-import { collectSections, collectsBySection } from "../content/collects";
+import { allCollects, collectText } from "../content/collects";
 import {
   psalmIncipit,
   psalmNumbers,
   psalmPassage,
   psalmVerseCount,
 } from "../content/psalter";
-import type { CollectRite, CollectSection } from "../content/types";
+import type { CollectSection } from "../content/types";
 
 export type PsalmHit = {
   psalm: number;
@@ -16,13 +16,10 @@ export type PsalmHit = {
 };
 
 export type CollectHit = {
-  rite: CollectRite;
   section: CollectSection;
   title: string;
   snippet: string | null;
 };
-
-const RITES: CollectRite[] = ["traditional", "contemporary"];
 
 // a short excerpt of `text` centered on the first case-insensitive
 // occurrence of `q`, or null when `q` does not occur.
@@ -69,23 +66,25 @@ export function searchPsalms(query: string): PsalmHit[] {
   return hits;
 }
 
-// collects matching `query` by title or text, in printed order. an empty
-// query yields the full list.
+// collects matching `query` by title or by either rite's text, one hit
+// per collect in printed order. an empty query yields the full list.
 export function searchCollects(query: string): CollectHit[] {
   const q = query.trim().toLowerCase();
   const hits: CollectHit[] = [];
-  for (const rite of RITES) {
-    for (const section of collectSections(rite)) {
-      for (const collect of collectsBySection(rite, section)) {
-        if (!q) {
-          hits.push({ rite, section, title: collect.title, snippet: null });
-          continue;
-        }
-        const s = snippet(collect.title, q) ?? snippet(collect.text, q);
-        if (s !== null) {
-          hits.push({ rite, section, title: collect.title, snippet: s });
-        }
-      }
+  for (const entry of allCollects()) {
+    if (!q) {
+      hits.push({ section: entry.section, title: entry.title, snippet: null });
+      continue;
+    }
+    const s =
+      snippet(entry.title, q) ??
+      snippet(
+        collectText("traditional", entry.section, entry.title) ?? "",
+        q,
+      ) ??
+      snippet(collectText("contemporary", entry.section, entry.title) ?? "", q);
+    if (s !== null) {
+      hits.push({ section: entry.section, title: entry.title, snippet: s });
     }
   }
   return hits;

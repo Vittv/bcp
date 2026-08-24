@@ -1,11 +1,19 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Chevron } from "./Chevron";
 
-export type PageId = "today" | "calendar" | "offices" | "settings";
+export type PageId =
+  | "today"
+  | "calendar"
+  | "psalms"
+  | "collects"
+  | "offices"
+  | "settings";
 
 const NAV: { id: PageId; label: string }[] = [
   { id: "today", label: "Today" },
   { id: "calendar", label: "Calendar" },
+  { id: "psalms", label: "Psalms" },
+  { id: "collects", label: "Collects" },
   { id: "offices", label: "Offices" },
   { id: "settings", label: "Settings" },
 ];

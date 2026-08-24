@@ -6,11 +6,21 @@ export function Chevron({
   size = 8,
   stroke = 1.5,
 }: {
-  direction: "left" | "right";
+  direction: "left" | "right" | "up" | "down";
   size?: number;
   stroke?: number;
 }) {
   const bias = 0.354 * (size - stroke);
+  const tx = direction === "left" ? bias : direction === "right" ? -bias : 0;
+  const ty = direction === "up" ? bias : direction === "down" ? -bias : 0;
+  const angle =
+    direction === "left"
+      ? 45
+      : direction === "right"
+        ? -135
+        : direction === "up"
+          ? 135
+          : -45;
   return (
     <View
       style={[
@@ -22,8 +32,9 @@ export function Chevron({
           borderBottomWidth: stroke,
           borderRadius: stroke,
           transform: [
-            { translateX: direction === "left" ? bias : -bias },
-            { rotate: direction === "left" ? "45deg" : "-135deg" },
+            { translateX: tx },
+            { translateY: ty },
+            { rotate: `${angle}deg` },
           ],
         },
       ]}

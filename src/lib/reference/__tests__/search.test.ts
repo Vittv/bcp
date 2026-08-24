@@ -53,15 +53,18 @@ describe("searchPsalms", () => {
 });
 
 describe("searchCollects", () => {
-  test("empty query lists collects in printed order across both rites", () => {
+  test("empty query lists every collect exactly once, in printed order", () => {
     const hits = searchCollects("");
-    expect(hits.length).toBeGreaterThan(50);
-    const firstContemporary = hits.findIndex((h) => h.rite === "contemporary");
-    expect(firstContemporary).toBeGreaterThan(0);
-    // traditional collects all precede contemporary ones
-    expect(
-      hits.slice(firstContemporary).every((h) => h.rite === "contemporary"),
-    ).toBe(true);
+    expect(hits).toHaveLength(142);
+    // sections appear in printed order; rites are no longer separate
+    // rows since both variants share a title and render together
+    expect([...new Set(hits.map((h) => h.section))]).toEqual([
+      "church-year",
+      "holy-days",
+      "common-of-saints",
+      "various-occasions",
+    ]);
+    expect(new Set(hits.map((h) => `${h.section}:${h.title}`)).size).toBe(142);
   });
 
   test("matches by title", () => {
@@ -69,12 +72,18 @@ describe("searchCollects", () => {
     expect(hits.some((h) => h.title.includes("Peace"))).toBe(true);
   });
 
-  test("matches by collect text", () => {
+  test("matches traditional text", () => {
     const hits = searchCollects("cast away the works of darkness");
     expect(hits.length).toBeGreaterThan(0);
     expect(hits[0].snippet?.toLowerCase()).toContain(
       "cast away the works of darkness",
     );
+  });
+
+  test("matches contemporary-only phrasing too", () => {
+    // "armor of light" appears only in the contemporary Advent collect
+    const hits = searchCollects("armor of light");
+    expect(hits.some((h) => h.title.includes("Advent"))).toBe(true);
   });
 
   test("unknown text yields no results", () => {

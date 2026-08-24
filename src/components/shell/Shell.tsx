@@ -15,10 +15,14 @@ import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
 import { CalendarScreen } from "../../screens/CalendarScreen";
 import {
+  CollectsBar,
+  CollectsScreen,
+  OfficesBar,
   OfficesScreen,
-  ReferenceBar,
+  PsalmsBar,
+  PsalmsScreen,
   ReferenceProvider,
-} from "../../screens/OfficesScreen";
+} from "../../screens/reference";
 import { SettingsScreen } from "../../screens/SettingsScreen";
 import { TodayScreen } from "../../screens/TodayScreen";
 import { DEVOTIONS, OFFICES, OfficeTabs } from "./OfficeTabs";
@@ -44,6 +48,15 @@ function today(): CalendarDate {
 }
 
 const IS_WEB = Platform.OS === "web";
+
+// format a computed unit value without float noise
+function u(n: number): string {
+  return n.toFixed(4);
+}
+
+function isReferencePage(p: PageId): boolean {
+  return p === "psalms" || p === "collects" || p === "offices";
+}
 
 export function Shell() {
   const { resolved, fontScale } = useTheme();
@@ -144,6 +157,16 @@ export function Shell() {
   const { days: daysUntilNext, label: nextSeason } = daysUntilNextSeason(date);
 
   const scrollRafRef = useRef<number | null>(null);
+  // shared sink for scroll progress: the outer document scroller reports
+  // through handleScroll; the offices page's inner ScrollView reports
+  // straight here, since its scrolling never touches the outer element
+  const reportScroll = useCallback((pct: number) => {
+    if (scrollRafRef.current !== null) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      setScrollPct(pct);
+    });
+  }, []);
   const handleScroll = useCallback(() => {
     if (scrollRafRef.current !== null) return;
     scrollRafRef.current = requestAnimationFrame(() => {
@@ -177,8 +200,12 @@ export function Shell() {
   // every page gets the auxiliary 30px row under the TopBar: the
   // page's own bar where one exists, otherwise a bare strip
   const auxRow =
-    page === "offices" ? (
-      <ReferenceBar leading={sidebarShowButton} isMobile={isMobile} />
+    page === "psalms" ? (
+      <PsalmsBar leading={sidebarShowButton} isMobile={isMobile} />
+    ) : page === "collects" ? (
+      <CollectsBar leading={sidebarShowButton} isMobile={isMobile} />
+    ) : page === "offices" ? (
+      <OfficesBar leading={sidebarShowButton} isMobile={isMobile} />
     ) : page === "today" ? (
       <OfficeTabs
         leading={sidebarShowButton}
@@ -217,8 +244,12 @@ export function Shell() {
             leading={sidebarShowButton}
           />
         );
+      case "psalms":
+        return <PsalmsScreen isMobile={isMobile} />;
+      case "collects":
+        return <CollectsScreen isMobile={isMobile} />;
       case "offices":
-        return <OfficesScreen isMobile={isMobile} />;
+        return <OfficesScreen onScrollProgress={reportScroll} />;
       case "settings":
         return <SettingsScreen />;
     }
@@ -226,7 +257,7 @@ export function Shell() {
 
   if (IS_WEB) {
     return (
-      <ReferenceProvider onReadingChange={setReading}>
+      <ReferenceProvider onReadingChange={setReading} page={page}>
         <div
           style={{
             display: "flex",
@@ -282,13 +313,13 @@ export function Shell() {
                   outline: "none",
                   overflowX: "hidden",
                   overflowY:
-                    page === "calendar" || (page === "offices" && !isMobile)
+                    page === "calendar" || (isReferencePage(page) && !isMobile)
                       ? "hidden"
                       : "auto",
                   display: "flex",
                   flexDirection: "column",
                   alignItems:
-                    page === "calendar" || page === "offices"
+                    page === "calendar" || isReferencePage(page)
                       ? "stretch"
                       : "center",
                 }}
@@ -298,20 +329,31 @@ export function Shell() {
                     // raw divs are content-box by default; without
                     // this the 100% width ignores padding and bleeds
                     boxSizing: "border-box",
-                    // zoom scales the laid-out box, so pre-divide the
-                    // width to keep the rendered size at exactly 100%;
-                    // clamp to <=100% so scales under 1 can't overflow
-                    width: `${Math.min(100, 100 / fontScale)}%`,
+                    // standardized CSS zoom resolves percentage widths
+                    // against the parent as-is (verified in Chrome: a
+                    // 100%-wide zoomed box renders exactly parent-wide
+                    // at any scale), so no inverse-width math is needed
+                    // here — dividing by fontScale would only shrink
+                    // the column on small screens
+                    width: "100%",
+                    // rem lengths inside a zoomed element are scaled by
+                    // it, so a plain rem cap stays visually constant at
+                    // every font scale
                     maxWidth:
                       page === "today" || page === "settings"
-                        ? `${(46 / fontScale).toFixed(4)}rem`
+                        ? "46rem"
                         : "100%",
+                    // padding lives inside the zoomed element, so it
+                    // grows with fontScale unless pre-divided; keep it
+                    // visually constant so bigger type uses the freed
+                    // space instead of fatter margins squeezing it out
                     padding:
                       page === "today" || page === "settings"
-                        ? "clamp(1rem, 4vw, 32px) clamp(1rem, 5vw, 40px)"
+                        ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
                         : "0",
                     height:
-                      page === "calendar" || (page === "offices" && !isMobile)
+                      page === "calendar" ||
+                      (isReferencePage(page) && !isMobile)
                         ? "100%"
                         : undefined,
                     zoom: page !== "calendar" ? String(fontScale) : undefined,
@@ -326,7 +368,7 @@ export function Shell() {
                 slot={slot}
                 officeName={document.officeName}
                 scrollPct={scrollPct}
-                reading={page === "offices" ? reading : null}
+                reading={isReferencePage(page) ? reading : null}
               />
             </div>
           </div>
@@ -336,7 +378,7 @@ export function Shell() {
   }
 
   return (
-    <ReferenceProvider onReadingChange={setReading}>
+    <ReferenceProvider onReadingChange={setReading} page={page}>
       <View style={styles.shell}>
         <TopBar
           season={season}
@@ -358,7 +400,7 @@ export function Shell() {
             <View
               style={[
                 styles.content,
-                page === "offices" && styles.contentWide,
+                isReferencePage(page) && styles.contentWide,
                 { transform: [{ scale: fontScale }] },
               ]}
             >
@@ -370,7 +412,7 @@ export function Shell() {
               slot={slot}
               officeName={document.officeName}
               scrollPct={scrollPct}
-              reading={page === "offices" ? reading : null}
+              reading={isReferencePage(page) ? reading : null}
             />
           </View>
         </View>

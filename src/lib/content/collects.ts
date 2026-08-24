@@ -81,3 +81,19 @@ export function collectsBySection(
 export function collectSections(rite: CollectRite): CollectSection[] {
   return SECTIONS.filter((s) => (collects[rite]?.[s]?.length ?? 0) > 0);
 }
+
+// one entry per collect, in traditional printed order. both rites carry
+// identical titles in identical section order, so the traditional
+// sequence stands for the pair; readers see both variants together
+export function allCollects(): {
+  section: CollectSection;
+  title: string;
+}[] {
+  const out: { section: CollectSection; title: string }[] = [];
+  for (const section of SECTIONS) {
+    for (const c of collectsBySection("traditional", section)) {
+      out.push({ section, title: c.title });
+    }
+  }
+  return out;
+}
