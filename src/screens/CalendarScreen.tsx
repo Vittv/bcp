@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   arrowBtnHover: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   monthTitle: {
     fontFamily: SANS,
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     backgroundColor: "var(--selected-bg, rgba(44, 32, 32, 0.09))",
   },
   cellHover: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   cellText: {
     fontFamily: SANS,
