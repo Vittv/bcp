@@ -75,31 +75,33 @@ function persistFontScale(scale: number) {
 const LightPalette = {
   bg: "#e0dbd0",
   bgRaised: "#ece7dd",
-  border: "#d2cbbf",
-  borderContent: "#b5aa9e",
+  border: "#c3bcb2",
+  borderContent: "#a59d92",
   borderFaint: "rgba(44, 32, 32, 0.09)",
   rowHover: "rgba(44, 32, 32, 0.06)",
   text: "#2c2020",
-  textSecondary: "#7a6e64",
+  textSecondary: "#6b6159",
   accent: "#7a3040",
   scrollbar: "#a09589",
   todayBg: "rgba(122, 48, 64, 0.16)",
   selectedBg: "rgba(44, 32, 32, 0.09)",
+  controlHover: "#d2cbbf",
 };
 
 const DarkPalette = {
   bg: "#1b191a",
   bgRaised: "#262425",
-  border: "#282628",
-  borderContent: "#484547",
+  border: "#373438",
+  borderContent: "#545053",
   borderFaint: "rgba(255, 255, 255, 0.07)",
   rowHover: "rgba(255, 255, 255, 0.06)",
   text: "#d4d0d3",
-  textSecondary: "#848083",
+  textSecondary: "#908a84",
   accent: "#a45888",
   scrollbar: "#5a5759",
   todayBg: "rgba(164, 88, 136, 0.30)",
   selectedBg: "rgba(212, 208, 211, 0.12)",
+  controlHover: "#282628",
 };
 
 // literal popover surface colors, keyed by resolved theme. applied as an
@@ -128,6 +130,7 @@ function applyPalette(theme: ResolvedTheme) {
   r.setProperty("--scrollbar", p.scrollbar);
   r.setProperty("--today-bg", p.todayBg);
   r.setProperty("--selected-bg", p.selectedBg);
+  r.setProperty("--control-hover", p.controlHover);
 
   const id = "scrollbar-style";
   // SAFETY: we only create <style> elements with this id in applyPalette.

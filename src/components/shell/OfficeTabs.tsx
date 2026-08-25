@@ -165,10 +165,10 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   tabActive: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   tabHover: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   tabText: {
     fontFamily: "sans-serif",
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   toggleOn: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   toggleText: {
     fontFamily: "sans-serif",
