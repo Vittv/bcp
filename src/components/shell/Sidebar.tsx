@@ -7,7 +7,8 @@ export type PageId =
   | "psalms"
   | "collects"
   | "offices"
-  | "settings";
+  | "settings"
+  | "about";
 
 const NAV: { id: PageId; label: string }[] = [
   { id: "today", label: "Today" },
@@ -16,6 +17,7 @@ const NAV: { id: PageId; label: string }[] = [
   { id: "collects", label: "Collects" },
   { id: "offices", label: "Offices" },
   { id: "settings", label: "Settings" },
+  { id: "about", label: "About" },
 ];
 
 const noSelect = {
@@ -95,7 +97,7 @@ const styles = StyleSheet.create({
     borderColor: "var(--border-content, #b5aa9e)",
   },
   toolBtnHover: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   nav: {
     paddingBottom: 8,
@@ -105,10 +107,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   navItemActive: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   navItemHover: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   navText: {
     fontFamily: "sans-serif",

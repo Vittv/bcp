@@ -11,8 +11,15 @@ import {
   seasonFor,
 } from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
+import {
+  IS_MACOS_TAURI,
+  IS_TAURI,
+  loadWindowControls,
+  saveWindowControls,
+} from "../../lib/desktop";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
+import { AboutScreen } from "../../screens/AboutScreen";
 import { CalendarScreen } from "../../screens/CalendarScreen";
 import {
   CollectsBar,
@@ -75,6 +82,13 @@ export function Shell() {
     return true;
   });
 
+  // window-control buttons in the titlebar (desktop shell only)
+  const [windowControls, setWindowControlsRaw] = useState(loadWindowControls);
+  const setWindowControls = useCallback((v: boolean) => {
+    setWindowControlsRaw(v);
+    saveWindowControls(v);
+  }, []);
+
   const setSidebarVisible = useCallback((v: boolean) => {
     setSidebarVisibleRaw(v);
     if (typeof window !== "undefined") {
@@ -97,6 +111,24 @@ export function Shell() {
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, [setSidebarVisible]);
+
+  // narrow layout for the chrome bars themselves: they keep working
+  // well below the sidebar's mobile breakpoint by dropping their
+  // least informative segments
+  const [compactBars, setCompactBars] = useState(() => {
+    if (Platform.OS !== "web") return true;
+    return window.matchMedia("(max-width: 560px)").matches;
+  });
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const mq = window.matchMedia("(max-width: 560px)");
+    const onChange = (e: MediaQueryListEvent) => {
+      setCompactBars(e.matches);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
   const [showRubrics, setShowRubrics] = useState(false);
   const [showSpeakers, setShowSpeakers] = useState(false);
   const [devotions, setDevotionsRaw] = useState(() => {
@@ -218,7 +250,7 @@ export function Shell() {
         devotions={devotions}
         onToggleDevotions={() => setDevotions(!devotions)}
       />
-    ) : page === "settings" ? (
+    ) : page === "settings" || page === "about" ? (
       <View style={styles.auxStrip}>{sidebarShowButton}</View>
     ) : null;
 
@@ -251,7 +283,15 @@ export function Shell() {
       case "offices":
         return <OfficesScreen onScrollProgress={reportScroll} />;
       case "settings":
-        return <SettingsScreen />;
+        return (
+          <SettingsScreen
+            showWindowControls={IS_TAURI && !IS_MACOS_TAURI}
+            windowControls={windowControls}
+            onWindowControlsChange={setWindowControls}
+          />
+        );
+      case "about":
+        return <AboutScreen />;
     }
   })();
 
@@ -273,6 +313,8 @@ export function Shell() {
             season={season}
             daysUntilNext={daysUntilNext}
             nextSeason={nextSeason}
+            windowControls={windowControls}
+            compact={compactBars}
           />
           <div
             style={{
@@ -340,7 +382,9 @@ export function Shell() {
                     // it, so a plain rem cap stays visually constant at
                     // every font scale
                     maxWidth:
-                      page === "today" || page === "settings"
+                      page === "today" ||
+                      page === "settings" ||
+                      page === "about"
                         ? "46rem"
                         : "100%",
                     // padding lives inside the zoomed element, so it
@@ -348,7 +392,9 @@ export function Shell() {
                     // visually constant so bigger type uses the freed
                     // space instead of fatter margins squeezing it out
                     padding:
-                      page === "today" || page === "settings"
+                      page === "today" ||
+                      page === "settings" ||
+                      page === "about"
                         ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
                         : "0",
                     height:
@@ -356,7 +402,14 @@ export function Shell() {
                       (isReferencePage(page) && !isMobile)
                         ? "100%"
                         : undefined,
-                    zoom: page !== "calendar" ? String(fontScale) : undefined,
+                    // zoom only when actually scaled: WebKitGTK rounds
+                    // line boxes to integers inside zoomed subtrees,
+                    // which shaves glyph bottoms even at 100% if the
+                    // property is present
+                    zoom:
+                      page !== "calendar" && fontScale !== 1
+                        ? String(fontScale)
+                        : undefined,
                   }}
                 >
                   {content}
@@ -369,6 +422,7 @@ export function Shell() {
                 officeName={document.officeName}
                 scrollPct={scrollPct}
                 reading={isReferencePage(page) ? reading : null}
+                compact={compactBars}
               />
             </div>
           </div>
@@ -384,6 +438,7 @@ export function Shell() {
           season={season}
           daysUntilNext={daysUntilNext}
           nextSeason={nextSeason}
+          windowControls={windowControls}
         />
         <View style={styles.body}>
           {sidebarVisible ? (
@@ -413,6 +468,7 @@ export function Shell() {
               officeName={document.officeName}
               scrollPct={scrollPct}
               reading={isReferencePage(page) ? reading : null}
+              compact={compactBars}
             />
           </View>
         </View>
@@ -455,7 +511,7 @@ const styles = StyleSheet.create({
     borderColor: "var(--border-content, #b5aa9e)",
   },
   auxShowBtnHover: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   sidebarOverlay: {
     position: "absolute",

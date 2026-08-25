@@ -1,7 +1,18 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 
-export function SettingsScreen() {
+type SettingsScreenProps = {
+  // only meaningful inside the desktop shell on win/linux
+  showWindowControls?: boolean;
+  windowControls?: boolean;
+  onWindowControlsChange?: (show: boolean) => void;
+};
+
+export function SettingsScreen({
+  showWindowControls = false,
+  windowControls = true,
+  onWindowControlsChange,
+}: SettingsScreenProps) {
   const { mode, setMode, fontScale, setFontScale } = useTheme();
 
   return (
@@ -45,17 +56,28 @@ export function SettingsScreen() {
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>About</Text>
-        <Text style={styles.body}>
-          The Book of Common Prayer (1979) Daily Office. A lightweight web app
-          for the Daily Office services of The Episcopal Church.
-        </Text>
-        <Text style={styles.body}>
-          Texts are in the public domain. Code is MIT licensed.
-        </Text>
-        <Text style={styles.body}>Version 0.1.0</Text>
-      </View>
+      {showWindowControls ? (
+        <View style={styles.section}>
+          <Text style={styles.label}>Window Controls</Text>
+          <View style={styles.row}>
+            {([true, false] as const).map((v) => (
+              <Text
+                key={String(v)}
+                style={[
+                  styles.option,
+                  windowControls === v && styles.optionActive,
+                ]}
+                onPress={() => onWindowControlsChange?.(v)}
+              >
+                {v ? "Show" : "Hide"}
+              </Text>
+            ))}
+          </View>
+          <Text style={[styles.body, styles.bodySpaced]}>
+            Minimize, maximize, and close buttons in the title bar.
+          </Text>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -113,5 +135,9 @@ const styles = StyleSheet.create({
     color: "var(--text-secondary, #7a6e64)",
     lineHeight: 20,
     marginBottom: 8,
+  },
+  bodySpaced: {
+    marginTop: 8,
+    marginBottom: 0,
   },
 });
