@@ -86,13 +86,7 @@ export function OfficesScreen({
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        <View
-          style={[
-            styles.detailPage,
-            isMobile && styles.detailPageMobile,
-            styles.officeMeasure,
-          ]}
-        >
+        <View style={[styles.detailPage, isMobile && styles.detailPageMobile]}>
           <OfficeDetailBody base={current} />
         </View>
       </ScrollView>

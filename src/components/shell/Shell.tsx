@@ -306,9 +306,9 @@ export function Shell() {
           />
         );
       case "psalms":
-        return <PsalmsScreen isMobile={isMobile} />;
+        return <PsalmsScreen isMobile={isMobile} fontScale={fontScale} />;
       case "collects":
-        return <CollectsScreen isMobile={isMobile} />;
+        return <CollectsScreen isMobile={isMobile} fontScale={fontScale} />;
       case "offices":
         return (
           <OfficesScreen isMobile={isMobile} onScrollProgress={reportScroll} />
@@ -363,7 +363,13 @@ export function Shell() {
                     ? "bcp-sidebar-in"
                     : "bcp-sidebar-in bcp-sidebar-in-left"
                 }
-                style={isMobile ? styles.sidebarOverlay : undefined}
+                style={{
+                  width: "25%",
+                  minWidth: 200,
+                  maxWidth: 340,
+                  flexShrink: 0,
+                  ...(isMobile ? styles.sidebarOverlay : undefined),
+                }}
               >
                 <Sidebar
                   active={page}
