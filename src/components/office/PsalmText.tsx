@@ -3,7 +3,10 @@ import type { PsalmPassage } from "../../lib/content/types";
 
 const MEDIANT = "\u2009";
 
-const SERIF = '"Crimson Text", Georgia, "Times New Roman", serif';
+const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
+// expo-font registers each face as its own single-face family
+const SERIF_ITALIC =
+  '"Crimson Pro Italic", "Crimson Pro", Georgia, "Times New Roman", serif';
 
 function Verse({ verse }: { verse: PsalmPassage["verses"][number] }) {
   return (
@@ -48,7 +51,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   stanza: {
-    fontStyle: "italic",
+    fontFamily: SERIF_ITALIC,
     color: "var(--text-secondary, #7a6e64)",
   },
 });

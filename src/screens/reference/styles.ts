@@ -1,7 +1,10 @@
 import { StyleSheet } from "react-native";
 import { officeBarStyles } from "../../components/shell/OfficeTabs";
 
-const SERIF = '"Crimson Text", Georgia, "Times New Roman", serif';
+const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
+// expo-font registers each face as its own single-face family
+const SERIF_SEMI =
+  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
 const SANS =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
@@ -170,9 +173,8 @@ export const sharedStyles = StyleSheet.create({
   psalmNumber: {
     width: 28,
     textAlign: "left",
-    fontFamily: SERIF,
+    fontFamily: SERIF_SEMI,
     fontSize: 15,
-    fontWeight: "700",
     color: "var(--accent, #7a3040)",
     fontVariant: ["tabular-nums"],
   },
@@ -205,9 +207,9 @@ export const sharedStyles = StyleSheet.create({
     maxWidth: 736,
   },
   detailTitle: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_SEMI,
     fontSize: 30,
-    fontWeight: "600",
+    lineHeight: 38,
     color: "var(--text, #2c2020)",
     marginBottom: 4,
   },
