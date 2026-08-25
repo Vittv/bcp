@@ -50,6 +50,9 @@ type StatusBarProps = {
   // label of the reference document currently open (e.g. "Psalm 23");
   // replaces the office name while set
   reading?: string | null;
+  // narrow layout: keep the edge-anchored items, drop the
+  // informational extras (lectionary year, scroll percentage)
+  compact?: boolean;
 };
 
 const noSelect = {
@@ -64,29 +67,48 @@ export function StatusBar({
   officeName,
   scrollPct,
   reading,
+  compact = false,
 }: StatusBarProps) {
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.left}>
         <View style={styles.item}>
           <SeasonDot color={seasonColor} size={6} />
-          <Text style={styles.text}>{SEASON_LABELS[season]}</Text>
+          <Text style={styles.text} numberOfLines={1}>
+            {SEASON_LABELS[season]}
+          </Text>
         </View>
-        <Text style={styles.sep}>·</Text>
-        <Text style={styles.text}>Year {slot.year}</Text>
-        <Text style={styles.sep}>·</Text>
-        <Text style={styles.text}>{weekLabel(slot)}</Text>
-        {slot.holyDay ? (
+        {!compact && (
           <>
             <Text style={styles.sep}>·</Text>
-            <Text style={styles.text}>{formatHolyDay(slot.holyDay)}</Text>
+            <Text style={styles.text}>Year {slot.year}</Text>
+          </>
+        )}
+        <Text style={styles.sep}>·</Text>
+        <Text style={styles.text} numberOfLines={1}>
+          {weekLabel(slot)}
+        </Text>
+        {!compact && slot.holyDay ? (
+          <>
+            <Text style={styles.sep}>·</Text>
+            <Text style={styles.text} numberOfLines={1}>
+              {formatHolyDay(slot.holyDay)}
+            </Text>
           </>
         ) : null}
       </View>
       <View style={styles.right}>
-        <Text style={styles.text}>{reading ?? officeName}</Text>
-        <Text style={styles.sep}>·</Text>
-        <Text style={styles.pct}>{String(scrollPct).padStart(3, " ")}%</Text>
+        <Text style={[styles.text, styles.rightText]} numberOfLines={1}>
+          {reading ?? officeName}
+        </Text>
+        {!compact && (
+          <>
+            <Text style={styles.sep}>·</Text>
+            <Text style={styles.pct}>
+              {String(scrollPct).padStart(3, " ")}%
+            </Text>
+          </>
+        )}
       </View>
     </View>
   );
@@ -131,6 +153,12 @@ const styles = StyleSheet.create({
     fontFamily: "sans-serif",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
+  },
+  // lets a long reading/office name truncate instead of pushing the
+  // percentage out of the bar
+  rightText: {
+    flexShrink: 1,
+    minWidth: 0,
   },
   pct: {
     fontFamily: "monospace",
