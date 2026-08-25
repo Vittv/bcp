@@ -1,0 +1,17 @@
+{
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "bcp",
+        "width": 1080,
+        "height": 760,
+        "minWidth": 360,
+        "minHeight": 480,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "transparent": true
+      }
+    ]
+  }
+}

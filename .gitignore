@@ -43,3 +43,9 @@ yarn-error.*
 # plan
 PLAN.md
 TODO.md
+
+# tauri
+src-tauri/target/
+
+# local artifacts
+src-tauri/shot-full.png

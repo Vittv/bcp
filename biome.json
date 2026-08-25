@@ -7,7 +7,13 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!src/lib/content/vendor", "!tools/oxlint"]
+    "includes": [
+      "**",
+      "!src/lib/content/vendor",
+      "!tools/oxlint",
+      "!src-tauri/gen",
+      "!src-tauri/target"
+    ]
   },
   "formatter": {
     "enabled": true,

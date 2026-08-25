@@ -7,6 +7,7 @@
   "private": true,
   "dependencies": {
     "@expo/metro-runtime": "~57.0.9",
+    "@tauri-apps/api": "^2.11.1",
     "expo": "~57.0.12",
     "expo-font": "^57.0.1",
     "expo-status-bar": "~57.0.1",
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.8",
     "@oxlint/plugins": "1.78.0",
+    "@tauri-apps/cli": "^2.11.4",
     "@types/react": "~19.2.2",
     "bun-types": "^1.3.14",
     "oxlint": "1.78.0",
@@ -33,6 +35,9 @@
     "export:web": "expo export -p web",
     "test": "bun test src/",
     "check": "biome check . && oxlint",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "tauri": "tauri",
+    "desktop:dev": "expo export -p web && tauri dev",
+    "desktop:build": "expo export -p web && NO_STRIP=1 tauri build"
   }
 }

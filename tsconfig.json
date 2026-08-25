@@ -5,5 +5,5 @@
     "types": ["bun-types", "expo/types"],
     "resolveJsonModule": true
   },
-  "exclude": ["node_modules", "tools", "dist"]
+  "exclude": ["node_modules", "tools", "dist", "src-tauri"]
 }

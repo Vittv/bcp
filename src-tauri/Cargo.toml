@@ -1,0 +1,18 @@
+[package]
+name = "bcp"
+version = "0.1.0"
+description = "Daily Office reader for the 1979 Book of Common Prayer"
+edition = "2021"
+
+# the static web export is embedded into the binary via tauri's asset
+# protocol; no server, no runtime network dependency
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
