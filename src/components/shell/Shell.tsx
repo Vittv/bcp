@@ -65,8 +65,34 @@ function isReferencePage(p: PageId): boolean {
   return p === "psalms" || p === "collects" || p === "offices";
 }
 
+const SIDEBAR_ANIM_STYLE_ID = "sidebar-anim-style";
+// quick fade-and-drift entrance: desktop comes in from the left
+// edge, the mobile overlay drops from the top
+function ensureSidebarAnimStyle() {
+  if (document.getElementById(SIDEBAR_ANIM_STYLE_ID)) return;
+  const el = document.createElement("style");
+  el.id = SIDEBAR_ANIM_STYLE_ID;
+  el.textContent = `
+@keyframes bcp-sidebar-in {
+  from { opacity: 0; transform: var(--bcp-from, translateY(-8px)); }
+}
+.bcp-sidebar-in {
+  animation: bcp-sidebar-in 150ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.bcp-sidebar-in-left { --bcp-from: translateX(-8px); }
+@media (prefers-reduced-motion: reduce) {
+  .bcp-sidebar-in { animation: none; }
+}`;
+  document.head.appendChild(el);
+}
+
 export function Shell() {
   const { resolved, fontScale } = useTheme();
+
+  useEffect(() => {
+    if (Platform.OS === "web") ensureSidebarAnimStyle();
+  }, []);
+
   const [date, setDate] = useState<CalendarDate>(today);
   const [tab, setTab] = useState<TabId>(() =>
     officeForHour(new Date().getHours()),
@@ -77,6 +103,9 @@ export function Shell() {
 
   const [sidebarVisible, setSidebarVisibleRaw] = useState(() => {
     if (typeof window !== "undefined") {
+      // phones always start collapsed: the stacked sidebar eats the
+      // whole viewport on load; the stored preference is desktop-only
+      if (window.matchMedia("(max-width: 768px)").matches) return false;
       return localStorage.getItem("sidebarVisible") !== "false";
     }
     return true;
@@ -281,7 +310,9 @@ export function Shell() {
       case "collects":
         return <CollectsScreen isMobile={isMobile} />;
       case "offices":
-        return <OfficesScreen onScrollProgress={reportScroll} />;
+        return (
+          <OfficesScreen isMobile={isMobile} onScrollProgress={reportScroll} />
+        );
       case "settings":
         return (
           <SettingsScreen
@@ -326,7 +357,14 @@ export function Shell() {
             }}
           >
             {sidebarVisible ? (
-              <div style={isMobile ? styles.sidebarOverlay : undefined}>
+              <div
+                className={
+                  isMobile
+                    ? "bcp-sidebar-in"
+                    : "bcp-sidebar-in bcp-sidebar-in-left"
+                }
+                style={isMobile ? styles.sidebarOverlay : undefined}
+              >
                 <Sidebar
                   active={page}
                   onSelect={handlePageSelect}

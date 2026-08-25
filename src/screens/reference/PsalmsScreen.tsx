@@ -19,7 +19,7 @@ export function PsalmsScreen({ isMobile }: { isMobile: boolean }) {
     return (
       <View style={styles.container}>
         {openPsalm !== null ? (
-          <DetailPage>
+          <DetailPage compact>
             <PsalmDetailBody psalm={openPsalm} />
           </DetailPage>
         ) : (

@@ -87,7 +87,7 @@ export const sharedStyles = StyleSheet.create({
     borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
   },
   rowHover: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   rowInner: {
     flexDirection: "row",
@@ -121,7 +121,7 @@ export const sharedStyles = StyleSheet.create({
   },
   // active matches hover on purpose, same as the sidebar and office tabs
   rowSelected: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   indexBody: {
     paddingBottom: 24,
@@ -201,6 +201,12 @@ export const sharedStyles = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: 64,
   },
+  // phone-width inset for the same wrapper: mirrors Today's shell
+  // padding (~19px at phone widths) and the list rows' 18px language
+  detailPageMobile: {
+    paddingHorizontal: 18,
+    paddingTop: 16,
+  },
   // offices read exactly like Today: same 46rem-equivalent column
   // (736px), centered once the browser is wide enough
   officeMeasure: {
@@ -278,7 +284,7 @@ export const sharedStyles = StyleSheet.create({
   // latched look when the picked date IS today: the same chip-on
   // treatment as OfficeTabs' active toggles
   todayBtnOn: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   todayText: {
     fontFamily: SANS,
@@ -435,7 +441,7 @@ export const sharedStyles = StyleSheet.create({
     borderRadius: 4,
   },
   popMenuItemSelected: {
-    backgroundColor: "var(--border, #d2cbbf)",
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   popMenuItemText: {
     fontFamily: SANS,

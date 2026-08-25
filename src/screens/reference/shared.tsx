@@ -245,11 +245,26 @@ export function SplitPane({
   // biome-ignore-end lint/a11y/noNoninteractiveTabindex: see above
 }
 
-// mobile detail wrapper: the pane scrolls the document column
-export function DetailPage({ children }: { children: ReactNode }) {
+// mobile detail wrapper: the pane scrolls the document column.
+// compact switches to the phone-width inset so opened psalms,
+// collects and offices breathe like Today does on small screens
+export function DetailPage({
+  children,
+  compact,
+}: {
+  children: ReactNode;
+  compact?: boolean;
+}) {
   return (
     <ScrollView style={sharedStyles.list}>
-      <View style={sharedStyles.detailPage}>{children}</View>
+      <View
+        style={[
+          sharedStyles.detailPage,
+          compact && sharedStyles.detailPageMobile,
+        ]}
+      >
+        {children}
+      </View>
     </ScrollView>
   );
 }
