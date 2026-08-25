@@ -6,9 +6,9 @@ import { ThemeProvider } from "./src/context/ThemeContext";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    "Crimson Text": require("./assets/fonts/crimson-text-regular.woff2"),
-    "Crimson Text Italic": require("./assets/fonts/crimson-text-italic.woff2"),
-    "Crimson Text SemiBold": require("./assets/fonts/crimson-text-semibold.woff2"),
+    "Crimson Pro": require("./assets/fonts/crimson-pro-latin-400-normal.woff2"),
+    "Crimson Pro SemiBold": require("./assets/fonts/crimson-pro-latin-600-normal.woff2"),
+    "Crimson Pro Italic": require("./assets/fonts/crimson-pro-latin-400-italic.woff2"),
   });
 
   if (!fontsLoaded) return null;

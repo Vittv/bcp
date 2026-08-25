@@ -7,7 +7,12 @@ import type {
 } from "../../lib/office/types";
 import { PsalmText } from "./PsalmText";
 
-const SERIF = '"Crimson Text", Georgia, "Times New Roman", serif';
+const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
+// expo-font registers each face as its own single-face family
+const SERIF_SEMI =
+  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
+const SERIF_ITALIC =
+  '"Crimson Pro Italic", "Crimson Pro", Georgia, "Times New Roman", serif';
 const SANS =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
@@ -176,16 +181,15 @@ const styles = StyleSheet.create({
     borderBottomColor: "var(--border-content, #b5aa9e)",
   },
   heading: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_SEMI,
     fontSize: 22,
-    fontWeight: "600",
+    lineHeight: 30,
     marginTop: 28,
     marginBottom: 8,
     color: "var(--text, #2c2020)",
   },
   rubric: {
-    fontFamily: SERIF,
-    fontStyle: "italic",
+    fontFamily: SERIF_ITALIC,
     fontSize: 15,
     lineHeight: 25,
     color: "var(--text-secondary, #7a6e64)",
@@ -212,9 +216,8 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   psalmTitle: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_ITALIC,
     fontSize: 15,
-    fontStyle: "italic",
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 6,
   },

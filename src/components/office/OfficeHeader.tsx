@@ -2,7 +2,9 @@ import { StyleSheet, Text, View } from "react-native";
 import { dayLabel } from "../../lib/office";
 import type { OfficeDocument } from "../../lib/office/types";
 
-const SERIF = '"Crimson Text", Georgia, "Times New Roman", serif';
+// expo-font registers each face as its own single-face family
+const SERIF_SEMI =
+  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
 const SANS =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
@@ -28,9 +30,9 @@ const styles = StyleSheet.create({
     borderBottomColor: "var(--border-content, #b5aa9e)",
   },
   officeName: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_SEMI,
     fontSize: 28,
-    fontWeight: "600",
+    lineHeight: 36,
     color: "var(--text, #2c2020)",
     letterSpacing: -0.3,
   },
