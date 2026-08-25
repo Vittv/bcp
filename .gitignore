@@ -42,6 +42,7 @@ yarn-error.*
 
 # plan
 PLAN.md
+PLAN-*.md
 TODO.md
 
 # tauri
