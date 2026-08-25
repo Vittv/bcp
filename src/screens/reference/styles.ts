@@ -57,7 +57,7 @@ export const sharedStyles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 3,
     fontFamily: SANS,
-    fontSize: 12,
+    fontSize: 14,
     color: "var(--text, #2c2020)",
   },
   backBtn: {
@@ -148,17 +148,14 @@ export const sharedStyles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 18,
   },
+  // rites always print one above the other at full measure: the
+  // horizontal wrap is only useful at extreme widths and fights the
+  // 736px column language
   compareRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 32,
+    gap: 24,
   },
-  compareCol: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 320,
-    minWidth: 280,
-  },
+  // rites stack at full measure; each block sizes to its own text
+  compareCol: {},
   compareRite: {
     fontFamily: SANS,
     fontSize: 11,
@@ -194,9 +191,13 @@ export const sharedStyles = StyleSheet.create({
   },
   // detail views keep a readable measure but sit hard left, unlike the
   // centered document column used by the Today page
+  // detail column matches Today and the offices browser: same
+  // 46rem-equivalent measure, centered via auto margins in both the
+  // split pane and mobile wrapper
   detailPage: {
     width: "100%",
-    maxWidth: 928,
+    maxWidth: 736,
+    marginHorizontal: "auto",
     paddingHorizontal: 40,
     paddingTop: 28,
     paddingBottom: 64,
@@ -206,11 +207,6 @@ export const sharedStyles = StyleSheet.create({
   detailPageMobile: {
     paddingHorizontal: 18,
     paddingTop: 16,
-  },
-  // offices read exactly like Today: same 46rem-equivalent column
-  // (736px), centered once the browser is wide enough
-  officeMeasure: {
-    maxWidth: 736,
   },
   detailTitle: {
     fontFamily: SERIF_SEMI,

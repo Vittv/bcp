@@ -73,7 +73,7 @@ export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
 
 const styles = StyleSheet.create({
   sidebar: {
-    width: 200,
+    width: "100%",
     height: "100%",
     borderRightWidth: 1,
     borderRightColor: "var(--border, #d2cbbf)",
@@ -99,6 +99,8 @@ const styles = StyleSheet.create({
   toolBtnHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
+  // nav items are full-width bands; active and hover share the same
+  // control-hover fill as every other chrome surface
   nav: {
     paddingBottom: 8,
   },
@@ -114,7 +116,7 @@ const styles = StyleSheet.create({
   },
   navText: {
     fontFamily: "sans-serif",
-    fontSize: 13,
+    fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
   },
   navTextActive: {

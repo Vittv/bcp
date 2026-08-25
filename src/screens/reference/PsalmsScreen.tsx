@@ -13,8 +13,15 @@ import {
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
 
-export function PsalmsScreen({ isMobile }: { isMobile: boolean }) {
-  const { query, openPsalm, setOpenPsalm } = useReference();
+export function PsalmsScreen({
+  isMobile,
+  fontScale,
+}: {
+  isMobile: boolean;
+  fontScale: number;
+}) {
+  const { query, setQuery, openPsalm, setOpenPsalm } = useReference();
+  const desktopInputRef = useRef<TextInput>(null);
   if (isMobile) {
     return (
       <View style={styles.container}>
@@ -30,6 +37,27 @@ export function PsalmsScreen({ isMobile }: { isMobile: boolean }) {
   }
   return (
     <SplitPane
+      fontScale={fontScale}
+      header={
+        <TextInput
+          ref={desktopInputRef}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search by number or text"
+          placeholderTextColor="var(--text-secondary, #7a6e64)"
+          style={[
+            styles.search,
+            {
+              width: "100%",
+              marginLeft: 0,
+              borderWidth: 0,
+              paddingHorizontal: 0,
+              paddingVertical: 0,
+            },
+          ]}
+          accessibilityLabel="Search psalms"
+        />
+      }
       list={
         <PsalmIndex
           query={query}
@@ -47,10 +75,9 @@ export function PsalmsScreen({ isMobile }: { isMobile: boolean }) {
   );
 }
 
-// the psalms bar is one long search field; the sidebar-show and back
-// buttons keep their own hit areas, everything else focuses the input.
-// the back button only exists on mobile, where the detail replaces the
-// index instead of sitting beside it.
+// the psalms bar carries the sidebar-show button; on mobile it also
+// has search (or a back button when a psalm is open). Desktop search
+// lives in the right navigator header instead.
 export function PsalmsBar({
   leading,
   isMobile,
@@ -60,7 +87,16 @@ export function PsalmsBar({
 }) {
   const { query, setQuery, openPsalm, setOpenPsalm } = useReference();
   const inputRef = useRef<TextInput>(null);
-  const searching = !(isMobile && openPsalm !== null);
+  const searching = isMobile ? openPsalm === null : false;
+
+  if (!isMobile) {
+    return (
+      <View style={[styles.bar, noSelect]}>
+        <View style={styles.barLeft}>{leading}</View>
+      </View>
+    );
+  }
+
   return (
     <Pressable
       style={[styles.bar, noSelect]}

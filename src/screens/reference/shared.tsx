@@ -33,10 +33,27 @@ const SPLIT_STYLE: React.CSSProperties = {
 const LIST_PANE_STYLE: React.CSSProperties = {
   boxSizing: "border-box",
   outline: "none",
-  width: 340,
+  width: "25%",
+  minWidth: 260,
+  maxWidth: 340,
   flexShrink: 0,
+  display: "flex",
+  flexDirection: "column",
+  borderLeft: "1px solid var(--border-faint, rgba(44, 32, 32, 0.09))",
+};
+const SPLIT_HEADER_STYLE: React.CSSProperties = {
+  flexShrink: 0,
+  borderBottom: "1px solid var(--border, #c3bcb2)",
+  flexDirection: "row",
+  alignItems: "center",
+  paddingTop: 8,
+  paddingBottom: 8,
+  paddingLeft: 18,
+  paddingRight: 18,
+};
+const SPLIT_LIST_SCROLL_STYLE: React.CSSProperties = {
+  flex: 1,
   overflowY: "auto",
-  borderRight: "1px solid var(--border-faint, rgba(44, 32, 32, 0.09))",
 };
 const DETAIL_PANE_STYLE: React.CSSProperties = {
   boxSizing: "border-box",
@@ -210,10 +227,14 @@ export function SplitPane({
   list,
   detail,
   detailOpen,
+  header,
+  fontScale = 1,
 }: {
   list: ReactNode;
   detail: ReactNode;
   detailOpen: boolean;
+  header?: ReactNode;
+  fontScale?: number;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
@@ -230,15 +251,25 @@ export function SplitPane({
     });
   }, [detailOpen]);
 
+  const listScale =
+    fontScale !== 1
+      ? { transform: `scale(${1 / fontScale})`, transformOrigin: "top left" }
+      : undefined;
+
   // biome-ignore-start lint/a11y/noNoninteractiveTabindex: each pane is a
   // scrollable region and must be focusable for native arrow scrolling
   return (
     <div style={SPLIT_STYLE}>
-      <div ref={listRef} tabIndex={0} style={LIST_PANE_STYLE}>
-        {list}
-      </div>
       <div ref={detailRef} tabIndex={0} style={DETAIL_PANE_STYLE}>
         <View style={sharedStyles.detailPage}>{detail}</View>
+      </div>
+      <div
+        ref={listRef}
+        tabIndex={0}
+        style={{ ...LIST_PANE_STYLE, ...listScale }}
+      >
+        {header ? <div style={SPLIT_HEADER_STYLE}>{header}</div> : null}
+        <div style={SPLIT_LIST_SCROLL_STYLE}>{list}</div>
       </div>
     </div>
   );
@@ -256,7 +287,10 @@ export function DetailPage({
   compact?: boolean;
 }) {
   return (
-    <ScrollView style={sharedStyles.list}>
+    <ScrollView
+      style={sharedStyles.list}
+      contentContainerStyle={{ alignItems: "center" }}
+    >
       <View
         style={[
           sharedStyles.detailPage,

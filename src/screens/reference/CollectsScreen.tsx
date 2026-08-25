@@ -31,8 +31,16 @@ function sectionLabel(section: string): string {
   return SECTION_LABELS[section] ?? section;
 }
 
-export function CollectsScreen({ isMobile }: { isMobile: boolean }) {
-  const { query, selectedCollect, setSelectedCollect } = useReference();
+export function CollectsScreen({
+  isMobile,
+  fontScale,
+}: {
+  isMobile: boolean;
+  fontScale: number;
+}) {
+  const { query, setQuery, selectedCollect, setSelectedCollect } =
+    useReference();
+  const desktopInputRef = useRef<TextInput>(null);
   if (isMobile) {
     return (
       <View style={styles.container}>
@@ -52,6 +60,27 @@ export function CollectsScreen({ isMobile }: { isMobile: boolean }) {
   }
   return (
     <SplitPane
+      fontScale={fontScale}
+      header={
+        <TextInput
+          ref={desktopInputRef}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search by title or text"
+          placeholderTextColor="var(--text-secondary, #7a6e64)"
+          style={[
+            styles.search,
+            {
+              width: "100%",
+              marginLeft: 0,
+              borderWidth: 0,
+              paddingHorizontal: 0,
+              paddingVertical: 0,
+            },
+          ]}
+          accessibilityLabel="Search collects"
+        />
+      }
       list={
         <CollectIndex
           query={query}
@@ -72,9 +101,9 @@ export function CollectsScreen({ isMobile }: { isMobile: boolean }) {
   );
 }
 
-// the collects bar mirrors the psalms bar: one long search field, with
-// the sidebar-show button keeping its own hit area; on phones the
-// detail replaces the list, so search gives way to a back button
+// the collects bar mirrors the psalms bar: on mobile it carries search
+// (or a back button when a collect is open). Desktop search lives in
+// the right navigator header instead.
 export function CollectsBar({
   leading,
   isMobile,
@@ -85,7 +114,16 @@ export function CollectsBar({
   const { query, setQuery, selectedCollect, setSelectedCollect } =
     useReference();
   const inputRef = useRef<TextInput>(null);
-  const searching = !(isMobile && selectedCollect !== null);
+  const searching = isMobile ? selectedCollect === null : false;
+
+  if (!isMobile) {
+    return (
+      <View style={[styles.bar, noSelect]}>
+        <View style={styles.barLeft}>{leading}</View>
+      </View>
+    );
+  }
+
   return (
     <Pressable
       style={[styles.bar, noSelect]}
@@ -198,8 +236,8 @@ function CollectIndex({
   );
 }
 
-// facing pages: Traditional on the left, Contemporary beside it. the
-// data pairs 1:1 by section and title, so a missing half is data rot.
+// stacked rites: Traditional on top, Contemporary below. the data pairs
+// 1:1 by section and title, so a missing half is data rot.
 // memoized so query keystrokes leave the reading pane alone
 const CollectCompare = memo(function CollectCompare({
   sel,

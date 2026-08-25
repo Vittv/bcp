@@ -75,7 +75,7 @@ function persistFontScale(scale: number) {
 const LightPalette = {
   bg: "#e0dbd0",
   bgRaised: "#ece7dd",
-  border: "#c3bcb2",
+  border: "#cbc5bb",
   borderContent: "#a59d92",
   borderFaint: "rgba(44, 32, 32, 0.09)",
   rowHover: "rgba(44, 32, 32, 0.06)",
@@ -91,12 +91,12 @@ const LightPalette = {
 const DarkPalette = {
   bg: "#1b191a",
   bgRaised: "#262425",
-  border: "#373438",
+  border: "#333034",
   borderContent: "#545053",
   borderFaint: "rgba(255, 255, 255, 0.07)",
   rowHover: "rgba(255, 255, 255, 0.06)",
   text: "#d4d0d3",
-  textSecondary: "#908a84",
+  textSecondary: "#8d8985",
   accent: "#a45888",
   scrollbar: "#5a5759",
   todayBg: "rgba(164, 88, 136, 0.30)",
