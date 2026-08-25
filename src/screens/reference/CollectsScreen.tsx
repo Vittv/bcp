@@ -37,7 +37,7 @@ export function CollectsScreen({ isMobile }: { isMobile: boolean }) {
     return (
       <View style={styles.container}>
         {selectedCollect !== null ? (
-          <DetailPage>
+          <DetailPage compact>
             <CollectCompare sel={selectedCollect} />
           </DetailPage>
         ) : (

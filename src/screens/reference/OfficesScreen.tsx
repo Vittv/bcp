@@ -43,11 +43,13 @@ function sameDate(a: CalendarDate, b: CalendarDate): boolean {
 
 export function OfficesScreen({
   onScrollProgress,
+  isMobile,
 }: {
   // the page scrolls in its own ScrollView (the shell's outer scroller
   // is hidden on reference pages), so it reports progress up to the
   // status bar itself
   onScrollProgress?: (pct: number) => void;
+  isMobile: boolean;
 }) {
   const { openOffice, officeRite } = useReference();
   // the bar picks the office; the page just renders it full-width.
@@ -84,7 +86,13 @@ export function OfficesScreen({
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        <View style={[styles.detailPage, styles.officeMeasure]}>
+        <View
+          style={[
+            styles.detailPage,
+            isMobile && styles.detailPageMobile,
+            styles.officeMeasure,
+          ]}
+        >
           <OfficeDetailBody base={current} />
         </View>
       </ScrollView>

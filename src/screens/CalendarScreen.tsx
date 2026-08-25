@@ -184,6 +184,8 @@ const styles = StyleSheet.create({
   },
   monthNav: {
     height: 30,
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border, #d2cbbf)",
     position: "relative",
     flexDirection: "row",
     alignItems: "center",
@@ -210,7 +212,6 @@ const styles = StyleSheet.create({
   },
   grid: {
     flex: 1,
-    borderTopWidth: 1,
     borderRightWidth: 1,
     borderColor: "var(--border, #d2cbbf)",
   },
