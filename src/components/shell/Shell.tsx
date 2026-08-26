@@ -211,7 +211,9 @@ export function Shell() {
     setScrollPct(0);
     // also reset the SplitPane detail pane scroll (desktop reference pages)
     requestAnimationFrame(() => {
-      const detail = window.document.querySelector("[data-split-detail]") as HTMLElement | null;
+      const detail = window.document.querySelector(
+        "[data-split-detail]",
+      ) as HTMLElement | null;
       if (detail) detail.scrollTop = 0;
     });
   };
@@ -338,7 +340,13 @@ export function Shell() {
         );
       case "old-testament":
       case "new-testament":
-        return <BibleReaderScreen isMobile={isMobile} fontScale={fontScale} onScrollProgress={reportScroll} />;
+        return (
+          <BibleReaderScreen
+            isMobile={isMobile}
+            fontScale={fontScale}
+            onScrollProgress={reportScroll}
+          />
+        );
       case "settings":
         return (
           <SettingsScreen
@@ -467,7 +475,9 @@ export function Shell() {
                           ? "100%"
                           : undefined,
                       zoom:
-                        page !== "calendar" && !(isReferencePage(page) && !isMobile) && fontScale !== 1
+                        page !== "calendar" &&
+                        !(isReferencePage(page) && !isMobile) &&
+                        fontScale !== 1
                           ? String(fontScale)
                           : undefined,
                     }}

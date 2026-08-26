@@ -29,10 +29,7 @@ export function PsalmText({ passage }: { passage: PsalmPassage }) {
 }
 
 const styles = StyleSheet.create({
-  block: {
-    marginTop: 4,
-    marginBottom: 14,
-  },
+  block: {},
   verse: {
     fontFamily: SERIF,
     fontSize: 17,

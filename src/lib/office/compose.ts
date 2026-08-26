@@ -20,6 +20,7 @@ import type {
   Office,
   OfficeItem,
   OfficeSection,
+  PsalmPassage,
 } from "../content/types";
 import type {
   ComposedLesson,
@@ -301,26 +302,69 @@ function composeOpening(
   let keep = true; // season-group state for opening sentences
   let inOption = false;
   let inCollectMenu = false;
+  let inPrayerMenu = false;
   let collectKept = false;
+  let collectTitle: string | undefined;
+  let collectBuf: string[] = [];
   let skipAbsolution = false;
-  for (const item of section.items) {
-    if (skipAbsolution) continue;
+  const items = section.items;
+  let idx = 0;
+  while (idx < items.length) {
+    const item = items[idx];
+    if (skipAbsolution) {
+      idx++;
+      continue;
+    }
     if (item.kind === "season") {
       keep = keepSeasonGroup(item.text, ctx);
       if (keep) nodes.push({ kind: "heading", text: item.text });
+      idx++;
       continue;
     }
     if (item.kind === "option") {
       inOption = true;
+      idx++;
       continue;
     }
     if (item.kind === "heading") {
+      if (collectBuf.length > 0) {
+        nodes.push({
+          kind: "fixed-collect",
+          text: collectBuf.join("\n"),
+          title: collectTitle,
+        });
+        collectBuf = [];
+        collectTitle = undefined;
+      }
       inOption = false;
       inCollectMenu = false;
+      inPrayerMenu = false;
+      const psalmMatch = item.text.match(/^Psalm (\d+)\s*(.*)/);
+      if (psalmMatch && keep) {
+        const psalmNum = Number(psalmMatch[1]);
+        const incipit = psalmMatch[2]?.trim() || undefined;
+        const verses: PsalmPassage["verses"] = [];
+        let j = idx + 1;
+        while (j < items.length && items[j].kind === "text") {
+          verses.push({ number: verses.length + 1, text: items[j].text });
+          j++;
+        }
+        if (verses.length > 0) {
+          nodes.push({
+            kind: "psalm",
+            passage: { psalm: psalmNum, verses },
+            citation: String(psalmNum),
+            incipit,
+          });
+          idx = j;
+          continue;
+        }
+      }
       if (keep) {
         const node = convert(item, ctx.prefs);
         if (node) nodes.push(node);
       }
+      idx++;
       continue;
     }
     if (item.kind === "rubric") {
@@ -332,37 +376,83 @@ function composeOpening(
         /Priest.*stands and says/i.test(text)
       ) {
         skipAbsolution = true;
+        idx++;
         continue;
       }
       if (
-        /(one or more of the following Collect|one of the following Collects?|one of the following prayers?)/i.test(
+        /(one or more of the following Collect|one of the following Collects?)/i.test(
           text,
         )
       ) {
         inCollectMenu = true;
         collectKept = false;
+        collectTitle = undefined;
+        collectBuf = [];
+      } else if (/(one of the following prayers?)/i.test(text)) {
+        inCollectMenu = false;
+        inPrayerMenu = true;
       } else if (inCollectMenu && text.startsWith("A Collect for ")) {
+        // flush any pending collect before starting a new titled one
+        if (collectBuf.length > 0) {
+          nodes.push({
+            kind: "fixed-collect",
+            text: collectBuf.join("\n"),
+            title: collectTitle,
+          });
+          collectBuf = [];
+        }
+        collectTitle = text;
         collectKept = !keepOccasionalCollect(text, weekday(ctx.date));
-        if (collectKept) continue;
+        if (collectKept) {
+          idx++;
+          continue;
+        }
       } else {
+        if (collectBuf.length > 0) {
+          nodes.push({
+            kind: "fixed-collect",
+            text: collectBuf.join("\n"),
+            title: collectTitle,
+          });
+          collectBuf = [];
+          collectTitle = undefined;
+        }
         inCollectMenu = false;
       }
       if (keep) {
         const node = convert(item, ctx.prefs);
         if (node) nodes.push(node);
       }
+      idx++;
       continue;
     }
-    if (inOption || !keep) continue;
     if (inCollectMenu) {
-      if (collectKept) continue;
-      const node = convert(item, ctx.prefs);
-      if (node) nodes.push(node);
-      if (item.kind === "text" && item.speaker === "people") collectKept = true;
+      if (collectKept) {
+        idx++;
+        continue;
+      }
+      if (item.kind === "text") {
+        collectBuf.push(item.text);
+        if (item.speaker === "people") {
+          nodes.push({
+            kind: "fixed-collect",
+            text: collectBuf.join("\n"),
+            title: collectTitle,
+          });
+          collectBuf = [];
+          collectTitle = undefined;
+        }
+      }
+      idx++;
+      continue;
+    }
+    if ((inOption && !inPrayerMenu) || !keep) {
+      idx++;
       continue;
     }
     const node = convert(item, ctx.prefs);
     if (node) nodes.push(node);
+    idx++;
   }
   return nodes;
 }

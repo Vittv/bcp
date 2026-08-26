@@ -52,9 +52,11 @@ export type ComposedNode =
       passage: PsalmPassage;
       citation: string;
       optional?: boolean;
+      incipit?: string;
     }
   | { kind: "lessons"; lessons: ComposedLesson[] }
-  | { kind: "collect"; passage: CollectPassage };
+  | { kind: "collect"; passage: CollectPassage }
+  | { kind: "fixed-collect"; text: string; title?: string };
 
 export type ComposedSection = {
   key: OfficeSectionKey;

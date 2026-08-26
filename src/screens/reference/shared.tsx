@@ -266,14 +266,19 @@ export function SplitPane({
   // scrollable region and must be focusable for native arrow scrolling
   return (
     <div style={SPLIT_STYLE}>
-      <div ref={detailRef} tabIndex={0} style={{ ...DETAIL_PANE_STYLE, zoom: fontScale !== 1 ? String(fontScale) : undefined }} data-split-detail onScroll={handleDetailScroll}>
+      <div
+        ref={detailRef}
+        tabIndex={0}
+        style={{
+          ...DETAIL_PANE_STYLE,
+          zoom: fontScale !== 1 ? String(fontScale) : undefined,
+        }}
+        data-split-detail
+        onScroll={handleDetailScroll}
+      >
         <View style={sharedStyles.detailPage}>{detail}</View>
       </div>
-      <div
-        ref={listRef}
-        tabIndex={0}
-        style={LIST_PANE_STYLE}
-      >
+      <div ref={listRef} tabIndex={0} style={LIST_PANE_STYLE}>
         {header ? <div style={SPLIT_HEADER_STYLE}>{header}</div> : null}
         <div style={SPLIT_LIST_SCROLL_STYLE}>{list}</div>
       </div>
