@@ -35,22 +35,22 @@ function psalmNumbers(doc: OfficeDocument): number[] {
 
 function textOf(doc: OfficeDocument): string[] {
   return doc.sections.flatMap((s) =>
-    s.nodes.map((n) => {
+    s.nodes.flatMap((n) => {
       switch (n.kind) {
         case "text":
         case "rubric":
         case "heading":
-          return n.text;
+          return [n.text];
         case "psalm":
-          return n.passage.verses.map((v) => v.text).join(" ");
+          return [n.passage.verses.map((v) => v.text).join(" ")];
         case "collect":
-          return n.passage.text;
+          return [n.passage.text];
         case "fixed-collect":
-          return n.text;
+          return n.title ? [n.title, n.text] : [n.text];
         case "lessons":
-          return n.lessons.map((l) => l.ref).join(" ");
+          return [n.lessons.map((l) => l.ref).join(" ")];
         default:
-          return "";
+          return [""];
       }
     }),
   );
@@ -353,7 +353,7 @@ describe("composeOffice: preferences and other offices", () => {
     expect(texts).not.toContain("A Collect for the Presence of Christ");
   });
 
-  test("only the first mission prayer and closing blessing are kept", () => {
+  test("all mission prayers and both thanksgiving prayers are shown", () => {
     const doc = composeOffice(
       { year: 2026, month: 8, day: 14 },
       "evening-rite-two",
@@ -366,14 +366,14 @@ describe("composeOffice: preferences and other offices", () => {
         doc,
         "Keep watch, dear Lord, with those who work, or watch, or weep this night",
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       hasText(doc, "The grace of our Lord Jesus Christ, and the love of God"),
     ).toBe(true);
     expect(
       hasText(doc, "May the God of hope fill us with all joy and peace"),
-    ).toBe(false);
-    expect(hasText(doc, "Glory to God whose power, working in us")).toBe(false);
+    ).toBe(true);
+    expect(hasText(doc, "Glory to God whose power, working in us")).toBe(true);
   });
 
   test("alternative lessons are hidden unless requested", () => {
@@ -635,21 +635,21 @@ describe("composeOffice: Suffrages B closing menus", () => {
     return textOf(doc).some((t) => t.includes(fragment));
   }
 
-  test("the 'one or both' menu keeps only the General Thanksgiving", () => {
+  test("the 'one or both' menu shows both thanksgiving prayers", () => {
     expect(has("Father of all mercies")).toBe(true);
-    expect(has("grace at this time with one accord")).toBe(false);
+    expect(has("grace at this time with one accord")).toBe(true);
   });
 
-  test("exactly one concluding prayer is kept", () => {
+  test("all three concluding blessings are shown", () => {
     expect(has("grace of our Lord Jesus Christ")).toBe(true);
-    expect(has("God of hope fill us")).toBe(false);
-    expect(has("working in us, can do infinitely more")).toBe(false);
+    expect(has("God of hope fill us")).toBe(true);
+    expect(has("working in us, can do infinitely more")).toBe(true);
   });
 
-  test("one intercession from the mission menu is kept", () => {
+  test("all mission prayers are shown", () => {
     expect(has("O God and Father of all, whom the whole heavens adore")).toBe(
       true,
     );
-    expect(has("Keep watch, dear Lord, with those who work")).toBe(false);
+    expect(has("Keep watch, dear Lord, with those who work")).toBe(true);
   });
 });

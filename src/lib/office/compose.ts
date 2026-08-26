@@ -629,16 +629,25 @@ function composeSuffragesB(
   let menu: "prayers" | "mission" | "thanksgiving" | "closing" = "prayers";
   let keepGroup = true;
   let firstKept = false;
+  let collectTitle: string | undefined;
+  let collectBuf: string[] = [];
   for (const item of section.items) {
     if (item.kind === "rubric") {
+      if (menu === "thanksgiving") firstKept = false;
       const text = item.text;
       if (text === "The Collect of the Day") {
+        flushCollectBuf(nodes, collectBuf, collectTitle);
+        collectBuf = [];
+        collectTitle = undefined;
         if (showRubrics(ctx.prefs))
           nodes.push({ kind: "rubric", text: item.text });
         if (collect) nodes.push(collect);
         continue;
       }
       if (text.startsWith("Then, unless the Eucharist")) {
+        flushCollectBuf(nodes, collectBuf, collectTitle);
+        collectBuf = [];
+        collectTitle = undefined;
         menu = "mission";
         firstKept = false;
         const node = convert(item, ctx.prefs);
@@ -646,8 +655,9 @@ function composeSuffragesB(
         continue;
       }
       if (text.startsWith("Before the close of the Office")) {
-        // "one or both of the following may be used": keep only the first
-        // collect (the General Thanksgiving) for daily use.
+        flushCollectBuf(nodes, collectBuf, collectTitle);
+        collectBuf = [];
+        collectTitle = undefined;
         menu = "thanksgiving";
         firstKept = false;
         const node = convert(item, ctx.prefs);
@@ -655,6 +665,9 @@ function composeSuffragesB(
         continue;
       }
       if (text.startsWith("The Officiant may then conclude")) {
+        flushCollectBuf(nodes, collectBuf, collectTitle);
+        collectBuf = [];
+        collectTitle = undefined;
         menu = "closing";
         firstKept = false;
         const node = convert(item, ctx.prefs);
@@ -664,18 +677,29 @@ function composeSuffragesB(
       if (menu === "thanksgiving") {
         if (text.startsWith("Then may be said")) {
           menu = "prayers"; // dismissal: end of the thanksgiving menu
-        } else if (firstKept) {
-          continue; // later optional groups (e.g. Chrysostom) are dropped
+          firstKept = false;
         }
-        // else: the kept group's own heading falls through
+        // else: the group's own heading falls through
       }
       if (text.startsWith("A Collect for ")) {
+        flushCollectBuf(nodes, collectBuf, collectTitle);
+        collectBuf = [];
+        collectTitle = undefined;
         keepGroup = keepOccasionalCollect(text, weekday(ctx.date));
-        if (keepGroup && ctx.prefs.showRubrics)
-          nodes.push({ kind: "rubric", text: item.text });
+        if (keepGroup) {
+          collectTitle = text;
+        }
         continue;
       }
-      if (text === "Concerning the Service") break; // reference notes, not liturgy
+      if (text === "Concerning the Service") {
+        flushCollectBuf(nodes, collectBuf, collectTitle);
+        collectBuf = [];
+        collectTitle = undefined;
+        break; // reference notes, not liturgy
+      }
+      flushCollectBuf(nodes, collectBuf, collectTitle);
+      collectBuf = [];
+      collectTitle = undefined;
       if (menu !== "thanksgiving") {
         menu = "prayers";
         keepGroup = true;
@@ -684,12 +708,25 @@ function composeSuffragesB(
       if (node) nodes.push(node);
       continue;
     }
-    if (item.kind === "option") continue;
-    if (menu === "mission" || menu === "thanksgiving" || menu === "closing") {
+    if (item.kind === "option") {
+      firstKept = false;
+      continue;
+    }
+    if (menu === "mission" || menu === "thanksgiving") {
       if (firstKept) continue;
       const node = convert(item, ctx.prefs);
       if (node) nodes.push(node);
       if (item.kind === "text" && item.speaker === "people") firstKept = true;
+      continue;
+    }
+    if (menu === "closing") {
+      const node = convert(item, ctx.prefs);
+      if (node) nodes.push(node);
+      continue;
+    }
+    if (collectTitle) {
+      const node = convert(item, ctx.prefs);
+      if (node && node.kind === "text") collectBuf.push(node.text);
       continue;
     }
     if (keepGroup) {
@@ -697,7 +734,17 @@ function composeSuffragesB(
       if (node) nodes.push(node);
     }
   }
+  flushCollectBuf(nodes, collectBuf, collectTitle);
   return nodes;
+}
+
+function flushCollectBuf(
+  nodes: ComposedNode[],
+  buf: string[],
+  title: string | undefined,
+): void {
+  if (buf.length === 0) return;
+  nodes.push({ kind: "fixed-collect", text: buf.join("\n"), title });
 }
 
 function lessonList(ctx: ComposeContext): ComposedLesson[] {
