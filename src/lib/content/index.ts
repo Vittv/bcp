@@ -1,5 +1,6 @@
 export * from "./canticles";
 export * from "./collects";
+export * from "./kjv";
 export * from "./lectionary";
 export * from "./lessons";
 export * from "./offices";

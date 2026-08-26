@@ -174,3 +174,17 @@ export const collectsSchema = z.record(
     z.array(collectSchema),
   ),
 ) satisfies z.ZodType<Record<CollectRite, Record<CollectSection, Collect[]>>>;
+
+const kjvVerseSchema = z.string();
+
+export const kjvChapterSchema = z.record(z.string(), kjvVerseSchema);
+
+export const kjvBookSchema = z.object({
+  book: z.string(),
+  abbrev: z.string(),
+  testament: z.enum(["OT", "NT"]),
+  chapters: z.number().int().positive(),
+  verses: z.record(z.string(), kjvChapterSchema),
+}) satisfies z.ZodType<import("./types").KjvBook>;
+
+export const kjvBooksSchema = z.record(z.string(), kjvBookSchema);
