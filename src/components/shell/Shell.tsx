@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Chevron } from "../../components/shell/Chevron";
 import type { PageId } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
+import { BibleProvider } from "../../context/BibleContext";
 import { useTheme } from "../../context/ThemeContext";
 import {
   colorFor,
@@ -20,6 +21,7 @@ import {
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
 import { AboutScreen } from "../../screens/AboutScreen";
+import { BibleBar, BibleReaderScreen } from "../../screens/BibleReaderScreen";
 import { CalendarScreen } from "../../screens/CalendarScreen";
 import {
   CollectsBar,
@@ -62,7 +64,13 @@ function u(n: number): string {
 }
 
 function isReferencePage(p: PageId): boolean {
-  return p === "psalms" || p === "collects" || p === "offices";
+  return (
+    p === "psalms" ||
+    p === "collects" ||
+    p === "offices" ||
+    p === "old-testament" ||
+    p === "new-testament"
+  );
 }
 
 const SIDEBAR_ANIM_STYLE_ID = "sidebar-anim-style";
@@ -201,6 +209,11 @@ export function Shell() {
       el.focus({ preventScroll: true });
     }
     setScrollPct(0);
+    // also reset the SplitPane detail pane scroll (desktop reference pages)
+    requestAnimationFrame(() => {
+      const detail = window.document.querySelector("[data-split-detail]") as HTMLElement | null;
+      if (detail) detail.scrollTop = 0;
+    });
   };
 
   const document = composeOffice(
@@ -260,30 +273,40 @@ export function Shell() {
 
   // every page gets the auxiliary 30px row under the TopBar: the
   // page's own bar where one exists, otherwise a bare strip
-  const auxRow =
-    page === "psalms" ? (
-      <PsalmsBar leading={sidebarShowButton} isMobile={isMobile} />
-    ) : page === "collects" ? (
-      <CollectsBar leading={sidebarShowButton} isMobile={isMobile} />
-    ) : page === "offices" ? (
-      <OfficesBar leading={sidebarShowButton} isMobile={isMobile} />
-    ) : page === "today" ? (
-      <OfficeTabs
-        leading={sidebarShowButton}
-        active={tab}
-        onSelect={handleTabChange}
-        showRubrics={showRubrics}
-        onToggleRubrics={() => setShowRubrics((v) => !v)}
-        showSpeakers={showSpeakers}
-        onToggleSpeakers={() => setShowSpeakers((v) => !v)}
-        devotions={devotions}
-        onToggleDevotions={() => setDevotions(!devotions)}
-      />
-    ) : page === "settings" || page === "about" ? (
-      <View style={styles.auxStrip}>{sidebarShowButton}</View>
-    ) : null;
+  const getAuxRow = () => {
+    switch (page) {
+      case "psalms":
+        return <PsalmsBar leading={sidebarShowButton} isMobile={isMobile} />;
+      case "collects":
+        return <CollectsBar leading={sidebarShowButton} isMobile={isMobile} />;
+      case "offices":
+        return <OfficesBar leading={sidebarShowButton} isMobile={isMobile} />;
+      case "old-testament":
+      case "new-testament":
+        return <BibleBar leading={sidebarShowButton} isMobile={isMobile} />;
+      case "today":
+        return (
+          <OfficeTabs
+            leading={sidebarShowButton}
+            active={tab}
+            onSelect={handleTabChange}
+            showRubrics={showRubrics}
+            onToggleRubrics={() => setShowRubrics((v) => !v)}
+            showSpeakers={showSpeakers}
+            onToggleSpeakers={() => setShowSpeakers((v) => !v)}
+            devotions={devotions}
+            onToggleDevotions={() => setDevotions(!devotions)}
+          />
+        );
+      case "settings":
+      case "about":
+        return <View style={styles.auxStrip}>{sidebarShowButton}</View>;
+      default:
+        return null;
+    }
+  };
 
-  const content = (() => {
+  const getContent = () => {
     switch (page) {
       case "today":
         return (
@@ -313,6 +336,9 @@ export function Shell() {
         return (
           <OfficesScreen isMobile={isMobile} onScrollProgress={reportScroll} />
         );
+      case "old-testament":
+      case "new-testament":
+        return <BibleReaderScreen isMobile={isMobile} fontScale={fontScale} onScrollProgress={reportScroll} />;
       case "settings":
         return (
           <SettingsScreen
@@ -323,200 +349,185 @@ export function Shell() {
         );
       case "about":
         return <AboutScreen />;
+      default:
+        return null;
     }
-  })();
+  };
+
+  const auxRow = getAuxRow();
+  const content = getContent();
 
   if (IS_WEB) {
     return (
       <ReferenceProvider onReadingChange={setReading} page={page}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            height: "100vh",
-            width: "100%",
-            boxSizing: "border-box",
-            overflow: "hidden",
-            backgroundColor: resolved === "dark" ? "#1b191a" : "#e0dbd0",
-          }}
+        <BibleProvider
+          page={page}
+          onReadingChange={setReading}
+          onChapterChange={scrollToTop}
         >
-          <TopBar
-            season={season}
-            daysUntilNext={daysUntilNext}
-            nextSeason={nextSeason}
-            windowControls={windowControls}
-            compact={compactBars}
-          />
           <div
             style={{
               display: "flex",
-              flex: 1,
+              flexDirection: "column",
+              height: "100vh",
+              width: "100%",
               boxSizing: "border-box",
               overflow: "hidden",
-              position: "relative",
+              backgroundColor: resolved === "dark" ? "#1b191a" : "#e0dbd0",
             }}
           >
-            {sidebarVisible ? (
-              <div
-                className={
-                  isMobile
-                    ? "bcp-sidebar-in"
-                    : "bcp-sidebar-in bcp-sidebar-in-left"
-                }
-                style={{
-                  width: "25%",
-                  minWidth: 200,
-                  maxWidth: 340,
-                  flexShrink: 0,
-                  ...(isMobile ? styles.sidebarOverlay : undefined),
-                }}
-              >
-                <Sidebar
-                  active={page}
-                  onSelect={handlePageSelect}
-                  onHide={() => setSidebarVisible(false)}
-                />
-              </div>
-            ) : null}
+            <TopBar
+              season={season}
+              daysUntilNext={daysUntilNext}
+              nextSeason={nextSeason}
+              windowControls={windowControls}
+              compact={compactBars}
+            />
             <div
               style={{
-                flex: 1,
                 display: "flex",
-                flexDirection: "column",
+                flex: 1,
                 boxSizing: "border-box",
                 overflow: "hidden",
+                position: "relative",
               }}
             >
-              {auxRow}
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                /* biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be keyboard-focusable for native arrow scrolling */
-                tabIndex={0}
-                style={{
-                  flex: 1,
-                  boxSizing: "border-box",
-                  outline: "none",
-                  overflowX: "hidden",
-                  overflowY:
-                    page === "calendar" || (isReferencePage(page) && !isMobile)
-                      ? "hidden"
-                      : "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems:
-                    page === "calendar" || isReferencePage(page)
-                      ? "stretch"
-                      : "center",
-                }}
-              >
+              {sidebarVisible ? (
                 <div
+                  className={
+                    isMobile
+                      ? "bcp-sidebar-in"
+                      : "bcp-sidebar-in bcp-sidebar-in-left"
+                  }
                   style={{
-                    // raw divs are content-box by default; without
-                    // this the 100% width ignores padding and bleeds
-                    boxSizing: "border-box",
-                    // standardized CSS zoom resolves percentage widths
-                    // against the parent as-is (verified in Chrome: a
-                    // 100%-wide zoomed box renders exactly parent-wide
-                    // at any scale), so no inverse-width math is needed
-                    // here — dividing by fontScale would only shrink
-                    // the column on small screens
-                    width: "100%",
-                    // rem lengths inside a zoomed element are scaled by
-                    // it, so a plain rem cap stays visually constant at
-                    // every font scale
-                    maxWidth:
-                      page === "today" ||
-                      page === "settings" ||
-                      page === "about"
-                        ? "46rem"
-                        : "100%",
-                    // padding lives inside the zoomed element, so it
-                    // grows with fontScale unless pre-divided; keep it
-                    // visually constant so bigger type uses the freed
-                    // space instead of fatter margins squeezing it out
-                    padding:
-                      page === "today" ||
-                      page === "settings" ||
-                      page === "about"
-                        ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
-                        : "0",
-                    height:
-                      page === "calendar" ||
-                      (isReferencePage(page) && !isMobile)
-                        ? "100%"
-                        : undefined,
-                    // zoom only when actually scaled: WebKitGTK rounds
-                    // line boxes to integers inside zoomed subtrees,
-                    // which shaves glyph bottoms even at 100% if the
-                    // property is present
-                    zoom:
-                      page !== "calendar" && fontScale !== 1
-                        ? String(fontScale)
-                        : undefined,
+                    width: "25%",
+                    minWidth: 200,
+                    maxWidth: 340,
+                    flexShrink: 0,
+                    ...(isMobile ? styles.sidebarOverlay : undefined),
                   }}
                 >
-                  {content}
+                  <Sidebar
+                    active={page}
+                    onSelect={handlePageSelect}
+                    onHide={() => setSidebarVisible(false)}
+                  />
                 </div>
+              ) : null}
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  boxSizing: "border-box",
+                  overflow: "hidden",
+                }}
+              >
+                {auxRow}
+                <div
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                  style={{
+                    flex: 1,
+                    boxSizing: "border-box",
+                    outline: "none",
+                    overflowX: "hidden",
+                    overflowY:
+                      page === "calendar" ||
+                      (isReferencePage(page) && !isMobile)
+                        ? "hidden"
+                        : "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems:
+                      page === "calendar" || isReferencePage(page)
+                        ? "stretch"
+                        : "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      boxSizing: "border-box",
+                      width: "100%",
+                      maxWidth:
+                        page === "today" ||
+                        page === "settings" ||
+                        page === "about"
+                          ? "46rem"
+                          : "100%",
+                      padding:
+                        page === "today" ||
+                        page === "settings" ||
+                        page === "about"
+                          ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
+                          : "0",
+                      height:
+                        page === "calendar" ||
+                        (isReferencePage(page) && !isMobile)
+                          ? "100%"
+                          : undefined,
+                      zoom:
+                        page !== "calendar" && !(isReferencePage(page) && !isMobile) && fontScale !== 1
+                          ? String(fontScale)
+                          : undefined,
+                    }}
+                  >
+                    {content}
+                  </div>
+                </div>
+
+                <StatusBar
+                  season={season}
+                  seasonColor={seasonColor}
+                  slot={slot}
+                  officeName={document.officeName}
+                  scrollPct={scrollPct}
+                  reading={isReferencePage(page) ? reading : null}
+                  compact={compactBars}
+                />
               </div>
-              <StatusBar
-                season={season}
-                seasonColor={seasonColor}
-                slot={slot}
-                officeName={document.officeName}
-                scrollPct={scrollPct}
-                reading={isReferencePage(page) ? reading : null}
-                compact={compactBars}
-              />
             </div>
           </div>
-        </div>
+        </BibleProvider>
       </ReferenceProvider>
     );
   }
 
   return (
     <ReferenceProvider onReadingChange={setReading} page={page}>
-      <View style={styles.shell}>
-        <TopBar
-          season={season}
-          daysUntilNext={daysUntilNext}
-          nextSeason={nextSeason}
-          windowControls={windowControls}
-        />
-        <View style={styles.body}>
-          {sidebarVisible ? (
-            <View style={isMobile ? styles.sidebarOverlay : undefined}>
-              <Sidebar
-                active={page}
-                onSelect={handlePageSelect}
-                onHide={() => setSidebarVisible(false)}
-              />
+      <BibleProvider page={page}>
+        <View style={styles.shell}>
+          <TopBar
+            season={season}
+            daysUntilNext={daysUntilNext}
+            nextSeason={nextSeason}
+            windowControls={windowControls}
+          />
+          <View style={styles.body}>
+            {sidebarVisible ? (
+              <View style={isMobile ? styles.sidebarOverlay : undefined}>
+                <Sidebar
+                  active={page}
+                  onSelect={handlePageSelect}
+                  onHide={() => setSidebarVisible(false)}
+                />
+              </View>
+            ) : null}
+            <View style={styles.mainCol}>
+              {auxRow}
+              <View
+                style={[
+                  styles.content,
+                  isReferencePage(page) && styles.contentWide,
+                  { transform: [{ scale: fontScale }] },
+                ]}
+              >
+                {content}
+              </View>
             </View>
-          ) : null}
-          <View style={styles.mainCol}>
-            {auxRow}
-            <View
-              style={[
-                styles.content,
-                isReferencePage(page) && styles.contentWide,
-                { transform: [{ scale: fontScale }] },
-              ]}
-            >
-              {content}
-            </View>
-            <StatusBar
-              season={season}
-              seasonColor={seasonColor}
-              slot={slot}
-              officeName={document.officeName}
-              scrollPct={scrollPct}
-              reading={isReferencePage(page) ? reading : null}
-              compact={compactBars}
-            />
           </View>
         </View>
-      </View>
+      </BibleProvider>
     </ReferenceProvider>
   );
 }

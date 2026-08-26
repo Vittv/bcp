@@ -7,23 +7,29 @@ export type PageId =
   | "psalms"
   | "collects"
   | "offices"
+  | "old-testament"
+  | "new-testament"
   | "settings"
   | "about";
 
-const NAV: { id: PageId; label: string }[] = [
+const NAV: { id: PageId; label: string; section?: string }[] = [
   { id: "today", label: "Today" },
   { id: "calendar", label: "Calendar" },
   { id: "psalms", label: "Psalms" },
   { id: "collects", label: "Collects" },
   { id: "offices", label: "Offices" },
-  { id: "settings", label: "Settings" },
-  { id: "about", label: "About" },
+  { id: "old-testament", label: "Old Testament", section: "scripture" },
+  { id: "new-testament", label: "New Testament", section: "scripture" },
+  { id: "settings", label: "Settings", section: "settings" },
+  { id: "about", label: "About", section: "settings" },
 ];
 
 const noSelect = {
   userSelect: "none" as const,
   WebkitUserSelect: "none" as const,
 };
+
+const SECTION_ORDER = ["", "scripture", "settings"] as const;
 
 type SidebarProps = {
   active: PageId;
@@ -32,6 +38,11 @@ type SidebarProps = {
 };
 
 export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
+  const sections = SECTION_ORDER.map((section) => ({
+    section,
+    items: NAV.filter((item) => (item.section ?? "") === section),
+  }));
+
   return (
     <View style={[styles.sidebar, noSelect]}>
       <View style={styles.toolbar}>
@@ -48,24 +59,31 @@ export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
         </Pressable>
       </View>
       <View style={styles.nav}>
-        {NAV.map((item) => {
-          const isActive = active === item.id;
-          return (
-            <Pressable
-              key={item.id}
-              onPress={() => onSelect(item.id)}
-              style={({ hovered }) => [
-                styles.navItem,
-                isActive && styles.navItemActive,
-                hovered && !isActive && styles.navItemHover,
-              ]}
-            >
-              <Text style={[styles.navText, isActive && styles.navTextActive]}>
-                {item.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {sections.map(({ section, items }, idx) => (
+          <View key={section || "main"} style={styles.section}>
+            {section && idx > 0 && <View style={styles.sectionDivider} />}
+            {items.map((item) => {
+              const isActive = active === item.id;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => onSelect(item.id)}
+                  style={({ hovered }) => [
+                    styles.navItem,
+                    isActive && styles.navItemActive,
+                    hovered && !isActive && styles.navItemHover,
+                  ]}
+                >
+                  <Text
+                    style={[styles.navText, isActive && styles.navTextActive]}
+                  >
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -104,9 +122,20 @@ const styles = StyleSheet.create({
   nav: {
     paddingBottom: 8,
   },
+  section: {
+    paddingBottom: 4,
+  },
+  sectionDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
+    marginHorizontal: 14,
+    marginBottom: 4,
+  },
   navItem: {
-    paddingVertical: 7,
+    paddingVertical: 5,
     paddingHorizontal: 14,
+    marginHorizontal: 8,
+    borderRadius: 4,
   },
   navItemActive: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
