@@ -20,9 +20,11 @@ import { sharedStyles as styles } from "./reference/styles";
 export function BibleReaderScreen({
   isMobile,
   fontScale,
+  onScrollProgress,
 }: {
   isMobile: boolean;
   fontScale: number;
+  onScrollProgress?: (pct: number) => void;
 }) {
   const { book, selectBook } = useBible();
 
@@ -42,8 +44,9 @@ export function BibleReaderScreen({
 
   return (
     <SplitPane
-      fontScale={fontScale}
-      list={<BibleBookList selected={book?.abbrev} onSelect={selectBook} />}
+          fontScale={fontScale}
+          onScrollProgress={onScrollProgress}
+          list={<BibleBookList selected={book?.abbrev} onSelect={selectBook} />}
       detail={book ? <BibleChapterBody /> : <EmptyMessage message="" />}
       detailOpen={book !== null}
     />

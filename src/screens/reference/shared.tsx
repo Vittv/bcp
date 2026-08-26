@@ -1,6 +1,7 @@
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -229,12 +230,14 @@ export function SplitPane({
   detailOpen,
   header,
   fontScale = 1,
+  onScrollProgress,
 }: {
   list: ReactNode;
   detail: ReactNode;
   detailOpen: boolean;
   header?: ReactNode;
   fontScale?: number;
+  onScrollProgress?: (pct: number) => void;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
@@ -251,22 +254,25 @@ export function SplitPane({
     });
   }, [detailOpen]);
 
-  const listScale =
-    fontScale !== 1
-      ? { transform: `scale(${1 / fontScale})`, transformOrigin: "top left" }
-      : undefined;
+  const handleDetailScroll = useCallback(() => {
+    if (!onScrollProgress) return;
+    const el = detailRef.current;
+    if (!el) return;
+    const max = el.scrollHeight - el.clientHeight;
+    onScrollProgress(max > 0 ? Math.round((el.scrollTop / max) * 100) : 0);
+  }, [onScrollProgress]);
 
   // biome-ignore-start lint/a11y/noNoninteractiveTabindex: each pane is a
   // scrollable region and must be focusable for native arrow scrolling
   return (
     <div style={SPLIT_STYLE}>
-      <div ref={detailRef} tabIndex={0} style={DETAIL_PANE_STYLE}>
+      <div ref={detailRef} tabIndex={0} style={{ ...DETAIL_PANE_STYLE, zoom: fontScale !== 1 ? String(fontScale) : undefined }} data-split-detail onScroll={handleDetailScroll}>
         <View style={sharedStyles.detailPage}>{detail}</View>
       </div>
       <div
         ref={listRef}
         tabIndex={0}
-        style={{ ...LIST_PANE_STYLE, ...listScale }}
+        style={LIST_PANE_STYLE}
       >
         {header ? <div style={SPLIT_HEADER_STYLE}>{header}</div> : null}
         <div style={SPLIT_LIST_SCROLL_STYLE}>{list}</div>
