@@ -78,8 +78,23 @@ function NodeView({ node, showRubrics, showSpeakers }: NodeViewProps) {
     case "collect":
       return (
         <View style={styles.collectBlock}>
-          <Text style={styles.collectTitle}>A Collect</Text>
-          <Text style={styles.text}>{node.passage.text}</Text>
+          <Text style={styles.collectCross}>{"\u2720"}</Text>
+          <View style={styles.collectBody}>
+            <Text style={styles.collectTitle}>{node.passage.title}</Text>
+            <Text style={styles.collectText}>{node.passage.text}</Text>
+          </View>
+        </View>
+      );
+    case "fixed-collect":
+      return (
+        <View style={styles.fixedCollectBlock}>
+          <Text style={styles.collectCross}>{"\u2720"}</Text>
+          <View style={styles.collectBody}>
+            {node.title ? (
+              <Text style={styles.fixedCollectTitle}>{node.title}</Text>
+            ) : null}
+            <Text style={styles.fixedCollectText}>{node.text}</Text>
+          </View>
         </View>
       );
   }
@@ -160,6 +175,8 @@ function nodeKey(node: ComposedNode): string {
       return `l:${node.lessons.map((l) => l.ref).join("|")}`;
     case "collect":
       return `c:${node.passage.text}`;
+    case "fixed-collect":
+      return `fc:${node.title ?? ""}:${node.text}`;
   }
 }
 
@@ -211,8 +228,7 @@ const styles = StyleSheet.create({
     color: "var(--accent, #7a3040)",
   },
   psalmBlock: {
-    marginTop: 10,
-    marginBottom: 4,
+    marginTop: 22,
     paddingLeft: 4,
   },
   psalmTitle: {
@@ -237,14 +253,44 @@ const styles = StyleSheet.create({
   collectBlock: {
     marginTop: 10,
     marginBottom: 10,
+    flexDirection: "row",
+  },
+  collectCross: {
+    fontFamily: 'Georgia, "Times New Roman", serif',
+    fontSize: 16,
+    color: "var(--accent, #7a3040)",
+    marginRight: 4,
+  },
+  collectBody: {
+    flex: 1,
   },
   collectTitle: {
-    fontFamily: SANS,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
+    fontFamily: SERIF_ITALIC,
+    fontSize: 14,
     color: "var(--accent, #7a3040)",
-    marginBottom: 6,
+    marginBottom: 4,
+  },
+  collectText: {
+    fontFamily: SERIF,
+    fontSize: 17,
+    lineHeight: 28,
+    color: "var(--text, #2c2020)",
+  },
+  fixedCollectBlock: {
+    marginTop: 10,
+    marginBottom: 10,
+    flexDirection: "row",
+  },
+  fixedCollectTitle: {
+    fontFamily: SERIF_ITALIC,
+    fontSize: 14,
+    color: "var(--accent, #7a3040)",
+    marginBottom: 4,
+  },
+  fixedCollectText: {
+    fontFamily: SERIF,
+    fontSize: 17,
+    lineHeight: 28,
+    color: "var(--text, #2c2020)",
   },
 });

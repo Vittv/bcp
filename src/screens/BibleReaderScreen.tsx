@@ -44,9 +44,9 @@ export function BibleReaderScreen({
 
   return (
     <SplitPane
-          fontScale={fontScale}
-          onScrollProgress={onScrollProgress}
-          list={<BibleBookList selected={book?.abbrev} onSelect={selectBook} />}
+      fontScale={fontScale}
+      onScrollProgress={onScrollProgress}
+      list={<BibleBookList selected={book?.abbrev} onSelect={selectBook} />}
       detail={book ? <BibleChapterBody /> : <EmptyMessage message="" />}
       detailOpen={book !== null}
     />

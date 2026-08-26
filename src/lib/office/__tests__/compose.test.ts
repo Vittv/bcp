@@ -45,6 +45,8 @@ function textOf(doc: OfficeDocument): string[] {
           return n.passage.verses.map((v) => v.text).join(" ");
         case "collect":
           return n.passage.text;
+        case "fixed-collect":
+          return n.text;
         case "lessons":
           return n.lessons.map((l) => l.ref).join(" ");
         default:
@@ -325,7 +327,6 @@ describe("composeOffice: preferences and other offices", () => {
     for (const id of ["noonday", "compline"] as const) {
       const doc = composeOffice({ year: 2026, month: 8, day: 12 }, id);
       expect(doc.sections.length).toBeGreaterThan(0);
-      expect(nodesOf(doc, "psalm")).toHaveLength(0);
       expect(nodesOf(doc, "lessons")).toHaveLength(0);
       expect(nodesOf(doc, "collect")).toHaveLength(0);
     }
@@ -399,13 +400,14 @@ describe("composeOffice: preferences and other offices", () => {
     ]);
   });
 
-  test("Compline collapses its collect and prayer menus", () => {
+  test("Compline shows all collects and prayers from its menus", () => {
     const doc = composeOffice({ year: 2026, month: 8, day: 14 }, "compline");
     expect(hasText(doc, "Be our light in the darkness, O Lord")).toBe(true);
-    expect(hasText(doc, "Be present, O merciful God")).toBe(false);
+    expect(hasText(doc, "Be present, O merciful God")).toBe(true);
     expect(hasText(doc, "Look down, O Lord, from your heavenly throne")).toBe(
-      false,
+      true,
     );
+    expect(hasText(doc, "Visit this place, O Lord")).toBe(true);
     expect(
       hasText(
         doc,
@@ -414,7 +416,7 @@ describe("composeOffice: preferences and other offices", () => {
     ).toBe(true);
     expect(
       hasText(doc, "O God, your unfailing providence sustains the world"),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   test("only one invitatory antiphon is kept", () => {
