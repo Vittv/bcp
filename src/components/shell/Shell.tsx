@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Chevron } from "../../components/shell/Chevron";
 import type { PageId } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
+import { useDrawerSwipe } from "../../components/shell/useDrawerSwipe";
 import { BibleProvider, setBiblePendingRef } from "../../context/BibleContext";
 import {
   type NavigateToRef,
@@ -79,8 +80,8 @@ function isReferencePage(p: PageId): boolean {
 }
 
 const SIDEBAR_ANIM_STYLE_ID = "sidebar-anim-style";
-// quick fade-and-drift entrance: desktop comes in from the left
-// edge, the mobile overlay drops from the top
+// entrance animations: desktop fades-and-drifts in from the left edge,
+// the mobile drawer slides in from off-screen for a native drawer feel
 function ensureSidebarAnimStyle() {
   if (document.getElementById(SIDEBAR_ANIM_STYLE_ID)) return;
   const el = document.createElement("style");
@@ -89,12 +90,21 @@ function ensureSidebarAnimStyle() {
 @keyframes bcp-sidebar-in {
   from { opacity: 0; transform: var(--bcp-from, translateY(-8px)); }
 }
+:root {
+  --bcp-drawer-width: min(84vw, 380px);
+}
+@keyframes bcp-drawer-in {
+  from { transform: translateX(calc(-1 * var(--bcp-drawer-width))); }
+}
 .bcp-sidebar-in {
   animation: bcp-sidebar-in 150ms cubic-bezier(0.2, 0.9, 0.3, 1);
 }
+.bcp-drawer-in {
+  animation: bcp-drawer-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
 .bcp-sidebar-in-left { --bcp-from: translateX(-8px); }
 @media (prefers-reduced-motion: reduce) {
-  .bcp-sidebar-in { animation: none; }
+  .bcp-sidebar-in, .bcp-drawer-in { animation: none; }
 }`;
   document.head.appendChild(el);
 }
@@ -114,45 +124,72 @@ export function Shell() {
   const [reading, setReading] = useState<string | null>(null);
   const [scrollPct, setScrollPct] = useState(0);
 
-  const [sidebarVisible, setSidebarVisibleRaw] = useState(() => {
-    if (typeof window !== "undefined") {
-      // phones always start collapsed: the stacked sidebar eats the
-      // whole viewport on load; the stored preference is desktop-only
-      if (window.matchMedia("(max-width: 768px)").matches) return false;
-      return localStorage.getItem("sidebarVisible") !== "false";
-    }
-    return true;
+  const [isMobile, setIsMobile] = useState(() => {
+    if (Platform.OS !== "web") return true;
+    return window.matchMedia("(max-width: 768px)").matches;
   });
 
-  // window-control buttons in the titlebar (desktop shell only)
+  // Persistent sidebar visibility on desktop, deliberately toggled by the
+  // user. The mobile drawer is a separate, transient state (mobileOpen) so a
+  // shrink-to-mobile / auto-hide can never overwrite a deliberate desktop
+  // choice.
+  const [desktopVisible, setDesktopVisibleRaw] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("sidebarVisible") !== "false";
+  });
+  const setDesktopVisible = useCallback((v: boolean) => {
+    setDesktopVisibleRaw(v);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sidebarVisible", String(v));
+    }
+  }, []);
+
+  // Transient mobile drawer open/close state; deliberately not persisted.
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Effective visibility: on mobile the drawer rides its transient state; on
+  // desktop it follows the persisted preference. Resizing back to desktop
+  // therefore restores the user's deliberate desktop choice, while a hidden
+  // choice stays hidden.
+  const sidebarVisible = isMobile ? mobileOpen : desktopVisible;
+
+  const openSidebar = useCallback(() => {
+    if (isMobile) setMobileOpen(true);
+    else setDesktopVisible(true);
+  }, [isMobile, setDesktopVisible]);
+
+  const hideSidebar = useCallback(() => {
+    if (isMobile) setMobileOpen(false);
+    else setDesktopVisible(false);
+  }, [isMobile, setDesktopVisible]);
+
+  // windows-control buttons in the titlebar (desktop shell only)
   const [windowControls, setWindowControlsRaw] = useState(loadWindowControls);
   const setWindowControls = useCallback((v: boolean) => {
     setWindowControlsRaw(v);
     saveWindowControls(v);
   }, []);
 
-  const setSidebarVisible = useCallback((v: boolean) => {
-    setSidebarVisibleRaw(v);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("sidebarVisible", String(v));
-    }
-  }, []);
-
-  const [isMobile, setIsMobile] = useState(() => {
-    if (Platform.OS !== "web") return true;
-    return window.matchMedia("(max-width: 768px)").matches;
-  });
-
   useEffect(() => {
     if (Platform.OS !== "web") return;
     const mq = window.matchMedia("(max-width: 768px)");
     const onChange = (e: MediaQueryListEvent) => {
+      // entering mobile just resets the transient drawer (no persistence);
+      // the derived sidebarVisible handles the desktop restore on the way up
       setIsMobile(e.matches);
-      if (e.matches) setSidebarVisible(false);
+      if (e.matches) setMobileOpen(false);
     };
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
-  }, [setSidebarVisible]);
+  }, []);
+
+  // mobile drawer gestures: edge-swipe to open, left-swipe to close
+  useDrawerSwipe({
+    enabled: IS_WEB && isMobile,
+    open: mobileOpen,
+    onOpen: () => setMobileOpen(true),
+    onClose: () => setMobileOpen(false),
+  });
 
   // narrow layout for the chrome bars themselves: they keep working
   // well below the sidebar's mobile breakpoint by dropping their
@@ -213,7 +250,7 @@ export function Shell() {
   const handlePageSelect = (p: PageId) => {
     setPage(p);
     setReading(null);
-    if (isMobile) setSidebarVisible(false);
+    if (isMobile) setMobileOpen(false);
     scrollToTop();
   };
 
@@ -222,7 +259,7 @@ export function Shell() {
       const setPageAndClean = (p: PageId) => {
         setPage(p);
         setReading(null);
-        if (isMobile) setSidebarVisible(false);
+        if (isMobile) setMobileOpen(false);
         scrollToTop();
       };
       if (typeof target === "string") {
@@ -242,7 +279,7 @@ export function Shell() {
         setPageAndClean(target.page);
       }
     },
-    [isMobile, scrollToTop, setSidebarVisible],
+    [isMobile, scrollToTop],
   );
 
   // park keyboard focus on the scroller so native arrow/space
@@ -299,7 +336,7 @@ export function Shell() {
         styles.auxShowBtn,
         hovered && styles.auxShowBtnHover,
       ]}
-      onPress={() => setSidebarVisible(true)}
+      onPress={openSidebar}
       accessibilityLabel="Show sidebar"
       accessibilityRole="button"
     >
@@ -439,13 +476,13 @@ export function Shell() {
                   <div
                     className={
                       isMobile
-                        ? "bcp-sidebar-in"
+                        ? "bcp-drawer-in"
                         : "bcp-sidebar-in bcp-sidebar-in-left"
                     }
                     style={{
-                      width: "25%",
-                      minWidth: 200,
-                      maxWidth: 340,
+                      width: isMobile ? "min(84vw, 380px)" : "25%",
+                      minWidth: isMobile ? undefined : 200,
+                      maxWidth: isMobile ? undefined : 340,
                       flexShrink: 0,
                       ...(isMobile ? styles.sidebarOverlay : undefined),
                     }}
@@ -453,7 +490,7 @@ export function Shell() {
                     <Sidebar
                       active={page}
                       onSelect={handlePageSelect}
-                      onHide={() => setSidebarVisible(false)}
+                      onHide={hideSidebar}
                     />
                   </div>
                 ) : null}
@@ -474,6 +511,7 @@ export function Shell() {
                       flex: 1,
                       boxSizing: "border-box",
                       outline: "none",
+                      position: "relative",
                       overflowX: "hidden",
                       overflowY:
                         page === "calendar" ||
@@ -519,6 +557,13 @@ export function Shell() {
                     >
                       {content}
                     </div>
+                    {isMobile && sidebarVisible ? (
+                      <div
+                        onClick={() => setMobileOpen(false)}
+                        aria-hidden="true"
+                        style={styles.backdrop}
+                      />
+                    ) : null}
                   </div>
 
                   <StatusBar
@@ -556,7 +601,7 @@ export function Shell() {
                   <Sidebar
                     active={page}
                     onSelect={handlePageSelect}
-                    onHide={() => setSidebarVisible(false)}
+                    onHide={hideSidebar}
                   />
                 </View>
               ) : null}
@@ -622,6 +667,16 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     zIndex: 30,
+  },
+  backdrop: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 20,
+    backgroundColor: "rgba(20, 15, 15, 0.35)",
+    cursor: "pointer",
   },
   content: {
     flex: 1,
