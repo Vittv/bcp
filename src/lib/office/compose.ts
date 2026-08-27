@@ -339,7 +339,39 @@ function composeOpening(
       inOption = false;
       inCollectMenu = false;
       inPrayerMenu = false;
-      const psalmMatch = item.text.match(/^Psalm (\d+)\s*(.*)/);
+
+      // daily-devotions single reading: the "A Reading" heading carries the
+      // lesson citation, followed by the BCP-printed passage text which we
+      // replace with the same inline KJV rendering used for office lessons.
+      if (item.text === "A Reading" && item.citation) {
+        nodes.push({
+          kind: "lessons",
+          lessons: [{ number: 1, label: "A Reading", ref: item.citation }],
+        });
+        idx++;
+        while (idx < items.length && items[idx].kind === "text") idx++;
+        continue;
+      }
+
+      // daily-devotions fixed collect: the "The Collect" heading is followed
+      // by the collect text, optionally an "or this" alternative to drop.
+      if (item.text === "The Collect") {
+        const buf: string[] = [];
+        idx++;
+        while (idx < items.length && items[idx].kind === "text") {
+          buf.push(items[idx].text);
+          idx++;
+        }
+        if (idx < items.length && items[idx].kind === "option") {
+          idx++;
+          while (idx < items.length && items[idx].kind === "text") idx++;
+        }
+        if (buf.length > 0)
+          nodes.push({ kind: "fixed-collect", text: buf.join("\n") });
+        continue;
+      }
+
+      const psalmMatch = item.text.match(/^(?:From )?Psalm (\d+)\s*(.*)/);
       if (psalmMatch && keep) {
         const psalmNum = Number(psalmMatch[1]);
         const incipit = psalmMatch[2]?.trim() || undefined;

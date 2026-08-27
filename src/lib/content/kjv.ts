@@ -763,3 +763,41 @@ export async function getKjvPassageFromDolRef(
     parsed.endChapter,
   );
 }
+
+// load every range of a lesson ref, which may combine semicolon-separated
+// groups and comma-separated ranges (e.g. "Gen 17:1–12a, 15–16" or
+// "Isaiah 26:3; 30:15"). Verse-only pieces inherit the running chapter.
+export async function getKjvPassagesFromDolRef(
+  ref: string,
+): Promise<KjvPassage[]> {
+  const groups = ref.split(";").map((s) => s.trim());
+  if (groups.length === 0) return [];
+
+  const firstParsed = parseDolLessonRef(groups[0]);
+  if (!firstParsed) return [];
+  const book = firstParsed.book;
+
+  const results: KjvPassage[] = [];
+  let lastChapter = firstParsed.chapter;
+
+  for (const group of groups) {
+    for (let range of group.split(",").map((s) => s.trim())) {
+      // only the first range of the ref carries the book name; strip it so we
+      // always rebuild fullRef from the running chapter
+      if (range.toLowerCase().startsWith(book.toLowerCase())) {
+        range = range.slice(book.length).trim();
+      }
+      if (/:/.test(range)) {
+        const parsed = parseDolLessonRef(`${book} ${range}`);
+        if (parsed) lastChapter = parsed.chapter;
+      }
+      const fullRef = /:/.test(range)
+        ? `${book} ${range}`
+        : `${book} ${lastChapter}:${range}`;
+      const passage = await getKjvPassageFromDolRef(fullRef);
+      if (passage) results.push(passage);
+    }
+  }
+
+  return results;
+}

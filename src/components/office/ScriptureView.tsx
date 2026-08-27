@@ -49,7 +49,7 @@ export function ScriptureView({ passage }: { passage: KjvPassage }) {
 const styles = StyleSheet.create({
   block: {
     marginTop: 8,
-    marginBottom: 16,
+    marginBottom: 0,
   },
   reference: {
     fontFamily: SERIF_ITALIC,

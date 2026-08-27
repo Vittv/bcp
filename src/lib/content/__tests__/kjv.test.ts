@@ -3,6 +3,7 @@ import {
   getBooksByTestament,
   getKjvBookMeta,
   getKjvPassageFromDolRef,
+  getKjvPassagesFromDolRef,
   KJV_BOOKS,
   loadKjvBook,
   parseDolLessonRef,
@@ -280,5 +281,36 @@ describe("End-to-end DOL ref to passage", () => {
   it("returns null for invalid refs", async () => {
     const passage = await getKjvPassageFromDolRef("InvalidBook 1:1");
     expect(passage).toBeNull();
+  });
+});
+
+describe("getKjvPassagesFromDolRef (multi-range refs)", () => {
+  it("loads a single-verse devotion reading", async () => {
+    const passages = await getKjvPassagesFromDolRef("1 Peter 1:3");
+    expect(passages.length).toBe(1);
+    expect(passages[0].chapter).toBe(1);
+    expect(passages[0].verses[0].number).toBe(3);
+  });
+
+  it("loads comma-separated verse-only ranges", async () => {
+    const passages = await getKjvPassagesFromDolRef("Gen 17:1–12a, 15–16");
+    expect(passages.map((p) => p.verses.length)).toEqual([12, 2]);
+    expect(passages[1].verses[0].number).toBe(15);
+  });
+
+  it("loads bare verse numbers after a comma as the same chapter", async () => {
+    const passages = await getKjvPassagesFromDolRef("Jer 14:9, 22");
+    expect(passages.map((p) => `${p.chapter}:${p.verses[0].number}`)).toEqual([
+      "14:9",
+      "14:22",
+    ]);
+  });
+
+  it("loads semicolon-separated groups with chapter inheritance", async () => {
+    const passages = await getKjvPassagesFromDolRef("Isaiah 26:3; 30:15");
+    expect(passages.map((p) => `${p.chapter}:${p.verses[0].number}`)).toEqual([
+      "26:3",
+      "30:15",
+    ]);
   });
 });

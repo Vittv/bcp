@@ -33,6 +33,20 @@ function psalmNumbers(doc: OfficeDocument): number[] {
   );
 }
 
+function psalmCitations(doc: OfficeDocument): string[] {
+  // SAFETY: nodesOf filters by kind, so every element has kind "psalm".
+  return nodesOf(doc, "psalm").map(
+    (n) => (n as Extract<ComposedNode, { kind: "psalm" }>).citation,
+  );
+}
+
+function lessonRefsOf(doc: OfficeDocument): string[] {
+  // SAFETY: nodesOf filters by kind, so every element has kind "lessons".
+  return nodesOf(doc, "lessons").flatMap((n) =>
+    (n as Extract<ComposedNode, { kind: "lessons" }>).lessons.map((l) => l.ref),
+  );
+}
+
 function textOf(doc: OfficeDocument): string[] {
   return doc.sections.flatMap((s) =>
     s.nodes.flatMap((n) => {
@@ -518,8 +532,12 @@ describe("composeOffice: daily devotions", () => {
     expect(doc.rite).toBeNull();
     // devotions are independent of the lectionary
     expect(doc.entryTitle).toBeNull();
-    expect(nodesOf(doc, "psalm")).toHaveLength(0);
-    expect(nodesOf(doc, "lessons")).toHaveLength(0);
+    // but its own psalm, reading, and collect are styled like office nodes
+    expect(nodesOf(doc, "psalm")).toHaveLength(1);
+    expect(psalmCitations(doc)).toEqual(["51"]);
+    expect(nodesOf(doc, "lessons")).toHaveLength(1);
+    expect(lessonRefsOf(doc)).toEqual(["1 Peter 1:3"]);
+    expect(nodesOf(doc, "fixed-collect")).toHaveLength(1);
     expect(hasText(doc, "Open my lips, O Lord")).toBe(true);
     expect(hasText(doc, "Lord God, almighty and everlasting Father")).toBe(
       true,
