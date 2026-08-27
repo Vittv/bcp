@@ -6,7 +6,7 @@ export function AboutScreen() {
       <Text style={styles.heading}>About</Text>
 
       <View style={styles.section}>
-        <Text style={styles.label}>Daily Office</Text>
+        <Text style={styles.label}>bcp</Text>
         <Text style={styles.body}>
           A reader for the Daily Office of the Book of Common Prayer (1979, The
           Episcopal Church): Morning Prayer, Noonday Prayer, Evening Prayer, and
