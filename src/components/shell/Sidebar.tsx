@@ -58,32 +58,39 @@ export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
           <Chevron direction="left" size={6} />
         </Pressable>
       </View>
-      <View style={styles.nav}>
-        {sections.map(({ section, items }, idx) => (
-          <View key={section || "main"} style={styles.section}>
-            {section && idx > 0 && <View style={styles.sectionDivider} />}
-            {items.map((item) => {
-              const isActive = active === item.id;
-              return (
-                <Pressable
-                  key={item.id}
-                  onPress={() => onSelect(item.id)}
-                  style={({ hovered }) => [
-                    styles.navItem,
-                    isActive && styles.navItemActive,
-                    hovered && !isActive && styles.navItemHover,
-                  ]}
-                >
-                  <Text
-                    style={[styles.navText, isActive && styles.navTextActive]}
+      <View style={styles.scroll}>
+        <View style={styles.nav}>
+          {sections.map(({ section, items }, idx) => (
+            <View key={section || "main"} style={styles.section}>
+              {section && idx > 0 && <View style={styles.sectionDivider} />}
+              {items.map((item) => {
+                const isActive = active === item.id;
+                return (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => onSelect(item.id)}
+                    style={({ hovered }) => [
+                      styles.navItem,
+                      isActive && styles.navItemActive,
+                      hovered && !isActive && styles.navItemHover,
+                    ]}
                   >
-                    {item.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        ))}
+                    <Text
+                      style={[styles.navText, isActive && styles.navTextActive]}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ))}
+        </View>
+      </View>
+      <View style={styles.footer}>
+        <Text style={styles.footerText} numberOfLines={1}>
+          bcp · v0.1.0
+        </Text>
       </View>
     </View>
   );
@@ -93,6 +100,8 @@ const styles = StyleSheet.create({
   sidebar: {
     width: "100%",
     height: "100%",
+    display: "flex",
+    flexDirection: "column",
     borderRightWidth: 1,
     borderRightColor: "var(--border, #d2cbbf)",
     backgroundColor: "var(--bg, #e0dbd0)",
@@ -119,6 +128,11 @@ const styles = StyleSheet.create({
   },
   // nav items are full-width bands; active and hover share the same
   // control-hover fill as every other chrome surface
+  scroll: {
+    flex: 1,
+    overflowY: "auto",
+    overflowX: "hidden",
+  },
   nav: {
     paddingBottom: 8,
   },
@@ -135,6 +149,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 14,
     marginHorizontal: 8,
+    marginVertical: 3,
     borderRadius: 4,
   },
   navItemActive: {
@@ -151,5 +166,19 @@ const styles = StyleSheet.create({
   navTextActive: {
     color: "var(--accent, #7a3040)",
     fontWeight: "600",
+  },
+  footer: {
+    height: 24,
+    flexShrink: 0,
+    borderTopWidth: 1,
+    borderTopColor: "var(--border, #d2cbbf)",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+  },
+  footerText: {
+    fontFamily: "sans-serif",
+    fontSize: 11,
+    color: "var(--text-secondary, #7a6e64)",
   },
 });
