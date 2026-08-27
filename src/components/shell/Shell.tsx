@@ -3,7 +3,11 @@ import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Chevron } from "../../components/shell/Chevron";
 import type { PageId } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
-import { BibleProvider } from "../../context/BibleContext";
+import { BibleProvider, setBiblePendingRef } from "../../context/BibleContext";
+import {
+  type NavigateToRef,
+  NavigationContext,
+} from "../../context/NavigationContext";
 import { useTheme } from "../../context/ThemeContext";
 import {
   colorFor,
@@ -12,6 +16,7 @@ import {
   seasonFor,
 } from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
+import { getKjvBookMeta } from "../../lib/content/kjv";
 import {
   IS_MACOS_TAURI,
   IS_TAURI,
@@ -188,21 +193,7 @@ export function Shell() {
     scrollToTop();
   };
 
-  const handlePageSelect = (p: PageId) => {
-    setPage(p);
-    setReading(null);
-    if (isMobile) setSidebarVisible(false);
-    scrollToTop();
-  };
-
-  // park keyboard focus on the scroller so native arrow/space
-  // navigation works from first load without a click
-  useEffect(() => {
-    if (!IS_WEB) return;
-    scrollRef.current?.focus({ preventScroll: true });
-  }, []);
-
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     const el = scrollRef.current;
     if (el) {
       el.scrollTop = 0;
@@ -211,12 +202,55 @@ export function Shell() {
     setScrollPct(0);
     // also reset the SplitPane detail pane scroll (desktop reference pages)
     requestAnimationFrame(() => {
+      // SAFETY: querySelector returns Element, we need HTMLElement for scrollTop
       const detail = window.document.querySelector(
         "[data-split-detail]",
       ) as HTMLElement | null;
       if (detail) detail.scrollTop = 0;
     });
+  }, []);
+
+  const handlePageSelect = (p: PageId) => {
+    setPage(p);
+    setReading(null);
+    if (isMobile) setSidebarVisible(false);
+    scrollToTop();
   };
+
+  const handleNavigateTo = useCallback(
+    (target: NavigateToRef | PageId) => {
+      const setPageAndClean = (p: PageId) => {
+        setPage(p);
+        setReading(null);
+        if (isMobile) setSidebarVisible(false);
+        scrollToTop();
+      };
+      if (typeof target === "string") {
+        setPageAndClean(target);
+        return;
+      }
+      if (target.bookAbbrev && target.chapter) {
+        const meta = getKjvBookMeta(target.bookAbbrev);
+        const page: PageId =
+          meta?.testament === "NT" ? "new-testament" : "old-testament";
+        setBiblePendingRef({
+          abbrev: target.bookAbbrev,
+          chapter: target.chapter,
+        });
+        setPageAndClean(page);
+      } else {
+        setPageAndClean(target.page);
+      }
+    },
+    [isMobile, scrollToTop, setSidebarVisible],
+  );
+
+  // park keyboard focus on the scroller so native arrow/space
+  // navigation works from first load without a click
+  useEffect(() => {
+    if (!IS_WEB) return;
+    scrollRef.current?.focus({ preventScroll: true });
+  }, []);
 
   const document = composeOffice(
     date,
@@ -373,131 +407,133 @@ export function Shell() {
           onReadingChange={setReading}
           onChapterChange={scrollToTop}
         >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              height: "100vh",
-              width: "100%",
-              boxSizing: "border-box",
-              overflow: "hidden",
-              backgroundColor: resolved === "dark" ? "#1b191a" : "#e0dbd0",
-            }}
-          >
-            <TopBar
-              season={season}
-              daysUntilNext={daysUntilNext}
-              nextSeason={nextSeason}
-              windowControls={windowControls}
-              compact={compactBars}
-            />
+          <NavigationContext.Provider value={{ navigateTo: handleNavigateTo }}>
             <div
               style={{
                 display: "flex",
-                flex: 1,
+                flexDirection: "column",
+                height: "100vh",
+                width: "100%",
                 boxSizing: "border-box",
                 overflow: "hidden",
-                position: "relative",
+                backgroundColor: resolved === "dark" ? "#1b191a" : "#e0dbd0",
               }}
             >
-              {sidebarVisible ? (
-                <div
-                  className={
-                    isMobile
-                      ? "bcp-sidebar-in"
-                      : "bcp-sidebar-in bcp-sidebar-in-left"
-                  }
-                  style={{
-                    width: "25%",
-                    minWidth: 200,
-                    maxWidth: 340,
-                    flexShrink: 0,
-                    ...(isMobile ? styles.sidebarOverlay : undefined),
-                  }}
-                >
-                  <Sidebar
-                    active={page}
-                    onSelect={handlePageSelect}
-                    onHide={() => setSidebarVisible(false)}
-                  />
-                </div>
-              ) : null}
+              <TopBar
+                season={season}
+                daysUntilNext={daysUntilNext}
+                nextSeason={nextSeason}
+                windowControls={windowControls}
+                compact={compactBars}
+              />
               <div
                 style={{
-                  flex: 1,
                   display: "flex",
-                  flexDirection: "column",
+                  flex: 1,
                   boxSizing: "border-box",
                   overflow: "hidden",
+                  position: "relative",
                 }}
               >
-                {auxRow}
-                <div
-                  ref={scrollRef}
-                  onScroll={handleScroll}
-                  style={{
-                    flex: 1,
-                    boxSizing: "border-box",
-                    outline: "none",
-                    overflowX: "hidden",
-                    overflowY:
-                      page === "calendar" ||
-                      (isReferencePage(page) && !isMobile)
-                        ? "hidden"
-                        : "auto",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems:
-                      page === "calendar" || isReferencePage(page)
-                        ? "stretch"
-                        : "center",
-                  }}
-                >
+                {sidebarVisible ? (
                   <div
+                    className={
+                      isMobile
+                        ? "bcp-sidebar-in"
+                        : "bcp-sidebar-in bcp-sidebar-in-left"
+                    }
                     style={{
-                      boxSizing: "border-box",
-                      width: "100%",
-                      maxWidth:
-                        page === "today" ||
-                        page === "settings" ||
-                        page === "about"
-                          ? "46rem"
-                          : "100%",
-                      padding:
-                        page === "today" ||
-                        page === "settings" ||
-                        page === "about"
-                          ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
-                          : "0",
-                      height:
-                        page === "calendar" ||
-                        (isReferencePage(page) && !isMobile)
-                          ? "100%"
-                          : undefined,
-                      zoom:
-                        page !== "calendar" &&
-                        !(isReferencePage(page) && !isMobile) &&
-                        fontScale !== 1
-                          ? String(fontScale)
-                          : undefined,
+                      width: "25%",
+                      minWidth: 200,
+                      maxWidth: 340,
+                      flexShrink: 0,
+                      ...(isMobile ? styles.sidebarOverlay : undefined),
                     }}
                   >
-                    {content}
+                    <Sidebar
+                      active={page}
+                      onSelect={handlePageSelect}
+                      onHide={() => setSidebarVisible(false)}
+                    />
                   </div>
-                </div>
+                ) : null}
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    boxSizing: "border-box",
+                    overflow: "hidden",
+                  }}
+                >
+                  {auxRow}
+                  <div
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    style={{
+                      flex: 1,
+                      boxSizing: "border-box",
+                      outline: "none",
+                      overflowX: "hidden",
+                      overflowY:
+                        page === "calendar" ||
+                        (isReferencePage(page) && !isMobile)
+                          ? "hidden"
+                          : "auto",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems:
+                        page === "calendar" || isReferencePage(page)
+                          ? "stretch"
+                          : "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        boxSizing: "border-box",
+                        width: "100%",
+                        maxWidth:
+                          page === "today" ||
+                          page === "settings" ||
+                          page === "about"
+                            ? "46rem"
+                            : "100%",
+                        padding:
+                          page === "today" ||
+                          page === "settings" ||
+                          page === "about"
+                            ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
+                            : "0",
+                        height:
+                          page === "calendar" ||
+                          (isReferencePage(page) && !isMobile)
+                            ? "100%"
+                            : undefined,
+                        zoom:
+                          page !== "calendar" &&
+                          !(isReferencePage(page) && !isMobile) &&
+                          fontScale !== 1
+                            ? String(fontScale)
+                            : undefined,
+                      }}
+                    >
+                      {content}
+                    </div>
+                  </div>
 
-                <StatusBar
-                  season={season}
-                  seasonColor={seasonColor}
-                  slot={slot}
-                  officeName={document.officeName}
-                  scrollPct={scrollPct}
-                  reading={isReferencePage(page) ? reading : null}
-                  compact={compactBars}
-                />
+                  <StatusBar
+                    season={season}
+                    seasonColor={seasonColor}
+                    slot={slot}
+                    officeName={document.officeName}
+                    scrollPct={scrollPct}
+                    reading={isReferencePage(page) ? reading : null}
+                    compact={compactBars}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </NavigationContext.Provider>
         </BibleProvider>
       </ReferenceProvider>
     );
@@ -506,37 +542,39 @@ export function Shell() {
   return (
     <ReferenceProvider onReadingChange={setReading} page={page}>
       <BibleProvider page={page}>
-        <View style={styles.shell}>
-          <TopBar
-            season={season}
-            daysUntilNext={daysUntilNext}
-            nextSeason={nextSeason}
-            windowControls={windowControls}
-          />
-          <View style={styles.body}>
-            {sidebarVisible ? (
-              <View style={isMobile ? styles.sidebarOverlay : undefined}>
-                <Sidebar
-                  active={page}
-                  onSelect={handlePageSelect}
-                  onHide={() => setSidebarVisible(false)}
-                />
-              </View>
-            ) : null}
-            <View style={styles.mainCol}>
-              {auxRow}
-              <View
-                style={[
-                  styles.content,
-                  isReferencePage(page) && styles.contentWide,
-                  { transform: [{ scale: fontScale }] },
-                ]}
-              >
-                {content}
+        <NavigationContext.Provider value={{ navigateTo: handleNavigateTo }}>
+          <View style={styles.shell}>
+            <TopBar
+              season={season}
+              daysUntilNext={daysUntilNext}
+              nextSeason={nextSeason}
+              windowControls={windowControls}
+            />
+            <View style={styles.body}>
+              {sidebarVisible ? (
+                <View style={isMobile ? styles.sidebarOverlay : undefined}>
+                  <Sidebar
+                    active={page}
+                    onSelect={handlePageSelect}
+                    onHide={() => setSidebarVisible(false)}
+                  />
+                </View>
+              ) : null}
+              <View style={styles.mainCol}>
+                {auxRow}
+                <View
+                  style={[
+                    styles.content,
+                    isReferencePage(page) && styles.contentWide,
+                    { transform: [{ scale: fontScale }] },
+                  ]}
+                >
+                  {content}
+                </View>
               </View>
             </View>
           </View>
-        </View>
+        </NavigationContext.Provider>
       </BibleProvider>
     </ReferenceProvider>
   );

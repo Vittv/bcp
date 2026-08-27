@@ -184,5 +184,5 @@ export type KjvPassage = {
   abbrev: string;
   testament: "OT" | "NT";
   chapter: number;
-  verses: { number: number; text: string }[];
+  verses: { number: number; text: string; chapter?: number }[];
 };
