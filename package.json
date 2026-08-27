@@ -37,7 +37,7 @@
     "check": "biome check . && oxlint",
     "format": "biome format --write .",
     "tauri": "tauri",
-    "desktop:dev": "expo export -p web && tauri dev",
-    "desktop:build": "expo export -p web && NO_STRIP=1 tauri build"
+    "desktop:dev": "BASE_URL=/ expo export -p web && tauri dev",
+    "desktop:build": "BASE_URL=/ expo export -p web && NO_STRIP=1 tauri build"
   }
 }
