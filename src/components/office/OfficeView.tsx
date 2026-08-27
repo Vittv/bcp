@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import {
-  getKjvPassageFromDolRef,
-  parseDolLessonRef,
-} from "../../lib/content/kjv";
+import { getKjvPassagesFromDolRef } from "../../lib/content/kjv";
 import type { KjvPassage, OfficeSpeaker } from "../../lib/content/types";
 import type {
   ComposedLesson,
@@ -39,47 +36,12 @@ function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
   return <Text style={styles.speaker}>{SPEAKER_LABEL[speaker]} </Text>;
 }
 
-async function loadLessonPassages(ref: string): Promise<KjvPassage[]> {
-  // split into semicolon groups, then comma-separated ranges within each
-  const groups = ref.split(";").map((s) => s.trim());
-  if (groups.length === 0) return [];
-
-  // extract book name from the first group
-  const firstParsed = parseDolLessonRef(groups[0]);
-  if (!firstParsed) return [];
-  const book = firstParsed.book;
-
-  const results: KjvPassage[] = [];
-  let lastChapter = firstParsed.chapter;
-
-  for (const group of groups) {
-    // split group on commas, each piece is a range like "16:16–22" or "1, 13–16"
-    const ranges = group.split(",").map((s) => s.trim());
-    for (const range of ranges) {
-      // ranges with a colon have an explicit chapter; verse-only ranges inherit lastChapter
-      if (/:/.test(range)) {
-        const parsed = parseDolLessonRef(`${book} ${range}`);
-        if (parsed) lastChapter = parsed.chapter;
-      }
-      const fullRef = /^\d+\s*[-–]/.test(range)
-        ? `${book} ${lastChapter}:${range}`
-        : /^\d/.test(range)
-          ? `${book} ${range}`
-          : range;
-      const passage = await getKjvPassageFromDolRef(fullRef);
-      if (passage) results.push(passage);
-    }
-  }
-
-  return results;
-}
-
 function LessonRow({ lesson }: { lesson: ComposedLesson }) {
   const [passages, setPassages] = useState<KjvPassage[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    loadLessonPassages(lesson.ref).then((ps) => {
+    getKjvPassagesFromDolRef(lesson.ref).then((ps) => {
       if (!cancelled) setPassages(ps);
     });
     return () => {
@@ -267,7 +229,7 @@ const styles = StyleSheet.create({
     fontFamily: SERIF_SEMI,
     fontSize: 22,
     lineHeight: 30,
-    marginTop: 28,
+    marginTop: 22,
     marginBottom: 8,
     color: "var(--text, #2c2020)",
   },
@@ -304,11 +266,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   lessonBlock: {
-    marginTop: 22,
+    marginBottom: 12,
     paddingLeft: 4,
   },
   lessonRow: {
-    marginBottom: 14,
+    marginTop: 22,
   },
   lessonRef: {
     fontFamily: SERIF_ITALIC,
