@@ -189,6 +189,13 @@ export function ReferenceProvider({
     onReadingChange(readingLabel);
   }, [readingLabel, onReadingChange]);
 
+  // the search query is per-page: typing on Collects must not leak into the
+  // Psalms index (or anywhere else) when the page changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run on page change to clear the per-page search
+  useEffect(() => {
+    setQuery("");
+  }, [page, setQuery]);
+
   const state: ReferenceState = {
     query,
     setQuery,
