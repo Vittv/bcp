@@ -4,6 +4,9 @@ import type { Season } from "../../lib/calendar/types";
 import { IS_MACOS_TAURI, IS_TAURI } from "../../lib/desktop";
 import { WindowControls } from "./WindowControls";
 
+// bundled via expo-font; system monospace is the fallback on native
+const MONO = '"JetBrains Mono", monospace';
+
 // forwarded by react-native-web as data-tauri-drag-region; tauri's
 // injected script turns mousedown/double-click on it into window
 // dragging and maximize toggling
@@ -81,7 +84,7 @@ export function TopBar({
 
       <View style={styles.controls} dataSet={IS_TAURI ? DRAG_DATA : undefined}>
         <View style={styles.fontControl}>
-          {!compact && <Text style={styles.fontPct}>{pct}</Text>}
+          <Text style={styles.fontPct}>{pct}</Text>
           <Pressable
             style={({ hovered }) => [styles.fontBtn, hovered && styles.hover]}
             onPress={() => setFontScale(fontScale - 0.05)}
@@ -162,7 +165,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   fontPct: {
-    fontFamily: "monospace",
+    fontFamily: MONO,
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
     minWidth: 28,
