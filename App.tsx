@@ -29,6 +29,7 @@ export default function App() {
     "Crimson Pro": require("./assets/fonts/crimson-pro-latin-400-normal.woff2"),
     "Crimson Pro SemiBold": require("./assets/fonts/crimson-pro-latin-600-normal.woff2"),
     "Crimson Pro Italic": require("./assets/fonts/crimson-pro-latin-400-italic.woff2"),
+    "JetBrains Mono": require("./assets/fonts/jetbrains-mono-latin-400-normal.woff2"),
   });
 
   usePwa();

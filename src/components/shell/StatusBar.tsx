@@ -2,6 +2,9 @@ import { StyleSheet, Text, View } from "react-native";
 import type { Color, DolSlot, Season } from "../../lib/calendar/types";
 import { SeasonDot } from "./SeasonDot";
 
+// bundled via expo-font; system monospace is the fallback on native
+const MONO = '"JetBrains Mono", monospace';
+
 const SEASON_LABELS: Record<Season, string> = {
   advent: "Advent",
   christmas: "Christmas",
@@ -101,14 +104,8 @@ export function StatusBar({
         <Text style={[styles.text, styles.rightText]} numberOfLines={1}>
           {reading ?? officeName}
         </Text>
-        {!compact && (
-          <>
-            <Text style={styles.sep}>·</Text>
-            <Text style={styles.pct}>
-              {String(scrollPct).padStart(3, " ")}%
-            </Text>
-          </>
-        )}
+        <Text style={styles.sep}>·</Text>
+        <Text style={styles.pct}>{scrollPct}%</Text>
       </View>
     </View>
   );
@@ -161,10 +158,13 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   pct: {
-    fontFamily: "monospace",
+    fontFamily: MONO,
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
-    letterSpacing: 0.5,
+    // reserve room for the widest value ("100%") and right-align so the
+    // number never shifts the layout as it grows
+    minWidth: 26,
+    textAlign: "right",
   },
   sep: {
     fontSize: 11,
