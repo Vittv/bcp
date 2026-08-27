@@ -162,8 +162,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
     // reserve room for the widest value ("100%") and right-align so the
-    // number never shifts the layout as it grows
-    minWidth: 26,
+    // number never shifts the layout as it grows. 26px barely clips "100%"
+    // at 11px JetBrains Mono, which then pushes the reading/left content;
+    // 30px always fits it.
+    minWidth: 30,
     textAlign: "right",
   },
   sep: {
