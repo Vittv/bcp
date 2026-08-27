@@ -126,7 +126,7 @@ describe("DOL lesson reference parsing", () => {
       book: "Gen",
       chapter: 2,
       verseStart: 23,
-      verseEnd: undefined,
+      verseEnd: 23,
     });
   });
 
@@ -155,13 +155,64 @@ describe("DOL lesson reference parsing", () => {
       book: "1 Sam",
       chapter: 1,
       verseStart: 1,
-      verseEnd: undefined,
+      verseEnd: 1,
     });
     expect(parseDolLessonRef("2 Cor 5:17")).toEqual({
       book: "2 Cor",
       chapter: 5,
       verseStart: 17,
-      verseEnd: undefined,
+      verseEnd: 17,
+    });
+  });
+
+  it("parses cross-chapter verse ranges", () => {
+    expect(parseDolLessonRef("Acts 7:59–8:8")).toEqual({
+      book: "Acts",
+      chapter: 7,
+      verseStart: 59,
+      verseEnd: 8,
+      endChapter: 8,
+    });
+    expect(parseDolLessonRef("Heb 6:17–7:10")).toEqual({
+      book: "Heb",
+      chapter: 6,
+      verseStart: 17,
+      verseEnd: 10,
+      endChapter: 7,
+    });
+  });
+
+  it("parses multi-range refs by taking the first range", () => {
+    expect(parseDolLessonRef("Job 16:16–22; 17:1, 13–16")).toEqual({
+      book: "Job",
+      chapter: 16,
+      verseStart: 16,
+      verseEnd: 22,
+    });
+  });
+
+  it("parses single-chapter book verse ranges without a chapter marker", () => {
+    expect(parseDolLessonRef("Obad 15–21")).toEqual({
+      book: "Obad",
+      chapter: 1,
+      verseStart: 15,
+      verseEnd: 21,
+    });
+    expect(parseDolLessonRef("Jude 17-25")).toEqual({
+      book: "Jude",
+      chapter: 1,
+      verseStart: 17,
+      verseEnd: 25,
+    });
+  });
+
+  it("parses malformed cross-chapter refs missing a separator", () => {
+    expect(parseDolLessonRef("Jer 36:27:37–2")).toEqual({
+      book: "Jer",
+      chapter: 36,
+      verseStart: 27,
+      verseEnd: 2,
+      endChapter: 37,
     });
   });
 

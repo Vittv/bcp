@@ -1,11 +1,18 @@
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import type { OfficeSpeaker } from "../../lib/content/types";
+import {
+  getKjvPassageFromDolRef,
+  parseDolLessonRef,
+} from "../../lib/content/kjv";
+import type { KjvPassage, OfficeSpeaker } from "../../lib/content/types";
 import type {
+  ComposedLesson,
   ComposedNode,
   ComposedSection,
   OfficeDocument,
 } from "../../lib/office/types";
 import { PsalmText } from "./PsalmText";
+import { ScriptureView } from "./ScriptureView";
 
 const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
 // expo-font registers each face as its own single-face family
@@ -30,6 +37,68 @@ type NodeViewProps = {
 
 function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
   return <Text style={styles.speaker}>{SPEAKER_LABEL[speaker]} </Text>;
+}
+
+async function loadLessonPassages(ref: string): Promise<KjvPassage[]> {
+  // split into semicolon groups, then comma-separated ranges within each
+  const groups = ref.split(";").map((s) => s.trim());
+  if (groups.length === 0) return [];
+
+  // extract book name from the first group
+  const firstParsed = parseDolLessonRef(groups[0]);
+  if (!firstParsed) return [];
+  const book = firstParsed.book;
+
+  const results: KjvPassage[] = [];
+  let lastChapter = firstParsed.chapter;
+
+  for (const group of groups) {
+    // split group on commas, each piece is a range like "16:16–22" or "1, 13–16"
+    const ranges = group.split(",").map((s) => s.trim());
+    for (const range of ranges) {
+      // ranges with a colon have an explicit chapter; verse-only ranges inherit lastChapter
+      if (/:/.test(range)) {
+        const parsed = parseDolLessonRef(`${book} ${range}`);
+        if (parsed) lastChapter = parsed.chapter;
+      }
+      const fullRef = /^\d+\s*[-–]/.test(range)
+        ? `${book} ${lastChapter}:${range}`
+        : /^\d/.test(range)
+          ? `${book} ${range}`
+          : range;
+      const passage = await getKjvPassageFromDolRef(fullRef);
+      if (passage) results.push(passage);
+    }
+  }
+
+  return results;
+}
+
+function LessonRow({ lesson }: { lesson: ComposedLesson }) {
+  const [passages, setPassages] = useState<KjvPassage[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadLessonPassages(lesson.ref).then((ps) => {
+      if (!cancelled) setPassages(ps);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [lesson.ref]);
+
+  return (
+    <View style={styles.lessonRow}>
+      <Text style={styles.lessonRef}>
+        <Text style={styles.lessonLabel}>{lesson.label}: </Text>
+        {lesson.ref}
+        {lesson.optional ? "  (optional)" : ""}
+      </Text>
+      {passages.map((p) => (
+        <ScriptureView key={`${p.book}-${p.chapter}`} passage={p} />
+      ))}
+    </View>
+  );
 }
 
 function NodeView({ node, showRubrics, showSpeakers }: NodeViewProps) {
@@ -68,10 +137,7 @@ function NodeView({ node, showRubrics, showSpeakers }: NodeViewProps) {
       return (
         <View style={styles.lessonBlock}>
           {node.lessons.map((l) => (
-            <Text key={l.ref} style={styles.lessonRef}>
-              {l.label}: {l.ref}
-              {l.optional ? "  (optional)" : ""}
-            </Text>
+            <LessonRow key={l.ref} lesson={l} />
           ))}
         </View>
       );
@@ -238,17 +304,19 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   lessonBlock: {
-    marginTop: 10,
-    marginBottom: 4,
-    borderLeftWidth: 2,
-    borderLeftColor: "var(--accent, #7a3040)",
-    paddingLeft: 14,
-    paddingVertical: 6,
+    marginTop: 22,
+    paddingLeft: 4,
+  },
+  lessonRow: {
+    marginBottom: 14,
   },
   lessonRef: {
-    fontFamily: SERIF,
-    fontSize: 18,
-    color: "var(--text, #2c2020)",
+    fontFamily: SERIF_ITALIC,
+    fontSize: 15,
+    color: "var(--text-secondary, #7a6e64)",
+  },
+  lessonLabel: {
+    color: "var(--accent, #7a3040)",
   },
   collectBlock: {
     marginTop: 10,

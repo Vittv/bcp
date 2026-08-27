@@ -4,7 +4,7 @@
  * Usage: bun scripts/fetch-kjv.ts
  */
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const REPO = "aruljohn/Bible-kjv";
@@ -139,6 +139,7 @@ async function fetchBook(info: (typeof BOOKS)[0]): Promise<void> {
     console.error(`  ✗ ${info.book}: HTTP ${res.status}`);
     return;
   }
+  // SAFETY: response from Bible API is well-formed JSON with known shape
   const raw = (await res.json()) as {
     book_name: string;
     chapters: { chapter: string; verses: { verse: string; text: string }[] }[];
@@ -162,8 +163,8 @@ async function fetchBook(info: (typeof BOOKS)[0]): Promise<void> {
     verses,
   };
 
-  const filename = info.abbrev.toLowerCase().replace(/\s+/g, "") + ".json";
-  await writeFile(join(OUT_DIR, filename), JSON.stringify(book) + "\n");
+  const filename = `${info.abbrev.toLowerCase().replace(/\s+/g, "")}.json`;
+  await writeFile(join(OUT_DIR, filename), `${JSON.stringify(book)}\n`);
   console.log(
     `  ✓ ${info.book} → ${filename} (${raw.chapters.length} chapters)`,
   );

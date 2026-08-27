@@ -34,6 +34,7 @@ function loadPos(t: Testament): SavedPos | null {
   try {
     const raw = localStorage.getItem(storageKey(t));
     if (!raw) return null;
+    // SAFETY: fields validated by the type guard below
     const parsed = JSON.parse(raw) as SavedPos;
     if (
       typeof parsed.abbrev === "string" &&
@@ -56,8 +57,22 @@ function savePos(t: Testament, pos: SavedPos): void {
 }
 
 // ---------------------------------------------------------------------------
+// Module-level pending ref setter (for NavigationContext integration)
+// ---------------------------------------------------------------------------
+
+let _pendingRefTarget: PendingRef = null;
+
+export function setBiblePendingRef(
+  ref: { abbrev: string; chapter: number } | null,
+): void {
+  _pendingRefTarget = ref;
+}
+
+// ---------------------------------------------------------------------------
 // Context
 // ---------------------------------------------------------------------------
+
+type PendingRef = { abbrev: string; chapter: number } | null;
 
 type BibleState = {
   testament: Testament;
@@ -69,6 +84,7 @@ type BibleState = {
   clearBook: () => void;
   nextChapter: () => void;
   prevChapter: () => void;
+  goToRef: (abbrev: string, chapter: number) => void;
 };
 
 const Ctx = createContext<BibleState | null>(null);
@@ -96,12 +112,11 @@ function resolvePos(
   t: Testament,
   saved: SavedPos | null,
 ): {
-  book: KjvBookMeta;
+  book: KjvBookMeta | null;
   chapter: number;
 } {
   const books = ALL_BOOKS[t];
-  if (books.length === 0)
-    return { book: null as unknown as KjvBookMeta, chapter: 1 };
+  if (books.length === 0) return { book: null, chapter: 1 };
   if (saved) {
     const found = books.find((b) => b.abbrev === saved.abbrev);
     if (found) {
@@ -138,9 +153,18 @@ export function BibleProvider({
     if (isBiblePage(page)) {
       const t = pageTestament(page);
       setTestament(t);
-      const pos = resolvePos(t, loadPos(t));
-      setBook(pos.book);
-      setChapter(pos.chapter);
+      if (_pendingRefTarget) {
+        const ref = _pendingRefTarget;
+        _pendingRefTarget = null;
+        const found =
+          ALL_BOOKS[t].find((b) => b.abbrev === ref.abbrev) ?? ALL_BOOKS[t][0];
+        setBook(found);
+        setChapter(Math.min(Math.max(1, ref.chapter), found.chapters));
+      } else {
+        const pos = resolvePos(t, loadPos(t));
+        setBook(pos.book);
+        setChapter(pos.chapter);
+      }
     }
   }, [page]);
 
@@ -195,6 +219,10 @@ export function BibleProvider({
     if (chapter > 1) setChapter((c) => c - 1);
   }, [chapter]);
 
+  const goToRef = useCallback((abbrev: string, chapter: number) => {
+    _pendingRefTarget = { abbrev, chapter };
+  }, []);
+
   return (
     <Ctx.Provider
       value={{
@@ -207,6 +235,7 @@ export function BibleProvider({
         clearBook,
         nextChapter,
         prevChapter,
+        goToRef,
       }}
     >
       {children}
