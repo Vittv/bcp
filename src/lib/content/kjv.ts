@@ -1,6 +1,7 @@
 import { kjvBookSchema } from "./schemas";
 import type { KjvBook, KjvPassage } from "./types";
 import * as kjvBooks from "./vendor/kjv/index";
+import { kjvBookImports } from "./vendor/kjv/index";
 
 export type { KjvBook, KjvPassage };
 
@@ -511,10 +512,10 @@ export async function loadKjvBook(
   }
 
   try {
-    // SAFETY: filename is validated by filenameForBook against known books
-    const bookModule = kjvBooks[filename as keyof typeof kjvBooks] as
-      | KjvBook
-      | undefined;
+    // SAFETY: filename is validated by filenameForBook against known books,
+    // so kjvBookImports is guaranteed to have a typed key for it
+    const bookKey = kjvBookImports[filename];
+    const bookModule = bookKey ? kjvBooks[bookKey] : undefined;
     if (!bookModule) {
       console.error(`KJV book ${filename} not found in static imports`);
       return null;
