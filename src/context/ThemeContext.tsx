@@ -97,9 +97,9 @@ const DarkPalette = {
   rowHover: "rgba(255, 255, 255, 0.06)",
   text: "#d4d0d3",
   textSecondary: "#8d8985",
-  accent: "#a45888",
+  accent: "#c85f8b",
   scrollbar: "#5a5759",
-  todayBg: "rgba(164, 88, 136, 0.30)",
+  todayBg: "rgba(200, 95, 139, 0.30)",
   selectedBg: "rgba(212, 208, 211, 0.12)",
   controlHover: "#282628",
 };
