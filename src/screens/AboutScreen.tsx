@@ -1,4 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { CHROME_FONT } from "../lib/fonts";
+import { VERSION } from "../lib/version";
 
 export function AboutScreen() {
   return (
@@ -57,7 +59,7 @@ export function AboutScreen() {
       <View style={styles.sectionLast}>
         <Text style={styles.label}>License</Text>
         <Text style={styles.body}>Code: MIT. Texts: public domain.</Text>
-        <Text style={styles.value}>Version 0.1.0</Text>
+        <Text style={styles.value}>Version {VERSION}</Text>
       </View>
     </ScrollView>
   );
@@ -65,7 +67,7 @@ export function AboutScreen() {
 
 const styles = StyleSheet.create({
   heading: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
     fontSize: 20,
     fontWeight: "700",
     color: "var(--text, #2c2020)",
@@ -78,20 +80,22 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
     marginBottom: 8,
   },
   value: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 12,
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 8,
   },
   body: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 13,
     color: "var(--text-secondary, #7a6e64)",
     lineHeight: 20,

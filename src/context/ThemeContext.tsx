@@ -1,3 +1,4 @@
+import { Asset } from "expo-asset";
 import {
   createContext,
   useCallback,
@@ -7,20 +8,25 @@ import {
   useState,
 } from "react";
 import { Platform } from "react-native";
+import { INTER, SYSTEM_UI } from "../lib/fonts";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
+export type FontMode = "inter" | "system";
 
 type ThemeContextValue = {
   mode: ThemeMode;
   resolved: ResolvedTheme;
   fontScale: number;
+  fontMode: FontMode;
   setMode: (mode: ThemeMode) => void;
   setFontScale: (scale: number) => void;
+  setFontMode: (mode: FontMode) => void;
 };
 
 const STORAGE_KEY_THEME = "bcp-theme-mode";
 const STORAGE_KEY_FONT = "bcp-font-scale";
+const STORAGE_KEY_FONT_MODE = "bcp-font-mode";
 
 const MIN_FONT = 0.85;
 const MAX_FONT = 1.3;
@@ -68,6 +74,24 @@ function persistFontScale(scale: number) {
   try {
     if (Platform.OS === "web" && typeof localStorage !== "undefined") {
       localStorage.setItem(STORAGE_KEY_FONT, String(scale));
+    }
+  } catch {}
+}
+
+function loadFontMode(): FontMode {
+  try {
+    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+      const v = localStorage.getItem(STORAGE_KEY_FONT_MODE);
+      if (v === "inter" || v === "system") return v;
+    }
+  } catch {}
+  return "inter";
+}
+
+function persistFontMode(mode: FontMode) {
+  try {
+    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEY_FONT_MODE, mode);
     }
   } catch {}
 }
@@ -149,17 +173,88 @@ function applyPalette(theme: ResolvedTheme) {
   `;
 }
 
+export const INTER_FACES = [
+  { weight: 400, file: "inter-latin-400-normal.woff2" },
+  { weight: 500, file: "inter-latin-500-normal.woff2" },
+  { weight: 600, file: "inter-latin-600-normal.woff2" },
+  { weight: 700, file: "inter-latin-700-normal.woff2" },
+] as const;
+
+function ensureInterFont() {
+  if (Platform.OS !== "web" || typeof document === "undefined") return;
+  const id = "chrome-font-face";
+  // SAFETY: we only create <style> elements with this id here.
+  if (document.getElementById(id)) return;
+  const faces = [
+    {
+      weight: 400,
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      uri: assetUri(require("../../assets/fonts/inter-latin-400-normal.woff2")),
+    },
+    {
+      weight: 500,
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      uri: assetUri(require("../../assets/fonts/inter-latin-500-normal.woff2")),
+    },
+    {
+      weight: 600,
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      uri: assetUri(require("../../assets/fonts/inter-latin-600-normal.woff2")),
+    },
+    {
+      weight: 700,
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      uri: assetUri(require("../../assets/fonts/inter-latin-700-normal.woff2")),
+    },
+  ];
+  const rules = faces
+    .filter((f) => Boolean(f.uri))
+    .map(
+      (f) =>
+        `@font-face{font-family:${JSON.stringify(INTER)};font-style:normal;font-weight:${f.weight};font-display:swap;src:url(${JSON.stringify(
+          f.uri,
+        )}) format("woff2")}`,
+    );
+  if (rules.length === 0) return;
+  const el = document.createElement("style");
+  el.id = id;
+  el.textContent = rules.join("\n");
+  document.head.appendChild(el);
+}
+
+type FontSource = string | number | { uri?: string; localUri?: string };
+
+function assetUri(face: FontSource): string {
+  if (typeof face === "string") return face;
+  if (typeof face === "object" && face !== null) {
+    return face.uri ?? face.localUri ?? "";
+  }
+  // SAFETY: the only remaining branch is the metro module id number, which
+  // expo-asset resolves to a usable asset URI.
+  return Asset.fromModule(face).uri;
+}
+
+function applyFontMode(mode: FontMode) {
+  if (Platform.OS !== "web" || typeof document === "undefined") return;
+  ensureInterFont();
+  const r = document.documentElement.style;
+  r.setProperty("--chrome-font", mode === "inter" ? INTER : SYSTEM_UI);
+}
+
 const ThemeContext = createContext<ThemeContextValue>({
   mode: "system",
   resolved: "light",
   fontScale: 1,
+  fontMode: "inter",
   setMode: () => {},
   setFontScale: () => {},
+  setFontMode: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(loadThemeMode);
   const [fontScale, setFontScaleState] = useState<number>(loadFontScale);
+  const [fontMode, setFontModeState] = useState<FontMode>(loadFontMode);
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
 
   const resolved: ResolvedTheme = mode === "system" ? systemTheme : mode;
@@ -167,6 +262,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     applyPalette(resolved);
   }, [resolved]);
+
+  useEffect(() => {
+    applyFontMode(fontMode);
+  }, [fontMode]);
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;
@@ -188,9 +287,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     persistFontScale(clamped);
   }, []);
 
+  const setFontMode = useCallback((m: FontMode) => {
+    setFontModeState(m);
+    persistFontMode(m);
+  }, []);
+
   const value = useMemo(
-    () => ({ mode, resolved, fontScale, setMode, setFontScale }),
-    [mode, resolved, fontScale, setMode, setFontScale],
+    () => ({
+      mode,
+      resolved,
+      fontScale,
+      fontMode,
+      setMode,
+      setFontScale,
+      setFontMode,
+    }),
+    [mode, resolved, fontScale, fontMode, setMode, setFontScale, setFontMode],
   );
 
   return (

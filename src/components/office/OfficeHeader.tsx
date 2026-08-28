@@ -1,12 +1,11 @@
 import { StyleSheet, Text, View } from "react-native";
+import { CHROME_FONT } from "../../lib/fonts";
 import { dayLabel } from "../../lib/office";
 import type { OfficeDocument } from "../../lib/office/types";
 
 // expo-font registers each face as its own single-face family
 const SERIF_SEMI =
   '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
-const SANS =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
 // the masthead above every composed office; the Today page and the
 // reference offices page share it verbatim so the two read identically
@@ -37,13 +36,14 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   dateLabel: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 13,
     color: "var(--text-secondary, #7a6e64)",
     marginTop: 4,
   },
   entryTitle: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 12,
     fontWeight: "600",
     letterSpacing: 1,

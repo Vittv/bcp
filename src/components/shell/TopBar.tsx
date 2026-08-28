@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../context/ThemeContext";
 import type { Season } from "../../lib/calendar/types";
 import { IS_MACOS_TAURI, IS_TAURI } from "../../lib/desktop";
+import { CHROME_FONT } from "../../lib/fonts";
 import { WindowControls } from "./WindowControls";
 
 // bundled via expo-font; system monospace is the fallback on native
@@ -149,12 +150,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   seasonText: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 12,
     color: "var(--text-secondary, #7a6e64)",
   },
   countdown: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
     opacity: 0.7,

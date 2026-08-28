@@ -4,6 +4,7 @@ import { Chevron } from "../components/shell/Chevron";
 import { useSeasonColorMap } from "../components/shell/SeasonDot";
 import { colorFor, daysInMonth, weekday } from "../lib/calendar";
 import type { CalendarDate } from "../lib/calendar/types";
+import { CHROME_FONT } from "../lib/fonts";
 
 const noSelect = {
   userSelect: "none" as const,
@@ -168,9 +169,6 @@ export function CalendarScreen({
   );
 }
 
-const SANS =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-
 const styles = StyleSheet.create({
   container: {
     height: "100%",
@@ -203,7 +201,7 @@ const styles = StyleSheet.create({
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   monthTitle: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 14,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
@@ -230,7 +228,7 @@ const styles = StyleSheet.create({
     borderRightColor: "var(--border, #d2cbbf)",
   },
   headerText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 0.8,
@@ -268,7 +266,7 @@ const styles = StyleSheet.create({
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   cellText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 14,
     fontWeight: "500",
     color: "var(--text, #2c2020)",

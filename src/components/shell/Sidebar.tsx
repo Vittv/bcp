@@ -1,4 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { IS_TAURI } from "../../lib/desktop";
+import { CHROME_FONT } from "../../lib/fonts";
+import { VERSION } from "../../lib/version";
 import { Chevron } from "./Chevron";
 
 export type PageId =
@@ -9,6 +12,7 @@ export type PageId =
   | "offices"
   | "old-testament"
   | "new-testament"
+  | "install"
   | "settings"
   | "about";
 
@@ -20,6 +24,7 @@ const NAV: { id: PageId; label: string; section?: string }[] = [
   { id: "offices", label: "Offices" },
   { id: "old-testament", label: "Old Testament", section: "scripture" },
   { id: "new-testament", label: "New Testament", section: "scripture" },
+  { id: "install", label: "Install", section: "settings" },
   { id: "settings", label: "Settings", section: "settings" },
   { id: "about", label: "About", section: "settings" },
 ];
@@ -40,7 +45,11 @@ type SidebarProps = {
 export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
   const sections = SECTION_ORDER.map((section) => ({
     section,
-    items: NAV.filter((item) => (item.section ?? "") === section),
+    items: NAV.filter(
+      (item) =>
+        (item.section ?? "") === section &&
+        !(IS_TAURI && item.id === "install"),
+    ),
   }));
 
   return (
@@ -89,7 +98,7 @@ export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
       </View>
       <View style={styles.footer}>
         <Text style={styles.footerText} numberOfLines={1}>
-          bcp · v0.1.0
+          {`bcp · v${VERSION}`}
         </Text>
       </View>
     </View>
@@ -159,7 +168,8 @@ const styles = StyleSheet.create({
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   navText: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
   },
@@ -177,7 +187,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   footerText: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
   },
