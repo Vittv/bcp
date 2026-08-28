@@ -2,6 +2,7 @@ import { memo, type ReactNode, useDeferredValue, useMemo, useRef } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { PsalmText } from "../../components/office/PsalmText";
 import { Chevron } from "../../components/shell/Chevron";
+import { SearchField } from "../../components/shell/SearchField";
 import { psalmPassage } from "../../lib/content/psalter";
 import { searchPsalms } from "../../lib/reference/search";
 import {
@@ -39,22 +40,11 @@ export function PsalmsScreen({
     <SplitPane
       fontScale={fontScale}
       header={
-        <TextInput
+        <SearchField
           ref={desktopInputRef}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search by number or text"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={[
-            styles.search,
-            {
-              width: "100%",
-              marginLeft: 0,
-              borderWidth: 0,
-              paddingHorizontal: 0,
-              paddingVertical: 0,
-            },
-          ]}
+          placeholder="Search"
           accessibilityLabel="Search psalms"
         />
       }

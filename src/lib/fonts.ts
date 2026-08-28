@@ -3,4 +3,6 @@ export const SYSTEM_UI =
 
 export const INTER = "Inter";
 
-export const CHROME_FONT = `var(--chrome-font, ${SYSTEM_UI})`;
+export const INTER_TIGHT = "Inter Tight";
+
+export const CHROME_FONT = `var(--chrome-font, ${INTER_TIGHT})`;

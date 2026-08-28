@@ -1,8 +1,14 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { IS_TAURI } from "../lib/desktop";
 import { CHROME_FONT } from "../lib/fonts";
+
+const THEME_OPTIONS = [
+  { id: "light" as const, label: "Light" },
+  { id: "dark" as const, label: "Dark" },
+  { id: "system" as const, label: "System" },
+];
 
 type SettingsScreenProps = {
   // only meaningful inside the desktop shell on win/linux
@@ -62,19 +68,17 @@ export function SettingsScreen({
   }
 
   return (
-    <ScrollView>
-      <Text style={styles.heading}>Settings</Text>
-
+    <View>
       <View style={styles.section}>
         <Text style={styles.label}>Theme</Text>
         <View style={styles.row}>
-          {(["light", "dark", "system"] as const).map((m) => (
+          {THEME_OPTIONS.map(({ id, label }) => (
             <Text
-              key={m}
-              style={[styles.option, mode === m && styles.optionActive]}
-              onPress={() => setMode(m)}
+              key={id}
+              style={[styles.option, mode === id && styles.optionActive]}
+              onPress={() => setMode(id)}
             >
-              {m === "light" ? "Light" : m === "dark" ? "Dark" : "System"}
+              {label}
             </Text>
           ))}
         </View>
@@ -178,18 +182,11 @@ export function SettingsScreen({
           ) : null}
         </View>
       ) : null}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  heading: {
-    fontFamily: CHROME_FONT,
-    fontSize: 20,
-    fontWeight: "700",
-    color: "var(--text, #2c2020)",
-    marginBottom: 24,
-  },
   section: {
     marginBottom: 24,
     paddingBottom: 24,
@@ -198,15 +195,15 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: CHROME_FONT,
-    fontSize: 13,
+    fontSize: 18,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
     marginBottom: 8,
   },
   value: {
     fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 12,
+    fontWeight: "400",
+    fontSize: 16,
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 8,
   },
@@ -216,11 +213,11 @@ const styles = StyleSheet.create({
   },
   option: {
     fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 13,
+    fontWeight: "400",
+    fontSize: 17,
     color: "var(--text-secondary, #7a6e64)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: 4,
     borderWidth: 1,
     borderColor: "var(--border, #d2cbbf)",
@@ -233,21 +230,21 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     fontFamily: CHROME_FONT,
-    fontSize: 13,
+    fontSize: 17,
     fontWeight: "600",
     color: "#f6f1e8",
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     borderRadius: 4,
     backgroundColor: "var(--accent, #7a3040)",
     overflow: "hidden",
   },
   body: {
     fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 13,
+    fontWeight: "400",
+    fontSize: 17,
     color: "var(--text-secondary, #7a6e64)",
-    lineHeight: 20,
+    lineHeight: 27,
     marginBottom: 8,
   },
   bodySpaced: {

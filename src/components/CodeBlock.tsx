@@ -80,8 +80,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 11,
+    fontWeight: "400",
+    fontSize: 13,
     color: "var(--text-secondary, #6b6159)",
     marginBottom: 4,
     textTransform: "uppercase",
@@ -99,9 +99,9 @@ const styles = StyleSheet.create({
   code: {
     flex: 1,
     fontFamily: MONO,
-    fontSize: 12,
+    fontSize: 14,
     color: "var(--text, #2c2020)",
-    lineHeight: 20,
+    lineHeight: 24,
     paddingVertical: 8,
     userSelect: "text",
   },
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   copyText: {
     fontFamily: CHROME_FONT,
-    fontSize: 11,
+    fontSize: 13,
     color: "var(--accent, #7a3040)",
     fontWeight: "600",
   },

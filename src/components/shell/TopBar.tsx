@@ -3,6 +3,7 @@ import { useTheme } from "../../context/ThemeContext";
 import type { Season } from "../../lib/calendar/types";
 import { IS_MACOS_TAURI, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
+import { MoonIcon, SunIcon, SystemIcon } from "./Icon";
 import { WindowControls } from "./WindowControls";
 
 // bundled via expo-font; system monospace is the fallback on native
@@ -110,9 +111,36 @@ export function TopBar({
           accessibilityRole="button"
           accessibilityLabel={`Theme: ${mode}. Switch theme`}
         >
-          <Text style={styles.controlText}>
-            {mode === "light" ? "L" : mode === "dark" ? "D" : "S"}
-          </Text>
+          {({ hovered }) =>
+            mode === "light" ? (
+              <SunIcon
+                size={16}
+                color={
+                  hovered
+                    ? "var(--text, #2c2020)"
+                    : "var(--text-secondary, #7a6e64)"
+                }
+              />
+            ) : mode === "dark" ? (
+              <MoonIcon
+                size={16}
+                color={
+                  hovered
+                    ? "var(--text, #2c2020)"
+                    : "var(--text-secondary, #7a6e64)"
+                }
+              />
+            ) : (
+              <SystemIcon
+                size={16}
+                color={
+                  hovered
+                    ? "var(--text, #2c2020)"
+                    : "var(--text-secondary, #7a6e64)"
+                }
+              />
+            )
+          }
         </Pressable>
       </View>
 

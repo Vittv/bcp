@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { AppModal } from "../../components/shell/AppModal";
 import { Chevron } from "../../components/shell/Chevron";
-import type { PageId } from "../../components/shell/Sidebar";
+import {
+  clearGlobalSearch,
+  focusGlobalSearch,
+} from "../../components/shell/GlobalSearch";
+import { HelpScreen } from "../../components/shell/HelpScreen";
+import type { ModalType, PageId } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
 import { useDrawerSwipe } from "../../components/shell/useDrawerSwipe";
 import { BibleProvider, setBiblePendingRef } from "../../context/BibleContext";
@@ -11,6 +17,7 @@ import {
 } from "../../context/NavigationContext";
 import { useTheme } from "../../context/ThemeContext";
 import {
+  addDays,
   colorFor,
   daysUntilNextSeason,
   resolve,
@@ -122,6 +129,7 @@ export function Shell() {
     officeForHour(new Date().getHours()),
   );
   const [page, setPage] = useState<PageId>("today");
+  const [modal, setModal] = useState<ModalType | null>(null);
   const [reading, setReading] = useState<string | null>(null);
   const [scrollPct, setScrollPct] = useState(0);
 
@@ -290,6 +298,153 @@ export function Shell() {
     scrollRef.current?.focus({ preventScroll: true });
   }, []);
 
+  // global keyboard shortcuts (GitHub-style). attached in the capture phase
+  // so handled keys are stopped before browser extensions like Vimium can
+  // grab them; unhandled keys pass through untouched.
+  useEffect(() => {
+    if (!IS_WEB) return;
+    let goPending: string | null = null;
+    let goTimer: ReturnType<typeof setTimeout> | null = null;
+    const GO_MAP: Record<string, PageId> = {
+      t: "today",
+      c: "calendar",
+      p: "psalms",
+      o: "offices",
+      b: "old-testament",
+      n: "new-testament",
+    };
+    const isEditable = (el: EventTarget | null): boolean => {
+      // SAFETY: DOM keydown targets are Elements or text nodes; a missing
+      // tagName is treated as non-editable by the guard below
+      const t = el as HTMLElement | null;
+      if (!t?.tagName) return false;
+      const tag = t.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+        return true;
+      }
+      return t.isContentEditable === true;
+    };
+    const scrollActive = (dy: number) => {
+      const el = scrollRef.current;
+      if (el && el.scrollHeight > el.clientHeight) {
+        el.scrollTop += dy;
+        return;
+      }
+      const detail = window.document.querySelector("[data-split-detail]");
+      if (detail) {
+        // SAFETY: the split detail pane is a real DOM scroller, so it is an
+        // HTMLElement with a scrollTop we can read and write
+        (detail as HTMLElement).scrollTop += dy;
+      }
+    };
+    const stepDay = (delta: number) => {
+      setDate((d) => addDays(d, delta));
+      handleNavigateTo("today");
+    };
+    const clearGo = () => {
+      if (goTimer) clearTimeout(goTimer);
+      goPending = null;
+      goTimer = null;
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isEditable(e.target)) {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          clearGlobalSearch();
+        }
+        return;
+      }
+      if (modal) {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          setModal(null);
+        }
+        return;
+      }
+      if (goPending !== null) {
+        const page = GO_MAP[e.key.toLowerCase()];
+        clearGo();
+        if (page) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          handleNavigateTo(page);
+        }
+        return;
+      }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const key = e.key;
+      switch (key) {
+        case "?":
+        case "/":
+          if (e.shiftKey) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            setModal("help");
+          } else {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            focusGlobalSearch();
+          }
+          clearGo();
+          return;
+        case "Escape":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          clearGlobalSearch();
+          clearGo();
+          return;
+        case "g":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          clearGo();
+          goPending = "";
+          goTimer = setTimeout(clearGo, 900);
+          return;
+        case "n":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          stepDay(1);
+          return;
+        case "p":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          stepDay(-1);
+          return;
+        case "j":
+        case "ArrowDown":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          scrollActive(360);
+          return;
+        case "k":
+        case "ArrowUp":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          scrollActive(-360);
+          return;
+        case "Home":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          scrollToTop();
+          return;
+        case "End":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          scrollActive(Number.MAX_SAFE_INTEGER);
+          return;
+        default:
+          return;
+      }
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+      if (goTimer) clearTimeout(goTimer);
+    };
+  }, [modal, handleNavigateTo, scrollToTop]);
+
   const document = composeOffice(
     date,
     devotions ? DEVOTIONS[tab] : OFFICES[tab],
@@ -372,10 +527,6 @@ export function Shell() {
             onToggleDevotions={() => setDevotions(!devotions)}
           />
         );
-      case "settings":
-      case "about":
-      case "install":
-        return <View style={styles.auxStrip}>{sidebarShowButton}</View>;
       default:
         return null;
     }
@@ -420,18 +571,6 @@ export function Shell() {
             onScrollProgress={reportScroll}
           />
         );
-      case "settings":
-        return (
-          <SettingsScreen
-            showWindowControls={IS_TAURI && !IS_MACOS_TAURI}
-            windowControls={windowControls}
-            onWindowControlsChange={setWindowControls}
-          />
-        );
-      case "about":
-        return <AboutScreen />;
-      case "install":
-        return <InstallScreen />;
       default:
         return null;
     }
@@ -439,6 +578,43 @@ export function Shell() {
 
   const auxRow = getAuxRow();
   const content = getContent();
+
+  const closeModal = () => setModal(null);
+
+  const modalContent = (() => {
+    switch (modal) {
+      case "settings":
+        return (
+          <AppModal title="Settings" onClose={closeModal} width={760}>
+            <SettingsScreen
+              showWindowControls={IS_TAURI && !IS_MACOS_TAURI}
+              windowControls={windowControls}
+              onWindowControlsChange={setWindowControls}
+            />
+          </AppModal>
+        );
+      case "install":
+        return (
+          <AppModal title="Install" onClose={closeModal} width={760}>
+            <InstallScreen />
+          </AppModal>
+        );
+      case "about":
+        return (
+          <AppModal title="About" onClose={closeModal} width={760}>
+            <AboutScreen />
+          </AppModal>
+        );
+      case "help":
+        return (
+          <AppModal title="Help & Shortcuts" onClose={closeModal} width={520}>
+            <HelpScreen />
+          </AppModal>
+        );
+      default:
+        return null;
+    }
+  })();
 
   if (IS_WEB) {
     return (
@@ -495,6 +671,7 @@ export function Shell() {
                       active={page}
                       onSelect={handlePageSelect}
                       onHide={hideSidebar}
+                      onOpenModal={setModal}
                     />
                   </div>
                 ) : null}
@@ -534,18 +711,9 @@ export function Shell() {
                       style={{
                         boxSizing: "border-box",
                         width: "100%",
-                        maxWidth:
-                          page === "today" ||
-                          page === "settings" ||
-                          page === "about" ||
-                          page === "install"
-                            ? "46rem"
-                            : "100%",
+                        maxWidth: page === "today" ? "46rem" : "100%",
                         padding:
-                          page === "today" ||
-                          page === "settings" ||
-                          page === "about" ||
-                          page === "install"
+                          page === "today"
                             ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
                             : "0",
                         height:
@@ -583,6 +751,7 @@ export function Shell() {
                   />
                 </div>
               </div>
+              {modalContent}
             </div>
           </NavigationContext.Provider>
         </BibleProvider>
@@ -608,6 +777,7 @@ export function Shell() {
                     active={page}
                     onSelect={handlePageSelect}
                     onHide={hideSidebar}
+                    onOpenModal={setModal}
                   />
                 </View>
               ) : null}
@@ -624,6 +794,7 @@ export function Shell() {
                 </View>
               </View>
             </View>
+            {modalContent}
           </View>
         </NavigationContext.Provider>
       </BibleProvider>
