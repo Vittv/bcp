@@ -29,6 +29,7 @@ import { DEFAULT_PREFS } from "../../lib/office/types";
 import { AboutScreen } from "../../screens/AboutScreen";
 import { BibleBar, BibleReaderScreen } from "../../screens/BibleReaderScreen";
 import { CalendarScreen } from "../../screens/CalendarScreen";
+import { InstallScreen } from "../../screens/InstallScreen";
 import {
   CollectsBar,
   CollectsScreen,
@@ -373,6 +374,7 @@ export function Shell() {
         );
       case "settings":
       case "about":
+      case "install":
         return <View style={styles.auxStrip}>{sidebarShowButton}</View>;
       default:
         return null;
@@ -428,6 +430,8 @@ export function Shell() {
         );
       case "about":
         return <AboutScreen />;
+      case "install":
+        return <InstallScreen />;
       default:
         return null;
     }
@@ -533,13 +537,15 @@ export function Shell() {
                         maxWidth:
                           page === "today" ||
                           page === "settings" ||
-                          page === "about"
+                          page === "about" ||
+                          page === "install"
                             ? "46rem"
                             : "100%",
                         padding:
                           page === "today" ||
                           page === "settings" ||
-                          page === "about"
+                          page === "about" ||
+                          page === "install"
                             ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
                             : "0",
                         height:
