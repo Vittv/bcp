@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=bcp
+Comment=1979 Book of Common Prayer daily office reader
+Exec=__BCP_BIN__/bcp
+Icon=bcp
+Terminal=false
+Type=Application
+Categories=Education;Office;
+StartupWMClass=bcp

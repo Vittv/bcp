@@ -4,12 +4,15 @@
 // /bcp prefix points at nothing and blanks the window. BASE_URL overrides the
 // default /bcp per invocation; the desktop scripts set it to the webview root.
 const baseUrl = process.env.BASE_URL || "/bcp";
+// package.json is the canonical version; the app and the release workflow keep
+// a single source of truth by reading it here rather than duplicating it.
+const pkg = require("./package.json");
 
 module.exports = {
   expo: {
     name: "bcp",
     slug: "bcp",
-    version: "0.1.0",
+    version: pkg.version,
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "automatic",

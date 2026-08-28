@@ -8,7 +8,10 @@
   "dependencies": {
     "@expo/metro-runtime": "~57.0.9",
     "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.10.1",
     "expo": "~57.0.12",
+    "expo-asset": "^57.0.10",
     "expo-font": "^57.0.1",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
@@ -37,6 +40,7 @@
     "check": "biome check . && oxlint",
     "format": "biome format --write .",
     "tauri": "tauri",
+    "version": "bun scripts/bump-version.ts",
     "desktop:dev": "BASE_URL=/ expo export -p web && tauri dev",
     "desktop:build": "BASE_URL=/ expo export -p web && NO_STRIP=1 tauri build"
   }
