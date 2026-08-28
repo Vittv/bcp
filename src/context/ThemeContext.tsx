@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import { Platform } from "react-native";
-import { INTER, SYSTEM_UI } from "../lib/fonts";
+import { INTER, INTER_TIGHT, SYSTEM_UI } from "../lib/fonts";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
@@ -99,6 +99,7 @@ function persistFontMode(mode: FontMode) {
 const LightPalette = {
   bg: "#e0dbd0",
   bgRaised: "#ece7dd",
+  inputBg: "#ece7dd",
   border: "#cbc5bb",
   borderContent: "#a59d92",
   borderFaint: "rgba(44, 32, 32, 0.09)",
@@ -115,6 +116,7 @@ const LightPalette = {
 const DarkPalette = {
   bg: "#1b191a",
   bgRaised: "#262425",
+  inputBg: "#1f1d1f",
   border: "#333034",
   borderContent: "#545053",
   borderFaint: "rgba(255, 255, 255, 0.07)",
@@ -143,6 +145,7 @@ function applyPalette(theme: ResolvedTheme) {
   const r = document.documentElement.style;
   r.setProperty("--bg", p.bg);
   r.setProperty("--bg-raised", p.bgRaised);
+  r.setProperty("--input-bg", p.inputBg);
   r.setProperty("--border", p.border);
   r.setProperty("--border-content", p.borderContent);
   r.setProperty("--border-faint", p.borderFaint);
@@ -220,6 +223,27 @@ function ensureInterFont() {
   el.id = id;
   el.textContent = rules.join("\n");
   document.head.appendChild(el);
+
+  // Inter Tight is a variable font: one woff2 carries every weight, so a
+  // single @font-face with a weight range replaces the per-weight Inter
+  // faces. declared in its own style element so it can't be confused with
+  // the static Inter faces above.
+  const tightId = "chrome-font-tight-face";
+  // SAFETY: we only create <style> elements with this id here.
+  if (document.getElementById(tightId)) return;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const tightUri = assetUri(
+    require("../../assets/fonts/inter-tight-latin-var.woff2"),
+  );
+  if (!tightUri) return;
+  const tightEl = document.createElement("style");
+  tightEl.id = tightId;
+  tightEl.textContent = `@font-face{font-family:${JSON.stringify(
+    INTER_TIGHT,
+  )};font-style:normal;font-weight:100 900;font-display:swap;src:url(${JSON.stringify(
+    tightUri,
+  )}) format("woff2")}`;
+  document.head.appendChild(tightEl);
 }
 
 type FontSource = string | number | { uri?: string; localUri?: string };
@@ -238,7 +262,10 @@ function applyFontMode(mode: FontMode) {
   if (Platform.OS !== "web" || typeof document === "undefined") return;
   ensureInterFont();
   const r = document.documentElement.style;
-  r.setProperty("--chrome-font", mode === "inter" ? INTER : SYSTEM_UI);
+  r.setProperty(
+    "--chrome-font",
+    mode === "inter" ? `"${INTER_TIGHT}", ${INTER}, ${SYSTEM_UI}` : SYSTEM_UI,
+  );
 }
 
 const ThemeContext = createContext<ThemeContextValue>({

@@ -3,6 +3,8 @@ import { IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { VERSION } from "../../lib/version";
 import { Chevron } from "./Chevron";
+import { GlobalSearch } from "./GlobalSearch";
+import { DownloadIcon, HelpIcon, InfoIcon, SettingsIcon } from "./Icon";
 
 export type PageId =
   | "today"
@@ -11,10 +13,9 @@ export type PageId =
   | "collects"
   | "offices"
   | "old-testament"
-  | "new-testament"
-  | "install"
-  | "settings"
-  | "about";
+  | "new-testament";
+
+export type ModalType = "install" | "settings" | "about" | "help";
 
 const NAV: { id: PageId; label: string; section?: string }[] = [
   { id: "today", label: "Today" },
@@ -24,9 +25,6 @@ const NAV: { id: PageId; label: string; section?: string }[] = [
   { id: "offices", label: "Offices" },
   { id: "old-testament", label: "Old Testament", section: "scripture" },
   { id: "new-testament", label: "New Testament", section: "scripture" },
-  { id: "install", label: "Install", section: "settings" },
-  { id: "settings", label: "Settings", section: "settings" },
-  { id: "about", label: "About", section: "settings" },
 ];
 
 const noSelect = {
@@ -34,22 +32,27 @@ const noSelect = {
   WebkitUserSelect: "none" as const,
 };
 
-const SECTION_ORDER = ["", "scripture", "settings"] as const;
+const HOVER_COLOR = "var(--text, #2c2020)";
+const IDLE_COLOR = "var(--text-secondary, #7a6e64)";
+
+const SECTION_ORDER = ["", "scripture"] as const;
 
 type SidebarProps = {
   active: PageId;
   onSelect: (id: PageId) => void;
   onHide: () => void;
+  onOpenModal: (modal: ModalType) => void;
 };
 
-export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
+export function Sidebar({
+  active,
+  onSelect,
+  onHide,
+  onOpenModal,
+}: SidebarProps) {
   const sections = SECTION_ORDER.map((section) => ({
     section,
-    items: NAV.filter(
-      (item) =>
-        (item.section ?? "") === section &&
-        !(IS_TAURI && item.id === "install"),
-    ),
+    items: NAV.filter((item) => (item.section ?? "") === section),
   }));
 
   return (
@@ -66,7 +69,56 @@ export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
         >
           <Chevron direction="left" size={6} />
         </Pressable>
+        <View style={styles.toolbarSpacer} />
+        {!IS_TAURI ? (
+          <Pressable
+            style={({ hovered }) => [
+              styles.toolBtn,
+              hovered && styles.toolBtnHover,
+            ]}
+            onPress={() => onOpenModal("install")}
+            accessibilityLabel="Install"
+            accessibilityRole="button"
+          >
+            {({ hovered }) => (
+              <DownloadIcon
+                size={14}
+                color={hovered ? HOVER_COLOR : IDLE_COLOR}
+              />
+            )}
+          </Pressable>
+        ) : null}
+        <Pressable
+          style={({ hovered }) => [
+            styles.toolBtn,
+            hovered && styles.toolBtnHover,
+          ]}
+          onPress={() => onOpenModal("settings")}
+          accessibilityLabel="Settings"
+          accessibilityRole="button"
+        >
+          {({ hovered }) => (
+            <SettingsIcon
+              size={14}
+              color={hovered ? HOVER_COLOR : IDLE_COLOR}
+            />
+          )}
+        </Pressable>
+        <Pressable
+          style={({ hovered }) => [
+            styles.toolBtn,
+            hovered && styles.toolBtnHover,
+          ]}
+          onPress={() => onOpenModal("help")}
+          accessibilityLabel="Help and shortcuts"
+          accessibilityRole="button"
+        >
+          {({ hovered }) => (
+            <HelpIcon size={14} color={hovered ? HOVER_COLOR : IDLE_COLOR} />
+          )}
+        </Pressable>
       </View>
+      <GlobalSearch />
       <View style={styles.scroll}>
         <View style={styles.nav}>
           {sections.map(({ section, items }, idx) => (
@@ -100,6 +152,20 @@ export function Sidebar({ active, onSelect, onHide }: SidebarProps) {
         <Text style={styles.footerText} numberOfLines={1}>
           {`bcp · v${VERSION}`}
         </Text>
+        <View style={styles.toolbarSpacer} />
+        <Pressable
+          style={({ hovered }) => [
+            styles.aboutBtn,
+            hovered && styles.aboutBtnHover,
+          ]}
+          onPress={() => onOpenModal("about")}
+          accessibilityLabel="About"
+          accessibilityRole="button"
+        >
+          {({ hovered }) => (
+            <InfoIcon size={14} color={hovered ? HOVER_COLOR : IDLE_COLOR} />
+          )}
+        </Pressable>
       </View>
     </View>
   );
@@ -121,7 +187,11 @@ const styles = StyleSheet.create({
     borderBottomColor: "var(--border, #d2cbbf)",
     flexDirection: "row",
     alignItems: "center",
+    gap: 4,
     paddingHorizontal: 6,
+  },
+  toolbarSpacer: {
+    flex: 1,
   },
   toolBtn: {
     width: 24,
@@ -143,23 +213,23 @@ const styles = StyleSheet.create({
     overflowX: "hidden",
   },
   nav: {
-    paddingBottom: 8,
+    paddingVertical: 4,
   },
   section: {
-    paddingBottom: 4,
+    paddingVertical: 4,
   },
   sectionDivider: {
     borderBottomWidth: 1,
     borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
-    marginHorizontal: 14,
+    marginHorizontal: 10,
     marginBottom: 4,
   },
   navItem: {
-    paddingVertical: 5,
-    paddingHorizontal: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     marginHorizontal: 8,
-    marginVertical: 3,
-    borderRadius: 4,
+    marginVertical: 1,
+    borderRadius: 8,
   },
   navItemActive: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
@@ -184,12 +254,23 @@ const styles = StyleSheet.create({
     borderTopColor: "var(--border, #d2cbbf)",
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
+    gap: 4,
   },
   footerText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
+  },
+  aboutBtn: {
+    width: 24,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 4,
+  },
+  aboutBtnHover: {
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
 });

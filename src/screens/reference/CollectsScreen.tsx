@@ -1,6 +1,7 @@
 import { memo, type ReactNode, useDeferredValue, useMemo, useRef } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Chevron } from "../../components/shell/Chevron";
+import { SearchField } from "../../components/shell/SearchField";
 import { collectPassage } from "../../lib/content/collects";
 import type { CollectRite, CollectSection } from "../../lib/content/types";
 import { searchCollects } from "../../lib/reference/search";
@@ -62,22 +63,11 @@ export function CollectsScreen({
     <SplitPane
       fontScale={fontScale}
       header={
-        <TextInput
+        <SearchField
           ref={desktopInputRef}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search by title or text"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={[
-            styles.search,
-            {
-              width: "100%",
-              marginLeft: 0,
-              borderWidth: 0,
-              paddingHorizontal: 0,
-              paddingVertical: 0,
-            },
-          ]}
+          placeholder="Search"
           accessibilityLabel="Search collects"
         />
       }

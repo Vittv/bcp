@@ -38,6 +38,14 @@ describe("searchPsalms", () => {
     expect(hits.find((h) => h.psalm === 119)?.snippet).toBeNull();
   });
 
+  test("parses a leading psalm/ps prefix as an exact number", () => {
+    for (const q of ["Psalm 20", "psalm 20", "Ps 20", "ps 20", "Psalms 20"]) {
+      const hits = searchPsalms(q);
+      expect(hits).toHaveLength(1);
+      expect(hits[0].psalm).toBe(20);
+    }
+  });
+
   test("unknown text yields no results", () => {
     expect(searchPsalms("xyzzyplugh")).toHaveLength(0);
   });

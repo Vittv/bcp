@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { CodeBlock } from "../components/CodeBlock";
 import { ExternalLink } from "../components/ExternalLink";
 import { CHROME_FONT } from "../lib/fonts";
@@ -12,9 +12,7 @@ import { VERSION } from "../lib/version";
 
 export function InstallScreen() {
   return (
-    <ScrollView>
-      <Text style={styles.heading}>Install</Text>
-
+    <View>
       <View style={styles.section}>
         <Text style={styles.body}>
           bcp is a desktop app for macOS, Windows and Linux, a web app for
@@ -109,18 +107,11 @@ export function InstallScreen() {
           nothing to install.
         </Text>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  heading: {
-    fontFamily: CHROME_FONT,
-    fontSize: 20,
-    fontWeight: "700",
-    color: "var(--text, #2c2020)",
-    marginBottom: 24,
-  },
   section: {
     marginBottom: 24,
   },
@@ -129,23 +120,23 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: CHROME_FONT,
-    fontSize: 13,
+    fontSize: 18,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
     marginBottom: 8,
   },
   body: {
     fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 13,
+    fontWeight: "400",
+    fontSize: 17,
     color: "var(--text-secondary, #7a6e64)",
-    lineHeight: 20,
+    lineHeight: 27,
     marginBottom: 8,
   },
   link: {
     fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 13,
+    fontWeight: "400",
+    fontSize: 17,
     color: "var(--accent, #7a3040)",
     textDecorationLine: "underline",
     marginBottom: 8,

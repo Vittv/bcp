@@ -78,12 +78,13 @@ export const sharedStyles = StyleSheet.create({
   list: {
     flexGrow: 1,
   },
-  // file-manager rows: full-width hover bands over faint dividers.
-  // hover and selected share the same low-contrast translucent tint —
-  // the opaque --border band read too loud, especially divider-less
-  // collects; bar pad + search inset/padding put the search text at
-  // the same 18px inset as row content
+  // file-manager rows: hover/selected paint as rounded pills inset from the
+  // pane edges, matching the main sidebar nav; the faint hairline divider is
+  // kept so the long psalm/collect lists stay scannable
   row: {
+    marginHorizontal: 8,
+    marginVertical: 1,
+    borderRadius: 8,
     borderBottomWidth: 1,
     borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
   },
@@ -95,7 +96,7 @@ export const sharedStyles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     paddingVertical: 8,
-    paddingHorizontal: 18,
+    paddingHorizontal: 10,
   },
   // psalm rows pin their geometry to match the collect rows exactly:
   // 22px incipit line + 2×6px padding + 1px hairline = 35px, same as
@@ -105,7 +106,7 @@ export const sharedStyles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     paddingVertical: 6,
-    paddingHorizontal: 18,
+    paddingHorizontal: 10,
   },
   rowMeta: {
     marginLeft: "auto",
@@ -148,7 +149,7 @@ export const sharedStyles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     paddingVertical: 8,
-    paddingHorizontal: 18,
+    paddingHorizontal: 10,
   },
   // rites always print one above the other at full measure: the
   // horizontal wrap is only useful at extreme widths and fights the
