@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import type { OfficeId } from "../../lib/content/types";
+import { CHROME_FONT } from "../../lib/fonts";
 
 const noSelect = {
   userSelect: "none" as const,
@@ -171,7 +172,8 @@ const styles = StyleSheet.create({
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   tabText: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
   },
@@ -188,7 +190,8 @@ const styles = StyleSheet.create({
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   toggleText: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
   },

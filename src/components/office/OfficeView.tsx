@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { getKjvPassagesFromDolRef } from "../../lib/content/kjv";
 import type { KjvPassage, OfficeSpeaker } from "../../lib/content/types";
+import { CHROME_FONT } from "../../lib/fonts";
 import type {
   ComposedLesson,
   ComposedNode,
@@ -17,8 +18,6 @@ const SERIF_SEMI =
   '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
 const SERIF_ITALIC =
   '"Crimson Pro Italic", "Crimson Pro", Georgia, "Times New Roman", serif';
-const SANS =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
 const SPEAKER_LABEL: Record<OfficeSpeaker, string> = {
   officiant: "Officiant",
@@ -213,7 +212,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionHeading: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "600",
     letterSpacing: 1.5,
@@ -249,7 +248,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   speaker: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontWeight: "600",
     fontSize: 11,
     letterSpacing: 0.4,

@@ -1,12 +1,11 @@
 import { StyleSheet } from "react-native";
 import { officeBarStyles } from "../../components/shell/OfficeTabs";
+import { CHROME_FONT } from "../../lib/fonts";
 
 const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
 // expo-font registers each face as its own single-face family
 const SERIF_SEMI =
   '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
-const SANS =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
 // styles shared across the Psalms, Collects, and Offices reference pages
 export const sharedStyles = StyleSheet.create({
@@ -56,7 +55,8 @@ export const sharedStyles = StyleSheet.create({
     backgroundColor: "transparent",
     paddingHorizontal: 4,
     paddingVertical: 3,
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 14,
     color: "var(--text, #2c2020)",
   },
@@ -70,7 +70,8 @@ export const sharedStyles = StyleSheet.create({
     marginLeft: 8,
   },
   backText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 12,
     color: "var(--text-secondary, #7a6e64)",
   },
@@ -108,7 +109,8 @@ export const sharedStyles = StyleSheet.create({
   },
   rowMeta: {
     marginLeft: "auto",
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 12,
     color: "var(--text-secondary, #7a6e64)",
     fontVariant: ["tabular-nums"],
@@ -134,7 +136,7 @@ export const sharedStyles = StyleSheet.create({
   // they stay sans; like the sidebar nav they sit in the muted
   // secondary ink, and the serif is reserved for the compare view
   collectIndexTitle: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 14,
     fontWeight: "400",
     lineHeight: 18,
@@ -157,7 +159,7 @@ export const sharedStyles = StyleSheet.create({
   // rites stack at full measure; each block sizes to its own text
   compareCol: {},
   compareRite: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.2,
@@ -183,7 +185,8 @@ export const sharedStyles = StyleSheet.create({
     flex: 1,
   },
   empty: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
     paddingVertical: 24,
@@ -216,7 +219,8 @@ export const sharedStyles = StyleSheet.create({
     marginBottom: 4,
   },
   detailSubtitle: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 13,
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 22,
@@ -225,7 +229,7 @@ export const sharedStyles = StyleSheet.create({
     marginBottom: 20,
   },
   groupHeading: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 1.2,
@@ -259,7 +263,7 @@ export const sharedStyles = StyleSheet.create({
     backgroundColor: "var(--row-hover, rgba(44, 32, 32, 0.06))",
   },
   dateText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "600",
     color: "var(--accent, #7a3040)",
@@ -283,7 +287,8 @@ export const sharedStyles = StyleSheet.create({
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   todayText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
   },
@@ -323,7 +328,7 @@ export const sharedStyles = StyleSheet.create({
     marginBottom: 6,
   },
   popMonth: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
@@ -347,7 +352,8 @@ export const sharedStyles = StyleSheet.create({
     backgroundColor: "var(--accent, #7a3040)",
   },
   popCellText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 12,
     color: "var(--text, #2c2020)",
     fontVariant: ["tabular-nums"],
@@ -412,7 +418,7 @@ export const sharedStyles = StyleSheet.create({
     backgroundColor: "var(--row-hover, rgba(44, 32, 32, 0.06))",
   },
   officeBtnText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "600",
     color: "var(--accent, #7a3040)",
@@ -440,7 +446,8 @@ export const sharedStyles = StyleSheet.create({
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   popMenuItemText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 13,
     color: "var(--text, #2c2020)",
   },
@@ -464,12 +471,14 @@ export const sharedStyles = StyleSheet.create({
     marginBottom: 4,
   },
   bibleReaderSubtitle: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
   },
   bibleLoading: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 16,
     color: "var(--text-secondary, #7a6e64)",
     textAlign: "center",
@@ -501,13 +510,14 @@ export const sharedStyles = StyleSheet.create({
     opacity: 0.4,
   },
   bibleNavBtnText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
   },
   bibleChapterIndicator: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 13,
     color: "var(--text-secondary, #7a6e64)",
   },
@@ -565,7 +575,7 @@ export const sharedStyles = StyleSheet.create({
     borderColor: "var(--accent, #7a3040)",
   },
   bibleBookSegmentText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "600",
     color: "var(--text-secondary, #7a6e64)",
@@ -586,7 +596,7 @@ export const sharedStyles = StyleSheet.create({
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   bibleResetBtnText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "600",
     color: "var(--text-secondary, #7a6e64)",
@@ -605,7 +615,7 @@ export const sharedStyles = StyleSheet.create({
     justifyContent: "center",
   },
   bibleDropdownText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
@@ -636,7 +646,8 @@ export const sharedStyles = StyleSheet.create({
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   bibleDropdownItemText: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 13,
     color: "var(--text, #2c2020)",
   },
@@ -650,7 +661,7 @@ export const sharedStyles = StyleSheet.create({
     flexDirection: "row",
   },
   bibleNavLabel: {
-    fontFamily: SANS,
+    fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "400",
     color: "var(--text, #2c2020)",

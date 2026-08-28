@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { Color, DolSlot, Season } from "../../lib/calendar/types";
+import { CHROME_FONT } from "../../lib/fonts";
 import { SeasonDot } from "./SeasonDot";
 
 // bundled via expo-font; system monospace is the fallback on native
@@ -147,7 +148,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   text: {
-    fontFamily: "sans-serif",
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
   },
