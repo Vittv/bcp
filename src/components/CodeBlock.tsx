@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { CHROME_FONT } from "../lib/fonts";
 
 // Code blocks theme themselves through the app palette: the raised surface
@@ -52,9 +52,16 @@ export function CodeBlock({ value, label }: CodeBlockProps) {
     <View style={styles.block}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View style={styles.row}>
-        <Text style={styles.code} selectable>
-          {value}
-        </Text>
+        <ScrollView
+          horizontal
+          style={styles.codeScroll}
+          contentContainerStyle={styles.codeScrollContent}
+          showsHorizontalScrollIndicator
+        >
+          <Text style={styles.code} selectable>
+            {value}
+          </Text>
+        </ScrollView>
         <Pressable
           onPress={onCopy}
           accessibilityRole="button"
@@ -96,8 +103,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     paddingLeft: 10,
   },
-  code: {
+  codeScroll: {
     flex: 1,
+    overflow: "hidden",
+  },
+  codeScrollContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  code: {
     fontFamily: MONO,
     fontWeight: "500",
     fontSize: 14,
@@ -105,6 +120,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     paddingVertical: 8,
     userSelect: "text",
+    flexShrink: 0,
   },
   copyBtn: {
     alignSelf: "stretch",
