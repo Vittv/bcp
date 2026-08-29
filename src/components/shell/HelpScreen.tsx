@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     minWidth: 96,
   },
   key: {
-    fontFamily: CHROME_FONT,
+    fontFamily: '"JetBrains Mono", monospace',
     fontWeight: "500",
     fontSize: 13,
     color: "var(--text, #2c2020)",

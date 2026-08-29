@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import { Platform } from "react-native";
-import { INTER, INTER_TIGHT, SYSTEM_UI } from "../lib/fonts";
+import { INTER_TIGHT, SYSTEM_UI } from "../lib/fonts";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
@@ -176,74 +176,26 @@ function applyPalette(theme: ResolvedTheme) {
   `;
 }
 
-export const INTER_FACES = [
-  { weight: 400, file: "inter-latin-400-normal.woff2" },
-  { weight: 500, file: "inter-latin-500-normal.woff2" },
-  { weight: 600, file: "inter-latin-600-normal.woff2" },
-  { weight: 700, file: "inter-latin-700-normal.woff2" },
-] as const;
-
+// Inter Tight is a variable font: one woff2 carries every weight, so a single
+// @font-face with a weight range serves the whole chrome.
 function ensureInterFont() {
   if (Platform.OS !== "web" || typeof document === "undefined") return;
-  const id = "chrome-font-face";
+  const id = "chrome-font-tight-face";
   // SAFETY: we only create <style> elements with this id here.
   if (document.getElementById(id)) return;
-  const faces = [
-    {
-      weight: 400,
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      uri: assetUri(require("../../assets/fonts/inter-latin-400-normal.woff2")),
-    },
-    {
-      weight: 500,
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      uri: assetUri(require("../../assets/fonts/inter-latin-500-normal.woff2")),
-    },
-    {
-      weight: 600,
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      uri: assetUri(require("../../assets/fonts/inter-latin-600-normal.woff2")),
-    },
-    {
-      weight: 700,
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      uri: assetUri(require("../../assets/fonts/inter-latin-700-normal.woff2")),
-    },
-  ];
-  const rules = faces
-    .filter((f) => Boolean(f.uri))
-    .map(
-      (f) =>
-        `@font-face{font-family:${JSON.stringify(INTER)};font-style:normal;font-weight:${f.weight};font-display:swap;src:url(${JSON.stringify(
-          f.uri,
-        )}) format("woff2")}`,
-    );
-  if (rules.length === 0) return;
-  const el = document.createElement("style");
-  el.id = id;
-  el.textContent = rules.join("\n");
-  document.head.appendChild(el);
-
-  // Inter Tight is a variable font: one woff2 carries every weight, so a
-  // single @font-face with a weight range replaces the per-weight Inter
-  // faces. declared in its own style element so it can't be confused with
-  // the static Inter faces above.
-  const tightId = "chrome-font-tight-face";
-  // SAFETY: we only create <style> elements with this id here.
-  if (document.getElementById(tightId)) return;
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const tightUri = assetUri(
     require("../../assets/fonts/inter-tight-latin-var.woff2"),
   );
   if (!tightUri) return;
-  const tightEl = document.createElement("style");
-  tightEl.id = tightId;
-  tightEl.textContent = `@font-face{font-family:${JSON.stringify(
+  const te = document.createElement("style");
+  te.id = id;
+  te.textContent = `@font-face{font-family:${JSON.stringify(
     INTER_TIGHT,
   )};font-style:normal;font-weight:100 900;font-display:swap;src:url(${JSON.stringify(
     tightUri,
   )}) format("woff2")}`;
-  document.head.appendChild(tightEl);
+  document.head.appendChild(te);
 }
 
 type FontSource = string | number | { uri?: string; localUri?: string };
@@ -264,7 +216,7 @@ function applyFontMode(mode: FontMode) {
   const r = document.documentElement.style;
   r.setProperty(
     "--chrome-font",
-    mode === "inter" ? `"${INTER_TIGHT}", ${INTER}, ${SYSTEM_UI}` : SYSTEM_UI,
+    mode === "inter" ? `"${INTER_TIGHT}", ${SYSTEM_UI}` : SYSTEM_UI,
   );
 }
 
