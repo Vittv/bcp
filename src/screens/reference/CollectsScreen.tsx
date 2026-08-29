@@ -1,7 +1,6 @@
 import { memo, type ReactNode, useDeferredValue, useMemo, useRef } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Chevron } from "../../components/shell/Chevron";
-import { SearchField } from "../../components/shell/SearchField";
 import { collectPassage } from "../../lib/content/collects";
 import type { CollectRite, CollectSection } from "../../lib/content/types";
 import { searchCollects } from "../../lib/reference/search";
@@ -63,11 +62,22 @@ export function CollectsScreen({
     <SplitPane
       fontScale={fontScale}
       header={
-        <SearchField
+        <TextInput
           ref={desktopInputRef}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search"
+          placeholder="Search by title or text"
+          placeholderTextColor="var(--text-secondary, #7a6e64)"
+          style={[
+            styles.search,
+            {
+              width: "100%",
+              marginLeft: 0,
+              borderWidth: 0,
+              paddingHorizontal: 0,
+              paddingVertical: 0,
+            },
+          ]}
           accessibilityLabel="Search collects"
         />
       }
@@ -201,8 +211,7 @@ function CollectIndex({
                   key={`${hit.section}:${hit.title}`}
                   style={({ hovered }) => [
                     styles.row,
-                    isSelected && styles.rowSelected,
-                    hovered && !isSelected && styles.rowHover,
+                    hovered && styles.rowHover,
                   ]}
                   onPress={() =>
                     onSelect(
@@ -213,7 +222,13 @@ function CollectIndex({
                   }
                 >
                   <View style={styles.collectRowInner}>
-                    <Text numberOfLines={2} style={styles.collectIndexTitle}>
+                    <Text
+                      numberOfLines={2}
+                      style={[
+                        styles.collectIndexTitle,
+                        isSelected && styles.rowTextActive,
+                      ]}
+                    >
                       {hit.title}
                     </Text>
                   </View>

@@ -49,8 +49,8 @@ const SPLIT_HEADER_STYLE: React.CSSProperties = {
   alignItems: "center",
   paddingTop: 8,
   paddingBottom: 8,
-  paddingLeft: 8,
-  paddingRight: 8,
+  paddingLeft: 18,
+  paddingRight: 18,
 };
 const SPLIT_LIST_SCROLL_STYLE: React.CSSProperties = {
   flex: 1,

@@ -33,11 +33,10 @@ export const SHORTCUTS: {
     ],
   },
   {
-    group: "Search & windows",
+    group: "Shortcuts & windows",
     rows: [
-      { keys: ["/"], label: "Focus search" },
       { keys: ["?"], label: "Help & shortcuts" },
-      { keys: ["Esc"], label: "Close modal or clear search" },
+      { keys: ["Esc"], label: "Close modal" },
     ],
   },
 ];

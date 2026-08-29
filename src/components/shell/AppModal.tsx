@@ -97,14 +97,12 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   titleBar: {
-    height: 58,
+    height: 64,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingLeft: 24,
     paddingRight: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
     flexShrink: 0,
     backgroundColor: "var(--bg, #e0dbd0)",
     userSelect: "none",
@@ -112,8 +110,8 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: CHROME_FONT,
     fontWeight: "600",
-    fontSize: 20,
-    letterSpacing: 0.4,
+    fontSize: 26,
+    letterSpacing: 0.2,
     color: "var(--text, #2c2020)",
   },
   closeBtn: {
@@ -122,8 +120,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
   },
   closeBtnHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",

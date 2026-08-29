@@ -3,7 +3,6 @@ import { IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { VERSION } from "../../lib/version";
 import { Chevron } from "./Chevron";
-import { GlobalSearch } from "./GlobalSearch";
 import { DownloadIcon, HelpIcon, InfoIcon, SettingsIcon } from "./Icon";
 
 export type PageId =
@@ -118,7 +117,6 @@ export function Sidebar({
           )}
         </Pressable>
       </View>
-      <GlobalSearch />
       <View style={styles.scroll}>
         <View style={styles.nav}>
           {sections.map(({ section, items }, idx) => (
@@ -132,8 +130,7 @@ export function Sidebar({
                     onPress={() => onSelect(item.id)}
                     style={({ hovered }) => [
                       styles.navItem,
-                      isActive && styles.navItemActive,
-                      hovered && !isActive && styles.navItemHover,
+                      hovered && styles.navItemHover,
                     ]}
                   >
                     <Text
@@ -198,15 +195,15 @@ const styles = StyleSheet.create({
     height: 24,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 6,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: "var(--border-content, #b5aa9e)",
   },
   toolBtnHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
-  // nav items are full-width bands; active and hover share the same
-  // control-hover fill as every other chrome surface
+  // nav items: the active row is marked by accent text alone, while hover
+  // keeps the control-hover fill
   scroll: {
     flex: 1,
     overflowY: "auto",
@@ -229,10 +226,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginHorizontal: 8,
     marginVertical: 1,
-    borderRadius: 8,
-  },
-  navItemActive: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    borderRadius: 4,
   },
   navItemHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
