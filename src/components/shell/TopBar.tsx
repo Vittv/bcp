@@ -197,6 +197,7 @@ const styles = StyleSheet.create({
   },
   fontPct: {
     fontFamily: MONO,
+    fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
     minWidth: 28,

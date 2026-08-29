@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
   code: {
     flex: 1,
     fontFamily: MONO,
+    fontWeight: "500",
     fontSize: 14,
     color: "var(--text, #2c2020)",
     lineHeight: 24,

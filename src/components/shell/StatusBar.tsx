@@ -161,6 +161,7 @@ const styles = StyleSheet.create({
   },
   pct: {
     fontFamily: MONO,
+    fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
     // reserve room for the widest value ("100%") and right-align so the
