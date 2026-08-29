@@ -1,5 +1,4 @@
 import { allCollects, collectText } from "../content/collects";
-import { getAllKjvBooks, loadKjvBook } from "../content/kjv";
 import {
   psalmIncipit,
   psalmNumbers,
@@ -7,14 +6,6 @@ import {
   psalmVerseCount,
 } from "../content/psalter";
 import type { CollectSection } from "../content/types";
-
-export type BibleHit = {
-  abbrev: string;
-  book: string;
-  chapter: number;
-  verse: number;
-  snippet: string;
-};
 
 export type PsalmHit = {
   psalm: number;
@@ -110,126 +101,4 @@ export function searchCollects(query: string): CollectHit[] {
     }
   }
   return hits;
-}
-
-type BibleLine = {
-  abbrev: string;
-  book: string;
-  chapter: number;
-  verse: number;
-  text: string;
-};
-
-// every KJV verse flattened into one line as soon as the full Bible has been
-// loaded. built lazily on first search so the first keystroke pays the cost
-// and every later one is a cheap linear scan.
-let bibleIndex: BibleLine[] | null = null;
-let bibleIndexPromise: Promise<BibleLine[]> | null = null;
-
-async function loadBibleIndex(): Promise<BibleLine[]> {
-  if (bibleIndex) return bibleIndex;
-  bibleIndexPromise ??= (async () => {
-    const lines: BibleLine[] = [];
-    const metas = getAllKjvBooks();
-    for (const meta of metas) {
-      const book = await loadKjvBook(meta.abbrev);
-      if (!book) continue;
-      for (const [chapterKey, verses] of Object.entries(book.verses)) {
-        const chapter = parseInt(chapterKey, 10);
-        if (Number.isNaN(chapter)) continue;
-        for (const [verseKey, text] of Object.entries(verses)) {
-          const verse = parseInt(verseKey, 10);
-          if (Number.isNaN(verse)) continue;
-          lines.push({
-            abbrev: book.abbrev,
-            book: book.book,
-            chapter,
-            verse,
-            text,
-          });
-        }
-      }
-    }
-    bibleIndex = lines;
-    return lines;
-  })();
-  return bibleIndexPromise;
-}
-
-// verses of `query` across the whole Bible, in canonical order. one hit per
-// matching verse; the caller caps the count it renders. an empty query yields
-// no hits (the full Bible is far too large to list).
-export async function searchBible(query: string): Promise<BibleHit[]> {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  const lines = await loadBibleIndex();
-  const hits: BibleHit[] = [];
-  for (const line of lines) {
-    const s = snippet(line.text, q);
-    if (s === null) {
-      // match against the book + chapter reference with spaces stripped on
-      // both sides so "John 3" matches "john3", "Psalm 20" style refs, etc.
-      const ref = `${line.book} ${line.chapter}`
-        .toLowerCase()
-        .replace(/\s+/g, "");
-      const compactQ = q.replace(/\s+/g, "");
-      if (!ref.includes(compactQ)) continue;
-      hits.push({
-        abbrev: line.abbrev,
-        book: line.book,
-        chapter: line.chapter,
-        verse: line.verse,
-        snippet: `${line.book} ${line.chapter}:${line.verse}`,
-      });
-      continue;
-    }
-    hits.push({
-      abbrev: line.abbrev,
-      book: line.book,
-      chapter: line.chapter,
-      verse: line.verse,
-      snippet: s,
-    });
-  }
-  return hits;
-}
-
-export type GlobalHit =
-  | {
-      kind: "psalm";
-      psalm: number;
-      incipit: string;
-      snippet: string | null;
-    }
-  | {
-      kind: "collect";
-      section: CollectSection;
-      title: string;
-      snippet: string | null;
-    }
-  | { kind: "bible"; bible: BibleHit };
-
-// group a query across psalms, collects, and the whole Bible. scripture titles
-// (e.g. "John 3") are matched against book and chapter names by searchBible.
-export async function globalSearch(query: string): Promise<GlobalHit[]> {
-  const q = query.trim();
-  if (!q) return [];
-  const psalmHits = searchPsalms(q).slice(0, 8);
-  const collectHits = searchCollects(q).slice(0, 6);
-  const bibleHits = (await searchBible(q)).slice(0, 10);
-  return [
-    ...psalmHits.map((h) => ({
-      kind: "psalm" as const,
-      psalm: h.psalm,
-      incipit: h.incipit,
-      snippet: h.snippet,
-    })),
-    ...collectHits.map((h) => ({
-      kind: "collect" as const,
-      section: h.section,
-      title: h.title,
-      snippet: h.snippet,
-    })),
-    ...bibleHits.map((h) => ({ kind: "bible" as const, bible: h })),
-  ];
 }

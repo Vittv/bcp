@@ -2,10 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { AppModal } from "../../components/shell/AppModal";
 import { Chevron } from "../../components/shell/Chevron";
-import {
-  clearGlobalSearch,
-  focusGlobalSearch,
-} from "../../components/shell/GlobalSearch";
 import { HelpScreen } from "../../components/shell/HelpScreen";
 import type { ModalType, PageId } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
@@ -135,7 +131,7 @@ export function Shell() {
 
   const [isMobile, setIsMobile] = useState(() => {
     if (Platform.OS !== "web") return true;
-    return window.matchMedia("(max-width: 768px)").matches;
+    return window.matchMedia("(max-width: 740px)").matches;
   });
 
   // Persistent sidebar visibility on desktop, deliberately toggled by the
@@ -181,7 +177,7 @@ export function Shell() {
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
-    const mq = window.matchMedia("(max-width: 768px)");
+    const mq = window.matchMedia("(max-width: 740px)");
     const onChange = (e: MediaQueryListEvent) => {
       // entering mobile just resets the transient drawer (no persistence);
       // the derived sidebarVisible handles the desktop restore on the way up
@@ -351,7 +347,6 @@ export function Shell() {
         if (e.key === "Escape") {
           e.preventDefault();
           e.stopImmediatePropagation();
-          clearGlobalSearch();
         }
         return;
       }
@@ -382,17 +377,12 @@ export function Shell() {
             e.preventDefault();
             e.stopImmediatePropagation();
             setModal("help");
-          } else {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            focusGlobalSearch();
           }
           clearGo();
           return;
         case "Escape":
           e.preventDefault();
           e.stopImmediatePropagation();
-          clearGlobalSearch();
           clearGo();
           return;
         case "g":
@@ -607,7 +597,7 @@ export function Shell() {
         );
       case "help":
         return (
-          <AppModal title="Help & Shortcuts" onClose={closeModal} width={520}>
+          <AppModal title="Help & Shortcuts" onClose={closeModal} width={760}>
             <HelpScreen />
           </AppModal>
         );
@@ -831,7 +821,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "var(--bg, #e0dbd0)",
-    borderRadius: 6,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: "var(--border-content, #b5aa9e)",
   },

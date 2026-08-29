@@ -78,25 +78,26 @@ export const sharedStyles = StyleSheet.create({
   list: {
     flexGrow: 1,
   },
-  // file-manager rows: hover/selected paint as rounded pills inset from the
-  // pane edges, matching the main sidebar nav; the faint hairline divider is
-  // kept so the long psalm/collect lists stay scannable
+  // file-manager rows: full-width hover bands over faint dividers; the
+  // 18px padding sits the search text and row text on the same left edge
   row: {
-    marginHorizontal: 8,
-    marginVertical: 1,
-    borderRadius: 8,
     borderBottomWidth: 1,
     borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
   },
   rowHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
+  // active rows turn every text node accent red instead of filling;
+  // hover paints the rowHover fill on top of that state
+  rowTextActive: {
+    color: "var(--accent, #7a3040)",
+  },
   rowInner: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 18,
   },
   // psalm rows pin their geometry to match the collect rows exactly:
   // 22px incipit line + 2×6px padding + 1px hairline = 35px, same as
@@ -106,7 +107,7 @@ export const sharedStyles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingHorizontal: 18,
   },
   rowMeta: {
     marginLeft: "auto",
@@ -121,10 +122,6 @@ export const sharedStyles = StyleSheet.create({
   },
   rowChevronShown: {
     opacity: 1,
-  },
-  // active matches hover on purpose, same as the sidebar and office tabs
-  rowSelected: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   indexBody: {
     paddingBottom: 24,
@@ -149,7 +146,7 @@ export const sharedStyles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 18,
   },
   // rites always print one above the other at full measure: the
   // horizontal wrap is only useful at extreme widths and fights the
@@ -260,8 +257,8 @@ export const sharedStyles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 4,
   },
-  dateBtnActive: {
-    backgroundColor: "var(--row-hover, rgba(44, 32, 32, 0.06))",
+  dateBtnHover: {
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   dateText: {
     fontFamily: CHROME_FONT,
@@ -281,11 +278,6 @@ export const sharedStyles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 4,
-  },
-  // latched look when the picked date IS today: the same chip-on
-  // treatment as OfficeTabs' active toggles
-  todayBtnOn: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   todayText: {
     fontFamily: CHROME_FONT,
@@ -372,7 +364,6 @@ export const sharedStyles = StyleSheet.create({
     ...officeBarStyles.tab,
   },
   offTabActive: {
-    ...officeBarStyles.tabActive,
     ...officeBarStyles.tabHover,
   },
   offTabText: {
@@ -390,11 +381,7 @@ export const sharedStyles = StyleSheet.create({
     gap: 2,
     marginRight: 6,
   },
-  riteChipOn: {
-    ...officeBarStyles.toggle,
-    ...officeBarStyles.toggleOn,
-  },
-  riteChipOff: {
+  riteChip: {
     ...officeBarStyles.toggle,
   },
   riteChipText: {
@@ -415,8 +402,8 @@ export const sharedStyles = StyleSheet.create({
     borderRadius: 4,
     marginLeft: 6,
   },
-  officeBtnActive: {
-    backgroundColor: "var(--row-hover, rgba(44, 32, 32, 0.06))",
+  officeBtnHover: {
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   officeBtnText: {
     fontFamily: CHROME_FONT,

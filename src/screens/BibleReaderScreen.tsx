@@ -140,18 +140,26 @@ function BibleBookList({
       {books.map((b) => (
         <Pressable
           key={b.abbrev}
-          style={({ hovered }) => [
-            styles.row,
-            b.abbrev === selected && styles.rowSelected,
-            hovered && b.abbrev !== selected && styles.rowHover,
-          ]}
+          style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
           onPress={() => onSelect(b.abbrev)}
         >
           <View style={styles.psalmRowInner}>
-            <Text style={[styles.incipit, { flex: 1 }]} numberOfLines={1}>
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.incipit,
+                { flex: 1 },
+                b.abbrev === selected && styles.rowTextActive,
+              ]}
+            >
               {b.book}
             </Text>
-            <Text style={[styles.rowMeta, { color: "var(--accent, #7a3040)" }]}>
+            <Text
+              style={[
+                styles.rowMeta,
+                b.abbrev === selected && styles.rowTextActive,
+              ]}
+            >
               {b.chapters} ch.
             </Text>
           </View>

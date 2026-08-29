@@ -142,8 +142,8 @@ export function OfficesBar({
         <Pressable
           key={r}
           style={({ hovered }) => [
-            r === officeRite ? styles.riteChipOn : styles.riteChipOff,
-            hovered && r !== officeRite && styles.offTabActive,
+            styles.riteChip,
+            hovered && styles.offTabActive,
           ]}
           onPress={() => setOfficeRite(r)}
           accessibilityRole="button"
@@ -178,8 +178,7 @@ export function OfficesBar({
       <Pressable
         style={({ hovered }) => [
           styles.dateBtn,
-          hovered && !pickerOpen && styles.dateBtnActive,
-          pickerOpen && styles.dateBtnActive,
+          hovered && styles.dateBtnHover,
         ]}
         onPress={openPicker}
         accessibilityLabel="Pick date"
@@ -199,11 +198,7 @@ export function OfficesBar({
         <Chevron direction="right" size={6} />
       </Pressable>
       <Pressable
-        style={({ hovered }) => [
-          styles.todayBtn,
-          onToday && styles.todayBtnOn,
-          !onToday && hovered && styles.rowHover,
-        ]}
+        style={({ hovered }) => [styles.todayBtn, hovered && styles.rowHover]}
         onPress={() => setOfficeDate(today())}
         accessibilityLabel="Jump to today"
         accessibilityRole="button"
@@ -225,7 +220,7 @@ export function OfficesBar({
           <Pressable
             style={({ hovered }) => [
               styles.officeBtn,
-              (hovered || menuOpen) && styles.officeBtnActive,
+              hovered && styles.officeBtnHover,
             ]}
             onPress={openMenu}
             accessibilityLabel="Pick office"
@@ -308,7 +303,7 @@ export function OfficesBar({
                 key={t.id}
                 style={({ hovered }) => [
                   styles.offTab,
-                  (isActive || hovered) && styles.offTabActive,
+                  hovered && styles.offTabActive,
                 ]}
                 onPress={() => setOpenOffice(t.id)}
                 accessibilityRole="tab"

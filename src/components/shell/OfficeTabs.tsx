@@ -78,8 +78,7 @@ export function OfficeTabs({
               style={({ hovered }) => [
                 styles.tab,
                 compact && styles.itemCompact,
-                isActive && styles.tabActive,
-                hovered && !isActive && styles.tabHover,
+                hovered && styles.tabHover,
               ]}
             >
               <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
@@ -94,7 +93,6 @@ export function OfficeTabs({
           style={({ hovered }) => [
             styles.toggle,
             compact && styles.itemCompact,
-            showRubrics && styles.toggleOn,
             hovered && styles.tabHover,
           ]}
           onPress={onToggleRubrics}
@@ -107,7 +105,6 @@ export function OfficeTabs({
           style={({ hovered }) => [
             styles.toggle,
             compact && styles.itemCompact,
-            showSpeakers && styles.toggleOn,
             hovered && styles.tabHover,
           ]}
           onPress={onToggleSpeakers}
@@ -122,7 +119,6 @@ export function OfficeTabs({
           style={({ hovered }) => [
             styles.toggle,
             compact && styles.itemCompact,
-            devotions && styles.toggleOn,
             hovered && styles.tabHover,
           ]}
           onPress={onToggleDevotions}
@@ -165,9 +161,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 4,
   },
-  tabActive: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
-  },
   tabHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
@@ -185,9 +178,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 4,
-  },
-  toggleOn: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   toggleText: {
     fontFamily: CHROME_FONT,

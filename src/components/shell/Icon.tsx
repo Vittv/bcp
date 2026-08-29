@@ -177,24 +177,6 @@ export function CloseIcon({
   );
 }
 
-export function SearchIcon({
-  size = 16,
-  strokeWidth = 2,
-  color,
-  style,
-}: IconProps) {
-  return icon(
-    size,
-    strokeWidth,
-    color,
-    style,
-    <>
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.35-4.35" />
-    </>,
-  );
-}
-
 export function HelpIcon({
   size = 16,
   strokeWidth = 2,

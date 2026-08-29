@@ -2,7 +2,6 @@ import { memo, type ReactNode, useDeferredValue, useMemo, useRef } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { PsalmText } from "../../components/office/PsalmText";
 import { Chevron } from "../../components/shell/Chevron";
-import { SearchField } from "../../components/shell/SearchField";
 import { psalmPassage } from "../../lib/content/psalter";
 import { searchPsalms } from "../../lib/reference/search";
 import {
@@ -40,11 +39,22 @@ export function PsalmsScreen({
     <SplitPane
       fontScale={fontScale}
       header={
-        <SearchField
+        <TextInput
           ref={desktopInputRef}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search"
+          placeholder="Search by number or text"
+          placeholderTextColor="var(--text-secondary, #7a6e64)"
+          style={[
+            styles.search,
+            {
+              width: "100%",
+              marginLeft: 0,
+              borderWidth: 0,
+              paddingHorizontal: 0,
+              paddingVertical: 0,
+            },
+          ]}
           accessibilityLabel="Search psalms"
         />
       }
@@ -148,19 +158,24 @@ function PsalmIndex({
         return (
           <Pressable
             key={hit.psalm}
-            style={({ hovered }) => [
-              styles.row,
-              isSelected && styles.rowSelected,
-              hovered && !isSelected && styles.rowHover,
-            ]}
+            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
             onPress={() => onSelect(hit.psalm)}
           >
             <View style={styles.psalmRowInner}>
-              <Text style={styles.psalmNumber}>{hit.psalm}</Text>
-              <Text numberOfLines={1} style={styles.incipit}>
+              <Text
+                style={[styles.psalmNumber, isSelected && styles.rowTextActive]}
+              >
+                {hit.psalm}
+              </Text>
+              <Text
+                numberOfLines={1}
+                style={[styles.incipit, isSelected && styles.rowTextActive]}
+              >
                 {hit.incipit}
               </Text>
-              <Text style={styles.rowMeta}>
+              <Text
+                style={[styles.rowMeta, isSelected && styles.rowTextActive]}
+              >
                 {hit.verses} verse{hit.verses === 1 ? "" : "s"}
               </Text>
             </View>
