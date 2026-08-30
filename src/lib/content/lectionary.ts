@@ -1,4 +1,5 @@
-import { HOLY_DAYS, resolve } from "../calendar/dol";
+import { resolve } from "../calendar/dol";
+import { SANCTORALE_SLUGS } from "../calendar/sanctorale";
 import type { CalendarDate, DolSlot } from "../calendar/types";
 import { parseLessonRef } from "./lessons";
 import { parsePsalmCitation } from "./psalms";
@@ -266,10 +267,10 @@ function buildHolyDayIndex(): Map<string, DolEntry> {
     if (entry.day !== undefined) byDate.set(entry.day, entry);
   }
   const byName = new Map<string, DolEntry>();
-  for (const h of HOLY_DAYS) {
+  for (const h of SANCTORALE_SLUGS) {
     const dateKey = `${MONTHS[h.month - 1]} ${h.day}`;
     const entry = byDate.get(dateKey);
-    if (entry) byName.set(h.name, entry);
+    if (entry) byName.set(h.slug, entry);
   }
   return byName;
 }
@@ -329,11 +330,19 @@ export function entryForDay(slot: DolSlot): DolEntry | undefined {
   );
 }
 
+// the sanctorale "Eve of ..." readings: their evening slot carries the eve
+// slug as the special name, and the reading is the vendored holy-day table's
+// evening content (the collect still belongs to the following feast).
+const HOLY_DAY_EVES = new Set(
+  SANCTORALE_SLUGS.filter((h) => h.eveOf !== undefined).map((h) => h.slug),
+);
+
 // the evening of a day may belong to a special eve reading (Christmas Eve,
 // Eve of the Epiphany, ...); otherwise Evening Prayer composes the next day.
 export function entryForEvening(slot: DolSlot): DolEntry | undefined {
   const name = slot.evening?.kind === "special" ? slot.evening.name : undefined;
   if (!name) return undefined;
+  if (HOLY_DAY_EVES.has(name)) return holyDaysByName.get(name);
   const key = EVENING_DAY_KEYS[name];
   if (!key) return undefined;
   return findEntry(slot.year, key, undefined);

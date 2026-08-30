@@ -9,6 +9,10 @@ import {
 } from "react";
 import { Platform, ScrollView, Text, View } from "react-native";
 import type { PageId } from "../../components/shell/Sidebar";
+import {
+  SANCTORALE_ENTRIES,
+  sanctoraleBySlug,
+} from "../../lib/calendar/sanctorale";
 import type { CalendarDate } from "../../lib/calendar/types";
 import type { CollectSection, OfficeId } from "../../lib/content/types";
 import { searchCollects } from "../../lib/reference/search";
@@ -17,6 +21,10 @@ import { sharedStyles } from "./styles";
 // the collect the desktop pane shows before anything is picked: the
 // first hit of the full list, i.e. traditional · church-year
 export const FIRST_COLLECT = searchCollects("")[0];
+
+// the saint the desktop pane shows before anything is picked: the first
+// entry of the calendar, i.e. the Conversion of Saint Peter, Jan 18
+export const FIRST_SAINT = SANCTORALE_ENTRIES[0].slug;
 
 export const noSelect = {
   userSelect: "none" as const,
@@ -137,6 +145,8 @@ export type ReferenceState = {
   setOfficeRite: (r: OfficeRite) => void;
   selectedCollect: CollectSel | null;
   setSelectedCollect: (c: CollectSel | null) => void;
+  openSaint: string | null;
+  setOpenSaint: (slug: string | null) => void;
   officeDate: CalendarDate;
   setOfficeDate: (d: CalendarDate) => void;
 };
@@ -155,6 +165,9 @@ type ReferenceProviderProps = {
   // the active sidebar page: the status bar reflects what the current
   // page actually displays, defaults included
   page: PageId;
+  // bumps on every navigation into any page, so a search always starts
+  // empty (prevents stale queries lingering after a page re-entry)
+  navKey: number;
 };
 
 // owns the shared reference-browsing state consumed by both the per-page
@@ -163,16 +176,34 @@ export function ReferenceProvider({
   children,
   onReadingChange,
   page,
+  navKey,
 }: ReferenceProviderProps) {
   const [query, setQuery] = useState("");
-  const [openPsalm, setOpenPsalm] = useState<number | null>(null);
+  const [openPsalm, setOpenPsalmRaw] = useState<number | null>(null);
   const [openOffice, setOpenOffice] = useState<RefOfficeBase | null>(null);
   // contemporary first, matching the Today page's default rites
   const [officeRite, setOfficeRite] = useState<OfficeRite>("Two");
-  const [selectedCollect, setSelectedCollect] = useState<CollectSel | null>(
+  const [selectedCollect, setSelectedCollectRaw] = useState<CollectSel | null>(
     null,
   );
+  const [openSaint, setOpenSaintRaw] = useState<string | null>(null);
   const [officeDate, setOfficeDate] = useState<CalendarDate>(today);
+
+  // picking a psalm, collect or saint empties the search: returning to
+  // the (now unfiltered) index is the point of the pick. wrapping the
+  // raw setters keeps every open/close/back path covered
+  const setOpenPsalm = useCallback((n: number | null) => {
+    setOpenPsalmRaw(n);
+    setQuery("");
+  }, []);
+  const setSelectedCollect = useCallback((c: CollectSel | null) => {
+    setSelectedCollectRaw(c);
+    setQuery("");
+  }, []);
+  const setOpenSaint = useCallback((s: string | null) => {
+    setOpenSaintRaw(s);
+    setQuery("");
+  }, []);
 
   // the status bar mirrors what the active page shows, including the
   // default-open first item; other pages' selections never leak in
@@ -183,18 +214,20 @@ export function ReferenceProvider({
         ? OFFICE_NAMES[refOfficeId(openOffice ?? "morning", officeRite)]
         : page === "collects"
           ? (selectedCollect ?? FIRST_COLLECT).title
-          : null;
+          : page === "saints"
+            ? (sanctoraleBySlug(openSaint ?? FIRST_SAINT)?.title ?? null)
+            : null;
 
   useEffect(() => {
     onReadingChange(readingLabel);
   }, [readingLabel, onReadingChange]);
 
-  // the search query is per-page: typing on Collects must not leak into the
-  // Psalms index (or anywhere else) when the page changes
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run on page change to clear the per-page search
+  // the search query is per-entry: navigating into any page (even the
+  // same one again) starts a fresh, empty search
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run on page or navKey change to clear the search
   useEffect(() => {
     setQuery("");
-  }, [page, setQuery]);
+  }, [page, navKey, setQuery]);
 
   const state: ReferenceState = {
     query,
@@ -207,6 +240,8 @@ export function ReferenceProvider({
     setOfficeRite,
     selectedCollect,
     setSelectedCollect,
+    openSaint,
+    setOpenSaint,
     officeDate,
     setOfficeDate,
   };

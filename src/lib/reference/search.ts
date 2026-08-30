@@ -1,3 +1,8 @@
+import {
+  SANCTORALE_ENTRIES,
+  sanctoraleDateLabel,
+  sanctoraleNameVariants,
+} from "../calendar/sanctorale";
 import { allCollects, collectText } from "../content/collects";
 import {
   psalmIncipit,
@@ -99,6 +104,42 @@ export function searchCollects(query: string): CollectHit[] {
     if (s !== null) {
       hits.push({ section: entry.section, title: entry.title, snippet: s });
     }
+  }
+  return hits;
+}
+
+export type SaintHit = {
+  slug: string;
+  title: string;
+  month: number;
+  day: number;
+  eveOf?: string;
+  snippet: string | null;
+};
+
+// holy days and saints matching `query` by proper title or by any exact
+// name variant (e.g. "Saint James" matches both the July feast and the
+// brother-of-our-Lord feast). an empty query yields all 36 entries in
+// calendar-date order.
+export function searchSaints(query: string): SaintHit[] {
+  const q = query.trim().toLowerCase();
+  const hits: SaintHit[] = [];
+  for (const entry of SANCTORALE_ENTRIES) {
+    if (q) {
+      const names = sanctoraleNameVariants(entry);
+      const matched =
+        names.some((v) => v.toLowerCase().includes(q)) ||
+        sanctoraleDateLabel(entry).toLowerCase().includes(q);
+      if (!matched) continue;
+    }
+    hits.push({
+      slug: entry.slug,
+      title: entry.title,
+      month: entry.month,
+      day: entry.day,
+      eveOf: entry.eveOf,
+      snippet: q ? snippet(entry.title, q) : null,
+    });
   }
   return hits;
 }
