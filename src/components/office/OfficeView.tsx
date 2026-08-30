@@ -9,6 +9,7 @@ import type {
   ComposedSection,
   OfficeDocument,
 } from "../../lib/office/types";
+import { MentionedText } from "./MentionedText";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 
@@ -29,6 +30,7 @@ type NodeViewProps = {
   node: ComposedNode;
   showRubrics: boolean;
   showSpeakers: boolean;
+  todaySlug?: string;
 };
 
 function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
@@ -62,7 +64,12 @@ function LessonRow({ lesson }: { lesson: ComposedLesson }) {
   );
 }
 
-function NodeView({ node, showRubrics, showSpeakers }: NodeViewProps) {
+function NodeView({
+  node,
+  showRubrics,
+  showSpeakers,
+  todaySlug,
+}: NodeViewProps) {
   switch (node.kind) {
     case "heading":
       return <Text style={styles.heading}>{node.text}</Text>;
@@ -75,7 +82,7 @@ function NodeView({ node, showRubrics, showSpeakers }: NodeViewProps) {
           {node.speaker && showSpeakers ? (
             <SpeakerLabel speaker={node.speaker} />
           ) : null}
-          {node.text}
+          <MentionedText text={node.text} todaySlug={todaySlug} />
         </Text>
       );
     case "psalm": {
@@ -107,7 +114,9 @@ function NodeView({ node, showRubrics, showSpeakers }: NodeViewProps) {
         <View style={styles.collectBlock}>
           <Text style={styles.collectCross}>{"\u2720"}</Text>
           <View style={styles.collectBody}>
-            <Text style={styles.collectTitle}>{node.passage.title}</Text>
+            <Text style={styles.collectTitle}>
+              <MentionedText text={node.passage.title} todaySlug={todaySlug} />
+            </Text>
             <Text style={styles.collectText}>{node.passage.text}</Text>
           </View>
         </View>
@@ -118,7 +127,9 @@ function NodeView({ node, showRubrics, showSpeakers }: NodeViewProps) {
           <Text style={styles.collectCross}>{"\u2720"}</Text>
           <View style={styles.collectBody}>
             {node.title ? (
-              <Text style={styles.fixedCollectTitle}>{node.title}</Text>
+              <Text style={styles.fixedCollectTitle}>
+                <MentionedText text={node.title} todaySlug={todaySlug} />
+              </Text>
             ) : null}
             <Text style={styles.fixedCollectText}>{node.text}</Text>
           </View>
@@ -141,10 +152,12 @@ function SectionView({
   section,
   showRubrics,
   showSpeakers,
+  todaySlug,
 }: {
   section: ComposedSection;
   showRubrics: boolean;
   showSpeakers: boolean;
+  todaySlug?: string;
 }) {
   if (section.nodes.length === 0) return null;
   const keys = sectionKeys(section.nodes);
@@ -159,6 +172,7 @@ function SectionView({
           node={node}
           showRubrics={showRubrics}
           showSpeakers={showSpeakers}
+          todaySlug={todaySlug}
         />
       ))}
     </View>
@@ -182,6 +196,7 @@ export function OfficeView({
           section={section}
           showRubrics={showRubrics}
           showSpeakers={showSpeakers}
+          todaySlug={document.slot.holyDay}
         />
       ))}
     </View>

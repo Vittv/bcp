@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { SaintPopoverProvider } from "../../components/office/SaintPopover";
 import { AppModal } from "../../components/shell/AppModal";
 import { Chevron } from "../../components/shell/Chevron";
 import { HelpScreen } from "../../components/shell/HelpScreen";
@@ -41,6 +42,8 @@ import {
   PsalmsBar,
   PsalmsScreen,
   ReferenceProvider,
+  SaintsBar,
+  SaintsScreen,
 } from "../../screens/reference";
 import { SettingsScreen } from "../../screens/SettingsScreen";
 import { TodayScreen } from "../../screens/TodayScreen";
@@ -78,6 +81,7 @@ function isReferencePage(p: PageId): boolean {
     p === "psalms" ||
     p === "collects" ||
     p === "offices" ||
+    p === "saints" ||
     p === "old-testament" ||
     p === "new-testament"
   );
@@ -125,6 +129,9 @@ export function Shell() {
     officeForHour(new Date().getHours()),
   );
   const [page, setPage] = useState<PageId>("today");
+  // increments on every navigation (including re-entering the same
+  // page), so reference searches reset each time a page is entered
+  const [navKey, setNavKey] = useState(0);
   const [modal, setModal] = useState<ModalType | null>(null);
   const [reading, setReading] = useState<string | null>(null);
   const [scrollPct, setScrollPct] = useState(0);
@@ -254,6 +261,7 @@ export function Shell() {
 
   const handlePageSelect = (p: PageId) => {
     setPage(p);
+    setNavKey((k) => k + 1);
     setReading(null);
     if (isMobile) setMobileOpen(false);
     scrollToTop();
@@ -263,6 +271,7 @@ export function Shell() {
     (target: NavigateToRef | PageId) => {
       const setPageAndClean = (p: PageId) => {
         setPage(p);
+        setNavKey((k) => k + 1);
         setReading(null);
         if (isMobile) setMobileOpen(false);
         scrollToTop();
@@ -308,6 +317,7 @@ export function Shell() {
       o: "offices",
       b: "old-testament",
       n: "new-testament",
+      s: "saints",
     };
     const isEditable = (el: EventTarget | null): boolean => {
       // SAFETY: DOM keydown targets are Elements or text nodes; a missing
@@ -500,6 +510,8 @@ export function Shell() {
         return <CollectsBar leading={sidebarShowButton} isMobile={isMobile} />;
       case "offices":
         return <OfficesBar leading={sidebarShowButton} isMobile={isMobile} />;
+      case "saints":
+        return <SaintsBar leading={sidebarShowButton} isMobile={isMobile} />;
       case "old-testament":
       case "new-testament":
         return <BibleBar leading={sidebarShowButton} isMobile={isMobile} />;
@@ -545,12 +557,32 @@ export function Shell() {
           />
         );
       case "psalms":
-        return <PsalmsScreen isMobile={isMobile} fontScale={fontScale} />;
+        return (
+          <PsalmsScreen
+            isMobile={isMobile}
+            fontScale={fontScale}
+            onScrollProgress={reportScroll}
+          />
+        );
       case "collects":
-        return <CollectsScreen isMobile={isMobile} fontScale={fontScale} />;
+        return (
+          <CollectsScreen
+            isMobile={isMobile}
+            fontScale={fontScale}
+            onScrollProgress={reportScroll}
+          />
+        );
       case "offices":
         return (
           <OfficesScreen isMobile={isMobile} onScrollProgress={reportScroll} />
+        );
+      case "saints":
+        return (
+          <SaintsScreen
+            isMobile={isMobile}
+            fontScale={fontScale}
+            onScrollProgress={reportScroll}
+          />
         );
       case "old-testament":
       case "new-testament":
@@ -608,141 +640,147 @@ export function Shell() {
 
   if (IS_WEB) {
     return (
-      <ReferenceProvider onReadingChange={setReading} page={page}>
+      <ReferenceProvider
+        onReadingChange={setReading}
+        page={page}
+        navKey={navKey}
+      >
         <BibleProvider
           page={page}
           onReadingChange={setReading}
           onChapterChange={scrollToTop}
         >
           <NavigationContext.Provider value={{ navigateTo: handleNavigateTo }}>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                height: "100vh",
-                width: "100%",
-                boxSizing: "border-box",
-                overflow: "hidden",
-                backgroundColor: resolved === "dark" ? "#1b191a" : "#e0dbd0",
-              }}
-            >
-              <TopBar
-                season={season}
-                daysUntilNext={daysUntilNext}
-                nextSeason={nextSeason}
-                windowControls={windowControls}
-                compact={compactBars}
-              />
+            <SaintPopoverProvider>
               <div
                 style={{
                   display: "flex",
-                  flex: 1,
+                  flexDirection: "column",
+                  height: "100vh",
+                  width: "100%",
                   boxSizing: "border-box",
                   overflow: "hidden",
-                  position: "relative",
+                  backgroundColor: resolved === "dark" ? "#1b191a" : "#e0dbd0",
                 }}
               >
-                {sidebarVisible ? (
-                  <div
-                    className={
-                      isMobile
-                        ? "bcp-drawer-in"
-                        : "bcp-sidebar-in bcp-sidebar-in-left"
-                    }
-                    style={{
-                      width: isMobile ? "min(84vw, 380px)" : "25%",
-                      minWidth: isMobile ? undefined : 200,
-                      maxWidth: isMobile ? undefined : 340,
-                      flexShrink: 0,
-                      ...(isMobile ? styles.sidebarOverlay : undefined),
-                    }}
-                  >
-                    <Sidebar
-                      active={page}
-                      onSelect={handlePageSelect}
-                      onHide={hideSidebar}
-                      onOpenModal={setModal}
-                    />
-                  </div>
-                ) : null}
+                <TopBar
+                  season={season}
+                  daysUntilNext={daysUntilNext}
+                  nextSeason={nextSeason}
+                  windowControls={windowControls}
+                  compact={compactBars}
+                />
                 <div
                   style={{
-                    flex: 1,
                     display: "flex",
-                    flexDirection: "column",
+                    flex: 1,
                     boxSizing: "border-box",
                     overflow: "hidden",
+                    position: "relative",
                   }}
                 >
-                  {auxRow}
-                  <div
-                    ref={scrollRef}
-                    onScroll={handleScroll}
-                    style={{
-                      flex: 1,
-                      boxSizing: "border-box",
-                      outline: "none",
-                      position: "relative",
-                      overflowX: "hidden",
-                      overflowY:
-                        page === "calendar" ||
-                        (isReferencePage(page) && !isMobile)
-                          ? "hidden"
-                          : "auto",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems:
-                        page === "calendar" || isReferencePage(page)
-                          ? "stretch"
-                          : "center",
-                    }}
-                  >
+                  {sidebarVisible ? (
                     <div
+                      className={
+                        isMobile
+                          ? "bcp-drawer-in"
+                          : "bcp-sidebar-in bcp-sidebar-in-left"
+                      }
                       style={{
-                        boxSizing: "border-box",
-                        width: "100%",
-                        maxWidth: page === "today" ? "46rem" : "100%",
-                        padding:
-                          page === "today"
-                            ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
-                            : "0",
-                        height:
-                          page === "calendar" ||
-                          (isReferencePage(page) && !isMobile)
-                            ? "100%"
-                            : undefined,
-                        zoom:
-                          page !== "calendar" &&
-                          !(isReferencePage(page) && !isMobile) &&
-                          fontScale !== 1
-                            ? String(fontScale)
-                            : undefined,
+                        width: isMobile ? "min(84vw, 380px)" : "25%",
+                        minWidth: isMobile ? undefined : 200,
+                        maxWidth: isMobile ? undefined : 340,
+                        flexShrink: 0,
+                        ...(isMobile ? styles.sidebarOverlay : undefined),
                       }}
                     >
-                      {content}
-                    </div>
-                    {isMobile && sidebarVisible ? (
-                      <div
-                        onClick={() => setMobileOpen(false)}
-                        aria-hidden="true"
-                        style={styles.backdrop}
+                      <Sidebar
+                        active={page}
+                        onSelect={handlePageSelect}
+                        onHide={hideSidebar}
+                        onOpenModal={setModal}
                       />
-                    ) : null}
-                  </div>
+                    </div>
+                  ) : null}
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      boxSizing: "border-box",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {auxRow}
+                    <div
+                      ref={scrollRef}
+                      onScroll={handleScroll}
+                      style={{
+                        flex: 1,
+                        boxSizing: "border-box",
+                        outline: "none",
+                        position: "relative",
+                        overflowX: "hidden",
+                        overflowY:
+                          page === "calendar" ||
+                          (isReferencePage(page) && !isMobile)
+                            ? "hidden"
+                            : "auto",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems:
+                          page === "calendar" || isReferencePage(page)
+                            ? "stretch"
+                            : "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          boxSizing: "border-box",
+                          width: "100%",
+                          maxWidth: page === "today" ? "46rem" : "100%",
+                          padding:
+                            page === "today"
+                              ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
+                              : "0",
+                          height:
+                            page === "calendar" ||
+                            (isReferencePage(page) && !isMobile)
+                              ? "100%"
+                              : undefined,
+                          zoom:
+                            page !== "calendar" &&
+                            !(isReferencePage(page) && !isMobile) &&
+                            fontScale !== 1
+                              ? String(fontScale)
+                              : undefined,
+                        }}
+                      >
+                        {content}
+                      </div>
+                      {isMobile && sidebarVisible ? (
+                        <div
+                          onClick={() => setMobileOpen(false)}
+                          aria-hidden="true"
+                          style={styles.backdrop}
+                        />
+                      ) : null}
+                    </div>
 
-                  <StatusBar
-                    season={season}
-                    seasonColor={seasonColor}
-                    slot={slot}
-                    officeName={document.officeName}
-                    scrollPct={scrollPct}
-                    reading={isReferencePage(page) ? reading : null}
-                    compact={compactBars}
-                  />
+                    <StatusBar
+                      season={season}
+                      seasonColor={seasonColor}
+                      slot={slot}
+                      officeName={document.officeName}
+                      scrollPct={scrollPct}
+                      reading={isReferencePage(page) ? reading : null}
+                      compact={compactBars}
+                    />
+                  </div>
                 </div>
+                {modalContent}
               </div>
-              {modalContent}
-            </div>
+            </SaintPopoverProvider>
           </NavigationContext.Provider>
         </BibleProvider>
       </ReferenceProvider>
@@ -750,42 +788,44 @@ export function Shell() {
   }
 
   return (
-    <ReferenceProvider onReadingChange={setReading} page={page}>
+    <ReferenceProvider onReadingChange={setReading} page={page} navKey={navKey}>
       <BibleProvider page={page}>
         <NavigationContext.Provider value={{ navigateTo: handleNavigateTo }}>
-          <View style={styles.shell}>
-            <TopBar
-              season={season}
-              daysUntilNext={daysUntilNext}
-              nextSeason={nextSeason}
-              windowControls={windowControls}
-            />
-            <View style={styles.body}>
-              {sidebarVisible ? (
-                <View style={isMobile ? styles.sidebarOverlay : undefined}>
-                  <Sidebar
-                    active={page}
-                    onSelect={handlePageSelect}
-                    onHide={hideSidebar}
-                    onOpenModal={setModal}
-                  />
-                </View>
-              ) : null}
-              <View style={styles.mainCol}>
-                {auxRow}
-                <View
-                  style={[
-                    styles.content,
-                    isReferencePage(page) && styles.contentWide,
-                    { transform: [{ scale: fontScale }] },
-                  ]}
-                >
-                  {content}
+          <SaintPopoverProvider>
+            <View style={styles.shell}>
+              <TopBar
+                season={season}
+                daysUntilNext={daysUntilNext}
+                nextSeason={nextSeason}
+                windowControls={windowControls}
+              />
+              <View style={styles.body}>
+                {sidebarVisible ? (
+                  <View style={isMobile ? styles.sidebarOverlay : undefined}>
+                    <Sidebar
+                      active={page}
+                      onSelect={handlePageSelect}
+                      onHide={hideSidebar}
+                      onOpenModal={setModal}
+                    />
+                  </View>
+                ) : null}
+                <View style={styles.mainCol}>
+                  {auxRow}
+                  <View
+                    style={[
+                      styles.content,
+                      isReferencePage(page) && styles.contentWide,
+                      { transform: [{ scale: fontScale }] },
+                    ]}
+                  >
+                    {content}
+                  </View>
                 </View>
               </View>
+              {modalContent}
             </View>
-            {modalContent}
-          </View>
+          </SaintPopoverProvider>
         </NavigationContext.Provider>
       </BibleProvider>
     </ReferenceProvider>

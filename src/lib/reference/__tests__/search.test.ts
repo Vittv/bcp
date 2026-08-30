@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { searchCollects, searchPsalms } from "../search";
+import { searchCollects, searchPsalms, searchSaints } from "../search";
 
 describe("searchPsalms", () => {
   test("empty query lists every psalm without snippets", () => {
@@ -96,5 +96,44 @@ describe("searchCollects", () => {
 
   test("unknown text yields no results", () => {
     expect(searchCollects("xyzzyplugh")).toHaveLength(0);
+  });
+});
+
+describe("searchSaints", () => {
+  test("empty query lists all 36 entries in calendar order", () => {
+    const hits = searchSaints("");
+    expect(hits).toHaveLength(36);
+    expect(hits[0].slug).toBe("confession-of-st-peter"); // Jan 18
+    expect(hits[0].snippet).toBeNull();
+    expect(hits.find((h) => h.slug === "eve-of-all-saints")?.title).toBe(
+      "Eve of All Saints",
+    );
+  });
+
+  test("matches by proper title case-insensitively", () => {
+    const hits = searchSaints("transfiguration");
+    expect(hits).toHaveLength(2);
+    expect(hits.map((h) => h.slug).sort()).toEqual([
+      "eve-of-transfiguration",
+      "transfiguration",
+    ]);
+  });
+
+  test("matches by saint-name variant", () => {
+    const hits = searchSaints("saint james");
+    const slugs = new Set(hits.map((h) => h.slug));
+    expect(slugs).toEqual(
+      new Set(["st-james", "st-james-of-jerusalem", "philip-and-james"]),
+    );
+  });
+
+  test("eve entries are searchable and carry eveOf", () => {
+    const eve = searchSaints("eve of all saints")[0];
+    expect(eve?.slug).toBe("eve-of-all-saints");
+    expect(eve?.eveOf).toBe("all-saints");
+  });
+
+  test("unknown text yields no results", () => {
+    expect(searchSaints("xyzzyplugh")).toHaveLength(0);
   });
 });

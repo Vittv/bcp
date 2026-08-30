@@ -12,6 +12,7 @@ export const SHORTCUTS: {
       { keys: ["g", "c"], label: "Calendar" },
       { keys: ["g", "p"], label: "Psalms" },
       { keys: ["g", "o"], label: "Offices" },
+      { keys: ["g", "s"], label: "Saints" },
       { keys: ["g", "b"], label: "Old Testament" },
       { keys: ["g", "n"], label: "New Testament" },
     ],

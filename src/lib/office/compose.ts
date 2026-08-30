@@ -3,6 +3,7 @@ import {
   easterYear,
   feastsForEasterYear,
   resolve,
+  sanctoraleBySlug,
   seasonFor,
   sundayOnOrBefore,
   toDays,
@@ -133,6 +134,13 @@ const SUNDAY_FEASTS = new Set([
   "transfiguration",
   "all-saints",
 ]);
+
+// the collect title for a sanctorale slug; an eve entry takes its feast's
+// collect (a prior-evening celebration uses the collect of the feast day).
+export function holyDayCollectTitle(slug: string): string | undefined {
+  const feast = sanctoraleBySlug(slug)?.eveOf ?? slug;
+  return HOLY_DAY_COLLECTS[feast];
+}
 
 type ComposeContext = {
   date: CalendarDate;

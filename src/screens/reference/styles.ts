@@ -117,6 +117,11 @@ export const sharedStyles = StyleSheet.create({
     color: "var(--text-secondary, #7a6e64)",
     fontVariant: ["tabular-nums"],
   },
+  // the book list's chapter counter in the bible navigator reads in the
+  // same red as the saints' date counter, marking the row's span
+  bibleChapterCount: {
+    color: "var(--accent, #7a3040)",
+  },
   rowChevron: {
     opacity: 0,
   },
@@ -147,6 +152,34 @@ export const sharedStyles = StyleSheet.create({
     gap: 8,
     paddingVertical: 8,
     paddingHorizontal: 18,
+  },
+  // saint rows carry a short date pinned to the trailing edge so the
+  // calendar races itself at a glance while titles keep the ragged-left
+  // edge; the min-width keeps the right-aligned column tidy
+  saintRowInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+  },
+  saintDate: {
+    minWidth: 44,
+    flexShrink: 0,
+    textAlign: "right",
+    fontFamily: CHROME_FONT,
+    fontWeight: "600",
+    fontSize: 12,
+    color: "var(--accent, #7a3040)",
+    fontVariant: ["tabular-nums"],
+  },
+  saintTitle: {
+    fontFamily: CHROME_FONT,
+    fontSize: 14,
+    fontWeight: "400",
+    lineHeight: 18,
+    color: "var(--text-secondary, #7a6e64)",
+    flex: 1,
   },
   // rites always print one above the other at full measure: the
   // horizontal wrap is only useful at extreme widths and fights the

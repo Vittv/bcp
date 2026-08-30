@@ -6,6 +6,7 @@ import {
   weekday,
 } from "./date";
 import { feastsForEasterYear } from "./feasts";
+import { eveForDate, SANCTORALE_SLUGS, sanctoraleForDate } from "./sanctorale";
 import { easterYear, liturgicalYearStart } from "./season";
 import type { CalendarDate, DolDay, DolSlot, DolWeek } from "./types";
 
@@ -17,43 +18,18 @@ export function dolYear(date: CalendarDate): 1 | 2 {
   return liturgicalYearStart(date).year % 2 === 0 ? 1 : 2;
 }
 
-export const HOLY_DAYS: Array<{ month: number; day: number; name: string }> = [
-  { month: 11, day: 30, name: "st-andrew" },
-  { month: 12, day: 21, name: "st-thomas" },
-  { month: 12, day: 26, name: "st-stephen" },
-  { month: 12, day: 27, name: "st-john" },
-  { month: 12, day: 28, name: "holy-innocents" },
-  { month: 1, day: 18, name: "confession-of-st-peter" },
-  { month: 1, day: 25, name: "conversion-of-st-paul" },
-  { month: 2, day: 2, name: "presentation" },
-  { month: 2, day: 24, name: "st-matthias" },
-  { month: 3, day: 19, name: "st-joseph" },
-  { month: 3, day: 25, name: "annunciation" },
-  { month: 4, day: 25, name: "st-mark" },
-  { month: 5, day: 1, name: "philip-and-james" },
-  { month: 5, day: 31, name: "visitation" },
-  { month: 6, day: 11, name: "st-barnabas" },
-  { month: 6, day: 24, name: "nativity-of-st-john-the-baptist" },
-  { month: 6, day: 29, name: "peter-and-paul" },
-  { month: 7, day: 22, name: "st-mary-magdalene" },
-  { month: 7, day: 25, name: "st-james" },
-  { month: 8, day: 6, name: "transfiguration" },
-  { month: 8, day: 15, name: "st-mary-the-virgin" },
-  { month: 8, day: 24, name: "st-bartholomew" },
-  { month: 9, day: 14, name: "holy-cross" },
-  { month: 9, day: 21, name: "st-matthew" },
-  { month: 9, day: 29, name: "st-michael-and-all-angels" },
-  { month: 10, day: 18, name: "st-luke" },
-  { month: 10, day: 23, name: "st-james-of-jerusalem" },
-  { month: 10, day: 28, name: "simon-and-jude" },
-  { month: 11, day: 1, name: "all-saints" },
-];
+// the fixed-date holy days (the sanctorale). full-day feasts only: the eve
+// entries live beside them in the sanctorale slug table but are not feasts
+// of the day in their own right.
+export const HOLY_DAYS: Array<{ month: number; day: number; name: string }> =
+  SANCTORALE_SLUGS.filter((h) => !h.eveOf).map((h) => ({
+    month: h.month,
+    day: h.day,
+    name: h.slug,
+  }));
 
 export function holyDayFor(date: CalendarDate): string | undefined {
-  for (const h of HOLY_DAYS) {
-    if (h.month === date.month && h.day === date.day) return h.name;
-  }
-  return undefined;
+  return sanctoraleForDate(date)?.slug;
 }
 
 function wd(date: CalendarDate): DolDay {
@@ -61,8 +37,19 @@ function wd(date: CalendarDate): DolDay {
 }
 
 // resolve a calendar date to its place in the Daily Office Lectionary:
-// which year, which week table, and which day (or named special day).
+// which year, which week table, and which day (or named special day). the
+// evening of an "Eve of ..." sanctorale date is overridden to that eve's
+// appointed reading; the day itself and the feast's collect are unaffected.
 export function resolve(date: CalendarDate): DolSlot {
+  const slot = resolveBase(date);
+  const eve = eveForDate(date);
+  if (eve) {
+    return { ...slot, evening: { kind: "special", name: eve.slug } };
+  }
+  return slot;
+}
+
+function resolveBase(date: CalendarDate): DolSlot {
   const f = feastsForEasterYear(easterYear(date));
   const d = toDays(date);
   const year = dolYear(date);

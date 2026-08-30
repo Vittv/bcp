@@ -200,6 +200,34 @@ describe("composeOffice: the evening boundary", () => {
     expect(collectOf(doc)?.passage.title).toBe("Saint Mary Magdalene");
   });
 
+  test("the fixed-date Eve of All Saints reads the eve entry and the feast's collect", () => {
+    // Oct 31 2025 (Friday) evening: the "Eve of All Saints" appointed
+    // reading, with the collect of the following feast.
+    const doc = composeOffice(
+      { year: 2025, month: 10, day: 31 },
+      "evening-rite-two",
+    );
+    expect(doc.entryTitle).toBe("Eve of All Saints");
+    expect(collectOf(doc)?.passage.title).toBe("All Saint's Day");
+    const psalms = nodesOf(doc, "psalm");
+    expect(psalms.length).toBeGreaterThan(0);
+    // SAFETY: nodesOf filters by kind.
+    const lessons = nodesOf(doc, "lessons")[0] as Extract<
+      ComposedNode,
+      { kind: "lessons" }
+    >;
+    expect(lessons.lessons.length).toBeGreaterThan(0);
+  });
+
+  test("Morning Prayer on an eve date stays an ordinary weekday", () => {
+    const doc = composeOffice(
+      { year: 2025, month: 10, day: 31 },
+      "morning-rite-two",
+    );
+    expect(doc.entryTitle).toBeNull();
+    expect(collectOf(doc)?.passage.title).not.toBe("All Saint's Day");
+  });
+
   test("Morning Prayer keeps the current day", () => {
     const doc = composeOffice(
       { year: 2026, month: 7, day: 21 },

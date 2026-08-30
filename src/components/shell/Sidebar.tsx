@@ -11,6 +11,7 @@ export type PageId =
   | "psalms"
   | "collects"
   | "offices"
+  | "saints"
   | "old-testament"
   | "new-testament";
 
@@ -21,6 +22,7 @@ const NAV: { id: PageId; label: string; section?: string }[] = [
   { id: "calendar", label: "Calendar" },
   { id: "psalms", label: "Psalms" },
   { id: "collects", label: "Collects" },
+  { id: "saints", label: "Saints" },
   { id: "offices", label: "Offices" },
   { id: "old-testament", label: "Old Testament", section: "scripture" },
   { id: "new-testament", label: "New Testament", section: "scripture" },
