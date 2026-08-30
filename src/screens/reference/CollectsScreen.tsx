@@ -34,9 +34,11 @@ function sectionLabel(section: string): string {
 export function CollectsScreen({
   isMobile,
   fontScale,
+  onScrollProgress,
 }: {
   isMobile: boolean;
   fontScale: number;
+  onScrollProgress?: (pct: number) => void;
 }) {
   const { query, setQuery, selectedCollect, setSelectedCollect } =
     useReference();
@@ -61,6 +63,7 @@ export function CollectsScreen({
   return (
     <SplitPane
       fontScale={fontScale}
+      onScrollProgress={onScrollProgress}
       header={
         <TextInput
           ref={desktopInputRef}
@@ -223,7 +226,8 @@ function CollectIndex({
                 >
                   <View style={styles.collectRowInner}>
                     <Text
-                      numberOfLines={2}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                       style={[
                         styles.collectIndexTitle,
                         isSelected && styles.rowTextActive,

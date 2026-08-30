@@ -157,6 +157,7 @@ function BibleBookList({
             <Text
               style={[
                 styles.rowMeta,
+                styles.bibleChapterCount,
                 b.abbrev === selected && styles.rowTextActive,
               ]}
             >

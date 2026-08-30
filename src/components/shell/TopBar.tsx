@@ -1,10 +1,15 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../context/ThemeContext";
 import type { Season } from "../../lib/calendar/types";
 import { IS_MACOS_TAURI, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { MoonIcon, SunIcon, SystemIcon } from "./Icon";
 import { WindowControls } from "./WindowControls";
+
+// transparent-background cross glyphs, one per theme, so the in-app mark
+// follows the resolved theme instead of being tinted by CSS filters
+const ICON_LIGHT = require("../../../assets/app_icons/cross_light_192.png");
+const ICON_DARK = require("../../../assets/app_icons/cross_dark_192.png");
 
 // bundled via expo-font; system monospace is the fallback on native
 const MONO = '"JetBrains Mono", monospace';
@@ -49,7 +54,7 @@ export function TopBar({
   windowControls = false,
   compact = false,
 }: TopBarProps) {
-  const { mode, setMode, fontScale, setFontScale } = useTheme();
+  const { mode, setMode, fontScale, setFontScale, resolved } = useTheme();
 
   const pct = `${Math.round(fontScale * 100)}%`;
 
@@ -66,6 +71,12 @@ export function TopBar({
         style={styles.seasonLabel}
         dataSet={IS_TAURI ? DRAG_DATA : undefined}
       >
+        <Image
+          source={resolved === "dark" ? ICON_DARK : ICON_LIGHT}
+          style={styles.appIcon}
+          resizeMode="contain"
+          accessibilityLabel="bcp"
+        />
         <Text
           style={styles.seasonText}
           numberOfLines={1}
@@ -175,7 +186,11 @@ const styles = StyleSheet.create({
   seasonLabel: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+  },
+  appIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 6,
   },
   seasonText: {
     fontFamily: CHROME_FONT,

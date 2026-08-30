@@ -16,9 +16,11 @@ import { sharedStyles as styles } from "./styles";
 export function PsalmsScreen({
   isMobile,
   fontScale,
+  onScrollProgress,
 }: {
   isMobile: boolean;
   fontScale: number;
+  onScrollProgress?: (pct: number) => void;
 }) {
   const { query, setQuery, openPsalm, setOpenPsalm } = useReference();
   const desktopInputRef = useRef<TextInput>(null);
@@ -38,6 +40,7 @@ export function PsalmsScreen({
   return (
     <SplitPane
       fontScale={fontScale}
+      onScrollProgress={onScrollProgress}
       header={
         <TextInput
           ref={desktopInputRef}
