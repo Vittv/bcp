@@ -9,6 +9,7 @@ import type {
   ComposedSection,
   OfficeDocument,
 } from "../../lib/office/types";
+import { sectionHeading } from "./contentHeadings";
 import { MentionedText } from "./MentionedText";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
@@ -60,6 +61,11 @@ function LessonRow({ lesson }: { lesson: ComposedLesson }) {
       {passages.map((p) => (
         <ScriptureView key={`${p.book}-${p.chapter}`} passage={p} />
       ))}
+      {passages.length === 0 ? (
+        <Text style={styles.lessonMissing}>
+          Apocrypha text not available in the KJV edition
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -164,7 +170,7 @@ function SectionView({
   return (
     <View style={styles.section}>
       {section.heading ? (
-        <Text style={styles.sectionHeading}>{section.heading}</Text>
+        <Text style={sectionHeading}>{section.heading}</Text>
       ) : null}
       {section.nodes.map((node, i) => (
         <NodeView
@@ -226,19 +232,6 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
   },
-  sectionHeading: {
-    fontFamily: CHROME_FONT,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-    color: "var(--accent, #7a3040)",
-    marginBottom: 12,
-    marginTop: 8,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "var(--border-content, #b5aa9e)",
-  },
   heading: {
     fontFamily: SERIF_SEMI,
     fontSize: 22,
@@ -293,6 +286,13 @@ const styles = StyleSheet.create({
   },
   lessonLabel: {
     color: "var(--accent, #7a3040)",
+  },
+  lessonMissing: {
+    fontFamily: SERIF_ITALIC,
+    fontSize: 13,
+    lineHeight: 20,
+    color: "var(--text-secondary, #7a6e64)",
+    marginTop: 4,
   },
   collectBlock: {
     marginTop: 10,

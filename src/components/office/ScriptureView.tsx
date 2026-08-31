@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   chapterBreak: {
     fontFamily: SERIF_SEMI,
     fontSize: 16,
-    color: "var(--accent, #7a3040)",
+    color: "var(--text-secondary, #7a6e64)",
     marginTop: 10,
     marginBottom: 4,
   },
