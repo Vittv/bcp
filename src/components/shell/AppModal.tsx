@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     minHeight: 0,
     overflow: "scroll",
-    paddingHorizontal: 28,
-    paddingVertical: 26,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
     backgroundColor: "var(--bg, #e0dbd0)",
   },
   footer: {

@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from "react-native";
-import { sanctoraleTitle } from "../../lib/calendar/sanctorale";
 import type { Color, DolSlot, Season } from "../../lib/calendar/types";
 import { CHROME_FONT } from "../../lib/fonts";
 import { SeasonDot } from "./SeasonDot";
@@ -93,14 +92,6 @@ export function StatusBar({
         <Text style={styles.text} numberOfLines={1}>
           {weekLabel(slot)}
         </Text>
-        {!compact && slot.holyDay ? (
-          <>
-            <Text style={styles.sep}>·</Text>
-            <Text style={styles.text} numberOfLines={1}>
-              {sanctoraleTitle(slot.holyDay) ?? formatHolyDay(slot.holyDay)}
-            </Text>
-          </>
-        ) : null}
       </View>
       <View style={styles.right}>
         <Text style={[styles.text, styles.rightText]} numberOfLines={1}>
@@ -111,11 +102,6 @@ export function StatusBar({
       </View>
     </View>
   );
-}
-
-// fallback for non-sanctorale slugs (no scheme unknown to the table).
-function formatHolyDay(slug: string): string {
-  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 const styles = StyleSheet.create({

@@ -701,6 +701,7 @@ export function Shell() {
                   season={season}
                   daysUntilNext={daysUntilNext}
                   nextSeason={nextSeason}
+                  holyDay={slot.holyDay ?? null}
                   windowControls={windowControls}
                   compact={compactBars}
                 />
@@ -831,6 +832,7 @@ export function Shell() {
                 season={season}
                 daysUntilNext={daysUntilNext}
                 nextSeason={nextSeason}
+                holyDay={slot.holyDay ?? null}
                 windowControls={windowControls}
               />
               <View style={styles.body}>
