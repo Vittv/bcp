@@ -1,8 +1,10 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../context/ThemeContext";
+import { sanctoraleTitle } from "../../lib/calendar/sanctorale";
 import type { Season } from "../../lib/calendar/types";
 import { IS_MACOS_TAURI, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
+import { useSaintPopover } from "../office/SaintPopover";
 import { MoonIcon, SunIcon, SystemIcon } from "./Icon";
 import { WindowControls } from "./WindowControls";
 
@@ -30,10 +32,19 @@ const SEASON_LABEL: Record<Season, string> = {
   "after-pentecost": "After Pentecost",
 };
 
+// fallback for feast slugs unknown to the sanctorale table
+function formatHolyDay(slug: string): string {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 type TopBarProps = {
   season: Season;
   daysUntilNext: number;
   nextSeason: string;
+  // the day's holy-day slug, if any; on such a day the countdown is
+  // replaced by the feast name so the feasts can be seen at a glance
+  // (clicking opens the saint modal)
+  holyDay?: string | null;
   // resolved window-control visibility (auto-detected + setting);
   // undefined while the shell is still resolving
   windowControls?: boolean;
@@ -51,14 +62,23 @@ export function TopBar({
   season,
   daysUntilNext,
   nextSeason,
+  holyDay,
   windowControls = false,
   compact = false,
 }: TopBarProps) {
   const { mode, setMode, fontScale, setFontScale, resolved } = useTheme();
+  const { openSaint } = useSaintPopover();
 
   const pct = `${Math.round(fontScale * 100)}%`;
 
   const showingControls = IS_TAURI && !IS_MACOS_TAURI && windowControls;
+
+  // on a feast of a saint, the countdown gives way to the feast name so
+  // the day's observance is visible at a glance; it's a single source of
+  // truth (the office data), rendered nowhere else in the chrome
+  const holyDayLabel = holyDay
+    ? (sanctoraleTitle(holyDay) ?? formatHolyDay(holyDay))
+    : null;
 
   return (
     <View
@@ -84,14 +104,37 @@ export function TopBar({
         >
           {SEASON_LABEL[season]}
         </Text>
-        {!compact && daysUntilNext > 0 && (
-          <Text
-            style={styles.countdown}
-            dataSet={IS_TAURI ? DRAG_DATA : undefined}
-          >
-            {" "}
-            · {daysUntilNext}d to {nextSeason}
-          </Text>
+        {!compact && (holyDayLabel || daysUntilNext > 0) && (
+          <>
+            <Text style={styles.countdownSep}>·</Text>
+            {holyDayLabel ? (
+              <Pressable
+                style={({ hovered }) => [
+                  styles.countdown,
+                  hovered && styles.countdownHover,
+                ]}
+                onPress={() => holyDay && openSaint(holyDay)}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${holyDayLabel} in Saints`}
+                dataSet={IS_TAURI ? DRAG_DATA : undefined}
+              >
+                <Text
+                  style={styles.countdownText}
+                  numberOfLines={1}
+                  dataSet={IS_TAURI ? DRAG_DATA : undefined}
+                >
+                  {holyDayLabel}
+                </Text>
+              </Pressable>
+            ) : (
+              <Text
+                style={styles.countdownText}
+                dataSet={IS_TAURI ? DRAG_DATA : undefined}
+              >
+                {daysUntilNext}d to {nextSeason}
+              </Text>
+            )}
+          </>
         )}
       </View>
 
@@ -199,6 +242,21 @@ const styles = StyleSheet.create({
     color: "var(--text-secondary, #7a6e64)",
   },
   countdown: {
+    borderRadius: 4,
+  },
+  countdownHover: {
+    backgroundColor: "var(--control-hover, #d2cbbf)",
+  },
+  // the bullet separating the season title from the countdown/saint-day
+  // label; a fixed, always-spaced item that is never part of the label's
+  // hoverable area
+  countdownSep: {
+    fontSize: 11,
+    color: "var(--text-secondary, #7a6e64)",
+    opacity: 0.7,
+    marginHorizontal: 6,
+  },
+  countdownText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
