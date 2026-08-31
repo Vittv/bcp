@@ -156,11 +156,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   titleBar: {
-    height: 64,
+    height: 52,
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 24,
-    paddingRight: 12,
+    paddingLeft: 20,
+    paddingRight: 10,
     flexShrink: 0,
     backgroundColor: "var(--bg, #e0dbd0)",
     userSelect: "none",
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: CHROME_FONT,
     fontWeight: "600",
-    fontSize: 26,
+    fontSize: 24,
     letterSpacing: 0.2,
     color: "var(--text, #2c2020)",
     flex: 1,

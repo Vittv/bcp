@@ -2,6 +2,7 @@ import { memo, type ReactNode, useDeferredValue, useMemo, useRef } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { SanctoraleCard } from "../../components/office/SanctoraleCard";
 import { Chevron } from "../../components/shell/Chevron";
+import { officeBarStyles } from "../../components/shell/OfficeTabs";
 import { monthDayShortLabel } from "../../lib/calendar/sanctorale";
 import { searchSaints } from "../../lib/reference/search";
 import {
@@ -23,14 +24,19 @@ export function SaintsScreen({
   fontScale: number;
   onScrollProgress?: (pct: number) => void;
 }) {
-  const { query, setQuery, openSaint, setOpenSaint } = useReference();
+  const { query, setQuery, openSaint, setOpenSaint, saintBio, saintLiturgy } =
+    useReference();
   const desktopInputRef = useRef<TextInput>(null);
   if (isMobile) {
     return (
       <View style={styles.container}>
         {openSaint !== null ? (
           <DetailPage compact>
-            <SanctoraleCard slug={openSaint} />
+            <SanctoraleCard
+              slug={openSaint}
+              showBio={saintBio}
+              showLiturgy={saintLiturgy}
+            />
           </DetailPage>
         ) : (
           <SaintIndex query={query} selected={null} onSelect={setOpenSaint} />
@@ -75,6 +81,8 @@ export function SaintsScreen({
         <SanctoraleCard
           slug={openSaint ?? FIRST_SAINT}
           key={openSaint ?? FIRST_SAINT}
+          showBio={saintBio}
+          showLiturgy={saintLiturgy}
         />
       }
       detailOpen={openSaint !== null}
@@ -92,14 +100,64 @@ export function SaintsBar({
   leading?: ReactNode;
   isMobile: boolean;
 }) {
-  const { query, setQuery, openSaint, setOpenSaint } = useReference();
+  const {
+    query,
+    setQuery,
+    openSaint,
+    setOpenSaint,
+    saintBio,
+    setSaintBio,
+    saintLiturgy,
+    setSaintLiturgy,
+  } = useReference();
   const inputRef = useRef<TextInput>(null);
   const searching = isMobile ? openSaint === null : false;
+
+  // the bio/liturgy view toggles, shown only once a saint is on screen
+  // (never during mobile search). bio leads by default; both are
+  // standalone so each can be on or off independently
+  const toggles = (
+    <View style={styles.saintToggles}>
+      <Pressable
+        style={({ hovered }) => [
+          officeBarStyles.toggle,
+          hovered && styles.rowHover,
+        ]}
+        onPress={() => setSaintBio(!saintBio)}
+        accessibilityRole="button"
+        accessibilityState={{ selected: saintBio }}
+        accessibilityLabel={saintBio ? "Hide biography" : "Show biography"}
+      >
+        <Text style={[officeBarStyles.toggleText, saintBio && styles.toggleOn]}>
+          Bio
+        </Text>
+      </Pressable>
+      <Pressable
+        style={({ hovered }) => [
+          officeBarStyles.toggle,
+          hovered && styles.rowHover,
+        ]}
+        onPress={() => setSaintLiturgy(!saintLiturgy)}
+        accessibilityRole="button"
+        accessibilityState={{ selected: saintLiturgy }}
+        accessibilityLabel={
+          saintLiturgy ? "Hide liturgical content" : "Show liturgical content"
+        }
+      >
+        <Text
+          style={[officeBarStyles.toggleText, saintLiturgy && styles.toggleOn]}
+        >
+          Liturgy
+        </Text>
+      </Pressable>
+    </View>
+  );
 
   if (!isMobile) {
     return (
       <View style={[styles.bar, noSelect]}>
         <View style={styles.barLeft}>{leading}</View>
+        <View style={styles.barRight}>{toggles}</View>
       </View>
     );
   }
@@ -136,7 +194,9 @@ export function SaintsBar({
           style={styles.search}
           accessibilityLabel="Search saints"
         />
-      ) : null}
+      ) : (
+        <View style={styles.barRight}>{toggles}</View>
+      )}
     </Pressable>
   );
 }

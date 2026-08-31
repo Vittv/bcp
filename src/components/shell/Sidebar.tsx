@@ -12,6 +12,8 @@ export type PageId =
   | "collects"
   | "offices"
   | "saints"
+  | "proverbs"
+  | "canticles"
   | "old-testament"
   | "new-testament";
 
@@ -20,10 +22,12 @@ export type ModalType = "install" | "settings" | "about" | "help";
 const NAV: { id: PageId; label: string; section?: string }[] = [
   { id: "today", label: "Today" },
   { id: "calendar", label: "Calendar" },
-  { id: "psalms", label: "Psalms" },
-  { id: "collects", label: "Collects" },
-  { id: "saints", label: "Saints" },
   { id: "offices", label: "Offices" },
+  { id: "canticles", label: "Canticles", section: "reference" },
+  { id: "collects", label: "Collects", section: "reference" },
+  { id: "saints", label: "Saints", section: "reference" },
+  { id: "psalms", label: "Psalms", section: "scripture" },
+  { id: "proverbs", label: "Proverbs", section: "scripture" },
   { id: "old-testament", label: "Old Testament", section: "scripture" },
   { id: "new-testament", label: "New Testament", section: "scripture" },
 ];
@@ -36,7 +40,7 @@ const noSelect = {
 const HOVER_COLOR = "var(--text, #2c2020)";
 const IDLE_COLOR = "var(--text-secondary, #7a6e64)";
 
-const SECTION_ORDER = ["", "scripture"] as const;
+const SECTION_ORDER = ["", "reference", "scripture"] as const;
 
 type SidebarProps = {
   active: PageId;

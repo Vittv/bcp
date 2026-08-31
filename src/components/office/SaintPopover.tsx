@@ -19,11 +19,12 @@ const SERIF_SEMI =
   '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
 
 // tapping a saint mention anywhere in an office opens a reusable modal
-// window (the same chrome as Settings/About) holding the saint's full
-// facts card, so the reader never leaves the prayer to look the saint
-// up. appmodal handles the standard dismissals (Esc, backdrop, X).
-// context lives at module scope so any office node can open it without
-// prop drilling.
+// window (the same chrome as Settings/About) holding the saint's bio, so
+// the reader never leaves the prayer to look the saint up. the liturgy
+// is left out here (bio-only) since the mention is a quick lookup, not
+// the full reference page. appmodal handles the standard dismissals
+// (Esc, backdrop, X). context lives at module scope so any office node
+// can open it without prop drilling.
 type SaintPopoverValue = {
   openSaint: (slug: string) => void;
   close: () => void;
@@ -80,7 +81,7 @@ export function SaintPopoverProvider({ children }: { children: ReactNode }) {
             </Pressable>
           }
         >
-          <SanctoraleCard slug={slug} showTitle={false} />
+          <SanctoraleCard slug={slug} showTitle={false} showLiturgy={false} />
         </AppModal>
       ) : null}
     </SaintPopoverContext.Provider>

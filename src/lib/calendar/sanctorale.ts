@@ -1,5 +1,6 @@
 import type { DolEntry, DolLessonGroup } from "../content/types";
 import holyDayData from "../content/vendor/dol/dol-holy-days.min.json";
+import { SANCTORALE_BIOS } from "./sanctoraleBios";
 import type { CalendarDate } from "./types";
 
 // the sanctorale: the fixed-date holy days the DOL assigns readings for.
@@ -87,6 +88,8 @@ export type SanctoraleEntry = {
   day: number;
   /** set on eve entries: the feast slug the eve anticipates. */
   eveOf?: string;
+  /** a short biographical note for the feast's subject, if any. */
+  bio?: string;
   psalms: {
     morning?: string[];
     evening?: string[];
@@ -136,6 +139,7 @@ function buildEntries(): SanctoraleEntry[] {
       month: spec.month,
       day: spec.day,
       eveOf: spec.eveOf,
+      bio: SANCTORALE_BIOS[spec.slug],
       psalms: {
         morning: raw.psalms.morning,
         evening: raw.psalms.evening,

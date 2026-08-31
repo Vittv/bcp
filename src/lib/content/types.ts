@@ -92,6 +92,9 @@ export type Canticle = {
 export type CanticlePassage = {
   number: number;
   title: string;
+  latin?: string | null;
+  source?: string | null;
+  note?: string | null;
   sections: CanticleSection[];
 };
 
