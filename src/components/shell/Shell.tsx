@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { SaintPopoverProvider } from "../../components/office/SaintPopover";
-import { AppModal } from "../../components/shell/AppModal";
+import {
+  AppModal,
+  dismissEscapeConsumers,
+} from "../../components/shell/AppModal";
 import { Chevron } from "../../components/shell/Chevron";
 import { HelpScreen } from "../../components/shell/HelpScreen";
 import type { ModalType, PageId } from "../../components/shell/Sidebar";
@@ -392,6 +395,9 @@ export function Shell() {
           return;
         case "Escape":
           e.preventDefault();
+          // any open modal (AppModal-registered, e.g. the saint lookup)
+          // closes first; the go-chord state clears either way
+          dismissEscapeConsumers();
           e.stopImmediatePropagation();
           clearGo();
           return;

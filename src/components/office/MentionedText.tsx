@@ -29,9 +29,7 @@ export function MentionedText({
         return (
           <Text
             key={key}
-            onPress={(e) =>
-              openSaint(entry.slug, e.nativeEvent.pageX, e.nativeEvent.pageY)
-            }
+            onPress={() => openSaint(entry.slug)}
             style={[
               styles.mention,
               entry.slug === todaySlug && styles.mentionToday,

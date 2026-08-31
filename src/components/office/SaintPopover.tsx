@@ -3,34 +3,29 @@ import {
   type ReactNode,
   useCallback,
   useContext,
-  useEffect,
-  useRef,
   useState,
 } from "react";
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 import { useNavigation } from "../../context/NavigationContext";
+import { sanctoraleBySlug } from "../../lib/calendar/sanctorale";
 import { CHROME_FONT } from "../../lib/fonts";
 import { useReference } from "../../screens/reference/shared";
+import { AppModal } from "../shell/AppModal";
 import { SanctoraleCard } from "./SanctoraleCard";
 
-// tapping a saint mention anywhere in an office renders this popover
-// next to the tap (web) or as a centered sheet (native). context lives at
-// module scope so any office node can open it without prop drilling.
-type SaintPopoverState = {
-  slug: string;
-  x: number | null;
-  y: number | null;
-};
+// the saint modal's title bar uses the same serif semi voice as the
+// saints page's big heading, so the lookup reads as the same booklet
+const SERIF_SEMI =
+  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
 
+// tapping a saint mention anywhere in an office opens a reusable modal
+// window (the same chrome as Settings/About) holding the saint's full
+// facts card, so the reader never leaves the prayer to look the saint
+// up. appmodal handles the standard dismissals (Esc, backdrop, X).
+// context lives at module scope so any office node can open it without
+// prop drilling.
 type SaintPopoverValue = {
-  openSaint: (slug: string, x: number, y: number) => void;
+  openSaint: (slug: string) => void;
   close: () => void;
 };
 
@@ -42,219 +37,70 @@ export function useSaintPopover(): SaintPopoverValue {
   return ctx;
 }
 
-export const IS_WEB = Platform.OS === "web";
-
-// keep the card on screen: clamp within the viewport, letting the card
-// scroll internally if it is taller than the space below the tap
-function clampPoint(value: number, limit: number): number {
-  if (!IS_WEB || Number.isNaN(value)) return 0;
-  return Math.max(12, Math.min(value, limit));
-}
-
 export function SaintPopoverProvider({ children }: { children: ReactNode }) {
-  const [popover, setPopover] = useState<SaintPopoverState | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [slug, setSlug] = useState<string | null>(null);
+  const { navigateTo } = useNavigation();
+  const { setOpenSaint } = useReference();
 
-  const openSaint = useCallback((slug: string, x: number, y: number) => {
-    if (IS_WEB) {
-      setPopover({
-        slug,
-        x: clampPoint(x, window.innerWidth - 352),
-        y: clampPoint(y, window.innerHeight - 90),
-      });
-    } else {
-      setPopover({ slug, x: null, y: null });
-    }
-  }, []);
+  const openSaint = useCallback((s: string) => setSlug(s), []);
+  const close = useCallback(() => setSlug(null), []);
 
-  const close = useCallback(() => setPopover(null), []);
+  const openInSaints = () => {
+    if (!slug) return;
+    // the saints page opens the same saint through the pending-ref
+    // handshake mirrored in BibleProvider
+    setOpenSaint(slug);
+    setSlug(null);
+    navigateTo({ page: "saints" });
+  };
 
-  // Escape dismisses, and re-opening the calendar week or navigating away
-  // should never strand an open popover
-  useEffect(() => {
-    if (!popover) return;
-    if (!IS_WEB) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        close();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [popover, close]);
-
-  const value: SaintPopoverValue = { openSaint, close };
+  const entry = slug ? sanctoraleBySlug(slug) : undefined;
 
   return (
-    <SaintPopoverContext.Provider value={value}>
+    <SaintPopoverContext.Provider value={{ openSaint, close }}>
       {children}
-      {popover ? (
-        <PopoverContent
-          slug={popover.slug}
-          x={popover.x ?? 0}
-          y={popover.y ?? 0}
+      {slug && entry ? (
+        <AppModal
+          title={entry.title}
           onClose={close}
-          scrollRef={scrollRef}
-        />
+          titleStyle={{
+            fontFamily: SERIF_SEMI,
+            fontWeight: "500",
+          }}
+          footer={
+            <Pressable
+              style={({ hovered }) => [
+                styles.saintsBtn,
+                hovered && styles.saintsBtnHover,
+              ]}
+              onPress={openInSaints}
+              accessibilityRole="button"
+            >
+              <Text style={styles.saintsBtnText}>Open in Saints</Text>
+            </Pressable>
+          }
+        >
+          <SanctoraleCard slug={slug} showTitle={false} />
+        </AppModal>
       ) : null}
     </SaintPopoverContext.Provider>
   );
 }
 
-function PopoverContent({
-  slug,
-  x,
-  y,
-  onClose,
-  scrollRef,
-}: {
-  slug: string;
-  x: number;
-  y: number;
-  onClose: () => void;
-  scrollRef: React.Ref<HTMLDivElement>;
-}) {
-  const { navigateTo } = useNavigation();
-  const { setOpenSaint } = useReference();
-
-  const openInSaints = () => {
-    // the saints page opens the same saint through the pending-ref
-    // handshake mirrored in BibleProvider
-    setOpenSaint(slug);
-    onClose();
-    navigateTo({ page: "saints" });
-  };
-
-  const cardStyle = IS_WEB
-    ? [styles.cardWeb, { left: x, top: y }]
-    : [styles.cardNative];
-
-  return (
-    <View style={styles.overlay}>
-      <Pressable
-        style={styles.backdrop}
-        onPress={onClose}
-        accessibilityLabel="Dismiss saint"
-        accessibilityRole="button"
-      />
-      <View style={cardStyle}>
-        {IS_WEB ? (
-          <div ref={scrollRef} style={WEB_SCROLL}>
-            <SanctoraleCard slug={slug} compact />
-            <View style={styles.footer}>
-              <Pressable
-                style={({ hovered }) => [
-                  styles.saintsBtn,
-                  hovered && styles.saintsBtnHover,
-                ]}
-                onPress={openInSaints}
-                accessibilityRole="button"
-              >
-                <Text style={styles.saintsBtnText}>Open in Saints</Text>
-              </Pressable>
-            </View>
-          </div>
-        ) : (
-          <ScrollView style={styles.nativeScroll}>
-            <SanctoraleCard slug={slug} compact />
-            <View style={styles.footer}>
-              <Pressable
-                style={styles.saintsBtn}
-                onPress={openInSaints}
-                accessibilityRole="button"
-              >
-                <Text style={styles.saintsBtnText}>Open in Saints</Text>
-              </Pressable>
-            </View>
-          </ScrollView>
-        )}
-      </View>
-    </View>
-  );
-}
-
-const WEB_SCROLL: React.CSSProperties = {
-  maxHeight: "calc(100vh - 108px)",
-  overflowY: "auto",
-  width: 340,
-  boxSizing: "border-box",
-};
-
 const styles = StyleSheet.create({
-  overlay: IS_WEB
-    ? {
-        position: "fixed" as const,
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-      }
-    : {
-        position: "absolute" as const,
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 100,
-      },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(20, 15, 15, 0.25)",
-    zIndex: 1,
-  },
-  cardWeb: {
-    position: "fixed" as const,
-    zIndex: 2,
-    width: 340,
-    backgroundColor: "var(--bg-raised, #ece7dd)",
-    borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
-    borderRadius: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
-  },
-  cardNative: {
-    position: "absolute" as const,
-    zIndex: 2,
-    left: 20,
-    right: 20,
-    top: 80,
-    maxHeight: "70%",
-    backgroundColor: "var(--bg-raised, #ece7dd)",
-    borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-  },
-  nativeScroll: {
-    maxHeight: "70%",
-  },
-  footer: {
-    marginTop: 12,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
   saintsBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    borderColor: "var(--border, #c9c1b2)",
   },
   saintsBtnHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   saintsBtnText: {
     fontFamily: CHROME_FONT,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
     color: "var(--accent, #7a3040)",
   },
