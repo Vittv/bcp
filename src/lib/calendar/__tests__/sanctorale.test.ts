@@ -30,6 +30,12 @@ describe("sanctorale table", () => {
     expect(validateSanctorale()).toEqual([]);
   });
 
+  test("every feast has a bio (even the eves anticipate a life)", () => {
+    for (const entry of SANCTORALE_ENTRIES) {
+      expect(entry.bio, `${entry.slug} is missing a bio`).toBeTruthy();
+    }
+  });
+
   test("every slug has a unique title and sorted dates", () => {
     const titles = new Set(SANCTORALE_ENTRIES.map((e) => e.title));
     expect(titles.size).toBe(SANCTORALE_ENTRIES.length);

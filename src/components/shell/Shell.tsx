@@ -38,10 +38,14 @@ import { BibleBar, BibleReaderScreen } from "../../screens/BibleReaderScreen";
 import { CalendarScreen } from "../../screens/CalendarScreen";
 import { InstallScreen } from "../../screens/InstallScreen";
 import {
+  CanticlesBar,
+  CanticlesScreen,
   CollectsBar,
   CollectsScreen,
   OfficesBar,
   OfficesScreen,
+  ProverbsBar,
+  ProverbsScreen,
   PsalmsBar,
   PsalmsScreen,
   ReferenceProvider,
@@ -85,6 +89,8 @@ function isReferencePage(p: PageId): boolean {
     p === "collects" ||
     p === "offices" ||
     p === "saints" ||
+    p === "proverbs" ||
+    p === "canticles" ||
     p === "old-testament" ||
     p === "new-testament"
   );
@@ -321,6 +327,8 @@ export function Shell() {
       b: "old-testament",
       n: "new-testament",
       s: "saints",
+      w: "proverbs",
+      a: "canticles",
     };
     const isEditable = (el: EventTarget | null): boolean => {
       // SAFETY: DOM keydown targets are Elements or text nodes; a missing
@@ -512,12 +520,16 @@ export function Shell() {
     switch (page) {
       case "psalms":
         return <PsalmsBar leading={sidebarShowButton} isMobile={isMobile} />;
+      case "canticles":
+        return <CanticlesBar leading={sidebarShowButton} isMobile={isMobile} />;
       case "collects":
         return <CollectsBar leading={sidebarShowButton} isMobile={isMobile} />;
       case "offices":
         return <OfficesBar leading={sidebarShowButton} isMobile={isMobile} />;
       case "saints":
         return <SaintsBar leading={sidebarShowButton} isMobile={isMobile} />;
+      case "proverbs":
+        return <ProverbsBar leading={sidebarShowButton} isMobile={isMobile} />;
       case "old-testament":
       case "new-testament":
         return <BibleBar leading={sidebarShowButton} isMobile={isMobile} />;
@@ -570,6 +582,14 @@ export function Shell() {
             onScrollProgress={reportScroll}
           />
         );
+      case "canticles":
+        return (
+          <CanticlesScreen
+            isMobile={isMobile}
+            fontScale={fontScale}
+            onScrollProgress={reportScroll}
+          />
+        );
       case "collects":
         return (
           <CollectsScreen
@@ -585,6 +605,14 @@ export function Shell() {
       case "saints":
         return (
           <SaintsScreen
+            isMobile={isMobile}
+            fontScale={fontScale}
+            onScrollProgress={reportScroll}
+          />
+        );
+      case "proverbs":
+        return (
+          <ProverbsScreen
             isMobile={isMobile}
             fontScale={fontScale}
             onScrollProgress={reportScroll}

@@ -270,6 +270,11 @@ export const sharedStyles = StyleSheet.create({
     color: "var(--accent, #7a3040)",
     marginBottom: 10,
   },
+  // the first group sits flush under the search header (no row above it
+  // to separate from), so it keeps a little top breathing room
+  groupHeadingFirst: {
+    paddingTop: 12,
+  },
   groupRule: {
     borderTopWidth: 1,
     borderTopColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
@@ -280,6 +285,33 @@ export const sharedStyles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 27,
     color: "var(--text, #2c2020)",
+  },
+  // canticles read like psalms but carry unnumbered verses grouped into
+  // titled sections, so each section is its own serif block
+  canticleSection: {
+    marginBottom: 18,
+  },
+  canticleSectionTitle: {
+    fontFamily: SERIF_SEMI,
+    fontSize: 17,
+    lineHeight: 24,
+    fontWeight: "600",
+    color: "var(--accent, #7a3040)",
+    marginBottom: 6,
+  },
+  canticleVerse: {
+    fontFamily: SERIF,
+    fontSize: 17,
+    lineHeight: 29,
+    color: "var(--text, #2c2020)",
+  },
+  canticleNote: {
+    fontFamily: SERIF,
+    fontSize: 15,
+    fontStyle: "italic",
+    lineHeight: 24,
+    color: "var(--text-secondary, #7a6e64)",
+    marginBottom: 18,
   },
   // date trigger: a chip like every other control in these bars — no
   // border, the bar's single 11px type scale, accent red per the
@@ -425,6 +457,18 @@ export const sharedStyles = StyleSheet.create({
   },
   riteChipTextOn: {
     ...officeBarStyles.toggleTextOn,
+  },
+  // the saints bar's bio/liturgy view toggles: a right-aligned pair of
+  // chips shown only once a saint is on screen, in the same chip voice
+  // as the rites toggle so the detail pane's controls feel connected
+  saintToggles: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  toggleOn: {
+    color: "var(--accent, #7a3040)",
+    fontWeight: "700",
   },
   // mobile office dropdown: a chip-styled trigger matching the tab
   // chips' padding, plus a simple menu list anchored under the bar

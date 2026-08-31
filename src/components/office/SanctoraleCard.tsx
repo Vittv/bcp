@@ -62,15 +62,22 @@ function LessonRow({ ref }: { ref: string }) {
   );
 }
 
-// the shared facts card for a sanctorale entry: dates, psalms, lesson
-// citations (inline KJV passages), and the day's collect in both rites.
-// used by the Saints reference pane and the mention modal.
+// the shared card for a sanctorale entry: a biographical note by default,
+// plus the liturgical content (psalms, lesson citations with inline KJV
+// passages, and the day's collect in both rites) shown on demand. used by
+// the Saints reference pane and the mention modal.
 export function SanctoraleCard({
   slug,
   showTitle = true,
+  showBio = true,
+  showLiturgy = true,
 }: {
   slug: string;
   showTitle?: boolean;
+  /** render the biographical note. */
+  showBio?: boolean;
+  /** render the liturgical content: psalms, readings, collect. */
+  showLiturgy?: boolean;
 }) {
   const entry = sanctoraleBySlug(slug);
   if (!entry) return null;
@@ -118,55 +125,65 @@ export function SanctoraleCard({
         {entry.eveOf ? ` · eve of ${feast?.title ?? entry.eveOf}` : ""}
       </Text>
 
-      {psalmGroups.length > 0 ? (
+      {showBio && entry.bio ? (
         <View style={styles.group}>
-          <Text style={sectionHeading}>Psalms</Text>
-          {psalmGroups.map((group) => (
-            <View key={group.label} style={styles.timeBlock}>
-              <Text style={styles.groupSubheading}>{group.label}</Text>
-              {group.citations.map((citation) => {
-                const parsed = parsePsalmCitation(citation);
-                const passage = parsed ? psalmPassage(parsed) : undefined;
-                return (
-                  <View key={citation} style={styles.psalmBlock}>
-                    <Text style={styles.psalmRef}>Psalm {citation}</Text>
-                    {passage ? <PsalmText passage={passage} /> : null}
-                  </View>
-                );
-              })}
-            </View>
-          ))}
+          <Text style={styles.bioText}>{entry.bio}</Text>
         </View>
       ) : null}
 
-      {lessonGroups.length > 0 ? (
-        <View style={styles.group}>
-          <Text style={sectionHeading}>Readings</Text>
-          {lessonGroups.map((group) => (
-            <View key={group.label} style={styles.timeBlock}>
-              <Text style={styles.groupSubheading}>{group.label}</Text>
-              {group.refs.map((ref) => (
-                <LessonRow key={ref} ref={ref} />
+      {showLiturgy ? (
+        <View>
+          {psalmGroups.length > 0 ? (
+            <View style={styles.group}>
+              <Text style={sectionHeading}>Psalms</Text>
+              {psalmGroups.map((group) => (
+                <View key={group.label} style={styles.timeBlock}>
+                  <Text style={styles.groupSubheading}>{group.label}</Text>
+                  {group.citations.map((citation) => {
+                    const parsed = parsePsalmCitation(citation);
+                    const passage = parsed ? psalmPassage(parsed) : undefined;
+                    return (
+                      <View key={citation} style={styles.psalmBlock}>
+                        <Text style={styles.psalmRef}>Psalm {citation}</Text>
+                        {passage ? <PsalmText passage={passage} /> : null}
+                      </View>
+                    );
+                  })}
+                </View>
               ))}
             </View>
-          ))}
-        </View>
-      ) : null}
-
-      {traditional && contemporary ? (
-        <View style={styles.group}>
-          <Text style={sectionHeading}>Collect of the Day</Text>
-          {collectTitle ? (
-            <Text style={styles.collectTitle}>{collectTitle}</Text>
           ) : null}
-          {[traditional, contemporary].map((c) => (
-            <View key={c.rite} style={styles.collect}>
-              <Text style={styles.collectRite}>
-                {RITE_LABELS[c.rite] ?? c.rite}
-              </Text>
-              <Text style={styles.collectText}>{c.text}</Text>
+
+          {lessonGroups.length > 0 ? (
+            <View style={styles.group}>
+              <Text style={sectionHeading}>Readings</Text>
+              {lessonGroups.map((group) => (
+                <View key={group.label} style={styles.timeBlock}>
+                  <Text style={styles.groupSubheading}>{group.label}</Text>
+                  {group.refs.map((ref) => (
+                    <LessonRow key={ref} ref={ref} />
+                  ))}
+                </View>
+              ))}
             </View>
-          ))}
+          ) : null}
+
+          {traditional && contemporary ? (
+            <View style={styles.group}>
+              <Text style={sectionHeading}>Collect of the Day</Text>
+              {collectTitle ? (
+                <Text style={styles.collectTitle}>{collectTitle}</Text>
+              ) : null}
+              {[traditional, contemporary].map((c) => (
+                <View key={c.rite} style={styles.collect}>
+                  <Text style={styles.collectRite}>
+                    {RITE_LABELS[c.rite] ?? c.rite}
+                  </Text>
+                  <Text style={styles.collectText}>{c.text}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -263,5 +280,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 22,
+  },
+  // the biographical note leads the card, set in the same serif voice as
+  // the collect so it reads as a printed life, not machine metadata
+  bioText: {
+    fontFamily: SERIF,
+    fontSize: 17,
+    lineHeight: 28,
+    color: "var(--text, #2c2020)",
   },
 });

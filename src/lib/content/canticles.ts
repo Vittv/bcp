@@ -4,6 +4,9 @@ import canticlesData from "./vendor/bcp/canticles.min.json";
 
 const canticles = canticlesSchema.parse(canticlesData);
 
+// the 1979 BCP's daily office canticles are numbered 1-21 (S-280)
+export const CANTICLE_COUNT = 21;
+
 export function canticleExists(number: number): boolean {
   return Object.hasOwn(canticles, String(number));
 }
@@ -49,5 +52,12 @@ export function canticlePassage(
     }
     sections = selected;
   }
-  return { number, title: canticle.title, sections };
+  return {
+    number,
+    title: canticle.title,
+    latin: canticle.latin,
+    source: canticle.source,
+    note: canticle.note,
+    sections,
+  };
 }

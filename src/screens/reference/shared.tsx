@@ -14,6 +14,7 @@ import {
   sanctoraleBySlug,
 } from "../../lib/calendar/sanctorale";
 import type { CalendarDate } from "../../lib/calendar/types";
+import { canticleTitle } from "../../lib/content/canticles";
 import type { CollectSection, OfficeId } from "../../lib/content/types";
 import { searchCollects } from "../../lib/reference/search";
 import { sharedStyles } from "./styles";
@@ -147,6 +148,18 @@ export type ReferenceState = {
   setSelectedCollect: (c: CollectSel | null) => void;
   openSaint: string | null;
   setOpenSaint: (slug: string | null) => void;
+  // the open Proverbs chapter (1..31); null shows the chapter index
+  openProvChapter: number | null;
+  setOpenProvChapter: (n: number | null) => void;
+  // the open Canticle (canticle 1..21); null shows the index
+  openCanticle: number | null;
+  setOpenCanticle: (n: number | null) => void;
+  // the saints detail pane's two toggles: biography and liturgical
+  // content (psalms, readings, collect). standalone so both can be on.
+  saintBio: boolean;
+  setSaintBio: (on: boolean) => void;
+  saintLiturgy: boolean;
+  setSaintLiturgy: (on: boolean) => void;
   officeDate: CalendarDate;
   setOfficeDate: (d: CalendarDate) => void;
 };
@@ -187,6 +200,14 @@ export function ReferenceProvider({
     null,
   );
   const [openSaint, setOpenSaintRaw] = useState<string | null>(null);
+  const [openProvChapter, setOpenProvChapterRaw] = useState<number | null>(
+    null,
+  );
+  const [openCanticle, setOpenCanticleRaw] = useState<number | null>(null);
+  // the full card (bio and liturgy) leads by default; the reader can
+  // hide either half with the bar's toggles
+  const [saintBio, setSaintBio] = useState(true);
+  const [saintLiturgy, setSaintLiturgy] = useState(true);
   const [officeDate, setOfficeDate] = useState<CalendarDate>(today);
 
   // picking a psalm, collect or saint empties the search: returning to
@@ -204,6 +225,14 @@ export function ReferenceProvider({
     setOpenSaintRaw(s);
     setQuery("");
   }, []);
+  const setOpenProvChapter = useCallback((n: number | null) => {
+    setOpenProvChapterRaw(n);
+    setQuery("");
+  }, []);
+  const setOpenCanticle = useCallback((n: number | null) => {
+    setOpenCanticleRaw(n);
+    setQuery("");
+  }, []);
 
   // the status bar mirrors what the active page shows, including the
   // default-open first item; other pages' selections never leak in
@@ -216,7 +245,11 @@ export function ReferenceProvider({
           ? (selectedCollect ?? FIRST_COLLECT).title
           : page === "saints"
             ? (sanctoraleBySlug(openSaint ?? FIRST_SAINT)?.title ?? null)
-            : null;
+            : page === "proverbs"
+              ? `Proverbs ${openProvChapter ?? 1}`
+              : page === "canticles"
+                ? (canticleTitle(openCanticle ?? 1) ?? null)
+                : null;
 
   useEffect(() => {
     onReadingChange(readingLabel);
@@ -242,6 +275,14 @@ export function ReferenceProvider({
     setSelectedCollect,
     openSaint,
     setOpenSaint,
+    openProvChapter,
+    setOpenProvChapter,
+    openCanticle,
+    setOpenCanticle,
+    saintBio,
+    setSaintBio,
+    saintLiturgy,
+    setSaintLiturgy,
     officeDate,
     setOfficeDate,
   };
