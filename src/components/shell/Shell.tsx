@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import {
+  BackHandler,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SaintPopoverProvider } from "../../components/office/SaintPopover";
 import {
   AppModal,
@@ -271,13 +277,30 @@ export function Shell() {
   }, []);
 
   // mobile drawer gestures: any right-swipe opens the drawer, a left-swipe
-  // (over content or the drawer) closes it
-  useDrawerSwipe({
-    enabled: IS_WEB && isMobile,
+  // (over content or the drawer) closes it. a modal takes precedence over
+  // the sheltered drawer, so a swipe over modal content never opens it.
+  const swipeHandlers = useDrawerSwipe({
+    enabled: isMobile && modal === null,
     open: mobileOpen,
     onOpen: () => setMobileOpen(true),
     onClose: () => setMobileOpen(false),
   });
+
+  // Android hardware back hides the mobile drawer before the OS ever gets a
+  // chance to leave the app; modals claim their own handler (registered
+  // later, so LIFO dispatch runs theirs first) and nothing here runs on the
+  // desktop/web builds
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (mobileOpen) {
+        setMobileOpen(false);
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [mobileOpen]);
 
   // scroll-click (middle button) autoscroll, Linux and macOS desktop only:
   // their webviews (WebKitGTK, WKWebView) have no native gesture, while
@@ -877,6 +900,7 @@ export function Shell() {
                     width: "100%",
                     boxSizing: "border-box",
                     overflow: "hidden",
+                    touchAction: "pan-y",
                     backgroundColor:
                       resolved === "dark" ? "#1b191a" : "#e0dbd0",
                   }}
@@ -910,6 +934,7 @@ export function Shell() {
                           minWidth: isMobile ? undefined : 200,
                           maxWidth: isMobile ? undefined : 340,
                           flexShrink: 0,
+                          touchAction: "pan-y",
                           ...(isMobile ? styles.sidebarOverlay : undefined),
                         }}
                       >
@@ -947,6 +972,7 @@ export function Shell() {
                               : "auto",
                           display: "flex",
                           flexDirection: "column",
+                          touchAction: "pan-y",
                           alignItems:
                             page === "calendar" || isReferencePage(page)
                               ? "stretch"
@@ -984,7 +1010,7 @@ export function Shell() {
                           <div
                             onClick={() => setMobileOpen(false)}
                             aria-hidden="true"
-                            style={styles.backdrop}
+                            style={{ ...styles.backdrop, touchAction: "pan-y" }}
                           />
                         ) : null}
                       </div>
@@ -1029,7 +1055,7 @@ export function Shell() {
         <BibleProvider page={page}>
           <NavigationContext.Provider value={{ navigateTo: handleNavigateTo }}>
             <SaintPopoverProvider>
-              <View style={styles.shell}>
+              <View style={styles.shell} {...swipeHandlers}>
                 <TopBar
                   season={season}
                   daysUntilNext={daysUntilNext}
@@ -1060,6 +1086,14 @@ export function Shell() {
                       {content}
                     </View>
                   </View>
+                  {isMobile && sidebarVisible ? (
+                    <Pressable
+                      style={styles.backdrop}
+                      onPress={() => setMobileOpen(false)}
+                      accessibilityLabel="Close navigation"
+                      accessibilityRole="button"
+                    />
+                  ) : null}
                 </View>
                 {autoscroll ? <AutoscrollGlyph indicator={autoscroll} /> : null}
                 {modalContent}
