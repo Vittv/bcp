@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { getKjvPassagesFromDolRef } from "../../lib/content/kjv";
 import type { KjvPassage, OfficeSpeaker } from "../../lib/content/types";
+import { getWebPassagesFromDolRef } from "../../lib/content/web";
 import { CHROME_FONT } from "../../lib/fonts";
 import type {
   ComposedLesson,
@@ -43,7 +43,7 @@ function LessonRow({ lesson }: { lesson: ComposedLesson }) {
 
   useEffect(() => {
     let cancelled = false;
-    getKjvPassagesFromDolRef(lesson.ref).then((ps) => {
+    getWebPassagesFromDolRef(lesson.ref).then((ps) => {
       if (!cancelled) setPassages(ps);
     });
     return () => {
@@ -62,9 +62,7 @@ function LessonRow({ lesson }: { lesson: ComposedLesson }) {
         <ScriptureView key={`${p.book}-${p.chapter}`} passage={p} />
       ))}
       {passages.length === 0 ? (
-        <Text style={styles.lessonMissing}>
-          Apocrypha text not available in the KJV edition
-        </Text>
+        <Text style={styles.lessonMissing}>Reading text not available</Text>
       ) : null}
     </View>
   );

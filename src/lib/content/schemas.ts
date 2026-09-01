@@ -182,7 +182,7 @@ export const kjvChapterSchema = z.record(z.string(), kjvVerseSchema);
 export const kjvBookSchema = z.object({
   book: z.string(),
   abbrev: z.string(),
-  testament: z.enum(["OT", "NT"]),
+  testament: z.enum(["OT", "NT", "DC"]),
   chapters: z.number().int().positive(),
   verses: z.record(z.string(), kjvChapterSchema),
 }) satisfies z.ZodType<import("./types").KjvBook>;

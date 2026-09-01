@@ -4,7 +4,7 @@ import type { CalendarDate, DolSlot } from "../calendar/types";
 import { parseLessonRef } from "./lessons";
 import { parsePsalmCitation } from "./psalms";
 import { dolYearSchema } from "./schemas";
-import type { DolEntry } from "./types";
+import type { DolEntry, DolLessonGroup } from "./types";
 import holyDaysData from "./vendor/dol/dol-holy-days.min.json";
 import specialOccasionsData from "./vendor/dol/dol-special-occasions.min.json";
 import yearOneData from "./vendor/dol/dol-year-1.min.json";
@@ -350,6 +350,94 @@ export function entryForEvening(slot: DolSlot): DolEntry | undefined {
 
 export function entryForDate(date: CalendarDate): DolEntry | undefined {
   return entryForDay(resolve(date));
+}
+
+export type LectionaryLesson = { label: string; ref: string };
+
+export type LectionaryOffice = {
+  label: string;
+  psalms: string[];
+  lessons: LectionaryLesson[];
+};
+
+//  today's readings, shaped for the standalone lectionary view. year-table
+// entries carry a single lesson set shared by both offices; holy days and
+// special occasions split theirs by morning and evening.
+export type LectionaryDay =
+  | {
+      entry: DolEntry;
+      kind: "shared";
+      psalms: { morning: string[]; evening: string[] };
+      lessons: LectionaryLesson[];
+    }
+  | {
+      entry: DolEntry;
+      kind: "split";
+      morning: LectionaryOffice;
+      evening: LectionaryOffice;
+    };
+
+const LESSON_FIELDS: Array<{ key: keyof DolLessonGroup; label: string }> = [
+  { key: "first", label: "First Lesson" },
+  { key: "second", label: "Second Lesson" },
+  { key: "third", label: "Third Lesson" },
+  { key: "gospel", label: "Gospel" },
+];
+
+function lessonFields(group: DolLessonGroup | undefined): LectionaryLesson[] {
+  if (!group) return [];
+  const lessons: LectionaryLesson[] = [];
+  for (const { key, label } of LESSON_FIELDS) {
+    const ref = group[key];
+    if (typeof ref !== "string") continue;
+    lessons.push({ label, ref });
+  }
+  return lessons;
+}
+
+export function lectionaryForDate(
+  date: CalendarDate,
+): LectionaryDay | undefined {
+  const entry = entryForDate(date);
+  if (!entry) return undefined;
+  const split = (() => {
+    const morning = entry.lessons.morning;
+    const evening = entry.lessons.evening;
+    const splitGroup = (g: DolLessonGroup | undefined) =>
+      g && (g.first || g.second || g.third || g.gospel);
+    if (splitGroup(morning) && splitGroup(evening)) {
+      return {
+        morning,
+        evening,
+      };
+    }
+    return undefined;
+  })();
+  if (split) {
+    return {
+      entry,
+      kind: "split",
+      morning: {
+        label: "Morning Prayer",
+        psalms: entry.psalms.morning ?? [],
+        lessons: lessonFields(split.morning),
+      },
+      evening: {
+        label: "Evening Prayer",
+        psalms: entry.psalms.evening ?? [],
+        lessons: lessonFields(split.evening),
+      },
+    };
+  }
+  return {
+    entry,
+    kind: "shared",
+    psalms: {
+      morning: entry.psalms.morning ?? [],
+      evening: entry.psalms.evening ?? [],
+    },
+    lessons: lessonFields(entry.lessons),
+  };
 }
 
 // verify every psalm citation and lesson reference parses; any problem is a

@@ -38,6 +38,10 @@ import { BibleBar, BibleReaderScreen } from "../../screens/BibleReaderScreen";
 import { CalendarScreen } from "../../screens/CalendarScreen";
 import { InstallScreen } from "../../screens/InstallScreen";
 import {
+  LectionaryBar,
+  LectionaryScreen,
+} from "../../screens/LectionaryScreen";
+import {
   CanticlesBar,
   CanticlesScreen,
   CollectsBar,
@@ -322,6 +326,7 @@ export function Shell() {
     const GO_MAP: Record<string, PageId> = {
       t: "today",
       c: "calendar",
+      l: "lectionary",
       p: "psalms",
       o: "offices",
       b: "old-testament",
@@ -356,7 +361,9 @@ export function Shell() {
     };
     const stepDay = (delta: number) => {
       setDate((d) => addDays(d, delta));
-      handleNavigateTo("today");
+      // the lectionary scrolls its own date; everywhere else n/p jumps
+      // straight to the office for the stepped day
+      if (page !== "lectionary") handleNavigateTo("today");
     };
     const clearGo = () => {
       if (goTimer) clearTimeout(goTimer);
@@ -457,7 +464,7 @@ export function Shell() {
       window.removeEventListener("keydown", onKeyDown, true);
       if (goTimer) clearTimeout(goTimer);
     };
-  }, [modal, handleNavigateTo, scrollToTop]);
+  }, [modal, handleNavigateTo, scrollToTop, page]);
 
   const document = composeOffice(
     date,
@@ -472,6 +479,9 @@ export function Shell() {
   const seasonColor = colorFor(date);
   const slot = resolve(date);
   const { days: daysUntilNext, label: nextSeason } = daysUntilNextSeason(date);
+  const now = today();
+  const isTodayDate =
+    now.year === date.year && now.month === date.month && now.day === date.day;
 
   const scrollRafRef = useRef<number | null>(null);
   // shared sink for scroll progress: the outer document scroller reports
@@ -497,6 +507,16 @@ export function Shell() {
 
   const handleTabChange = (t: TabId) => {
     setTab(t);
+    scrollToTop();
+  };
+
+  const stepLectionary = (delta: number) => {
+    setDate((d) => addDays(d, delta));
+    scrollToTop();
+  };
+
+  const resetLectionaryDate = () => {
+    setDate(today());
     scrollToTop();
   };
 
@@ -547,6 +567,16 @@ export function Shell() {
             onToggleDevotions={() => setDevotions(!devotions)}
           />
         );
+      case "lectionary":
+        return (
+          <LectionaryBar
+            leading={sidebarShowButton}
+            isToday={isTodayDate}
+            onPrevDate={() => stepLectionary(-1)}
+            onNextDate={() => stepLectionary(1)}
+            onToday={resetLectionaryDate}
+          />
+        );
       default:
         return null;
     }
@@ -574,6 +604,8 @@ export function Shell() {
             leading={sidebarShowButton}
           />
         );
+      case "lectionary":
+        return <LectionaryScreen date={date} />;
       case "psalms":
         return (
           <PsalmsScreen
@@ -773,9 +805,12 @@ export function Shell() {
                         style={{
                           boxSizing: "border-box",
                           width: "100%",
-                          maxWidth: page === "today" ? "46rem" : "100%",
+                          maxWidth:
+                            page === "today" || page === "lectionary"
+                              ? "46rem"
+                              : "100%",
                           padding:
-                            page === "today"
+                            page === "today" || page === "lectionary"
                               ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
                               : "0",
                           height:
@@ -808,7 +843,13 @@ export function Shell() {
                       slot={slot}
                       officeName={document.officeName}
                       scrollPct={scrollPct}
-                      reading={isReferencePage(page) ? reading : null}
+                      reading={
+                        isReferencePage(page)
+                          ? reading
+                          : page === "lectionary"
+                            ? "Daily Readings"
+                            : null
+                      }
                       compact={compactBars}
                     />
                   </div>

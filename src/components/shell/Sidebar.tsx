@@ -8,6 +8,7 @@ import { DownloadIcon, HelpIcon, InfoIcon, SettingsIcon } from "./Icon";
 export type PageId =
   | "today"
   | "calendar"
+  | "lectionary"
   | "psalms"
   | "collects"
   | "offices"
@@ -22,6 +23,7 @@ export type ModalType = "install" | "settings" | "about" | "help";
 const NAV: { id: PageId; label: string; section?: string }[] = [
   { id: "today", label: "Today" },
   { id: "calendar", label: "Calendar" },
+  { id: "lectionary", label: "Lectionary" },
   { id: "offices", label: "Offices" },
   { id: "canticles", label: "Canticles", section: "reference" },
   { id: "collects", label: "Collects", section: "reference" },
