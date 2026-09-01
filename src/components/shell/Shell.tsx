@@ -12,6 +12,10 @@ import { Sidebar } from "../../components/shell/Sidebar";
 import { useDrawerSwipe } from "../../components/shell/useDrawerSwipe";
 import { BibleProvider, setBiblePendingRef } from "../../context/BibleContext";
 import {
+  HistoryProvider,
+  type HistorySnapshot,
+} from "../../context/HistoryContext";
+import {
   type NavigateToRef,
   NavigationContext,
 } from "../../context/NavigationContext";
@@ -31,6 +35,10 @@ import {
   loadWindowControls,
   saveWindowControls,
 } from "../../lib/desktop";
+import {
+  createHistoryController,
+  type HistoryController,
+} from "../../lib/navigation/history";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
 import { AboutScreen } from "../../screens/AboutScreen";
@@ -208,7 +216,8 @@ export function Shell() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  // mobile drawer gestures: edge-swipe to open, left-swipe to close
+  // mobile drawer gestures: any right-swipe opens the drawer, a left-swipe
+  // (over content or the drawer) closes it
   useDrawerSwipe({
     enabled: IS_WEB && isMobile,
     open: mobileOpen,
@@ -250,10 +259,27 @@ export function Shell() {
   };
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleCalendarSelect = (d: CalendarDate) => {
-    setDate(d);
-    scrollToTop();
-  };
+  // browser history integration: one controller for the whole shell. only
+  // web has a history to drive; native builds get a null (no-op) provider.
+  const [historyController] =
+    useState<HistoryController<HistorySnapshot> | null>(() => {
+      if (Platform.OS !== "web") return null;
+      return createHistoryController<HistorySnapshot>({
+        addEventListener: (type, cb) => window.addEventListener(type, cb),
+        removeEventListener: (type, cb) => window.removeEventListener(type, cb),
+        history: window.history,
+        seedUrl: window.location.href,
+      });
+    });
+
+  // the controller's getters must read the latest committed value, not a
+  // closure captured at registration time; these refs update each render
+  const pageRef = useRef(page);
+  pageRef.current = page;
+  const dateRef = useRef(date);
+  dateRef.current = date;
+  const tabRef = useRef(tab);
+  tabRef.current = tab;
 
   const scrollToTop = useCallback(() => {
     const el = scrollRef.current;
@@ -272,25 +298,97 @@ export function Shell() {
     });
   }, []);
 
-  const handlePageSelect = (p: PageId) => {
-    setPage(p);
-    setNavKey((k) => k + 1);
-    setReading(null);
-    if (isMobile) setMobileOpen(false);
+  useEffect(() => {
+    if (!historyController) return;
+    historyController.start();
+    return () => historyController.stop();
+  }, [historyController]);
+
+  useEffect(() => {
+    if (!historyController) return;
+    const offPage = historyController.register(
+      "page",
+      () => pageRef.current,
+      (v) => setPage(v),
+    );
+    const offDate = historyController.register(
+      "date",
+      () => dateRef.current,
+      (v) => setDate(v),
+    );
+    const offTab = historyController.register(
+      "tab",
+      () => tabRef.current,
+      (v) => setTab(v),
+    );
+    const offRestored = historyController.onRestored(() => {
+      // a history navigation must never leave transient chrome open over a
+      // different page: the mobile drawer, any modal, and the office reading
+      setMobileOpen(false);
+      setModal(null);
+      setReading(null);
+      scrollToTop();
+    });
+    return () => {
+      offPage();
+      offDate();
+      offTab();
+      offRestored();
+    };
+  }, [historyController, scrollToTop]);
+
+  const handleCalendarSelect = (d: CalendarDate) => {
+    setDate(d);
+    historyController?.push({ date: d });
     scrollToTop();
+  };
+
+  const handleTabChange = (t: TabId) => {
+    setTab(t);
+    historyController?.push({ tab: t });
+    scrollToTop();
+  };
+
+  const stepLectionary = (delta: number) => {
+    const next = addDays(date, delta);
+    setDate(next);
+    historyController?.push({ date: next });
+    scrollToTop();
+  };
+
+  const resetLectionaryDate = () => {
+    const t = today();
+    setDate(t);
+    historyController?.push({ date: t });
+    scrollToTop();
+  };
+
+  // one navigation funnel: pushes the history entry, then applies the page
+  // change the way every navigation does (fresh search key, cleared reading,
+  // drawer + scroll reset)
+  const goToPage = useCallback(
+    (p: PageId, extra: Partial<HistorySnapshot> = {}) => {
+      // query is forced empty so a cross-page entry never carries a live
+      // filter: the search starts fresh per navigation (mirrors the navKey
+      // reset below) instead of leaking into Forward restores
+      historyController?.push({ ...extra, page: p, query: "" });
+      setPage(p);
+      setNavKey((k) => k + 1);
+      setReading(null);
+      if (isMobile) setMobileOpen(false);
+      scrollToTop();
+    },
+    [historyController, isMobile, scrollToTop],
+  );
+
+  const handlePageSelect = (p: PageId) => {
+    goToPage(p);
   };
 
   const handleNavigateTo = useCallback(
     (target: NavigateToRef | PageId) => {
-      const setPageAndClean = (p: PageId) => {
-        setPage(p);
-        setNavKey((k) => k + 1);
-        setReading(null);
-        if (isMobile) setMobileOpen(false);
-        scrollToTop();
-      };
       if (typeof target === "string") {
-        setPageAndClean(target);
+        goToPage(target);
         return;
       }
       if (target.bookAbbrev && target.chapter) {
@@ -301,12 +399,16 @@ export function Shell() {
           abbrev: target.bookAbbrev,
           chapter: target.chapter,
         });
-        setPageAndClean(page);
+        // the snapshot carries the exact ref too, so Back/Forward restore
+        // the chapter even though it is applied through the pending-ref path
+        goToPage(page, {
+          bible: { abbrev: target.bookAbbrev, chapter: target.chapter },
+        });
       } else {
-        setPageAndClean(target.page);
+        goToPage(target.page);
       }
     },
-    [isMobile, scrollToTop],
+    [goToPage],
   );
 
   // park keyboard focus on the scroller so native arrow/space
@@ -360,10 +462,12 @@ export function Shell() {
       }
     };
     const stepDay = (delta: number) => {
-      setDate((d) => addDays(d, delta));
+      const next = addDays(date, delta);
+      setDate(next);
       // the lectionary scrolls its own date; everywhere else n/p jumps
       // straight to the office for the stepped day
-      if (page !== "lectionary") handleNavigateTo("today");
+      if (page === "lectionary") goToPage("lectionary", { date: next });
+      else goToPage("today", { date: next });
     };
     const clearGo = () => {
       if (goTimer) clearTimeout(goTimer);
@@ -464,7 +568,7 @@ export function Shell() {
       window.removeEventListener("keydown", onKeyDown, true);
       if (goTimer) clearTimeout(goTimer);
     };
-  }, [modal, handleNavigateTo, scrollToTop, page]);
+  }, [modal, handleNavigateTo, scrollToTop, page, date, goToPage]);
 
   const document = composeOffice(
     date,
@@ -504,21 +608,6 @@ export function Shell() {
       setScrollPct(max > 0 ? Math.round((el.scrollTop / max) * 100) : 0);
     });
   }, []);
-
-  const handleTabChange = (t: TabId) => {
-    setTab(t);
-    scrollToTop();
-  };
-
-  const stepLectionary = (delta: number) => {
-    setDate((d) => addDays(d, delta));
-    scrollToTop();
-  };
-
-  const resetLectionaryDate = () => {
-    setDate(today());
-    scrollToTop();
-  };
 
   const sidebarShowButton = !sidebarVisible ? (
     <Pressable
@@ -706,206 +795,217 @@ export function Shell() {
 
   if (IS_WEB) {
     return (
+      <HistoryProvider controller={historyController}>
+        <ReferenceProvider
+          onReadingChange={setReading}
+          page={page}
+          navKey={navKey}
+        >
+          <BibleProvider
+            page={page}
+            onReadingChange={setReading}
+            onChapterChange={scrollToTop}
+          >
+            <NavigationContext.Provider
+              value={{ navigateTo: handleNavigateTo }}
+            >
+              <SaintPopoverProvider>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100vh",
+                    width: "100%",
+                    boxSizing: "border-box",
+                    overflow: "hidden",
+                    backgroundColor:
+                      resolved === "dark" ? "#1b191a" : "#e0dbd0",
+                  }}
+                >
+                  <TopBar
+                    season={season}
+                    daysUntilNext={daysUntilNext}
+                    nextSeason={nextSeason}
+                    holyDay={slot.holyDay ?? null}
+                    windowControls={windowControls}
+                    compact={compactBars}
+                  />
+                  <div
+                    style={{
+                      display: "flex",
+                      flex: 1,
+                      boxSizing: "border-box",
+                      overflow: "hidden",
+                      position: "relative",
+                    }}
+                  >
+                    {sidebarVisible ? (
+                      <div
+                        className={
+                          isMobile
+                            ? "bcp-drawer-in"
+                            : "bcp-sidebar-in bcp-sidebar-in-left"
+                        }
+                        style={{
+                          width: isMobile ? "min(84vw, 380px)" : "25%",
+                          minWidth: isMobile ? undefined : 200,
+                          maxWidth: isMobile ? undefined : 340,
+                          flexShrink: 0,
+                          ...(isMobile ? styles.sidebarOverlay : undefined),
+                        }}
+                      >
+                        <Sidebar
+                          active={page}
+                          onSelect={handlePageSelect}
+                          onHide={hideSidebar}
+                          onOpenModal={setModal}
+                        />
+                      </div>
+                    ) : null}
+                    <div
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        boxSizing: "border-box",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {auxRow}
+                      <div
+                        ref={scrollRef}
+                        onScroll={handleScroll}
+                        style={{
+                          flex: 1,
+                          boxSizing: "border-box",
+                          outline: "none",
+                          position: "relative",
+                          overflowX: "hidden",
+                          overflowY:
+                            page === "calendar" ||
+                            (isReferencePage(page) && !isMobile)
+                              ? "hidden"
+                              : "auto",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems:
+                            page === "calendar" || isReferencePage(page)
+                              ? "stretch"
+                              : "center",
+                        }}
+                      >
+                        <div
+                          style={{
+                            boxSizing: "border-box",
+                            width: "100%",
+                            maxWidth:
+                              page === "today" || page === "lectionary"
+                                ? "46rem"
+                                : "100%",
+                            padding:
+                              page === "today" || page === "lectionary"
+                                ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
+                                : "0",
+                            height:
+                              page === "calendar" ||
+                              (isReferencePage(page) && !isMobile)
+                                ? "100%"
+                                : undefined,
+                            zoom:
+                              page !== "calendar" &&
+                              !(isReferencePage(page) && !isMobile) &&
+                              fontScale !== 1
+                                ? String(fontScale)
+                                : undefined,
+                          }}
+                        >
+                          {content}
+                        </div>
+                        {isMobile && sidebarVisible ? (
+                          <div
+                            onClick={() => setMobileOpen(false)}
+                            aria-hidden="true"
+                            style={styles.backdrop}
+                          />
+                        ) : null}
+                      </div>
+
+                      <StatusBar
+                        season={season}
+                        seasonColor={seasonColor}
+                        slot={slot}
+                        officeName={document.officeName}
+                        scrollPct={scrollPct}
+                        reading={
+                          isReferencePage(page)
+                            ? reading
+                            : page === "lectionary"
+                              ? "Daily Readings"
+                              : null
+                        }
+                        compact={compactBars}
+                      />
+                    </div>
+                  </div>
+                  {modalContent}
+                </div>
+              </SaintPopoverProvider>
+            </NavigationContext.Provider>
+          </BibleProvider>
+        </ReferenceProvider>
+      </HistoryProvider>
+    );
+  }
+
+  return (
+    <HistoryProvider controller={historyController}>
       <ReferenceProvider
         onReadingChange={setReading}
         page={page}
         navKey={navKey}
       >
-        <BibleProvider
-          page={page}
-          onReadingChange={setReading}
-          onChapterChange={scrollToTop}
-        >
+        <BibleProvider page={page}>
           <NavigationContext.Provider value={{ navigateTo: handleNavigateTo }}>
             <SaintPopoverProvider>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  height: "100vh",
-                  width: "100%",
-                  boxSizing: "border-box",
-                  overflow: "hidden",
-                  backgroundColor: resolved === "dark" ? "#1b191a" : "#e0dbd0",
-                }}
-              >
+              <View style={styles.shell}>
                 <TopBar
                   season={season}
                   daysUntilNext={daysUntilNext}
                   nextSeason={nextSeason}
                   holyDay={slot.holyDay ?? null}
                   windowControls={windowControls}
-                  compact={compactBars}
                 />
-                <div
-                  style={{
-                    display: "flex",
-                    flex: 1,
-                    boxSizing: "border-box",
-                    overflow: "hidden",
-                    position: "relative",
-                  }}
-                >
+                <View style={styles.body}>
                   {sidebarVisible ? (
-                    <div
-                      className={
-                        isMobile
-                          ? "bcp-drawer-in"
-                          : "bcp-sidebar-in bcp-sidebar-in-left"
-                      }
-                      style={{
-                        width: isMobile ? "min(84vw, 380px)" : "25%",
-                        minWidth: isMobile ? undefined : 200,
-                        maxWidth: isMobile ? undefined : 340,
-                        flexShrink: 0,
-                        ...(isMobile ? styles.sidebarOverlay : undefined),
-                      }}
-                    >
+                    <View style={isMobile ? styles.sidebarOverlay : undefined}>
                       <Sidebar
                         active={page}
                         onSelect={handlePageSelect}
                         onHide={hideSidebar}
                         onOpenModal={setModal}
                       />
-                    </div>
+                    </View>
                   ) : null}
-                  <div
-                    style={{
-                      flex: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      boxSizing: "border-box",
-                      overflow: "hidden",
-                    }}
-                  >
+                  <View style={styles.mainCol}>
                     {auxRow}
-                    <div
-                      ref={scrollRef}
-                      onScroll={handleScroll}
-                      style={{
-                        flex: 1,
-                        boxSizing: "border-box",
-                        outline: "none",
-                        position: "relative",
-                        overflowX: "hidden",
-                        overflowY:
-                          page === "calendar" ||
-                          (isReferencePage(page) && !isMobile)
-                            ? "hidden"
-                            : "auto",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems:
-                          page === "calendar" || isReferencePage(page)
-                            ? "stretch"
-                            : "center",
-                      }}
+                    <View
+                      style={[
+                        styles.content,
+                        isReferencePage(page) && styles.contentWide,
+                        { transform: [{ scale: fontScale }] },
+                      ]}
                     >
-                      <div
-                        style={{
-                          boxSizing: "border-box",
-                          width: "100%",
-                          maxWidth:
-                            page === "today" || page === "lectionary"
-                              ? "46rem"
-                              : "100%",
-                          padding:
-                            page === "today" || page === "lectionary"
-                              ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
-                              : "0",
-                          height:
-                            page === "calendar" ||
-                            (isReferencePage(page) && !isMobile)
-                              ? "100%"
-                              : undefined,
-                          zoom:
-                            page !== "calendar" &&
-                            !(isReferencePage(page) && !isMobile) &&
-                            fontScale !== 1
-                              ? String(fontScale)
-                              : undefined,
-                        }}
-                      >
-                        {content}
-                      </div>
-                      {isMobile && sidebarVisible ? (
-                        <div
-                          onClick={() => setMobileOpen(false)}
-                          aria-hidden="true"
-                          style={styles.backdrop}
-                        />
-                      ) : null}
-                    </div>
-
-                    <StatusBar
-                      season={season}
-                      seasonColor={seasonColor}
-                      slot={slot}
-                      officeName={document.officeName}
-                      scrollPct={scrollPct}
-                      reading={
-                        isReferencePage(page)
-                          ? reading
-                          : page === "lectionary"
-                            ? "Daily Readings"
-                            : null
-                      }
-                      compact={compactBars}
-                    />
-                  </div>
-                </div>
+                      {content}
+                    </View>
+                  </View>
+                </View>
                 {modalContent}
-              </div>
+              </View>
             </SaintPopoverProvider>
           </NavigationContext.Provider>
         </BibleProvider>
       </ReferenceProvider>
-    );
-  }
-
-  return (
-    <ReferenceProvider onReadingChange={setReading} page={page} navKey={navKey}>
-      <BibleProvider page={page}>
-        <NavigationContext.Provider value={{ navigateTo: handleNavigateTo }}>
-          <SaintPopoverProvider>
-            <View style={styles.shell}>
-              <TopBar
-                season={season}
-                daysUntilNext={daysUntilNext}
-                nextSeason={nextSeason}
-                holyDay={slot.holyDay ?? null}
-                windowControls={windowControls}
-              />
-              <View style={styles.body}>
-                {sidebarVisible ? (
-                  <View style={isMobile ? styles.sidebarOverlay : undefined}>
-                    <Sidebar
-                      active={page}
-                      onSelect={handlePageSelect}
-                      onHide={hideSidebar}
-                      onOpenModal={setModal}
-                    />
-                  </View>
-                ) : null}
-                <View style={styles.mainCol}>
-                  {auxRow}
-                  <View
-                    style={[
-                      styles.content,
-                      isReferencePage(page) && styles.contentWide,
-                      { transform: [{ scale: fontScale }] },
-                    ]}
-                  >
-                    {content}
-                  </View>
-                </View>
-              </View>
-              {modalContent}
-            </View>
-          </SaintPopoverProvider>
-        </NavigationContext.Provider>
-      </BibleProvider>
-    </ReferenceProvider>
+    </HistoryProvider>
   );
 }
 

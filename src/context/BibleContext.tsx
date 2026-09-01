@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import type { PageId } from "../components/shell/Sidebar";
+import { useHistory, useHistoryField } from "../context/HistoryContext";
 import type { KjvBookMeta } from "../lib/content/kjv";
 import { getBooksByTestament, getKjvBookMeta } from "../lib/content/kjv";
 
@@ -85,6 +86,7 @@ type BibleState = {
   nextChapter: () => void;
   prevChapter: () => void;
   goToRef: (abbrev: string, chapter: number) => void;
+  restoreRef: (ref: { abbrev: string; chapter: number } | null) => void;
 };
 
 const Ctx = createContext<BibleState | null>(null);
@@ -145,15 +147,25 @@ export function BibleProvider({
   const [book, setBook] = useState<KjvBookMeta | null>(initial.book);
   const [chapter, setChapter] = useState(initial.chapter);
 
+  // browser history: pushes record each chapter/book step, restores replay
+  const history = useHistory();
+
+  // set by restoreRef when a history restore re-positions the bible, so the
+  // page-change effect keeps that position instead of re-reading localStorage
+  const restoredRef = useRef(false);
+
   // sync testament + restore position when page changes to a bible page
   const prevPage = useRef(page);
   useEffect(() => {
     if (prevPage.current === page) return;
     prevPage.current = page;
     if (isBiblePage(page)) {
-      const t = pageTestament(page);
-      setTestament(t);
-      if (_pendingRefTarget) {
+      if (restoredRef.current) {
+        // the position came from a history restore; stop re-reading localStorage
+        restoredRef.current = false;
+      } else if (_pendingRefTarget) {
+        const t = pageTestament(page);
+        setTestament(t);
         const ref = _pendingRefTarget;
         _pendingRefTarget = null;
         const found =
@@ -161,6 +173,8 @@ export function BibleProvider({
         setBook(found);
         setChapter(Math.min(Math.max(1, ref.chapter), found.chapters));
       } else {
+        const t = pageTestament(page);
+        setTestament(t);
         const pos = resolvePos(t, loadPos(t));
         setBook(pos.book);
         setChapter(pos.chapter);
@@ -188,41 +202,84 @@ export function BibleProvider({
 
   const books = ALL_BOOKS[testament];
 
-  const selectTestament = useCallback((t: Testament) => {
-    setTestament(t);
-    const pos = resolvePos(t, loadPos(t));
-    setBook(pos.book);
-    setChapter(pos.chapter);
-  }, []);
+  const selectTestament = useCallback(
+    (t: Testament) => {
+      setTestament(t);
+      const pos = resolvePos(t, loadPos(t));
+      setBook(pos.book);
+      setChapter(pos.chapter);
+      history?.push({
+        bible: pos.book
+          ? { abbrev: pos.book.abbrev, chapter: pos.chapter }
+          : null,
+      });
+    },
+    [history],
+  );
 
-  const selectBook = useCallback((abbrev: string) => {
-    const found =
-      ALL_BOOKS.OT.find((b) => b.abbrev === abbrev) ??
-      ALL_BOOKS.NT.find((b) => b.abbrev === abbrev);
-    // the browser only navigates OT/NT, so a DC-authored book never matches
-    if (found && found.testament !== "DC") {
-      setTestament(found.testament);
-      setBook(found);
-      setChapter(1);
-    }
-  }, []);
+  const selectBook = useCallback(
+    (abbrev: string) => {
+      const found =
+        ALL_BOOKS.OT.find((b) => b.abbrev === abbrev) ??
+        ALL_BOOKS.NT.find((b) => b.abbrev === abbrev);
+      // the browser only navigates OT/NT, so a DC-authored book never matches
+      if (found && found.testament !== "DC") {
+        setTestament(found.testament);
+        setBook(found);
+        setChapter(1);
+        history?.push({ bible: { abbrev: found.abbrev, chapter: 1 } });
+      }
+    },
+    [history],
+  );
 
   const clearBook = useCallback(() => {
     setBook(null);
     setChapter(1);
-  }, []);
+    history?.push({ bible: null });
+  }, [history]);
 
   const nextChapter = useCallback(() => {
-    if (book && chapter < book.chapters) setChapter((c) => c + 1);
-  }, [book, chapter]);
+    if (book && chapter < book.chapters) {
+      setChapter((c) => c + 1);
+      history?.push({ bible: { abbrev: book.abbrev, chapter: chapter + 1 } });
+    }
+  }, [book, chapter, history]);
 
   const prevChapter = useCallback(() => {
-    if (chapter > 1) setChapter((c) => c - 1);
-  }, [chapter]);
+    if (book && chapter > 1) {
+      setChapter((c) => c - 1);
+      history?.push({ bible: { abbrev: book.abbrev, chapter: chapter - 1 } });
+    }
+  }, [book, chapter, history]);
 
   const goToRef = useCallback((abbrev: string, chapter: number) => {
     _pendingRefTarget = { abbrev, chapter };
   }, []);
+
+  // history replay targets this instead of the user-facing setters, so it
+  // never pushes (the restoring flag would swallow those anyway)
+  const restoreRef = useCallback(
+    (ref: { abbrev: string; chapter: number } | null) => {
+      if (!ref) return;
+      const found = [...ALL_BOOKS.OT, ...ALL_BOOKS.NT].find(
+        (b) => b.abbrev === ref.abbrev,
+      );
+      if (!found || found.testament === "DC") return;
+      restoredRef.current = true;
+      setTestament(found.testament);
+      setBook(found);
+      setChapter(Math.min(Math.max(1, ref.chapter), found.chapters));
+    },
+    [],
+  );
+
+  // snapshot the open position while on a bible page; a restore replays it
+  useHistoryField(
+    "bible",
+    () => (book && isBiblePage(page) ? { abbrev: book.abbrev, chapter } : null),
+    restoreRef,
+  );
 
   return (
     <Ctx.Provider
@@ -237,6 +294,7 @@ export function BibleProvider({
         nextChapter,
         prevChapter,
         goToRef,
+        restoreRef,
       }}
     >
       {children}
