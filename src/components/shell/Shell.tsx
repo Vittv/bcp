@@ -9,6 +9,10 @@ import { Chevron } from "../../components/shell/Chevron";
 import { HelpScreen } from "../../components/shell/HelpScreen";
 import type { ModalType, PageId } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
+import {
+  type AutoscrollIndicator,
+  useAutoscroll,
+} from "../../components/shell/useAutoscroll";
 import { useDrawerSwipe } from "../../components/shell/useDrawerSwipe";
 import { BibleProvider, setBiblePendingRef } from "../../context/BibleContext";
 import {
@@ -32,6 +36,7 @@ import { getKjvBookMeta } from "../../lib/content/kjv";
 import {
   IS_MACOS_TAURI,
   IS_TAURI,
+  IS_WINDOWS_TAURI,
   loadWindowControls,
   saveWindowControls,
 } from "../../lib/desktop";
@@ -138,6 +143,55 @@ function ensureSidebarAnimStyle() {
   document.head.appendChild(el);
 }
 
+// the scroll-click autoscroll glyph, drawn to match the browser's own: a
+// white circle with a black border, two chevrons (up and down), and a dot
+// in the center. parked where the middle-click landed.
+function AutoscrollGlyph({ indicator }: { indicator: AutoscrollIndicator }) {
+  return (
+    <View
+      pointerEvents="none"
+      style={[
+        styles.autoscrollIndicator,
+        { left: indicator.x, top: indicator.y },
+      ]}
+    >
+      <svg
+        width={40}
+        height={40}
+        viewBox="0 0 40 40"
+        role="img"
+        aria-label="Autoscroll"
+      >
+        <circle
+          cx="20"
+          cy="20"
+          r="18.5"
+          fill="#ffffff"
+          stroke="#000000"
+          strokeWidth="1.5"
+        />
+        <path
+          d="M11 15 L20 6 L29 15"
+          fill="none"
+          stroke="#000000"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="20" cy="20" r="2.5" fill="#000000" />
+        <path
+          d="M11 25 L20 34 L29 25"
+          fill="none"
+          stroke="#000000"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </View>
+  );
+}
+
 export function Shell() {
   const { resolved, fontScale } = useTheme();
 
@@ -224,6 +278,11 @@ export function Shell() {
     onOpen: () => setMobileOpen(true),
     onClose: () => setMobileOpen(false),
   });
+
+  // scroll-click (middle button) autoscroll, Linux and macOS desktop only:
+  // their webviews (WebKitGTK, WKWebView) have no native gesture, while
+  // Windows WebView2 and the plain web build keep theirs
+  const autoscroll = useAutoscroll(IS_TAURI && !IS_WINDOWS_TAURI);
 
   // narrow layout for the chrome bars themselves: they keep working
   // well below the sidebar's mobile breakpoint by dropping their
@@ -947,6 +1006,9 @@ export function Shell() {
                       />
                     </div>
                   </div>
+                  {autoscroll ? (
+                    <AutoscrollGlyph indicator={autoscroll} />
+                  ) : null}
                   {modalContent}
                 </div>
               </SaintPopoverProvider>
@@ -999,6 +1061,7 @@ export function Shell() {
                     </View>
                   </View>
                 </View>
+                {autoscroll ? <AutoscrollGlyph indicator={autoscroll} /> : null}
                 {modalContent}
               </View>
             </SaintPopoverProvider>
@@ -1061,6 +1124,15 @@ const styles = StyleSheet.create({
     zIndex: 20,
     backgroundColor: "rgba(20, 15, 15, 0.35)",
     cursor: "pointer",
+  },
+  autoscrollIndicator: {
+    position: "absolute",
+    zIndex: 100,
+    width: 40,
+    height: 40,
+    marginLeft: -20,
+    marginTop: -20,
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.35)",
   },
   content: {
     flex: 1,
