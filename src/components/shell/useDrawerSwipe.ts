@@ -7,17 +7,16 @@ type DrawerSwipeOptions = {
   onClose: () => void;
 };
 
-// Edge-swipe gestures for the mobile drawer, driven by DOM pointer events
+// Drawer-swipe gestures for the mobile drawer, driven by DOM pointer events
 // (web/PWA only; the native branch keeps button + backdrop close).
 //
-// With the drawer closed: a horizontal drag that starts near the left edge
-// and moves right past a threshold opens it.
-// With the drawer open: a horizontal drag to the left past the threshold
-// closes it.
+// With the drawer closed: a horizontal drag to the right past a threshold
+// opens it, wherever it starts on the screen (Discord-style full-width
+// swipe). With the drawer open: a horizontal drag to the left past the
+// threshold closes it.
 //
 // The handler deliberately abandons a gesture as soon as vertical movement
 // dominates, so normal page scrolling is never interfered with.
-const EDGE = 24;
 const THRESHOLD = 64;
 
 export function useDrawerSwipe({
@@ -39,13 +38,10 @@ export function useDrawerSwipe({
     let horizontal = false;
 
     const down = (e: PointerEvent) => {
-      const s = state.current;
       startX = e.clientX;
       startY = e.clientY;
       tracking = true;
       horizontal = false;
-      // when closed we only care about swipes that start on the left edge
-      if (!s.open && e.clientX > EDGE) tracking = false;
     };
 
     const move = (e: PointerEvent) => {
