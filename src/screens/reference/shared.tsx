@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Platform, ScrollView, Text, View } from "react-native";
 import type { PageId } from "../../components/shell/Sidebar";
+import { useHistory, useHistoryField } from "../../context/HistoryContext";
 import {
   SANCTORALE_ENTRIES,
   sanctoraleBySlug,
@@ -193,9 +194,9 @@ export function ReferenceProvider({
 }: ReferenceProviderProps) {
   const [query, setQuery] = useState("");
   const [openPsalm, setOpenPsalmRaw] = useState<number | null>(null);
-  const [openOffice, setOpenOffice] = useState<RefOfficeBase | null>(null);
+  const [openOffice, setOpenOfficeRaw] = useState<RefOfficeBase | null>(null);
   // contemporary first, matching the Today page's default rites
-  const [officeRite, setOfficeRite] = useState<OfficeRite>("Two");
+  const [officeRite, setOfficeRiteRaw] = useState<OfficeRite>("Two");
   const [selectedCollect, setSelectedCollectRaw] = useState<CollectSel | null>(
     null,
   );
@@ -208,31 +209,154 @@ export function ReferenceProvider({
   // hide either half with the bar's toggles
   const [saintBio, setSaintBio] = useState(true);
   const [saintLiturgy, setSaintLiturgy] = useState(true);
-  const [officeDate, setOfficeDate] = useState<CalendarDate>(today);
+  const [officeDate, setOfficeDateRaw] = useState<CalendarDate>(today);
 
-  // picking a psalm, collect or saint empties the search: returning to
-  // the (now unfiltered) index is the point of the pick. wrapping the
-  // raw setters keeps every open/close/back path covered
-  const setOpenPsalm = useCallback((n: number | null) => {
-    setOpenPsalmRaw(n);
-    setQuery("");
-  }, []);
-  const setSelectedCollect = useCallback((c: CollectSel | null) => {
-    setSelectedCollectRaw(c);
-    setQuery("");
-  }, []);
-  const setOpenSaint = useCallback((s: string | null) => {
-    setOpenSaintRaw(s);
-    setQuery("");
-  }, []);
-  const setOpenProvChapter = useCallback((n: number | null) => {
-    setOpenProvChapterRaw(n);
-    setQuery("");
-  }, []);
-  const setOpenCanticle = useCallback((n: number | null) => {
-    setOpenCanticleRaw(n);
-    setQuery("");
-  }, []);
+  // browser history: pushes record the selection, restores replay it.
+  // refs keep the push-time and pick-time values fresh without re-creating
+  // the callbacks on every keystroke (stable identities let the memoized
+  // index rows skip re-renders while typing)
+  const history = useHistory();
+  const queryRef = useRef(query);
+  queryRef.current = query;
+  const openPsalmRef = useRef(openPsalm);
+  openPsalmRef.current = openPsalm;
+  const selectedCollectRef = useRef(selectedCollect);
+  selectedCollectRef.current = selectedCollect;
+  const openSaintRef = useRef(openSaint);
+  openSaintRef.current = openSaint;
+  const openProvChapterRef = useRef(openProvChapter);
+  openProvChapterRef.current = openProvChapter;
+  const openCanticleRef = useRef(openCanticle);
+  openCanticleRef.current = openCanticle;
+  const openOfficeRef = useRef(openOffice);
+  openOfficeRef.current = openOffice;
+  const officeRiteRef = useRef(officeRite);
+  officeRiteRef.current = officeRite;
+
+  // opening a pick keeps whatever search is active: the filter stays live
+  // on the index (Desktop split-pane) and rides along in history. before
+  // opening from a filtered list, record() reifies that list as its own
+  // back step, so system Back lands on the exact filtered list the pick
+  // came from instead of the pre-filter entry
+  const setOpenPsalm = useCallback(
+    (n: number | null) => {
+      if (
+        n !== null &&
+        page === "psalms" &&
+        openPsalmRef.current === null &&
+        queryRef.current !== ""
+      ) {
+        history?.record();
+      }
+      setOpenPsalmRaw(n);
+      history?.push({ psalm: n });
+    },
+    [history, page],
+  );
+  const setSelectedCollect = useCallback(
+    (c: CollectSel | null) => {
+      if (
+        c !== null &&
+        page === "collects" &&
+        selectedCollectRef.current === null &&
+        queryRef.current !== ""
+      ) {
+        history?.record();
+      }
+      setSelectedCollectRaw(c);
+      history?.push({ collect: c });
+    },
+    [history, page],
+  );
+  const setOpenSaint = useCallback(
+    (s: string | null) => {
+      if (
+        s !== null &&
+        page === "saints" &&
+        openSaintRef.current === null &&
+        queryRef.current !== ""
+      ) {
+        history?.record();
+      }
+      setOpenSaintRaw(s);
+      history?.push({ saint: s });
+    },
+    [history, page],
+  );
+  const setOpenProvChapter = useCallback(
+    (n: number | null) => {
+      if (
+        n !== null &&
+        page === "proverbs" &&
+        openProvChapterRef.current === null &&
+        queryRef.current !== ""
+      ) {
+        history?.record();
+      }
+      setOpenProvChapterRaw(n);
+      history?.push({ proverb: n });
+    },
+    [history, page],
+  );
+  const setOpenCanticle = useCallback(
+    (n: number | null) => {
+      if (
+        n !== null &&
+        page === "canticles" &&
+        openCanticleRef.current === null &&
+        queryRef.current !== ""
+      ) {
+        history?.record();
+      }
+      setOpenCanticleRaw(n);
+      history?.push({ canticle: n });
+    },
+    [history, page],
+  );
+  const setOpenOffice = useCallback(
+    (id: RefOfficeBase) => {
+      setOpenOfficeRaw(id);
+      history?.push({ office: { base: id, rite: officeRiteRef.current } });
+    },
+    [history],
+  );
+  const setOfficeRite = useCallback(
+    (r: OfficeRite) => {
+      setOfficeRiteRaw(r);
+      if (openOfficeRef.current) {
+        history?.push({
+          office: { base: openOfficeRef.current, rite: r },
+        });
+      }
+    },
+    [history],
+  );
+  const setOfficeDate = useCallback(
+    (d: CalendarDate) => {
+      setOfficeDateRaw(d);
+      history?.push({ officeDate: d });
+    },
+    [history],
+  );
+
+  // register the fields restore replays. raw setters only: a restore
+  // must re-create the state, never push a follow-up entry. the query is
+  // included so Back from a filtered pick returns to the same list
+  useHistoryField("query", () => query, setQuery);
+  useHistoryField("psalm", () => openPsalm, setOpenPsalmRaw);
+  useHistoryField(
+    "office",
+    () => (openOffice ? { base: openOffice, rite: officeRite } : null),
+    (v) => {
+      setOpenOfficeRaw(v?.base ?? null);
+      if (v) setOfficeRiteRaw(v.rite);
+    },
+  );
+  useHistoryField("collect", () => selectedCollect, setSelectedCollectRaw);
+  useHistoryField("saint", () => openSaint, setOpenSaintRaw);
+  useHistoryField("proverb", () => openProvChapter, setOpenProvChapterRaw);
+  useHistoryField("canticle", () => openCanticle, setOpenCanticleRaw);
+  useHistoryField("officeDate", () => officeDate, setOfficeDateRaw);
 
   // the status bar mirrors what the active page shows, including the
   // default-open first item; other pages' selections never leak in
@@ -256,11 +380,13 @@ export function ReferenceProvider({
   }, [readingLabel, onReadingChange]);
 
   // the search query is per-entry: navigating into any page (even the
-  // same one again) starts a fresh, empty search
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run on page or navKey change to clear the search
+  // same one again) starts a fresh, empty search. navKey bumps on every
+  // explicit navigation; history restores deliberately skip it, so the
+  // snapshot's query survives Back/Forward untouched
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run on navKey change to clear the search
   useEffect(() => {
     setQuery("");
-  }, [page, navKey, setQuery]);
+  }, [navKey, setQuery]);
 
   const state: ReferenceState = {
     query,
