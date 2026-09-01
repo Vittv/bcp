@@ -174,10 +174,12 @@ export type Office = {
 // an office to render: its id resolves to its full text.
 export type OfficePassage = Office;
 
+export type Testament = "OT" | "NT" | "DC";
+
 export type KjvBook = {
   book: string;
   abbrev: string;
-  testament: "OT" | "NT";
+  testament: Testament;
   chapters: number;
   verses: Record<string, Record<string, string>>;
 };
@@ -185,7 +187,7 @@ export type KjvBook = {
 export type KjvPassage = {
   book: string;
   abbrev: string;
-  testament: "OT" | "NT";
+  testament: Testament;
   chapter: number;
   verses: { number: number; text: string; chapter?: number }[];
 };

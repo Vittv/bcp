@@ -199,7 +199,8 @@ export function BibleProvider({
     const found =
       ALL_BOOKS.OT.find((b) => b.abbrev === abbrev) ??
       ALL_BOOKS.NT.find((b) => b.abbrev === abbrev);
-    if (found) {
+    // the browser only navigates OT/NT, so a DC-authored book never matches
+    if (found && found.testament !== "DC") {
       setTestament(found.testament);
       setBook(found);
       setChapter(1);

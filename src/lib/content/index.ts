@@ -8,3 +8,4 @@ export * from "./psalms";
 export * from "./psalter";
 export * from "./schemas";
 export * from "./types";
+export * from "./web";

@@ -5,10 +5,10 @@ import {
   sanctoraleDateLabel,
 } from "../../lib/calendar/sanctorale";
 import { collectPassage } from "../../lib/content/collects";
-import { getKjvPassagesFromDolRef } from "../../lib/content/kjv";
 import { parsePsalmCitation } from "../../lib/content/psalms";
 import { psalmPassage } from "../../lib/content/psalter";
 import type { KjvPassage } from "../../lib/content/types";
+import { getWebPassagesFromDolRef } from "../../lib/content/web";
 import { CHROME_FONT } from "../../lib/fonts";
 import { holyDayCollectTitle } from "../../lib/office/compose";
 import { sectionHeading } from "./contentHeadings";
@@ -27,15 +27,15 @@ const RITE_LABELS: Record<string, string> = {
 };
 
 // a lesson citation. the card expands the passage inline with
-// ScriptureView's own reference heading; refs outside the KJV, like
-// Wisdom and the Apocrypha, stay citation-only so the label never
-// dangles without text under it
+// ScriptureView's own reference heading; refs that resolve across the
+// combined canon (KJV for the OT/NT, WEB for the Apocrypha) render their
+// text, others stay citation-only.
 function LessonRow({ ref }: { ref: string }) {
   const [passages, setPassages] = useState<KjvPassage[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    getKjvPassagesFromDolRef(ref).then((ps) => {
+    getWebPassagesFromDolRef(ref).then((ps) => {
       if (!cancelled) setPassages(ps);
     });
     return () => {
@@ -46,10 +46,7 @@ function LessonRow({ ref }: { ref: string }) {
   if (passages.length === 0) {
     return (
       <View style={styles.lessonRow}>
-        <Text style={styles.lessonRef}>{ref}</Text>
-        <Text style={styles.lessonMissing}>
-          Apocrypha text not available in the KJV edition
-        </Text>
+        <Text style={styles.lessonMissing}>{ref}</Text>
       </View>
     );
   }

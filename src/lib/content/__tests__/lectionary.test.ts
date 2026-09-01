@@ -4,6 +4,7 @@ import {
   entryForDate,
   entryForDay,
   entryForEvening,
+  lectionaryForDate,
   validateLectionary,
 } from "../lectionary";
 
@@ -115,5 +116,45 @@ describe("entryForDate", () => {
     expect(entry?.title).toBe(
       "The First Sunday after Pentecost: Trinity Sunday",
     );
+  });
+});
+
+describe("lectionaryForDate", () => {
+  test("year-table entry shares one lesson set", () => {
+    const day = lectionaryForDate({ year: 2025, month: 6, day: 15 });
+    expect(day?.kind).toBe("shared");
+    if (day?.kind !== "shared") return;
+    expect(day.lessons).toEqual([
+      { label: "First Lesson", ref: "Sir 43:1–12(27–33)" },
+      { label: "Second Lesson", ref: "Eph 4:1–16" },
+      { label: "Gospel", ref: "John 1:1–18" },
+    ]);
+    expect(day.psalms.morning).toEqual(["146", "147"]);
+    expect(day.psalms.evening).toEqual(["111", "112", "113"]);
+  });
+
+  test("special occasion splits into morning and evening", () => {
+    const day = lectionaryForDate({ year: 2024, month: 12, day: 24 });
+    expect(day?.kind).toBe("split");
+    if (day?.kind !== "split") return;
+    expect(day.morning.lessons.at(-1)).toEqual({
+      label: "Gospel",
+      ref: "Luke 1:67–80",
+    });
+    expect(day.evening.lessons.map((l) => l.label)).toEqual([
+      "First Lesson",
+      "Second Lesson",
+    ]);
+    expect(day.evening.psalms).toEqual(["89:1–29"]);
+  });
+
+  test("undated days still resolve", () => {
+    const day = lectionaryForDate({ year: 2025, month: 3, day: 9 });
+    expect(day?.kind).toBe("shared");
+    if (day?.kind !== "shared") return;
+    expect(day.lessons[0]).toEqual({
+      label: "First Lesson",
+      ref: "Deut 8:1–10",
+    });
   });
 });
