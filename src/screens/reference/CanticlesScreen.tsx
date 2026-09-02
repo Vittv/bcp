@@ -236,10 +236,10 @@ function CanticleIndex({
                 ]}
                 onPress={() => onSelect(isSelected ? null : c.number)}
               >
-                <View style={styles.psalmRowInner}>
+                <View style={styles.collectRowInner}>
                   <Text
                     style={[
-                      styles.psalmNumber,
+                      styles.canticleNumber,
                       isSelected && styles.rowTextActive,
                     ]}
                   >
@@ -247,7 +247,10 @@ function CanticleIndex({
                   </Text>
                   <Text
                     numberOfLines={1}
-                    style={[styles.incipit, isSelected && styles.rowTextActive]}
+                    style={[
+                      styles.canticleIndexTitle,
+                      isSelected && styles.rowTextActive,
+                    ]}
                   >
                     {c.title}
                   </Text>
