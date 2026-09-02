@@ -99,7 +99,9 @@ export function ProverbsScreen({
         <ChapterIndex
           chapters={chapterMeta}
           query={query}
-          selected={openProvChapter}
+          // fall back to the first chapter so the pane never shows an
+          // empty hint; the row highlights as if it were picked
+          selected={openProvChapter ?? 1}
           onSelect={(n) => setOpenProvChapter(openProvChapter === n ? null : n)}
         />
       }
