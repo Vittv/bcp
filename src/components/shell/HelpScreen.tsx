@@ -79,8 +79,8 @@ const styles = StyleSheet.create({
   lead: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 14,
+    lineHeight: 21,
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 20,
   },
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
-    fontSize: 16,
+    fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
   },
 });

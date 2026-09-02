@@ -1,9 +1,17 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { IS_TAURI } from "../../lib/desktop";
+import { IS_STANDALONE, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { VERSION } from "../../lib/version";
 import { Chevron } from "./Chevron";
-import { DownloadIcon, HelpIcon, InfoIcon, SettingsIcon } from "./Icon";
+import {
+  DownloadIcon,
+  GithubIcon,
+  HelpIcon,
+  InfoIcon,
+  SettingsIcon,
+} from "./Icon";
+
+export const REPO_URL = "https://github.com/Vittv/bcp";
 
 export type PageId =
   | "today"
@@ -77,7 +85,7 @@ export function Sidebar({
           <Chevron direction="left" size={6} />
         </Pressable>
         <View style={styles.toolbarSpacer} />
-        {!IS_TAURI ? (
+        {!IS_TAURI && !IS_STANDALONE ? (
           <Pressable
             style={({ hovered }) => [
               styles.toolBtn,
@@ -158,6 +166,19 @@ export function Sidebar({
           {`bcp · v${VERSION}`}
         </Text>
         <View style={styles.toolbarSpacer} />
+        <Pressable
+          style={({ hovered }) => [
+            styles.aboutBtn,
+            hovered && styles.aboutBtnHover,
+          ]}
+          accessibilityLabel="Visit the repository on GitHub"
+          accessibilityRole="link"
+          onPress={() => {
+            window.open(REPO_URL, "_blank", "noreferrer");
+          }}
+        >
+          <GithubIcon size={14} color={IDLE_COLOR} />
+        </Pressable>
         <Pressable
           style={({ hovered }) => [
             styles.aboutBtn,
@@ -257,7 +278,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 10,
-    gap: 4,
+    gap: 2,
   },
   footerText: {
     fontFamily: CHROME_FONT,

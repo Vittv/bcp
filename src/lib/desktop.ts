@@ -4,6 +4,17 @@
 export const IS_TAURI =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
+// true when the browser is running the installed PWA in standalone mode (not
+// a regular browser tab). Mirrors the logic in useInstallPrompt but as a
+// synchronous snapshot so it can gate UI elements at render time.
+export const IS_STANDALONE =
+  typeof window !== "undefined" &&
+  (window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    window.matchMedia("(display-mode: minimal-ui)").matches ||
+    ("standalone" in navigator &&
+      (navigator as { standalone?: boolean }).standalone === true));
+
 export const IS_MACOS_TAURI =
   IS_TAURI &&
   typeof navigator !== "undefined" &&

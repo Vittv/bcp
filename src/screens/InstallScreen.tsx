@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: CHROME_FONT,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
     marginBottom: 8,
@@ -221,15 +221,15 @@ const styles = StyleSheet.create({
   body: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
-    fontSize: 17,
+    fontSize: 15,
     color: "var(--text-secondary, #7a6e64)",
-    lineHeight: 27,
+    lineHeight: 23,
     marginBottom: 8,
   },
   link: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
-    fontSize: 17,
+    fontSize: 15,
     color: "var(--accent, #7a3040)",
     textDecorationLine: "underline",
     marginBottom: 8,
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   installText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
-    fontSize: 16,
+    fontSize: 14,
     letterSpacing: 0.3,
     color: "var(--accent, #7a3040)",
   },
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     backgroundColor: "var(--bg-raised, #ece7dd)",
     fontFamily: CHROME_FONT,
     fontWeight: "500",
-    fontSize: 14,
+    fontSize: 13,
     color: "var(--text-secondary, #7a6e64)",
   },
   hint: {

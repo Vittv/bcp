@@ -10,7 +10,7 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-import { CHROME_FONT } from "../../lib/fonts";
+import { HEADING_FONT } from "../../lib/fonts";
 import { CloseIcon } from "./Icon";
 
 // A reusable floating-window modal (feishin/zennotes inspiration): a centered
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     userSelect: "none",
   },
   title: {
-    fontFamily: CHROME_FONT,
+    fontFamily: HEADING_FONT,
     fontWeight: "600",
     fontSize: 24,
     letterSpacing: 0.2,
