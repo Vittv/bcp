@@ -206,6 +206,9 @@ export function Shell() {
   }, []);
 
   const [date, setDate] = useState<CalendarDate>(today);
+  // the lectionary keeps its own date, independent of the office date shown
+  // on Today; stepping its prev/next/today never touches the global date
+  const [lectionaryDate, setLectionaryDate] = useState<CalendarDate>(today);
   const [tab, setTab] = useState<TabId>(() =>
     officeForHour(new Date().getHours()),
   );
@@ -368,17 +371,6 @@ export function Shell() {
   // the drawer without navigating in between never stacks another entry.
   const drawerRecord = useRef<string | null>(null);
 
-  // mirrors mobileOpen for the popstate handler: a system Back that pops the
-  // drawer's own step fires while the committed render still reports the
-  // drawer as open, which is how that pop is told apart from a real one
-  const mobileOpenRef = useRef(mobileOpen);
-  mobileOpenRef.current = mobileOpen;
-
-  // set while a dismiss is re-issuing history.back() to consume the drawer's
-  // own step; onRestored reads it (before it clears) to treat that synthetic
-  // pop as a drawer close rather than a navigation
-  const drawerDismiss = useRef(false);
-
   // web only: reify the drawer-opening as its own history step, so the
   // system back button has an entry to pop even at the app root (where back
   // would otherwise leave the PWA instead of hiding the drawer). the
@@ -396,16 +388,15 @@ export function Shell() {
   // history, consume that step via history.back() so Back behaves exactly as
   // if the drawer never opened. a dismiss (swipe, backdrop, hide button) only
   // hides the drawer, leaving its step behind the phantom entry: popping it
-  // here matches the dismiss pattern other apps use, push a step on open and
-  // pop it on every close. a system Back that already popped the step clears
-  // drawerRecord in onRestored first, so this never double-consumes.
+  // here keeps Back from stopping on a phantom drawer step. a system Back
+  // that already popped the step clears drawerRecord in onRestored first, so
+  // this never double-consumes.
   useEffect(() => {
     if (mobileOpen) return;
     if (!historyController || !drawerRecord.current) return;
     const top = JSON.stringify(window.history.state ?? null) ?? null;
     if (top !== drawerRecord.current) return;
     drawerRecord.current = null;
-    drawerDismiss.current = true;
     window.history.back();
   }, [mobileOpen, historyController]);
 
@@ -451,15 +442,12 @@ export function Shell() {
     );
     const offRestored = historyController.onRestored(() => {
       // a history navigation must never leave transient chrome open over a
-      // different page: the mobile drawer, any modal, and the office reading
-      // a pop that undoes the drawer's own step (Back consumed it, or a
-      // dismiss re-issued it) restores the exact page the drawer opened on,
-      // so it only hides the drawer and leaves scroll/modal/reading alone
-      const drawerPop = drawerDismiss.current || mobileOpenRef.current;
-      drawerDismiss.current = false;
+      // different page: the mobile drawer closes, and any modal and office
+      // reading clear. a pop that undoes the drawer's own recorded step
+      // restores the exact page the drawer opened on, so the extra cleanup
+      // below is harmless there
       drawerRecord.current = null;
       setMobileOpen(false);
-      if (drawerPop) return;
       setModal(null);
       setReading(null);
       scrollToTop();
@@ -472,12 +460,6 @@ export function Shell() {
     };
   }, [historyController, scrollToTop]);
 
-  const handleCalendarSelect = (d: CalendarDate) => {
-    setDate(d);
-    historyController?.push({ date: d });
-    scrollToTop();
-  };
-
   const handleTabChange = (t: TabId) => {
     setTab(t);
     historyController?.push({ tab: t });
@@ -485,16 +467,12 @@ export function Shell() {
   };
 
   const stepLectionary = (delta: number) => {
-    const next = addDays(date, delta);
-    setDate(next);
-    historyController?.push({ date: next });
+    setLectionaryDate((d) => addDays(d, delta));
     scrollToTop();
   };
 
   const resetLectionaryDate = () => {
-    const t = today();
-    setDate(t);
-    historyController?.push({ date: t });
+    setLectionaryDate(today);
     scrollToTop();
   };
 
@@ -507,18 +485,7 @@ export function Shell() {
       // filter: the search starts fresh per navigation (mirrors the navKey
       // reset below) instead of leaking into Forward restores
       const change = { ...extra, page: p, query: "" };
-      if (historyController && drawerRecord.current) {
-        // a navigation launched from the open drawer folds into the drawer's
-        // own recorded step instead of piling on top of it, so Back from the
-        // new page skips the drawer entry and lands on the page before the
-        // drawer as if the drawer was never opened. a same-page pick needs no
-        // entry at all: the close below lets the consume effect pop the step
-        const noop = p === pageRef.current && Object.keys(extra).length === 0;
-        drawerRecord.current = null;
-        if (!noop) historyController.replace(change);
-      } else {
-        historyController?.push(change);
-      }
+      historyController?.push(change);
       setPage(p);
       setNavKey((k) => k + 1);
       setReading(null);
@@ -609,12 +576,16 @@ export function Shell() {
       }
     };
     const stepDay = (delta: number) => {
+      // on the lectionary, n/p steps its own date without touching the
+      // office date; everywhere else n/p steps the office date and jumps
+      // to Today
+      if (page === "lectionary") {
+        setLectionaryDate((d) => addDays(d, delta));
+        return;
+      }
       const next = addDays(date, delta);
       setDate(next);
-      // the lectionary scrolls its own date; everywhere else n/p jumps
-      // straight to the office for the stepped day
-      if (page === "lectionary") goToPage("lectionary", { date: next });
-      else goToPage("today", { date: next });
+      goToPage("today", { date: next });
     };
     const clearGo = () => {
       if (goTimer) clearTimeout(goTimer);
@@ -726,13 +697,15 @@ export function Shell() {
       showRubrics,
     },
   );
-  const season = seasonFor(date);
-  const seasonColor = colorFor(date);
-  const slot = resolve(date);
-  const { days: daysUntilNext, label: nextSeason } = daysUntilNextSeason(date);
-  const now = today();
-  const isTodayDate =
-    now.year === date.year && now.month === date.month && now.day === date.day;
+  // the app's season context (top bar and status bar) always reflects the
+  // real current date, never a date a page happened to be scrolled to; only
+  // the Today office body (`document` above) follows the stepped office date
+  const season = seasonFor(today());
+  const seasonColor = colorFor(today());
+  const slot = resolve(today());
+  const { days: daysUntilNext, label: nextSeason } = daysUntilNextSeason(
+    today(),
+  );
 
   const scrollRafRef = useRef<number | null>(null);
   // shared sink for scroll progress: the outer document scroller reports
@@ -807,7 +780,14 @@ export function Shell() {
         return (
           <LectionaryBar
             leading={sidebarShowButton}
-            isToday={isTodayDate}
+            isToday={(() => {
+              const n = today();
+              return (
+                n.year === lectionaryDate.year &&
+                n.month === lectionaryDate.month &&
+                n.day === lectionaryDate.day
+              );
+            })()}
             onPrevDate={() => stepLectionary(-1)}
             onNextDate={() => stepLectionary(1)}
             onToday={resetLectionaryDate}
@@ -833,15 +813,9 @@ export function Shell() {
           />
         );
       case "calendar":
-        return (
-          <CalendarScreen
-            date={date}
-            onSelectDate={handleCalendarSelect}
-            leading={sidebarShowButton}
-          />
-        );
+        return <CalendarScreen leading={sidebarShowButton} />;
       case "lectionary":
-        return <LectionaryScreen date={date} />;
+        return <LectionaryScreen date={lectionaryDate} />;
       case "psalms":
         return (
           <PsalmsScreen
