@@ -363,6 +363,52 @@ export function Shell() {
   const tabRef = useRef(tab);
   tabRef.current = tab;
 
+  // web only: the JSON of the current top-of-history entry when it is the
+  // drawer's own record (see the record effect below). kept so re-opening
+  // the drawer without navigating in between never stacks another entry.
+  const drawerRecord = useRef<string | null>(null);
+
+  // mirrors mobileOpen for the popstate handler: a system Back that pops the
+  // drawer's own step fires while the committed render still reports the
+  // drawer as open, which is how that pop is told apart from a real one
+  const mobileOpenRef = useRef(mobileOpen);
+  mobileOpenRef.current = mobileOpen;
+
+  // set while a dismiss is re-issuing history.back() to consume the drawer's
+  // own step; onRestored reads it (before it clears) to treat that synthetic
+  // pop as a drawer close rather than a navigation
+  const drawerDismiss = useRef(false);
+
+  // web only: reify the drawer-opening as its own history step, so the
+  // system back button has an entry to pop even at the app root (where back
+  // would otherwise leave the PWA instead of hiding the drawer). the
+  // existing onRestored handler closes the drawer as soon as that entry is
+  // popped, and resets drawerRecord so a later open records again.
+  useEffect(() => {
+    if (!historyController || !mobileOpen) return;
+    const top = JSON.stringify(window.history.state ?? null) ?? null;
+    if (top === drawerRecord.current) return;
+    historyController.record();
+    drawerRecord.current = JSON.stringify(window.history.state ?? null) ?? null;
+  }, [mobileOpen, historyController]);
+
+  // whenever the drawer closes while its recorded step is still the top of
+  // history, consume that step via history.back() so Back behaves exactly as
+  // if the drawer never opened. a dismiss (swipe, backdrop, hide button) only
+  // hides the drawer, leaving its step behind the phantom entry: popping it
+  // here matches the dismiss pattern other apps use, push a step on open and
+  // pop it on every close. a system Back that already popped the step clears
+  // drawerRecord in onRestored first, so this never double-consumes.
+  useEffect(() => {
+    if (mobileOpen) return;
+    if (!historyController || !drawerRecord.current) return;
+    const top = JSON.stringify(window.history.state ?? null) ?? null;
+    if (top !== drawerRecord.current) return;
+    drawerRecord.current = null;
+    drawerDismiss.current = true;
+    window.history.back();
+  }, [mobileOpen, historyController]);
+
   const scrollToTop = useCallback(() => {
     const el = scrollRef.current;
     if (el) {
@@ -406,7 +452,14 @@ export function Shell() {
     const offRestored = historyController.onRestored(() => {
       // a history navigation must never leave transient chrome open over a
       // different page: the mobile drawer, any modal, and the office reading
+      // a pop that undoes the drawer's own step (Back consumed it, or a
+      // dismiss re-issued it) restores the exact page the drawer opened on,
+      // so it only hides the drawer and leaves scroll/modal/reading alone
+      const drawerPop = drawerDismiss.current || mobileOpenRef.current;
+      drawerDismiss.current = false;
+      drawerRecord.current = null;
       setMobileOpen(false);
+      if (drawerPop) return;
       setModal(null);
       setReading(null);
       scrollToTop();
@@ -453,7 +506,19 @@ export function Shell() {
       // query is forced empty so a cross-page entry never carries a live
       // filter: the search starts fresh per navigation (mirrors the navKey
       // reset below) instead of leaking into Forward restores
-      historyController?.push({ ...extra, page: p, query: "" });
+      const change = { ...extra, page: p, query: "" };
+      if (historyController && drawerRecord.current) {
+        // a navigation launched from the open drawer folds into the drawer's
+        // own recorded step instead of piling on top of it, so Back from the
+        // new page skips the drawer entry and lands on the page before the
+        // drawer as if the drawer was never opened. a same-page pick needs no
+        // entry at all: the close below lets the consume effect pop the step
+        const noop = p === pageRef.current && Object.keys(extra).length === 0;
+        drawerRecord.current = null;
+        if (!noop) historyController.replace(change);
+      } else {
+        historyController?.push(change);
+      }
       setPage(p);
       setNavKey((k) => k + 1);
       setReading(null);
