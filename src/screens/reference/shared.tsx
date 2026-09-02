@@ -1,5 +1,6 @@
 import {
   createContext,
+  type MutableRefObject,
   type ReactNode,
   useCallback,
   useContext,
@@ -9,6 +10,7 @@ import {
 } from "react";
 import { Platform, ScrollView, Text, View } from "react-native";
 import type { PageId } from "../../components/shell/Sidebar";
+import type { HistoryApi, HistorySnapshot } from "../../context/HistoryContext";
 import { useHistory, useHistoryField } from "../../context/HistoryContext";
 import {
   SANCTORALE_ENTRIES,
@@ -135,6 +137,48 @@ export type CollectSel = {
   title: string;
 };
 
+// the five index-style pickers (psalms, collects, saints, proverbs,
+// canticles) share one restorable-field implementation. null is the picker
+// page: opening pushes the selection, the mobile back button pushes null,
+// and restores replay the raw setter (null included) so Back from a detail
+// lands back on the list instead of a stale open item. picking from a
+// filtered list records that list as its own step first, so Back returns to
+// the exact list the pick came from.
+type IndexPickerKey = "psalm" | "collect" | "saint" | "proverb" | "canticle";
+
+function useIndexPicker<K extends IndexPickerKey>(
+  key: K,
+  pageId: PageId,
+  page: PageId,
+  history: HistoryApi | null,
+  queryRef: MutableRefObject<string>,
+): [HistorySnapshot[K], (v: HistorySnapshot[K]) => void] {
+  const [value, setValue] = useState<HistorySnapshot[K]>(
+    null as HistorySnapshot[K],
+  );
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const open = useCallback(
+    (v: HistorySnapshot[K]) => {
+      if (
+        v !== null &&
+        page === pageId &&
+        valueRef.current === null &&
+        queryRef.current !== ""
+      ) {
+        history?.record();
+      }
+      setValue(v);
+      history?.push({ [key]: v } as Partial<HistorySnapshot>);
+    },
+    [page, pageId, key, history, queryRef],
+  );
+  // the applier is the raw state setter, so a restored snapshot replays
+  // both branches: a value reopens the detail, null returns to the picker
+  useHistoryField(key, () => value, setValue);
+  return [value, open];
+}
+
 export type ReferenceState = {
   query: string;
   setQuery: (q: string) => void;
@@ -193,23 +237,6 @@ export function ReferenceProvider({
   navKey,
 }: ReferenceProviderProps) {
   const [query, setQuery] = useState("");
-  const [openPsalm, setOpenPsalmRaw] = useState<number | null>(null);
-  const [openOffice, setOpenOfficeRaw] = useState<RefOfficeBase | null>(null);
-  // contemporary first, matching the Today page's default rites
-  const [officeRite, setOfficeRiteRaw] = useState<OfficeRite>("Two");
-  const [selectedCollect, setSelectedCollectRaw] = useState<CollectSel | null>(
-    null,
-  );
-  const [openSaint, setOpenSaintRaw] = useState<string | null>(null);
-  const [openProvChapter, setOpenProvChapterRaw] = useState<number | null>(
-    null,
-  );
-  const [openCanticle, setOpenCanticleRaw] = useState<number | null>(null);
-  // the full card (bio and liturgy) leads by default; the reader can
-  // hide either half with the bar's toggles
-  const [saintBio, setSaintBio] = useState(true);
-  const [saintLiturgy, setSaintLiturgy] = useState(true);
-  const [officeDate, setOfficeDateRaw] = useState<CalendarDate>(today);
 
   // browser history: pushes record the selection, restores replay it.
   // refs keep the push-time and pick-time values fresh without re-creating
@@ -218,101 +245,62 @@ export function ReferenceProvider({
   const history = useHistory();
   const queryRef = useRef(query);
   queryRef.current = query;
-  const openPsalmRef = useRef(openPsalm);
-  openPsalmRef.current = openPsalm;
-  const selectedCollectRef = useRef(selectedCollect);
-  selectedCollectRef.current = selectedCollect;
-  const openSaintRef = useRef(openSaint);
-  openSaintRef.current = openSaint;
-  const openProvChapterRef = useRef(openProvChapter);
-  openProvChapterRef.current = openProvChapter;
-  const openCanticleRef = useRef(openCanticle);
-  openCanticleRef.current = openCanticle;
+
+  // the five index pickers share one restorable-field implementation:
+  // opening pushes the pick, the mobile back pushes null, and restores
+  // replay both branches through the raw setter
+  const [openPsalm, setOpenPsalm] = useIndexPicker(
+    "psalm",
+    "psalms",
+    page,
+    history,
+    queryRef,
+  );
+  const [selectedCollect, setSelectedCollect] = useIndexPicker(
+    "collect",
+    "collects",
+    page,
+    history,
+    queryRef,
+  );
+  const [openSaint, setOpenSaint] = useIndexPicker(
+    "saint",
+    "saints",
+    page,
+    history,
+    queryRef,
+  );
+  const [openProvChapter, setOpenProvChapter] = useIndexPicker(
+    "proverb",
+    "proverbs",
+    page,
+    history,
+    queryRef,
+  );
+  const [openCanticle, setOpenCanticle] = useIndexPicker(
+    "canticle",
+    "canticles",
+    page,
+    history,
+    queryRef,
+  );
+
+  const [openOffice, setOpenOfficeRaw] = useState<RefOfficeBase | null>(null);
+  // contemporary first, matching the Today page's default rites
+  const [officeRite, setOfficeRiteRaw] = useState<OfficeRite>("Two");
+  // the full card (bio and liturgy) leads by default; the reader can
+  // hide either half with the bar's toggles
+  const [saintBio, setSaintBio] = useState(true);
+  const [saintLiturgy, setSaintLiturgy] = useState(true);
+  const [officeDate, setOfficeDateRaw] = useState<CalendarDate>(today);
+
+  // the office drop-down has no picker-page state of its own: selection is
+  // the composed office id, so only its refs stay local to the provider
   const openOfficeRef = useRef(openOffice);
   openOfficeRef.current = openOffice;
   const officeRiteRef = useRef(officeRite);
   officeRiteRef.current = officeRite;
 
-  // opening a pick keeps whatever search is active: the filter stays live
-  // on the index (Desktop split-pane) and rides along in history. before
-  // opening from a filtered list, record() reifies that list as its own
-  // back step, so system Back lands on the exact filtered list the pick
-  // came from instead of the pre-filter entry
-  const setOpenPsalm = useCallback(
-    (n: number | null) => {
-      if (
-        n !== null &&
-        page === "psalms" &&
-        openPsalmRef.current === null &&
-        queryRef.current !== ""
-      ) {
-        history?.record();
-      }
-      setOpenPsalmRaw(n);
-      history?.push({ psalm: n });
-    },
-    [history, page],
-  );
-  const setSelectedCollect = useCallback(
-    (c: CollectSel | null) => {
-      if (
-        c !== null &&
-        page === "collects" &&
-        selectedCollectRef.current === null &&
-        queryRef.current !== ""
-      ) {
-        history?.record();
-      }
-      setSelectedCollectRaw(c);
-      history?.push({ collect: c });
-    },
-    [history, page],
-  );
-  const setOpenSaint = useCallback(
-    (s: string | null) => {
-      if (
-        s !== null &&
-        page === "saints" &&
-        openSaintRef.current === null &&
-        queryRef.current !== ""
-      ) {
-        history?.record();
-      }
-      setOpenSaintRaw(s);
-      history?.push({ saint: s });
-    },
-    [history, page],
-  );
-  const setOpenProvChapter = useCallback(
-    (n: number | null) => {
-      if (
-        n !== null &&
-        page === "proverbs" &&
-        openProvChapterRef.current === null &&
-        queryRef.current !== ""
-      ) {
-        history?.record();
-      }
-      setOpenProvChapterRaw(n);
-      history?.push({ proverb: n });
-    },
-    [history, page],
-  );
-  const setOpenCanticle = useCallback(
-    (n: number | null) => {
-      if (
-        n !== null &&
-        page === "canticles" &&
-        openCanticleRef.current === null &&
-        queryRef.current !== ""
-      ) {
-        history?.record();
-      }
-      setOpenCanticleRaw(n);
-      history?.push({ canticle: n });
-    },
-    [history, page],
-  );
   const setOpenOffice = useCallback(
     (id: RefOfficeBase) => {
       setOpenOfficeRaw(id);
@@ -343,7 +331,6 @@ export function ReferenceProvider({
   // must re-create the state, never push a follow-up entry. the query is
   // included so Back from a filtered pick returns to the same list
   useHistoryField("query", () => query, setQuery);
-  useHistoryField("psalm", () => openPsalm, setOpenPsalmRaw);
   useHistoryField(
     "office",
     () => (openOffice ? { base: openOffice, rite: officeRite } : null),
@@ -352,10 +339,6 @@ export function ReferenceProvider({
       if (v) setOfficeRiteRaw(v.rite);
     },
   );
-  useHistoryField("collect", () => selectedCollect, setSelectedCollectRaw);
-  useHistoryField("saint", () => openSaint, setOpenSaintRaw);
-  useHistoryField("proverb", () => openProvChapter, setOpenProvChapterRaw);
-  useHistoryField("canticle", () => openCanticle, setOpenCanticleRaw);
   useHistoryField("officeDate", () => officeDate, setOfficeDateRaw);
 
   // the status bar mirrors what the active page shows, including the

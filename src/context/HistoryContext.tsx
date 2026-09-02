@@ -37,7 +37,7 @@ export type HistorySnapshot = {
 // note: fields within a snapshot are plain JSON values; restore applies them
 // through the owning providers' raw setters so downstream state re-derives
 
-type HistoryApi = {
+export type HistoryApi = {
   push: (change: Partial<HistorySnapshot>) => void;
   // record the live snapshot as its own step, used to reify a filtered
   // index list before opening a detail so Back returns to that list
