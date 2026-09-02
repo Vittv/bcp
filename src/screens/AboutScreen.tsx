@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: CHROME_FONT,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "var(--text, #2c2020)",
     marginBottom: 8,
@@ -80,16 +80,16 @@ const styles = StyleSheet.create({
   value: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
-    fontSize: 16,
+    fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 8,
   },
   body: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
-    fontSize: 17,
+    fontSize: 15,
     color: "var(--text-secondary, #7a6e64)",
-    lineHeight: 27,
+    lineHeight: 23,
     marginBottom: 8,
   },
 });
