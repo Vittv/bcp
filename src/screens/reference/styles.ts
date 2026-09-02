@@ -181,6 +181,30 @@ export const sharedStyles = StyleSheet.create({
     color: "var(--text-secondary, #7a6e64)",
     flex: 1,
   },
+  // canticle titles are proper names (The Song of Mary, Nunc Dimittis)
+  // rather than first-line incipits, so the picker lists them in the same
+  // sans navigation voice as collects and saints; the pair keeps the row at
+  // the pinned 35px (18px line + 2×8 padding + hairline)
+  canticleIndexTitle: {
+    fontFamily: CHROME_FONT,
+    fontSize: 14,
+    fontWeight: "500",
+    lineHeight: 18,
+    color: "var(--text-secondary, #7a6e64)",
+    flex: 1,
+  },
+  // the canticle picker stays fully sans, so its number gutter uses the
+  // same navigation voice instead of the psalm serif digit; the 28px
+  // gutter keeps every title on the same edge as the psalm rows
+  canticleNumber: {
+    width: 28,
+    textAlign: "left",
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
+    fontWeight: "500",
+    color: "var(--accent, #7a3040)",
+    fontVariant: ["tabular-nums"],
+  },
   // rites always print one above the other at full measure: the
   // horizontal wrap is only useful at extreme widths and fights the
   // 736px column language
