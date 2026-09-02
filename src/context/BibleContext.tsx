@@ -261,7 +261,14 @@ export function BibleProvider({
   // never pushes (the restoring flag would swallow those anyway)
   const restoreRef = useCallback(
     (ref: { abbrev: string; chapter: number } | null) => {
-      if (!ref) return;
+      if (!ref) {
+        // a step with no open book is the picker page: returning to it clears
+        // the open book instead of leaving the last chapter open over it, so
+        // Back from a chapter lands back on the book list
+        setBook(null);
+        setChapter(1);
+        return;
+      }
       const found = [...ALL_BOOKS.OT, ...ALL_BOOKS.NT].find(
         (b) => b.abbrev === ref.abbrev,
       );
