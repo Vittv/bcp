@@ -40,6 +40,10 @@ export type HistoryController<S> = {
     apply: (v: S[K]) => void,
   ) => () => void;
   push: (change: Partial<S>) => void;
+  // replace the current entry instead of adding a step. used to fold a
+  // navigation that follows a record() into the recorded entry itself, so
+  // Back from the new page skips the interstitial duplicate.
+  replace: (change: Partial<S>) => void;
   // record the live snapshot as a distinct step even when it equals the
   // current state. used to reify a filtered index list before opening a
   // detail, so Back from the pick lands on the list instead of skipping it.
@@ -118,6 +122,19 @@ export function createHistoryController<S extends object>(
     platform.history.pushState(current, "", platform.seedUrl);
   };
 
+  // rewrite the top-of-history entry instead of pushing a new step. unlike
+  // push there is no no-op guard: even a change identical to the current
+  // state must rewrite the entry when that entry doubles as a recorded step
+  // (the drawer's own), so Back never stops on the duplicate.
+  const replace = (change: Partial<S>) => {
+    if (restoring) return;
+    const keys = Object.keys(change);
+    if (keys.length === 0) return;
+    ensureSeeded();
+    const next = { ...snapshot(), ...change };
+    platform.history.replaceState(next, "", platform.seedUrl);
+  };
+
   const restore = (entry: Partial<S>) => {
     restoring = true;
     try {
@@ -183,6 +200,7 @@ export function createHistoryController<S extends object>(
   return {
     register,
     push,
+    replace,
     record,
     onRestored,
     isRestoring: () => restoring,

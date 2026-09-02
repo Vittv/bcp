@@ -19,15 +19,20 @@ type FakePlatform = HistoryPlatform<Snap> & {
 function makePlatform(): FakePlatform {
   const listeners = new Set<(e: PopStateEvent) => void>();
   const entries: { state: Partial<Snap> }[] = [];
+  // the current position in the stack, so replaceState rewrites in place and
+  // pushState clears the forward entries, mirroring the browser
+  let index = 0;
   const platform: FakePlatform = {
     seedUrl: "https://app.example/",
     history: {
       pushState: (state: Partial<Snap>) => {
+        entries.splice(index + 1);
         entries.push({ state });
+        index = entries.length - 1;
       },
       replaceState: (state: Partial<Snap>) => {
         if (entries.length === 0) entries.push({ state });
-        else entries[0] = { state };
+        else entries[index] = { state };
       },
     },
     addEventListener: (_type, cb) => {
@@ -172,6 +177,52 @@ describe("createHistoryController", () => {
       () => {},
     );
     ctl.push({ psalm: 23 });
+    expect(platform.entries).toEqual([]);
+  });
+
+  it("replace rewrites the current entry without adding a step", () => {
+    const platform = makePlatform();
+    const ctl = createHistoryController<Snap>(platform);
+    ctl.register(
+      "page",
+      () => "today",
+      () => {},
+    );
+    ctl.push({ page: "psalms" });
+    ctl.replace({ page: "saints" });
+    expect(platform.entries).toHaveLength(2);
+    expect(platform.entries[0].state).toEqual({ page: "today" });
+    expect(platform.entries[1].state).toEqual({ page: "saints" });
+  });
+
+  it("replace still rewrites when the change equals the current state", () => {
+    const platform = makePlatform();
+    const ctl = createHistoryController<Snap>(platform);
+    ctl.register(
+      "page",
+      () => "psalms",
+      () => {},
+    );
+    ctl.record();
+    ctl.replace({ page: "psalms" });
+    // the seed and the recorded step stay one entry each: the replace folds
+    // the recorded step into a plain entry instead of growing the stack
+    expect(platform.entries).toHaveLength(2);
+    expect(platform.entries[1].state).toEqual({ page: "psalms" });
+  });
+
+  it("replace is suppressed while a restore is in flight", () => {
+    const platform = makePlatform();
+    const ctl = createHistoryController<Snap>(platform);
+    ctl.register(
+      "psalm",
+      () => null,
+      () => {
+        ctl.replace({ psalm: 12 });
+      },
+    );
+    ctl.start();
+    platform.pop({ psalm: 12 });
     expect(platform.entries).toEqual([]);
   });
 
