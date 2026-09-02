@@ -73,23 +73,23 @@ function cellLabels(info: DayInfo): { season: boolean; text: string }[] {
 }
 
 type CalendarScreenProps = {
-  date: CalendarDate;
-  onSelectDate: (date: CalendarDate) => void;
   leading?: ReactNode;
 };
 
-export function CalendarScreen({
-  date,
-  onSelectDate,
-  leading,
-}: CalendarScreenProps) {
+export function CalendarScreen({ leading }: CalendarScreenProps) {
   const colorMap = useSeasonColorMap();
   const { setOpenSaint } = useReference();
   const { navigateTo } = useNavigation();
+  const todayDate: CalendarDate = {
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+    day: new Date().getDate(),
+  };
   const [viewMonth, setViewMonth] = useState(() => ({
-    year: date.year,
-    month: date.month,
+    year: todayDate.year,
+    month: todayDate.month,
   }));
+  const [selected, setSelected] = useState<CalendarDate>(todayDate);
   const [openDay, setOpenDay] = useState<CalendarDate | null>(null);
 
   const firstDay = weekday({
@@ -98,12 +98,7 @@ export function CalendarScreen({
     day: 1,
   });
   const days = daysInMonth(viewMonth.year, viewMonth.month);
-  const todayDate: CalendarDate = {
-    year: new Date().getFullYear(),
-    month: new Date().getMonth() + 1,
-    day: new Date().getDate(),
-  };
-  const onToday = isSameDay(date, todayDate);
+  const onToday = isSameDay(selected, todayDate);
 
   // index the day-info for the whole visible month once per render
   const infoByKey = useMemo(() => {
@@ -134,7 +129,7 @@ export function CalendarScreen({
   };
 
   const goToday = () => {
-    onSelectDate(todayDate);
+    setSelected(todayDate);
     setOpenDay(null);
     setViewMonth({ year: todayDate.year, month: todayDate.month });
   };
@@ -147,7 +142,6 @@ export function CalendarScreen({
       navigateTo({ page: "saints" });
       return;
     }
-    onSelectDate(openDay ?? date);
     navigateTo("today");
   };
 
@@ -230,7 +224,7 @@ export function CalendarScreen({
                   : undefined;
                 const seasonColor = isValid ? colorMap[colorFor(cell)] : null;
                 const isToday = isValid && isSameDay(cell, todayDate);
-                const isSelected = isValid && isSameDay(cell, date);
+                const isSelected = isValid && isSameDay(cell, selected);
                 const labels = info ? cellLabels(info) : null;
 
                 return (
@@ -238,8 +232,9 @@ export function CalendarScreen({
                     key={`cell-${viewMonth.year}-${viewMonth.month}-${dayNum}`}
                     onPress={() => {
                       if (!isValid) return;
-                      onSelectDate(cell);
+                      setSelected(cell);
                       if (info && info.observances.length > 0) setOpenDay(cell);
+                      else setOpenDay(null);
                     }}
                     style={({ hovered }) => [
                       styles.cell,
@@ -289,7 +284,7 @@ export function CalendarScreen({
         </View>
       </View>
 
-      <SelectedDayStrip date={date} onOpenDay={setOpenDay} />
+      <SelectedDayStrip date={selected} onOpenDay={setOpenDay} />
 
       {openObs && openDay ? (
         <DayModal
