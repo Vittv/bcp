@@ -49,8 +49,8 @@ export function AboutScreen() {
           Easter computus.
         </Text>
         <Text style={styles.body}>
-          Body text is set in Crimson Pro, licensed under the SIL Open Font
-          License.
+          Body text is set in Crimson Pro and headings in Playfair Display, both
+          licensed under the SIL Open Font License.
         </Text>
       </View>
 

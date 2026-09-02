@@ -1,11 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
-import { CHROME_FONT } from "../../lib/fonts";
+import { CHROME_FONT, HEADING_FONT } from "../../lib/fonts";
 import { dayLabel } from "../../lib/office";
 import type { OfficeDocument } from "../../lib/office/types";
-
-// expo-font registers each face as its own single-face family
-const SERIF_SEMI =
-  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
 
 // the masthead above every composed office; the Today page and the
 // reference offices page share it verbatim so the two read identically
@@ -29,7 +25,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "var(--border-content, #b5aa9e)",
   },
   officeName: {
-    fontFamily: SERIF_SEMI,
+    fontFamily: HEADING_FONT,
+    fontWeight: "700",
     fontSize: 28,
     lineHeight: 36,
     color: "var(--text, #2c2020)",

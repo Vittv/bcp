@@ -1,12 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { PsalmPassage } from "../../lib/content/types";
+import { SERIF_FONT, SERIF_ITALIC_FONT } from "../../lib/fonts";
 
 const MEDIANT = "\u2009";
-
-const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
-// expo-font registers each face as its own single-face family
-const SERIF_ITALIC =
-  '"Crimson Pro Italic", "Crimson Pro", Georgia, "Times New Roman", serif';
 
 function Verse({ verse }: { verse: PsalmPassage["verses"][number] }) {
   return (
@@ -31,13 +27,13 @@ export function PsalmText({ passage }: { passage: PsalmPassage }) {
 const styles = StyleSheet.create({
   block: {},
   verse: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 29,
     color: "var(--text, #2c2020)",
   },
   verseNumber: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 12,
     lineHeight: 16,
     color: "var(--text-secondary, #7a6e64)",
@@ -48,7 +44,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   stanza: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     color: "var(--text-secondary, #7a6e64)",
   },
 });

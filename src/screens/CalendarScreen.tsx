@@ -12,17 +12,13 @@ import {
   seasonLabel,
 } from "../lib/calendar/observances";
 import type { CalendarDate } from "../lib/calendar/types";
-import { CHROME_FONT } from "../lib/fonts";
+import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../lib/fonts";
 import { useReference } from "./reference/shared";
 
 const noSelect = {
   userSelect: "none" as const,
   WebkitUserSelect: "none" as const,
 };
-
-const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
-const SERIF_SEMI =
-  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
 
 const MONTH_NAMES = [
   "January",
@@ -367,8 +363,8 @@ function DayModal({
       onClose={onClose}
       width={400}
       titleStyle={{
-        fontFamily: SERIF_SEMI,
-        fontWeight: "500",
+        fontFamily: HEADING_FONT,
+        fontWeight: "700",
         fontSize: 22,
         letterSpacing: 0,
       }}
@@ -618,7 +614,7 @@ const styles = StyleSheet.create({
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   modalRowName: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 16,
     color: "var(--text, #2c2020)",
     flex: 1,

@@ -97,7 +97,6 @@ export function StatusBar({
         <Text style={[styles.text, styles.rightText]} numberOfLines={1}>
           {reading ?? officeName}
         </Text>
-        <Text style={styles.sep}>·</Text>
         <Text style={styles.pct}>{scrollPct}%</Text>
       </View>
     </View>
