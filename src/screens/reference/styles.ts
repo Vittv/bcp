@@ -1,11 +1,11 @@
 import { StyleSheet } from "react-native";
 import { officeBarStyles } from "../../components/shell/OfficeTabs";
-import { CHROME_FONT } from "../../lib/fonts";
-
-const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
-// expo-font registers each face as its own single-face family
-const SERIF_SEMI =
-  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
+import {
+  CHROME_FONT,
+  HEADING_FONT,
+  SERIF_FONT,
+  SERIF_SEMI_FONT,
+} from "../../lib/fonts";
 
 // styles shared across the Psalms, Collects, and Offices reference pages
 export const sharedStyles = StyleSheet.create({
@@ -227,14 +227,14 @@ export const sharedStyles = StyleSheet.create({
   psalmNumber: {
     width: 28,
     textAlign: "left",
-    fontFamily: SERIF_SEMI,
+    fontFamily: SERIF_SEMI_FONT,
     fontSize: 15,
     fontWeight: "500",
     color: "var(--accent, #7a3040)",
     fontVariant: ["tabular-nums"],
   },
   incipit: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "500",
@@ -269,7 +269,8 @@ export const sharedStyles = StyleSheet.create({
     paddingTop: 16,
   },
   detailTitle: {
-    fontFamily: SERIF_SEMI,
+    fontFamily: HEADING_FONT,
+    fontWeight: "700",
     fontSize: 30,
     lineHeight: 38,
     color: "var(--text, #2c2020)",
@@ -305,7 +306,7 @@ export const sharedStyles = StyleSheet.create({
     paddingTop: 12,
   },
   collectBody: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 27,
     color: "var(--text, #2c2020)",
@@ -316,7 +317,7 @@ export const sharedStyles = StyleSheet.create({
     marginBottom: 18,
   },
   canticleSectionTitle: {
-    fontFamily: SERIF_SEMI,
+    fontFamily: HEADING_FONT,
     fontSize: 17,
     lineHeight: 24,
     fontWeight: "600",
@@ -324,13 +325,13 @@ export const sharedStyles = StyleSheet.create({
     marginBottom: 6,
   },
   canticleVerse: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 29,
     color: "var(--text, #2c2020)",
   },
   canticleNote: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 15,
     fontStyle: "italic",
     lineHeight: 24,
@@ -555,7 +556,8 @@ export const sharedStyles = StyleSheet.create({
     paddingTop: 8,
   },
   bibleReaderTitle: {
-    fontFamily: SERIF_SEMI,
+    fontFamily: HEADING_FONT,
+    fontWeight: "700",
     fontSize: 24,
     lineHeight: 32,
     color: "var(--text, #2c2020)",

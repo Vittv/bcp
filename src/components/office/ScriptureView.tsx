@@ -1,11 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { KjvPassage } from "../../lib/content/types";
-
-const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
-const SERIF_SEMI =
-  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
-const SERIF_ITALIC =
-  '"Crimson Pro Italic", "Crimson Pro", Georgia, "Times New Roman", serif';
+import {
+  SERIF_FONT,
+  SERIF_ITALIC_FONT,
+  SERIF_SEMI_FONT,
+} from "../../lib/fonts";
 
 function Verse({ verse }: { verse: KjvPassage["verses"][number] }) {
   return (
@@ -52,21 +51,21 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   reference: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
     lineHeight: 22,
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 6,
   },
   verse: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 29,
     color: "var(--text, #2c2020)",
     marginBottom: 4,
   },
   verseNumber: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 12,
     lineHeight: 16,
     color: "var(--text-secondary, #7a6e64)",
@@ -74,7 +73,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   chapterBreak: {
-    fontFamily: SERIF_SEMI,
+    fontFamily: SERIF_SEMI_FONT,
     fontSize: 16,
     color: "var(--text-secondary, #7a6e64)",
     marginTop: 10,

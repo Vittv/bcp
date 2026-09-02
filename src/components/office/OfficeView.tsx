@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { KjvPassage, OfficeSpeaker } from "../../lib/content/types";
 import { getWebPassagesFromDolRef } from "../../lib/content/web";
-import { CHROME_FONT } from "../../lib/fonts";
+import {
+  CHROME_FONT,
+  HEADING_FONT,
+  SERIF_FONT,
+  SERIF_ITALIC_FONT,
+} from "../../lib/fonts";
 import type {
   ComposedLesson,
   ComposedNode,
@@ -13,13 +18,6 @@ import { sectionHeading } from "./contentHeadings";
 import { MentionedText } from "./MentionedText";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
-
-const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
-// expo-font registers each face as its own single-face family
-const SERIF_SEMI =
-  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
-const SERIF_ITALIC =
-  '"Crimson Pro Italic", "Crimson Pro", Georgia, "Times New Roman", serif';
 
 const SPEAKER_LABEL: Record<OfficeSpeaker, string> = {
   officiant: "Officiant",
@@ -231,7 +229,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   heading: {
-    fontFamily: SERIF_SEMI,
+    fontFamily: HEADING_FONT,
+    fontWeight: "700",
     fontSize: 22,
     lineHeight: 30,
     marginTop: 22,
@@ -239,7 +238,7 @@ const styles = StyleSheet.create({
     color: "var(--text, #2c2020)",
   },
   rubric: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
     lineHeight: 25,
     color: "var(--text-secondary, #7a6e64)",
@@ -247,7 +246,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   text: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 18,
     lineHeight: 30,
     color: "var(--text, #2c2020)",
@@ -265,7 +264,7 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   psalmTitle: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 6,
@@ -278,7 +277,7 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   lessonRef: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
     color: "var(--text-secondary, #7a6e64)",
   },
@@ -286,7 +285,7 @@ const styles = StyleSheet.create({
     color: "var(--accent, #7a3040)",
   },
   lessonMissing: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 13,
     lineHeight: 20,
     color: "var(--text-secondary, #7a6e64)",
@@ -307,13 +306,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   collectTitle: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 14,
     color: "var(--accent, #7a3040)",
     marginBottom: 4,
   },
   collectText: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 28,
     color: "var(--text, #2c2020)",
@@ -324,13 +323,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   fixedCollectTitle: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 14,
     color: "var(--accent, #7a3040)",
     marginBottom: 4,
   },
   fixedCollectText: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 28,
     color: "var(--text, #2c2020)",

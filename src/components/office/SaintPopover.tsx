@@ -8,15 +8,10 @@ import {
 import { Pressable, StyleSheet, Text } from "react-native";
 import { useNavigation } from "../../context/NavigationContext";
 import { sanctoraleBySlug } from "../../lib/calendar/sanctorale";
-import { CHROME_FONT } from "../../lib/fonts";
+import { CHROME_FONT, HEADING_FONT } from "../../lib/fonts";
 import { useReference } from "../../screens/reference/shared";
 import { AppModal } from "../shell/AppModal";
 import { SanctoraleCard } from "./SanctoraleCard";
-
-// the saint modal's title bar uses the same serif semi voice as the
-// saints page's big heading, so the lookup reads as the same booklet
-const SERIF_SEMI =
-  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
 
 // tapping a saint mention anywhere in an office opens a reusable modal
 // window (the same chrome as Settings/About) holding the saint's bio, so
@@ -65,8 +60,8 @@ export function SaintPopoverProvider({ children }: { children: ReactNode }) {
           title={entry.title}
           onClose={close}
           titleStyle={{
-            fontFamily: SERIF_SEMI,
-            fontWeight: "500",
+            fontFamily: HEADING_FONT,
+            fontWeight: "700",
           }}
           footer={
             <Pressable

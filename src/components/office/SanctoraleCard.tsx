@@ -9,17 +9,16 @@ import { parsePsalmCitation } from "../../lib/content/psalms";
 import { psalmPassage } from "../../lib/content/psalter";
 import type { KjvPassage } from "../../lib/content/types";
 import { getWebPassagesFromDolRef } from "../../lib/content/web";
-import { CHROME_FONT } from "../../lib/fonts";
+import {
+  CHROME_FONT,
+  HEADING_FONT,
+  SERIF_FONT,
+  SERIF_ITALIC_FONT,
+} from "../../lib/fonts";
 import { holyDayCollectTitle } from "../../lib/office/compose";
 import { sectionHeading } from "./contentHeadings";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
-
-const SERIF = '"Crimson Pro", Georgia, "Times New Roman", serif';
-const SERIF_SEMI =
-  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
-const SERIF_ITALIC =
-  '"Crimson Pro Italic", "Crimson Pro", Georgia, "Times New Roman", serif';
 
 const RITE_LABELS: Record<string, string> = {
   traditional: "Traditional (Rite I)",
@@ -196,7 +195,7 @@ const styles = StyleSheet.create({
   // body labels so the morning/evening split reads as a section heading.
   // no top margin, the block beneath it carries the separation
   groupSubheading: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 16,
     lineHeight: 24,
     color: "var(--text, #2c2020)",
@@ -209,7 +208,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   psalmRef: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
     lineHeight: 22,
     color: "var(--text-secondary, #7a6e64)",
@@ -219,7 +218,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   lessonRef: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 16,
     lineHeight: 24,
     color: "var(--text-secondary, #7a6e64)",
@@ -228,7 +227,7 @@ const styles = StyleSheet.create({
   // text vendored yet; the citation stays, with a quiet notice instead
   // of a dangling label over empty space
   lessonMissing: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 13,
     lineHeight: 20,
     color: "var(--text-secondary, #7a6e64)",
@@ -240,7 +239,7 @@ const styles = StyleSheet.create({
   // the collect's own title leads the block as a serif heading; ink
   // stays in the paper colour so it reads as text, not a link
   collectTitle: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 16,
     lineHeight: 24,
     color: "var(--text, #2c2020)",
@@ -259,13 +258,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   collectText: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 28,
     color: "var(--text, #2c2020)",
   },
   detailTitle: {
-    fontFamily: SERIF_SEMI,
+    fontFamily: HEADING_FONT,
+    fontWeight: "700",
     fontSize: 30,
     lineHeight: 38,
     color: "var(--text, #2c2020)",
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   // the biographical note leads the card, set in the same serif voice as
   // the collect so it reads as a printed life, not machine metadata
   bioText: {
-    fontFamily: SERIF,
+    fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 28,
     color: "var(--text, #2c2020)",

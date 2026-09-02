@@ -21,17 +21,12 @@ import { parsePsalmCitation } from "../lib/content/psalms";
 import { psalmPassage } from "../lib/content/psalter";
 import type { KjvPassage } from "../lib/content/types";
 import { getWebPassagesFromDolRef } from "../lib/content/web";
-import { CHROME_FONT } from "../lib/fonts";
+import { CHROME_FONT, HEADING_FONT, SERIF_ITALIC_FONT } from "../lib/fonts";
 import { dayLabel } from "../lib/office";
 import { noSelect } from "./reference/shared";
 import { sharedStyles } from "./reference/styles";
 
 const IS_WEB = Platform.OS === "web";
-
-const SERIF_SEMI =
-  '"Crimson Pro SemiBold", "Crimson Pro", Georgia, "Times New Roman", serif';
-const SERIF_ITALIC =
-  '"Crimson Pro Italic", "Crimson Pro", Georgia, "Times New Roman", serif';
 
 export function LectionaryBar({
   leading,
@@ -139,10 +134,7 @@ function PsalmsBlock({ citations }: { citations: string[] }) {
         const passage = parsed ? psalmPassage(parsed) : undefined;
         if (!passage) return null;
         return (
-          <View
-            key={citation}
-            style={i === 0 ? undefined : styles.psalmItem}
-          >
+          <View key={citation} style={i === 0 ? undefined : styles.psalmItem}>
             <PsalmText passage={passage} />
           </View>
         );
@@ -212,7 +204,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "var(--border-content, #b5aa9e)",
   },
   title: {
-    fontFamily: SERIF_SEMI,
+    fontFamily: HEADING_FONT,
+    fontWeight: "700",
     fontSize: 28,
     lineHeight: 36,
     color: "var(--text, #2c2020)",
@@ -244,7 +237,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   psalmRef: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 6,
@@ -253,7 +246,7 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   lessonRef: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
     color: "var(--text-secondary, #7a6e64)",
   },
@@ -261,7 +254,7 @@ const styles = StyleSheet.create({
     color: "var(--accent, #7a3040)",
   },
   lessonMissing: {
-    fontFamily: SERIF_ITALIC,
+    fontFamily: SERIF_ITALIC_FONT,
     fontSize: 13,
     lineHeight: 20,
     color: "var(--text-secondary, #7a6e64)",
