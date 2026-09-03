@@ -1,0 +1,44 @@
+{
+  "appId": "org.vitt.bcp",
+  "productName": "bcp",
+  "extraMetadata": {
+    "main": "dist-electron/main.js"
+  },
+  "directories": {
+    "output": "release",
+    "buildResources": "assets"
+  },
+  "files": [
+    "dist-electron/**/*",
+    "dist/**/*",
+    "package.json",
+    "node_modules/electron-updater/**/*"
+  ],
+  "asar": true,
+  "win": {
+    "target": ["nsis", "zip"],
+    "icon": "assets/icon.png"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true
+  },
+  "mac": {
+    "target": ["dmg", "zip"],
+    "category": "public.app-category.reference",
+    "icon": "assets/icon.png"
+  },
+  "linux": {
+    "target": ["AppImage", "deb"],
+    "category": "Office",
+    "icon": "assets/icon.png",
+    "maintainer": "Vittorius"
+  },
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "Vittv",
+      "repo": "bcp"
+    }
+  ]
+}

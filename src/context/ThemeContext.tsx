@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { Platform } from "react-native";
+import { IS_DESKTOP } from "../lib/desktop";
 import { INTER_TIGHT, SYSTEM_UI } from "../lib/fonts";
 
 export type ThemeMode = "light" | "dark" | "system";
@@ -176,6 +177,25 @@ function applyPalette(theme: ResolvedTheme) {
   `;
 }
 
+// Electron's frameless windows drag through -webkit-app-region. The renderer
+// already tags the custom titlebar with data-tauri-drag-region (shared with
+// the retired Tauri shell); the same attribute now drives Electron dragging,
+// and interactive chrome opts back into clicking with data-no-drag. Plain
+// browsers ignore -webkit-app-region, so the web/PWA build is unaffected.
+function injectElectronChrome() {
+  if (Platform.OS !== "web" || typeof document === "undefined") return;
+  const id = "electron-chrome-style";
+  // SAFETY: we only create <style> elements with this id here.
+  if (document.getElementById(id)) return;
+  const el = document.createElement("style");
+  el.id = id;
+  el.textContent = `
+    [data-tauri-drag-region] { -webkit-app-region: drag; }
+    [data-no-drag] { -webkit-app-region: no-drag; }
+  `;
+  document.head.appendChild(el);
+}
+
 // Inter Tight is a variable font: one woff2 carries every weight, so a single
 // @font-face with a weight range serves the whole chrome.
 function ensureInterFont() {
@@ -239,6 +259,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const resolved: ResolvedTheme = mode === "system" ? systemTheme : mode;
 
   useEffect(() => {
+    if (IS_DESKTOP) injectElectronChrome();
     applyPalette(resolved);
   }, [resolved]);
 

@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { IS_STANDALONE, IS_TAURI } from "../../lib/desktop";
+import { IS_DESKTOP, IS_STANDALONE } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { VERSION } from "../../lib/version";
 import { Chevron } from "./Chevron";
@@ -85,7 +85,7 @@ export function Sidebar({
           <Chevron direction="left" size={6} />
         </Pressable>
         <View style={styles.toolbarSpacer} />
-        {!IS_TAURI && !IS_STANDALONE ? (
+        {!IS_DESKTOP && !IS_STANDALONE ? (
           <Pressable
             style={({ hovered }) => [
               styles.toolBtn,
