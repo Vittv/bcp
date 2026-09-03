@@ -1,4 +1,4 @@
-import { memo, type ReactNode, useMemo, useRef } from "react";
+import { memo, type ReactNode, useCallback, useMemo, useRef } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Chevron } from "../../components/shell/Chevron";
 import {
@@ -16,6 +16,7 @@ import {
   useReference,
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
+import { useCursorScroll, useIndexKeyboard } from "./useIndexKeyboard";
 
 export function CanticlesScreen({
   isMobile,
@@ -196,6 +197,14 @@ function CanticleIndex({
     );
   }, [all, q]);
 
+  const onEnter = useCallback(
+    (_i: number, c: { number: number; title: string; verses: number }) =>
+      onSelect(c.number === selected ? null : c.number),
+    [selected, onSelect],
+  );
+  const { cursor } = useIndexKeyboard(filtered, onEnter);
+  useCursorScroll(cursor);
+  const cursorItem = filtered[cursor];
   if (filtered.length === 0) {
     return <EmptyMessage message={`No canticle matches “${query}”.`} />;
   }
@@ -208,7 +217,7 @@ function CanticleIndex({
   })).filter((g) => g.items.length > 0);
 
   return (
-    <View style={styles.indexBody}>
+    <View data-index-list style={styles.indexBody}>
       {(q === ""
         ? groups
         : [{ label: null, numbers: [], items: filtered }]
@@ -227,12 +236,14 @@ function CanticleIndex({
           ) : null}
           {group.items.map((c) => {
             const isSelected = c.number === selected;
+            const isCursor = c === cursorItem;
             return (
               <Pressable
                 key={c.number}
                 style={({ hovered }) => [
                   styles.row,
                   hovered && styles.rowHover,
+                  isCursor && styles.rowCursor,
                 ]}
                 onPress={() => onSelect(isSelected ? null : c.number)}
               >

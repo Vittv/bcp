@@ -6,33 +6,15 @@ export const SHORTCUTS: {
   rows: { keys: string[]; label: string }[];
 }[] = [
   {
-    group: "Go to (press g, then a key)",
-    rows: [
-      { keys: ["g", "t"], label: "Today" },
-      { keys: ["g", "c"], label: "Calendar" },
-      { keys: ["g", "p"], label: "Psalms" },
-      { keys: ["g", "a"], label: "Canticles" },
-      { keys: ["g", "w"], label: "Proverbs" },
-      { keys: ["g", "s"], label: "Saints" },
-      { keys: ["g", "o"], label: "Offices" },
-      { keys: ["g", "b"], label: "Old Testament" },
-      { keys: ["g", "n"], label: "New Testament" },
-    ],
-  },
-  {
-    group: "Days",
-    rows: [
-      { keys: ["n"], label: "Next day" },
-      { keys: ["p"], label: "Previous day" },
-    ],
-  },
-  {
     group: "Reading",
     rows: [
       { keys: ["j", "↓"], label: "Scroll down" },
       { keys: ["k", "↑"], label: "Scroll up" },
-      { keys: ["Home"], label: "Top of page" },
-      { keys: ["End"], label: "Bottom of page" },
+      { keys: ["d"], label: "Scroll half page down" },
+      { keys: ["u"], label: "Scroll half page up" },
+      { keys: ["g", "g"], label: "Top of page" },
+      { keys: ["G"], label: "Bottom of page" },
+      { keys: ["f"], label: "Open link hints" },
     ],
   },
   {

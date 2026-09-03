@@ -1,9 +1,16 @@
-import { memo, type ReactNode, useDeferredValue, useMemo, useRef } from "react";
+import {
+  memo,
+  type ReactNode,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useRef,
+} from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Chevron } from "../../components/shell/Chevron";
 import { collectPassage } from "../../lib/content/collects";
 import type { CollectRite, CollectSection } from "../../lib/content/types";
-import { searchCollects } from "../../lib/reference/search";
+import { type CollectHit, searchCollects } from "../../lib/reference/search";
 import {
   type CollectSel,
   DetailPage,
@@ -14,6 +21,7 @@ import {
   useReference,
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
+import { useCursorScroll, useIndexKeyboard } from "./useIndexKeyboard";
 
 const RITE_LABELS: Record<CollectRite, string> = {
   traditional: "Traditional (Rite I)",
@@ -187,11 +195,23 @@ function CollectIndex({
     }
     return gs;
   }, [hits]);
+  const onEnter = useCallback(
+    (_i: number, hit: CollectHit) =>
+      onSelect(
+        selected?.section === hit.section && selected?.title === hit.title
+          ? null
+          : { section: hit.section, title: hit.title },
+      ),
+    [selected, onSelect],
+  );
+  const { cursor } = useIndexKeyboard(hits, onEnter);
+  useCursorScroll(cursor);
+  const cursorHit = hits[cursor];
   if (hits.length === 0) {
     return <EmptyMessage message={`No collects match “${deferredQuery}”.`} />;
   }
   return (
-    <View style={styles.indexBody}>
+    <View data-index-list style={styles.indexBody}>
       {sections.map((section) => (
         <View key={section} style={styles.collectGroup}>
           <Text
@@ -209,12 +229,14 @@ function CollectIndex({
               const isSelected =
                 selected?.section === hit.section &&
                 selected?.title === hit.title;
+              const isCursor = hit === cursorHit;
               return (
                 <Pressable
                   key={`${hit.section}:${hit.title}`}
                   style={({ hovered }) => [
                     styles.row,
                     hovered && styles.rowHover,
+                    isCursor && styles.rowCursor,
                   ]}
                   onPress={() =>
                     onSelect(

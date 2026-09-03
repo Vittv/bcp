@@ -13,6 +13,7 @@ import {
 } from "../../components/shell/AppModal";
 import { Chevron } from "../../components/shell/Chevron";
 import { HelpScreen } from "../../components/shell/HelpScreen";
+import { type HintHandle, HintLayer } from "../../components/shell/HintLayer";
 import type { ModalType, PageId } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
 import {
@@ -46,6 +47,7 @@ import {
   loadWindowControls,
   saveWindowControls,
 } from "../../lib/desktop";
+import { activeScrollTarget } from "../../lib/input/vim";
 import {
   createHistoryController,
   type HistoryController,
@@ -343,6 +345,7 @@ export function Shell() {
     }
   };
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hintsRef = useRef<HintHandle>(null);
 
   // browser history integration: one controller for the whole shell. only
   // web has a history to drive; native builds get a null (no-op) provider.
@@ -562,18 +565,40 @@ export function Shell() {
       }
       return t.isContentEditable === true;
     };
-    const scrollActive = (dy: number) => {
-      const el = scrollRef.current;
-      if (el && el.scrollHeight > el.clientHeight) {
-        el.scrollTop += dy;
-        return;
-      }
-      const detail = window.document.querySelector("[data-split-detail]");
-      if (detail) {
-        // SAFETY: the split detail pane is a real DOM scroller, so it is an
-        // HTMLElement with a scrollTop we can read and write
-        (detail as HTMLElement).scrollTop += dy;
-      }
+    // on reference split pages the right-hand picker owns j/k while it has
+    // focus; content (detail) owns them otherwise. lets h/l move between the
+    // two panes and keeps each pane's j/k rolling its own scroller/cursor.
+    const listHasFocus = (): boolean => {
+      // SAFETY: activeElement is always an Element; closest exists on all
+      // Elements, so the cast is safe for DOM elements queried here
+      const a = window.document.activeElement as HTMLElement | null;
+      return !!a?.closest?.("[data-split-list]");
+    };
+    const focusReferencePane = (list: boolean) => {
+      // SAFETY: these are driven by the SplitPane DOM, which always has the
+      // detail pane (data-split-detail) and list pane (data-split-list)
+      const node = window.document.querySelector(
+        list ? "[data-split-list]" : "[data-split-detail]",
+      ) as HTMLElement | null;
+      node?.focus({ preventScroll: false });
+    };
+    // scroll the currently-focused scroller by a fraction of its height. a
+    // negative factor scrolls up. j/k and d/u share this, differ only in step.
+    const scrollByFraction = (factor: number) => {
+      const el = activeScrollTarget(scrollRef.current);
+      if (!el) return;
+      // sign-preserving step: never stall at 0, and never flip direction
+      const raw = Math.round(el.clientHeight * factor);
+      const top = raw === 0 ? (factor > 0 ? 1 : -1) : raw;
+      el.scrollBy({ top, behavior: "auto" });
+    };
+    const scrollActiveTop = () => {
+      const el = activeScrollTarget(scrollRef.current);
+      if (el) el.scrollTop = 0;
+    };
+    const scrollActiveBottom = () => {
+      const el = activeScrollTarget(scrollRef.current);
+      if (el) el.scrollTop = el.scrollHeight;
     };
     const stepDay = (delta: number) => {
       // on the lectionary, n/p steps its own date without touching the
@@ -608,8 +633,24 @@ export function Shell() {
         }
         return;
       }
+      // while hint mode is open every key drives the hint layer
+      const hint = hintsRef.current;
+      if (hint?.isActive()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        hint.handleKey(e);
+        return;
+      }
       if (goPending !== null) {
-        const page = GO_MAP[e.key.toLowerCase()];
+        const k = e.key.toLowerCase();
+        if (k === "g") {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          clearGo();
+          scrollActiveTop();
+          return;
+        }
+        const page = GO_MAP[k];
         clearGo();
         if (page) {
           e.preventDefault();
@@ -656,26 +697,69 @@ export function Shell() {
           stepDay(-1);
           return;
         case "j":
-        case "ArrowDown":
+          // on a desktop reference page the picker owns j/k while its list
+          // has focus (the index hooks move the row cursor); once focus is
+          // on the content pane, j/k scroll that pane instead
+          if (isReferencePage(page) && !isMobile && listHasFocus()) return;
           e.preventDefault();
           e.stopImmediatePropagation();
-          scrollActive(360);
+          scrollByFraction(0.14);
           return;
         case "k":
-        case "ArrowUp":
+          if (isReferencePage(page) && !isMobile && listHasFocus()) return;
           e.preventDefault();
           e.stopImmediatePropagation();
-          scrollActive(-360);
+          scrollByFraction(-0.14);
+          return;
+        case "h":
+          // on a desktop reference split page h/l swap focus between the
+          // content pane and the right-hand picker, so j/k/d/u/gg/G follow
+          // whichever pane is active
+          if (isReferencePage(page) && !isMobile) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            focusReferencePane(false);
+            return;
+          }
+          return;
+        case "l":
+          if (isReferencePage(page) && !isMobile) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            focusReferencePane(true);
+            return;
+          }
+          return;
+        case "d":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          scrollByFraction(0.5);
+          return;
+        case "u":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          scrollByFraction(-0.5);
+          return;
+        case "G":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          scrollActiveBottom();
+          return;
+        case "f":
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          clearGo();
+          hintsRef.current?.start();
           return;
         case "Home":
           e.preventDefault();
           e.stopImmediatePropagation();
-          scrollToTop();
+          scrollActiveTop();
           return;
         case "End":
           e.preventDefault();
           e.stopImmediatePropagation();
-          scrollActive(Number.MAX_SAFE_INTEGER);
+          scrollActiveBottom();
           return;
         default:
           return;
@@ -686,7 +770,7 @@ export function Shell() {
       window.removeEventListener("keydown", onKeyDown, true);
       if (goTimer) clearTimeout(goTimer);
     };
-  }, [modal, handleNavigateTo, scrollToTop, page, date, goToPage]);
+  }, [modal, handleNavigateTo, page, date, goToPage, isMobile]);
 
   const document = composeOffice(
     date,
@@ -997,6 +1081,7 @@ export function Shell() {
                       {auxRow}
                       <div
                         ref={scrollRef}
+                        tabIndex={-1}
                         onScroll={handleScroll}
                         style={{
                           flex: 1,
@@ -1075,6 +1160,7 @@ export function Shell() {
                     <AutoscrollGlyph indicator={autoscroll} />
                   ) : null}
                   {modalContent}
+                  <HintLayer ref={hintsRef} />
                 </div>
               </SaintPopoverProvider>
             </NavigationContext.Provider>

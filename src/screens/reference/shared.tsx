@@ -470,9 +470,11 @@ export function SplitPane({
       >
         <View style={sharedStyles.detailPage}>{detail}</View>
       </div>
-      <div ref={listRef} tabIndex={0} style={LIST_PANE_STYLE}>
+      <div ref={listRef} tabIndex={0} style={LIST_PANE_STYLE} data-split-list>
         {header ? <div style={SPLIT_HEADER_STYLE}>{header}</div> : null}
-        <div style={SPLIT_LIST_SCROLL_STYLE}>{list}</div>
+        <div style={SPLIT_LIST_SCROLL_STYLE} data-split-list-scroll>
+          {list}
+        </div>
       </div>
     </div>
   );
