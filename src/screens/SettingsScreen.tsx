@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import type { BcpBridge } from "../../electron/ipc";
 import { useTheme } from "../context/ThemeContext";
-import { IS_TAURI } from "../lib/desktop";
+import { IS_DESKTOP } from "../lib/desktop";
 import { CHROME_FONT } from "../lib/fonts";
 
 const THEME_OPTIONS = [
@@ -30,12 +31,23 @@ export function SettingsScreen({
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const [updateMessage, setUpdateMessage] = useState("");
 
+  function updater(): BcpBridge["updater"] | null {
+    // SAFETY: window.bcp is injected only by the Electron preload; absent on
+    // web/PWA builds it is undefined, so the chained access yields null
+    return (window as unknown as { bcp?: BcpBridge }).bcp?.updater ?? null;
+  }
+
   async function checkForUpdates() {
     setUpdateStatus("checking");
     setUpdateMessage("");
     try {
-      const { check } = await import("@tauri-apps/plugin-updater");
-      const update = await check();
+      const u = updater();
+      if (!u) {
+        setUpdateStatus("error");
+        setUpdateMessage("Desktop-only.");
+        return;
+      }
+      const update = await u.check();
       if (!update) {
         setUpdateStatus("upToDate");
         return;
@@ -52,15 +64,12 @@ export function SettingsScreen({
     setUpdateStatus("installing");
     setUpdateMessage("");
     try {
-      const { check } = await import("@tauri-apps/plugin-updater");
-      const update = await check();
-      if (!update) {
-        setUpdateStatus("upToDate");
-        return;
-      }
-      await update.downloadAndInstall();
-      const { relaunch } = await import("@tauri-apps/plugin-process");
-      await relaunch();
+      const u = updater();
+      if (u) await u.download();
+      // return the button to its prior state; the relaunch handler quits and
+      // reinstalls, or a plain restart if nothing was downloaded
+      setUpdateStatus("upToDate");
+      await u?.relaunch();
     } catch (error) {
       setUpdateStatus("error");
       setUpdateMessage(error instanceof Error ? error.message : String(error));
@@ -149,7 +158,7 @@ export function SettingsScreen({
         </View>
       ) : null}
 
-      {IS_TAURI ? (
+      {IS_DESKTOP ? (
         <View style={styles.section}>
           <Text style={styles.label}>Updates</Text>
           {updateStatus === "idle" || updateStatus === "upToDate" ? (

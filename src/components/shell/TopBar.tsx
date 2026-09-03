@@ -2,7 +2,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../context/ThemeContext";
 import { sanctoraleTitle } from "../../lib/calendar/sanctorale";
 import type { Season } from "../../lib/calendar/types";
-import { IS_MACOS_TAURI, IS_TAURI } from "../../lib/desktop";
+import { IS_DESKTOP, IS_MACOS } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { useSaintPopover } from "../office/SaintPopover";
 import { MoonIcon, SunIcon, SystemIcon } from "./Icon";
@@ -71,7 +71,7 @@ export function TopBar({
 
   const pct = `${Math.round(fontScale * 100)}%`;
 
-  const showingControls = IS_TAURI && !IS_MACOS_TAURI && windowControls;
+  const showingControls = IS_DESKTOP && !IS_MACOS && windowControls;
 
   // on a feast of a saint, the countdown gives way to the feast name so
   // the day's observance is visible at a glance; it's a single source of
@@ -83,13 +83,13 @@ export function TopBar({
   return (
     <View
       style={[styles.bar, noSelect]}
-      dataSet={IS_TAURI ? DRAG_DATA : undefined}
+      dataSet={IS_DESKTOP ? DRAG_DATA : undefined}
     >
-      {IS_MACOS_TAURI && <View style={styles.macGap} />}
+      {IS_MACOS && <View style={styles.macGap} />}
 
       <View
         style={styles.seasonLabel}
-        dataSet={IS_TAURI ? DRAG_DATA : undefined}
+        dataSet={IS_DESKTOP ? DRAG_DATA : undefined}
       >
         <Image
           source={resolved === "dark" ? ICON_DARK : ICON_LIGHT}
@@ -100,7 +100,7 @@ export function TopBar({
         <Text
           style={styles.seasonText}
           numberOfLines={1}
-          dataSet={IS_TAURI ? DRAG_DATA : undefined}
+          dataSet={IS_DESKTOP ? DRAG_DATA : undefined}
         >
           {SEASON_LABEL[season]}
         </Text>
@@ -116,12 +116,14 @@ export function TopBar({
                 onPress={() => holyDay && openSaint(holyDay)}
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${holyDayLabel} in Saints`}
-                dataSet={IS_TAURI ? DRAG_DATA : undefined}
+                dataSet={
+                  IS_DESKTOP ? { ...DRAG_DATA, "no-drag": "" } : undefined
+                }
               >
                 <Text
                   style={styles.countdownText}
                   numberOfLines={1}
-                  dataSet={IS_TAURI ? DRAG_DATA : undefined}
+                  dataSet={IS_DESKTOP ? DRAG_DATA : undefined}
                 >
                   {holyDayLabel}
                 </Text>
@@ -129,7 +131,7 @@ export function TopBar({
             ) : (
               <Text
                 style={styles.countdownText}
-                dataSet={IS_TAURI ? DRAG_DATA : undefined}
+                dataSet={IS_DESKTOP ? DRAG_DATA : undefined}
               >
                 {daysUntilNext}d to {nextSeason}
               </Text>
@@ -138,7 +140,10 @@ export function TopBar({
         )}
       </View>
 
-      <View style={styles.controls} dataSet={IS_TAURI ? DRAG_DATA : undefined}>
+      <View
+        style={styles.controls}
+        dataSet={IS_DESKTOP ? { ...DRAG_DATA, "no-drag": "" } : undefined}
+      >
         <View style={styles.fontControl}>
           <Text style={styles.fontPct}>{pct}</Text>
           <Pressable
