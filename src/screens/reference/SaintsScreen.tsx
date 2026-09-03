@@ -1,10 +1,17 @@
-import { memo, type ReactNode, useDeferredValue, useMemo, useRef } from "react";
+import {
+  memo,
+  type ReactNode,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useRef,
+} from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { SanctoraleCard } from "../../components/office/SanctoraleCard";
 import { Chevron } from "../../components/shell/Chevron";
 import { officeBarStyles } from "../../components/shell/OfficeTabs";
 import { monthDayShortLabel } from "../../lib/calendar/sanctorale";
-import { searchSaints } from "../../lib/reference/search";
+import { type SaintHit, searchSaints } from "../../lib/reference/search";
 import {
   DetailPage,
   EmptyMessage,
@@ -14,6 +21,7 @@ import {
   useReference,
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
+import { useCursorScroll, useIndexKeyboard } from "./useIndexKeyboard";
 
 export function SaintsScreen({
   isMobile,
@@ -214,17 +222,29 @@ const SaintIndex = memo(function SaintIndex({
 }) {
   const deferredQuery = useDeferredValue(query);
   const hits = useMemo(() => searchSaints(deferredQuery), [deferredQuery]);
+  const onEnter = useCallback(
+    (_i: number, hit: SaintHit) =>
+      onSelect(hit.slug === selected ? null : hit.slug),
+    [selected, onSelect],
+  );
+  const { cursor } = useIndexKeyboard(hits, onEnter);
+  useCursorScroll(cursor);
   if (hits.length === 0) {
     return <EmptyMessage message={`No saints match “${deferredQuery}”.`} />;
   }
   return (
-    <View style={styles.indexBody}>
-      {hits.map((hit) => {
+    <View data-index-list style={styles.indexBody}>
+      {hits.map((hit, i) => {
         const isSelected = hit.slug === selected;
+        const isCursor = i === cursor;
         return (
           <Pressable
             key={hit.slug}
-            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
+            style={({ hovered }) => [
+              styles.row,
+              hovered && styles.rowHover,
+              isCursor && styles.rowCursor,
+            ]}
             onPress={() => onSelect(isSelected ? null : hit.slug)}
           >
             <View style={styles.saintRowInner}>

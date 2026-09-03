@@ -87,6 +87,11 @@ export const sharedStyles = StyleSheet.create({
   rowHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
+  // the vim row cursor: a soft band distinct from the hover fill and from
+  // the accent-red text of the opened row, so it reads as "you are here"
+  rowCursor: {
+    backgroundColor: "var(--selected-bg, rgba(44, 32, 32, 0.09))",
+  },
   // active rows turn every text node accent red instead of filling;
   // hover paints the rowHover fill on top of that state
   rowTextActive: {

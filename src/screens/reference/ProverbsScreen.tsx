@@ -1,4 +1,11 @@
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { ScriptureView } from "../../components/office/ScriptureView";
 import { Chevron } from "../../components/shell/Chevron";
@@ -12,6 +19,7 @@ import {
   useReference,
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
+import { useCursorScroll, useIndexKeyboard } from "./useIndexKeyboard";
 
 const PROVERS_CHAPTERS = 31;
 
@@ -195,17 +203,29 @@ function ChapterIndex({
     return chapters.filter((c) => String(c.chapter).startsWith(String(num)));
   }, [chapters, q]);
 
+  const onEnter = useCallback(
+    (_i: number, c: { chapter: number; verses: number }) =>
+      onSelect(c.chapter === selected ? null : c.chapter),
+    [selected, onSelect],
+  );
+  const { cursor } = useIndexKeyboard(filtered, onEnter);
+  useCursorScroll(cursor);
   if (filtered.length === 0) {
     return <EmptyMessage message={`No proverbs chapter matches “${q}”.`} />;
   }
   return (
-    <View style={styles.indexBody}>
-      {filtered.map((c) => {
+    <View data-index-list style={styles.indexBody}>
+      {filtered.map((c, i) => {
         const isSelected = c.chapter === selected;
+        const isCursor = i === cursor;
         return (
           <Pressable
             key={c.chapter}
-            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
+            style={({ hovered }) => [
+              styles.row,
+              hovered && styles.rowHover,
+              isCursor && styles.rowCursor,
+            ]}
             onPress={() => onSelect(isSelected ? null : c.chapter)}
           >
             <View style={styles.psalmRowInner}>

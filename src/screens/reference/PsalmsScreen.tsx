@@ -1,9 +1,16 @@
-import { memo, type ReactNode, useDeferredValue, useMemo, useRef } from "react";
+import {
+  memo,
+  type ReactNode,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useRef,
+} from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { PsalmText } from "../../components/office/PsalmText";
 import { Chevron } from "../../components/shell/Chevron";
 import { psalmPassage } from "../../lib/content/psalter";
-import { searchPsalms } from "../../lib/reference/search";
+import { type PsalmHit, searchPsalms } from "../../lib/reference/search";
 import {
   DetailPage,
   EmptyMessage,
@@ -12,6 +19,7 @@ import {
   useReference,
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
+import { useCursorScroll, useIndexKeyboard } from "./useIndexKeyboard";
 
 export function PsalmsScreen({
   isMobile,
@@ -151,17 +159,28 @@ function PsalmIndex({
 }) {
   const deferredQuery = useDeferredValue(query);
   const hits = useMemo(() => searchPsalms(deferredQuery), [deferredQuery]);
+  const onEnter = useCallback(
+    (_i: number, hit: PsalmHit) => onSelect(hit.psalm),
+    [onSelect],
+  );
+  const { cursor } = useIndexKeyboard(hits, onEnter);
+  useCursorScroll(cursor);
   if (hits.length === 0) {
     return <EmptyMessage message={`No psalms match “${deferredQuery}”.`} />;
   }
   return (
-    <View style={styles.indexBody}>
-      {hits.map((hit) => {
+    <View data-index-list style={styles.indexBody}>
+      {hits.map((hit, i) => {
         const isSelected = hit.psalm === selected;
+        const isCursor = i === cursor;
         return (
           <Pressable
             key={hit.psalm}
-            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
+            style={({ hovered }) => [
+              styles.row,
+              hovered && styles.rowHover,
+              isCursor && styles.rowCursor,
+            ]}
             onPress={() => onSelect(hit.psalm)}
           >
             <View style={styles.psalmRowInner}>

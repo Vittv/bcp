@@ -108,6 +108,9 @@ const LightPalette = {
   text: "#2c2020",
   textSecondary: "#6b6159",
   accent: "#7a3040",
+  // link-hint badge: wine chip with light text reads best on the light page
+  hintBg: "#7a3040",
+  hintText: "#f2ece4",
   scrollbar: "#a09589",
   todayBg: "rgba(122, 48, 64, 0.16)",
   selectedBg: "rgba(44, 32, 32, 0.09)",
@@ -125,6 +128,9 @@ const DarkPalette = {
   text: "#d4d0d3",
   textSecondary: "#8d8985",
   accent: "#c85f8b",
+  // link-hint badge: dark chip with pink text on the dark page
+  hintBg: "#1b191a",
+  hintText: "#c85f8b",
   scrollbar: "#5a5759",
   todayBg: "rgba(200, 95, 139, 0.30)",
   selectedBg: "rgba(212, 208, 211, 0.12)",
@@ -154,6 +160,8 @@ function applyPalette(theme: ResolvedTheme) {
   r.setProperty("--text", p.text);
   r.setProperty("--text-secondary", p.textSecondary);
   r.setProperty("--accent", p.accent);
+  r.setProperty("--hint-bg", p.hintBg);
+  r.setProperty("--hint-text", p.hintText);
   r.setProperty("--bg-page", p.bg);
   r.setProperty("--scrollbar", p.scrollbar);
   r.setProperty("--today-bg", p.todayBg);
