@@ -53,6 +53,7 @@ export function CanticlesScreen({
         <TextInput
           value={query}
           onChangeText={setQuery}
+          dataSet={{ pickerSearch: "" }}
           placeholder="Search by number or title"
           placeholderTextColor="var(--text-secondary, #7a6e64)"
           style={[
@@ -135,6 +136,7 @@ export function CanticlesBar({
           ref={inputRef}
           value={query}
           onChangeText={setQuery}
+          dataSet={{ pickerSearch: "" }}
           placeholder="Search by number or title"
           placeholderTextColor="var(--text-secondary, #7a6e64)"
           style={styles.search}
@@ -217,7 +219,7 @@ function CanticleIndex({
   })).filter((g) => g.items.length > 0);
 
   return (
-    <View data-index-list style={styles.indexBody}>
+    <View style={styles.indexBody} dataSet={{ indexList: "" }}>
       {(q === ""
         ? groups
         : [{ label: null, numbers: [], items: filtered }]
@@ -243,7 +245,6 @@ function CanticleIndex({
                 style={({ hovered }) => [
                   styles.row,
                   hovered && styles.rowHover,
-                  isCursor && styles.rowCursor,
                 ]}
                 onPress={() => onSelect(isSelected ? null : c.number)}
               >
@@ -251,7 +252,7 @@ function CanticleIndex({
                   <Text
                     style={[
                       styles.canticleNumber,
-                      isSelected && styles.rowTextActive,
+                      (isSelected || isCursor) && styles.rowTextActive,
                     ]}
                   >
                     {c.number}
@@ -260,13 +261,16 @@ function CanticleIndex({
                     numberOfLines={1}
                     style={[
                       styles.canticleIndexTitle,
-                      isSelected && styles.rowTextActive,
+                      (isSelected || isCursor) && styles.rowTextActive,
                     ]}
                   >
                     {c.title}
                   </Text>
                   <Text
-                    style={[styles.rowMeta, isSelected && styles.rowTextActive]}
+                    style={[
+                      styles.rowMeta,
+                      (isSelected || isCursor) && styles.rowTextActive,
+                    ]}
                   >
                     {c.verses} verse{c.verses === 1 ? "" : "s"}
                   </Text>

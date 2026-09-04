@@ -77,6 +77,7 @@ export function CollectsScreen({
           ref={desktopInputRef}
           value={query}
           onChangeText={setQuery}
+          dataSet={{ pickerSearch: "" }}
           placeholder="Search by title or text"
           placeholderTextColor="var(--text-secondary, #7a6e64)"
           style={[
@@ -162,6 +163,7 @@ export function CollectsBar({
           ref={inputRef}
           value={query}
           onChangeText={setQuery}
+          dataSet={{ pickerSearch: "" }}
           placeholder="Search by title or text"
           placeholderTextColor="var(--text-secondary, #7a6e64)"
           style={styles.search}
@@ -211,7 +213,7 @@ function CollectIndex({
     return <EmptyMessage message={`No collects match “${deferredQuery}”.`} />;
   }
   return (
-    <View data-index-list style={styles.indexBody}>
+    <View style={styles.indexBody} dataSet={{ indexList: "" }}>
       {sections.map((section) => (
         <View key={section} style={styles.collectGroup}>
           <Text
@@ -236,7 +238,6 @@ function CollectIndex({
                   style={({ hovered }) => [
                     styles.row,
                     hovered && styles.rowHover,
-                    isCursor && styles.rowCursor,
                   ]}
                   onPress={() =>
                     onSelect(
@@ -252,7 +253,7 @@ function CollectIndex({
                       ellipsizeMode="tail"
                       style={[
                         styles.collectIndexTitle,
-                        isSelected && styles.rowTextActive,
+                        (isSelected || isCursor) && styles.rowTextActive,
                       ]}
                     >
                       {hit.title}

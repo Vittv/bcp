@@ -17,11 +17,25 @@ function isEditable(el: EventTarget | null): boolean {
   );
 }
 
+// whether the keydown comes from a picker search field, where a type-ahead
+// (combobox) workflow should take over: arrows move the row cursor and Enter
+// opens the highlighted result, even while the input has focus. other editable
+// fields (plain search boxes elsewhere, the office bar, etc.) keep their keys.
+function isPickerSearch(el: EventTarget | null): boolean {
+  // SAFETY: keydown targets are DOM Elements; closest exists on Elements, so
+  // the cast is safe and anything without tagName is treated as non-search
+  const t = el as HTMLElement | null;
+  return !!t?.closest?.("[data-picker-search]");
+}
+
 // vim-style row navigation for the reference index lists. tracks a keyboard
 // cursor index into the (possibly filtered) list and moves it with
-// j/k / ArrowUp / ArrowDown, opening the focused row on Enter. only active
-// on web and only while the list is on screen; ignores keystrokes meant for
-// an editable field.
+// ctrl+j / ctrl+k / ArrowUp / ArrowDown, opening the focused row on Enter.
+// the bare j/k keys are reserved for scrolling the main content pane, so the
+// picker only moves under ctrl. only active on web and only while the list is
+// on screen; normally ignores keystrokes meant for an editable field, but a
+// picker search box (data-picker-search) lets arrows+Enter drive the cursor
+// directly, so typing a filter and picking with the keyboard is one motion.
 export function useIndexKeyboard<T>(
   movable: T[],
   onEnter: (index: number, value: T) => void,
@@ -55,20 +69,24 @@ export function useIndexKeyboard<T>(
   useEffect(() => {
     if (!IS_WEB) return;
     const onKey = (e: KeyboardEvent) => {
-      if (isEditable(e.target)) return;
+      const inPickerSearch = isPickerSearch(e.target);
+      if (isEditable(e.target) && !inPickerSearch) return;
       if (movableRef.current.length === 0) return;
       switch (e.key) {
         case "j":
-        case "ArrowDown":
+        case "k":
+          // j/k only drive the picker under ctrl; the bare keys scroll the
+          // main content pane (handled by the shell)
+          if (!e.ctrlKey) return;
           e.preventDefault();
           e.stopImmediatePropagation();
-          move(1);
+          move(e.key === "j" ? 1 : -1);
           return;
-        case "k":
+        case "ArrowDown":
         case "ArrowUp":
           e.preventDefault();
           e.stopImmediatePropagation();
-          move(-1);
+          move(e.key === "ArrowDown" ? 1 : -1);
           return;
         case "Enter": {
           e.preventDefault();
@@ -90,10 +108,15 @@ export function useIndexKeyboard<T>(
 
 // keep the cursor row in view as it moves. the active picker's index list
 // marks its container with data-index-list (see each Index's indexBody), so
-// the cursor row is the nth role=button inside it. scrolling it into the
-// nearest edge avoids jumping the page. only one index renders at a time.
+// the cursor row is the nth role=button inside it. on desktop the rows live
+// in the split-pane's own scroller ([data-split-list-scroll]), which we set
+// scrollTop on directly so the picked row always stays visible regardless of
+// how nesting affects scrollIntoView; on mobile the rows scroll with the
+// document column, where scrollIntoView is reliable. only one index renders
+// at a time.
 export function useCursorScroll(cursor: number) {
   useEffect(() => {
+    if (!IS_WEB) return;
     const list = document.querySelector("[data-index-list]");
     if (!list) return;
     // SAFETY: buttons are DOM Elements with scrollIntoView; the generic
@@ -101,6 +124,20 @@ export function useCursorScroll(cursor: number) {
     const rows = Array.from(
       list.querySelectorAll<HTMLElement>('[role="button"]'),
     );
-    rows[cursor]?.scrollIntoView({ block: "nearest" });
+    const row = rows[cursor];
+    if (!row) return;
+    const scroller = list.closest<HTMLElement>("[data-split-list-scroll]");
+    if (!scroller) {
+      row.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    const sTop = scroller.getBoundingClientRect().top;
+    const rTop = row.getBoundingClientRect().top - sTop;
+    const rBottom = rTop + row.getBoundingClientRect().height;
+    const viewTop = scroller.scrollTop;
+    const viewBottom = viewTop + scroller.clientHeight;
+    if (rTop < viewTop) scroller.scrollTop = rTop;
+    else if (rBottom > viewBottom)
+      scroller.scrollTop = rBottom - scroller.clientHeight;
   }, [cursor]);
 }

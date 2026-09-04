@@ -142,9 +142,7 @@ export function WindowControls() {
   }, []);
 
   return (
-    // never hintable: Close/Minimize/Maximize must not be reached through a
-    // link-hint key (typing one would actually close or resize the window)
-    <View style={styles.row} dataSet={{ vimHintSkip: "", "no-drag": "" }}>
+    <View style={styles.row} dataSet={{ "no-drag": "" }}>
       <ControlButton
         label="Minimize"
         disabled={!win}

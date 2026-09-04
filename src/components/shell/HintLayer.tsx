@@ -45,20 +45,41 @@ function isScrollContainer(el: HTMLElement): boolean {
   );
 }
 
+// whether an element accepts freeform text entry: native text inputs,
+// textareas, contenteditable regions and role=textbox boxes. hinting these
+// lets a hint focus the focused-in field so typing a search works right away.
+function isTextField(el: HTMLElement): boolean {
+  const tag = el.tagName;
+  if (tag === "TEXTAREA") return true;
+  if (tag === "INPUT") {
+    const type = (el as HTMLInputElement).type;
+    return (
+      type === "" ||
+      type === "text" ||
+      type === "search" ||
+      type === "email" ||
+      type === "url" ||
+      type === "tel" ||
+      type === "password" ||
+      type === "number"
+    );
+  }
+  return el.getAttribute("role") === "textbox" || el.isContentEditable === true;
+}
+
 // whether an element is a hintable click target. role/native-tag first, then
 // the RNW Pressable signal: a focusable element (tabindex) that is not a
-// scroll container, not a form field, and is a leaf pressable.
+// scroll container, not a form field, and is a leaf pressable. text-entry
+// controls are kept so a hint can hand focus to a search box.
 function isClickable(el: HTMLElement): boolean {
   const tag = el.tagName;
-  if (tag === "INPUT" || tag === "TEXTAREA") return false;
+  if (tag === "INPUT" || tag === "TEXTAREA") return isTextField(el);
   if (el.matches(TAG_SELECTOR) || el.matches(ROLE_SELECTOR)) return true;
   if (isScrollContainer(el)) return false;
   if (el === document.body || el === document.documentElement) return false;
   if (el.tabIndex >= 0) {
-    const role = el.getAttribute("role");
-    // a focusable non-control is a good Pressable candidate unless it is an
-    // editable-looking box or a layout pane
-    if (role !== "textbox") return true;
+    // a focusable non-control is a good Pressable candidate
+    return true;
   }
   return false;
 }
@@ -71,6 +92,10 @@ function collectTargets(): Target[] {
     // target: activating one through a keyboard hint would actually close,
     // resize or move the app window
     if (el.closest("[data-vim-hint-skip]")) continue;
+    // reference picker rows (data-index-list) flood the target set and make
+    // single nav letters ambiguous; the picker search field lives outside
+    // that container so it stays hintable. rows are driven with ctrl+j/k.
+    if (el.closest("[data-index-list]")) continue;
     const rect = el.getBoundingClientRect();
     if (rect.width < 6 || rect.height < 6) continue;
     const style = window.getComputedStyle(el);
@@ -173,6 +198,8 @@ export const HintLayer = forwardRef<HintHandle>(
         isActive() {
           return active.current;
         },
+        // hand focus to a text field (so the user can start typing a search)
+        // or click any other target
         handleKey(e: KeyboardEvent) {
           if (!active.current) return false;
           if (e.key === "Escape") {
@@ -185,7 +212,10 @@ export const HintLayer = forwardRef<HintHandle>(
             const match = registry.current.find((t) =>
               t.label.startsWith(typed.current ?? ""),
             );
-            if (match) match.el.click();
+            if (match) {
+              if (isTextField(match.el)) match.el.focus();
+              else match.el.click();
+            }
             this.cancel();
             return true;
           }
@@ -197,7 +227,8 @@ export const HintLayer = forwardRef<HintHandle>(
               t.label.startsWith(next),
             );
             if (matches.length === 1) {
-              matches[0].el.click();
+              if (isTextField(matches[0].el)) matches[0].el.focus();
+              else matches[0].el.click();
               this.cancel();
             } else if (matches.length === 0) {
               // no match: reset so the user can try again

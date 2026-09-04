@@ -15,6 +15,8 @@ export const SHORTCUTS: {
       { keys: ["g", "g"], label: "Top of page" },
       { keys: ["G"], label: "Bottom of page" },
       { keys: ["f"], label: "Open link hints" },
+      { keys: ["Ctrl+j"], label: "Move down a list picker" },
+      { keys: ["Ctrl+k"], label: "Move up a list picker" },
     ],
   },
   {
