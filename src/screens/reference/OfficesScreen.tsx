@@ -468,7 +468,7 @@ function MonthPicker({
                   style={[
                     styles.popCellText,
                     { color: colorMap[colorFor(cell)] },
-                    isSelected && styles.popCellTextLight,
+                    isSelected && styles.popCellTextSelected,
                   ]}
                 >
                   {dayNum}

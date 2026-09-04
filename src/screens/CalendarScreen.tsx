@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     backgroundColor: "var(--today-bg, rgba(122, 48, 64, 0.16))",
   },
   cellSelected: {
-    backgroundColor: "var(--selected-bg, rgba(44, 32, 32, 0.09))",
+    backgroundColor: "var(--selected-bg, #dbd7cd)",
   },
   cellHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",

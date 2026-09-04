@@ -113,8 +113,8 @@ const LightPalette = {
   hintText: "#f2ece4",
   scrollbar: "#a09589",
   todayBg: "rgba(122, 48, 64, 0.16)",
-  selectedBg: "rgba(44, 32, 32, 0.09)",
   controlHover: "#d2cbbf",
+  selectedBg: "#dbd7cd",
 };
 
 const DarkPalette = {
@@ -133,8 +133,8 @@ const DarkPalette = {
   hintText: "#c85f8b",
   scrollbar: "#5a5759",
   todayBg: "rgba(200, 95, 139, 0.30)",
-  selectedBg: "rgba(212, 208, 211, 0.12)",
   controlHover: "#282628",
+  selectedBg: "#2b292b",
 };
 
 // literal popover surface colors, keyed by resolved theme. applied as an
@@ -165,8 +165,8 @@ function applyPalette(theme: ResolvedTheme) {
   r.setProperty("--bg-page", p.bg);
   r.setProperty("--scrollbar", p.scrollbar);
   r.setProperty("--today-bg", p.todayBg);
-  r.setProperty("--selected-bg", p.selectedBg);
   r.setProperty("--control-hover", p.controlHover);
+  r.setProperty("--selected-bg", p.selectedBg);
 
   const id = "scrollbar-style";
   // SAFETY: we only create <style> elements with this id in applyPalette.
@@ -178,10 +178,12 @@ function applyPalette(theme: ResolvedTheme) {
   }
   el.textContent = `
     * { scrollbar-width: thin; scrollbar-color: ${p.scrollbar} transparent; }
-    *::-webkit-scrollbar { width: 6px; height: 6px; }
+    *::-webkit-scrollbar { width: 4px; height: 4px; }
     *::-webkit-scrollbar-track { background: transparent; }
-    *::-webkit-scrollbar-thumb { background: ${p.scrollbar}; border-radius: 3px; }
+    *::-webkit-scrollbar-thumb { background: ${p.scrollbar}; border-radius: 4px; }
     *::-webkit-scrollbar-thumb:hover { background: ${p.textSecondary}; }
+    ::selection { background: var(--control-hover, #d2cbbf); color: var(--text, #2c2020); }
+    :focus-visible { outline: 2px solid ${p.accent}; outline-offset: 2px; }
   `;
 }
 

@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   body: {
     flexShrink: 1,
     minHeight: 0,
-    overflow: "scroll",
+    overflowY: "auto",
     paddingHorizontal: 20,
     paddingVertical: 20,
     backgroundColor: "var(--bg, #e0dbd0)",
