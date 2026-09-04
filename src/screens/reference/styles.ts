@@ -434,9 +434,7 @@ export const sharedStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "var(--accent, #7a3040)",
   },
-  popCellSelected: {
-    backgroundColor: "var(--accent, #7a3040)",
-  },
+  popCellSelected: {},
   popCellText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
@@ -444,8 +442,8 @@ export const sharedStyles = StyleSheet.create({
     color: "var(--text, #2c2020)",
     fontVariant: ["tabular-nums"],
   },
-  popCellTextLight: {
-    color: "var(--bg, #e0dbd0)",
+  popCellTextSelected: {
+    color: "var(--accent, #7a3040)",
     fontWeight: "700",
   },
   // office picker tabs in the desktop bar — spread directly from the
