@@ -146,17 +146,13 @@ function BibleBookList({
   const { cursor } = useIndexKeyboard(books, onEnter);
   useCursorScroll(cursor);
   return (
-    <View data-index-list style={styles.indexBody}>
+    <View style={styles.indexBody} dataSet={{ indexList: "" }}>
       {books.map((b, i) => {
         const isCursor = i === cursor;
         return (
           <Pressable
             key={b.abbrev}
-            style={({ hovered }) => [
-              styles.row,
-              hovered && styles.rowHover,
-              isCursor && styles.rowCursor,
-            ]}
+            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
             onPress={() => onSelect(b.abbrev)}
           >
             <View style={styles.psalmRowInner}>
@@ -165,7 +161,7 @@ function BibleBookList({
                 style={[
                   styles.incipit,
                   { flex: 1 },
-                  b.abbrev === selected && styles.rowTextActive,
+                  (b.abbrev === selected || isCursor) && styles.rowTextActive,
                 ]}
               >
                 {b.book}
@@ -174,7 +170,7 @@ function BibleBookList({
                 style={[
                   styles.rowMeta,
                   styles.bibleChapterCount,
-                  b.abbrev === selected && styles.rowTextActive,
+                  (b.abbrev === selected || isCursor) && styles.rowTextActive,
                 ]}
               >
                 {b.chapters} ch.

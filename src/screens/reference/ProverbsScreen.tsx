@@ -88,6 +88,7 @@ export function ProverbsScreen({
         <TextInput
           value={query}
           onChangeText={setQuery}
+          dataSet={{ pickerSearch: "" }}
           placeholder="Search chapters by number"
           placeholderTextColor="var(--text-secondary, #7a6e64)"
           style={[
@@ -174,6 +175,7 @@ export function ProverbsBar({
           ref={inputRef}
           value={query}
           onChangeText={setQuery}
+          dataSet={{ pickerSearch: "" }}
           placeholder="Search chapters by number"
           placeholderTextColor="var(--text-secondary, #7a6e64)"
           style={styles.search}
@@ -214,34 +216,39 @@ function ChapterIndex({
     return <EmptyMessage message={`No proverbs chapter matches “${q}”.`} />;
   }
   return (
-    <View data-index-list style={styles.indexBody}>
+    <View style={styles.indexBody} dataSet={{ indexList: "" }}>
       {filtered.map((c, i) => {
         const isSelected = c.chapter === selected;
         const isCursor = i === cursor;
         return (
           <Pressable
             key={c.chapter}
-            style={({ hovered }) => [
-              styles.row,
-              hovered && styles.rowHover,
-              isCursor && styles.rowCursor,
-            ]}
+            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
             onPress={() => onSelect(isSelected ? null : c.chapter)}
           >
             <View style={styles.psalmRowInner}>
               <Text
-                style={[styles.psalmNumber, isSelected && styles.rowTextActive]}
+                style={[
+                  styles.psalmNumber,
+                  (isSelected || isCursor) && styles.rowTextActive,
+                ]}
               >
                 {c.chapter}
               </Text>
               <Text
                 numberOfLines={1}
-                style={[styles.incipit, isSelected && styles.rowTextActive]}
+                style={[
+                  styles.incipit,
+                  (isSelected || isCursor) && styles.rowTextActive,
+                ]}
               >
                 Chapter {c.chapter}
               </Text>
               <Text
-                style={[styles.rowMeta, isSelected && styles.rowTextActive]}
+                style={[
+                  styles.rowMeta,
+                  (isSelected || isCursor) && styles.rowTextActive,
+                ]}
               >
                 {c.verses} verse{c.verses === 1 ? "" : "s"}
               </Text>

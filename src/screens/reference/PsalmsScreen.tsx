@@ -54,6 +54,7 @@ export function PsalmsScreen({
           ref={desktopInputRef}
           value={query}
           onChangeText={setQuery}
+          dataSet={{ pickerSearch: "" }}
           placeholder="Search by number or text"
           placeholderTextColor="var(--text-secondary, #7a6e64)"
           style={[
@@ -135,6 +136,7 @@ export function PsalmsBar({
           ref={inputRef}
           value={query}
           onChangeText={setQuery}
+          dataSet={{ pickerSearch: "" }}
           placeholder="Search by number or text"
           placeholderTextColor="var(--text-secondary, #7a6e64)"
           style={styles.search}
@@ -169,34 +171,39 @@ function PsalmIndex({
     return <EmptyMessage message={`No psalms match “${deferredQuery}”.`} />;
   }
   return (
-    <View data-index-list style={styles.indexBody}>
+    <View style={styles.indexBody} dataSet={{ indexList: "" }}>
       {hits.map((hit, i) => {
         const isSelected = hit.psalm === selected;
         const isCursor = i === cursor;
         return (
           <Pressable
             key={hit.psalm}
-            style={({ hovered }) => [
-              styles.row,
-              hovered && styles.rowHover,
-              isCursor && styles.rowCursor,
-            ]}
+            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
             onPress={() => onSelect(hit.psalm)}
           >
             <View style={styles.psalmRowInner}>
               <Text
-                style={[styles.psalmNumber, isSelected && styles.rowTextActive]}
+                style={[
+                  styles.psalmNumber,
+                  (isSelected || isCursor) && styles.rowTextActive,
+                ]}
               >
                 {hit.psalm}
               </Text>
               <Text
                 numberOfLines={1}
-                style={[styles.incipit, isSelected && styles.rowTextActive]}
+                style={[
+                  styles.incipit,
+                  (isSelected || isCursor) && styles.rowTextActive,
+                ]}
               >
                 {hit.incipit}
               </Text>
               <Text
-                style={[styles.rowMeta, isSelected && styles.rowTextActive]}
+                style={[
+                  styles.rowMeta,
+                  (isSelected || isCursor) && styles.rowTextActive,
+                ]}
               >
                 {hit.verses} verse{hit.verses === 1 ? "" : "s"}
               </Text>

@@ -61,6 +61,7 @@ export function SaintsScreen({
           ref={desktopInputRef}
           value={query}
           onChangeText={setQuery}
+          dataSet={{ pickerSearch: "" }}
           placeholder="Search saints by name or date"
           placeholderTextColor="var(--text-secondary, #7a6e64)"
           style={[
@@ -197,6 +198,7 @@ export function SaintsBar({
           ref={inputRef}
           value={query}
           onChangeText={setQuery}
+          dataSet={{ pickerSearch: "" }}
           placeholder="Search saints by name or date"
           placeholderTextColor="var(--text-secondary, #7a6e64)"
           style={styles.search}
@@ -233,30 +235,32 @@ const SaintIndex = memo(function SaintIndex({
     return <EmptyMessage message={`No saints match “${deferredQuery}”.`} />;
   }
   return (
-    <View data-index-list style={styles.indexBody}>
+    <View style={styles.indexBody} dataSet={{ indexList: "" }}>
       {hits.map((hit, i) => {
         const isSelected = hit.slug === selected;
         const isCursor = i === cursor;
         return (
           <Pressable
             key={hit.slug}
-            style={({ hovered }) => [
-              styles.row,
-              hovered && styles.rowHover,
-              isCursor && styles.rowCursor,
-            ]}
+            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
             onPress={() => onSelect(isSelected ? null : hit.slug)}
           >
             <View style={styles.saintRowInner}>
               <Text
                 numberOfLines={1}
                 ellipsizeMode="tail"
-                style={[styles.saintTitle, isSelected && styles.rowTextActive]}
+                style={[
+                  styles.saintTitle,
+                  (isSelected || isCursor) && styles.rowTextActive,
+                ]}
               >
                 {hit.title}
               </Text>
               <Text
-                style={[styles.saintDate, isSelected && styles.rowTextActive]}
+                style={[
+                  styles.saintDate,
+                  (isSelected || isCursor) && styles.rowTextActive,
+                ]}
               >
                 {monthDayShortLabel(hit.month, hit.day)}
               </Text>

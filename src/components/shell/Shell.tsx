@@ -565,23 +565,6 @@ export function Shell() {
       }
       return t.isContentEditable === true;
     };
-    // on reference split pages the right-hand picker owns j/k while it has
-    // focus; content (detail) owns them otherwise. lets h/l move between the
-    // two panes and keeps each pane's j/k rolling its own scroller/cursor.
-    const listHasFocus = (): boolean => {
-      // SAFETY: activeElement is always an Element; closest exists on all
-      // Elements, so the cast is safe for DOM elements queried here
-      const a = window.document.activeElement as HTMLElement | null;
-      return !!a?.closest?.("[data-split-list]");
-    };
-    const focusReferencePane = (list: boolean) => {
-      // SAFETY: these are driven by the SplitPane DOM, which always has the
-      // detail pane (data-split-detail) and list pane (data-split-list)
-      const node = window.document.querySelector(
-        list ? "[data-split-list]" : "[data-split-detail]",
-      ) as HTMLElement | null;
-      node?.focus({ preventScroll: false });
-    };
     // scroll the currently-focused scroller by a fraction of its height. a
     // negative factor scrolls up. j/k and d/u share this, differ only in step.
     const scrollByFraction = (factor: number) => {
@@ -622,6 +605,12 @@ export function Shell() {
         if (e.key === "Escape") {
           e.preventDefault();
           e.stopImmediatePropagation();
+          // escaping a text field (e.g. a picker search) returns focus to
+          // the page so keyboard users can step out of it without a mouse
+          // SAFETY: editable targets are DOM elements with a blur(), verified
+          // by the same tagName check that drove isEditable
+          const t = e.target as HTMLElement;
+          if (typeof t.blur === "function") t.blur();
         }
         return;
       }
@@ -697,38 +686,16 @@ export function Shell() {
           stepDay(-1);
           return;
         case "j":
-          // on a desktop reference page the picker owns j/k while its list
-          // has focus (the index hooks move the row cursor); once focus is
-          // on the content pane, j/k scroll that pane instead
-          if (isReferencePage(page) && !isMobile && listHasFocus()) return;
+          // j/k always scroll the main content pane; the index pickers move
+          // their cursor with ctrl+j/ctrl+k instead (see useIndexKeyboard)
           e.preventDefault();
           e.stopImmediatePropagation();
           scrollByFraction(0.14);
           return;
         case "k":
-          if (isReferencePage(page) && !isMobile && listHasFocus()) return;
           e.preventDefault();
           e.stopImmediatePropagation();
           scrollByFraction(-0.14);
-          return;
-        case "h":
-          // on a desktop reference split page h/l swap focus between the
-          // content pane and the right-hand picker, so j/k/d/u/gg/G follow
-          // whichever pane is active
-          if (isReferencePage(page) && !isMobile) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            focusReferencePane(false);
-            return;
-          }
-          return;
-        case "l":
-          if (isReferencePage(page) && !isMobile) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            focusReferencePane(true);
-            return;
-          }
           return;
         case "d":
           e.preventDefault();
@@ -770,7 +737,7 @@ export function Shell() {
       window.removeEventListener("keydown", onKeyDown, true);
       if (goTimer) clearTimeout(goTimer);
     };
-  }, [modal, handleNavigateTo, page, date, goToPage, isMobile]);
+  }, [modal, handleNavigateTo, page, date, goToPage]);
 
   const document = composeOffice(
     date,
