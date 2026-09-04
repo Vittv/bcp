@@ -14,6 +14,7 @@ import {
   protocol,
   screen,
   session,
+  shell,
 } from "electron";
 import { autoUpdater } from "electron-updater";
 import { type BcpRectangle, IPC } from "./ipc";
@@ -21,6 +22,17 @@ import { type BcpRectangle, IPC } from "./ipc";
 let mainWindow: BrowserWindow | null = null;
 
 const isMac = process.platform === "darwin";
+
+// only hand http(s) and mailto targets to the OS; keep the app's own bcp://
+// host and anything exotic inside the desktop shell
+function isExternalUrl(url: string): boolean {
+  const u = new URL(url);
+  return (
+    u.protocol === "http:" ||
+    u.protocol === "https:" ||
+    u.protocol === "mailto:"
+  );
+}
 
 // Bun statically rewrites `__dirname` to the source file's folder, so relying
 // on it breaks once the shell is compiled to dist-electron/ + packaged into
@@ -120,9 +132,27 @@ async function createWindow(): Promise<void> {
 
   mainWindow = win;
 
+  const wc = win.webContents;
+
+  // external links (Sidebar's window.open and ExternalLink anchors) must leave
+  // the app entirely: route every requested new window straight to the OS
+  // through shell.openExternal, which on Linux dispatches to xdg-open and so
+  // opens the user's default browser instead of a second Electron window.
+  wc.setWindowOpenHandler(({ url }) => {
+    if (isExternalUrl(url)) void shell.openExternal(url);
+    // deny everywhere: the renderer never needs its own child windows
+    return { action: "deny" };
+  });
+  // guard in-page navigation too, in case any anchor hits the current window
+  wc.on("will-navigate", (event, url) => {
+    if (isExternalUrl(url)) {
+      event.preventDefault();
+      void shell.openExternal(url);
+    }
+  });
+
   // diagnostic plumbing: surface the page's load result and renderer errors
   // to the terminal so a blank window is explainable instead of a mystery
-  const wc = win.webContents;
   wc.on("did-start-loading", () => console.log("[renderer] did-start-loading"));
   wc.on("did-finish-load", () => console.log("[renderer] did-finish-load"));
   wc.on("did-fail-load", (_ev, code, desc, url) => {

@@ -41,12 +41,14 @@ yarn-error.*
 /android
 
 # plan
-PLAN.md
-PLAN-*.md
-TODO.md
+plan/
 
 # tauri
 src-tauri/target/
+
+# electron build artifacts
+dist-electron/
+release/
 
 # local artifacts
 src-tauri/shot-full.png
