@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Platform, ScrollView, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import type { PageId } from "../../components/shell/Sidebar";
 import type { HistoryApi, HistorySnapshot } from "../../context/HistoryContext";
 import { useHistory, useHistoryField } from "../../context/HistoryContext";
@@ -510,4 +510,28 @@ export function DetailPage({
 
 export function EmptyMessage({ message }: { message: string }) {
   return <Text style={sharedStyles.empty}>{message}</Text>;
+}
+
+// the one highlight rule for every picker row: red text on the picked or
+// hovered row, a plain hover fill, and no visual for the keyboard cursor
+export function IndexRow({
+  selected,
+  onPress,
+  children,
+}: {
+  selected: boolean;
+  onPress: () => void;
+  children: (active: boolean) => ReactNode;
+}) {
+  return (
+    <Pressable
+      style={({ hovered }) => [
+        sharedStyles.row,
+        hovered && sharedStyles.rowHover,
+      ]}
+      onPress={onPress}
+    >
+      {({ hovered }) => children(selected || hovered)}
+    </Pressable>
+  );
 }

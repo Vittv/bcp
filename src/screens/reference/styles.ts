@@ -87,9 +87,9 @@ export const sharedStyles = StyleSheet.create({
   rowHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
-  // active rows (selected, or under the keyboard cursor) turn every text node
-  // accent red instead of painting a background fill; hover paints the rowHover
-  // fill on top of that state
+  // picked rows turn every text node accent red instead of painting a
+  // background fill; hover paints the rowHover fill on top of that state.
+  // the keyboard cursor has no visual: it only picks a row on Enter
   rowTextActive: {
     color: "var(--accent, #7a3040)",
   },

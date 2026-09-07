@@ -16,6 +16,7 @@ import {
   DetailPage,
   EmptyMessage,
   FIRST_SAINT,
+  IndexRow,
   noSelect,
   SplitPane,
   useReference,
@@ -82,7 +83,7 @@ export function SaintsScreen({
           query={query}
           // fall back to the first saint so the pane never shows an
           // empty hint; the row highlights as if it were picked
-          selected={openSaint ?? FIRST_SAINT}
+          selected={openSaint}
           onSelect={setOpenSaint}
         />
       }
@@ -236,36 +237,31 @@ const SaintIndex = memo(function SaintIndex({
   }
   return (
     <View style={styles.indexBody} dataSet={{ indexList: "" }}>
-      {hits.map((hit, i) => {
+      {hits.map((hit) => {
         const isSelected = hit.slug === selected;
-        const isCursor = i === cursor;
         return (
-          <Pressable
+          <IndexRow
             key={hit.slug}
-            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
+            selected={isSelected}
             onPress={() => onSelect(isSelected ? null : hit.slug)}
           >
-            <View style={styles.saintRowInner}>
-              <Text
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={[
-                  styles.saintTitle,
-                  (isSelected || isCursor) && styles.rowTextActive,
-                ]}
-              >
-                {hit.title}
-              </Text>
-              <Text
-                style={[
-                  styles.saintDate,
-                  (isSelected || isCursor) && styles.rowTextActive,
-                ]}
-              >
-                {monthDayShortLabel(hit.month, hit.day)}
-              </Text>
-            </View>
-          </Pressable>
+            {(active) => (
+              <View style={styles.saintRowInner}>
+                <Text
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={[styles.saintTitle, active && styles.rowTextActive]}
+                >
+                  {hit.title}
+                </Text>
+                <Text
+                  style={[styles.saintDate, active && styles.rowTextActive]}
+                >
+                  {monthDayShortLabel(hit.month, hit.day)}
+                </Text>
+              </View>
+            )}
+          </IndexRow>
         );
       })}
     </View>

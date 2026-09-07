@@ -16,6 +16,7 @@ import {
   DetailPage,
   EmptyMessage,
   FIRST_COLLECT,
+  IndexRow,
   noSelect,
   SplitPane,
   useReference,
@@ -98,7 +99,7 @@ export function CollectsScreen({
           query={query}
           // fall back to the first collect so the pane never shows an
           // empty hint; the row highlights as if it were picked
-          selected={selectedCollect ?? FIRST_COLLECT}
+          selected={selectedCollect}
           onSelect={setSelectedCollect}
         />
       }
@@ -208,7 +209,6 @@ function CollectIndex({
   );
   const { cursor } = useIndexKeyboard(hits, onEnter);
   useCursorScroll(cursor);
-  const cursorHit = hits[cursor];
   if (hits.length === 0) {
     return <EmptyMessage message={`No collects match “${deferredQuery}”.`} />;
   }
@@ -231,14 +231,10 @@ function CollectIndex({
               const isSelected =
                 selected?.section === hit.section &&
                 selected?.title === hit.title;
-              const isCursor = hit === cursorHit;
               return (
-                <Pressable
+                <IndexRow
                   key={`${hit.section}:${hit.title}`}
-                  style={({ hovered }) => [
-                    styles.row,
-                    hovered && styles.rowHover,
-                  ]}
+                  selected={isSelected}
                   onPress={() =>
                     onSelect(
                       isSelected
@@ -247,19 +243,21 @@ function CollectIndex({
                     )
                   }
                 >
-                  <View style={styles.collectRowInner}>
-                    <Text
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      style={[
-                        styles.collectIndexTitle,
-                        (isSelected || isCursor) && styles.rowTextActive,
-                      ]}
-                    >
-                      {hit.title}
-                    </Text>
-                  </View>
-                </Pressable>
+                  {(active) => (
+                    <View style={styles.collectRowInner}>
+                      <Text
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        style={[
+                          styles.collectIndexTitle,
+                          active && styles.rowTextActive,
+                        ]}
+                      >
+                        {hit.title}
+                      </Text>
+                    </View>
+                  )}
+                </IndexRow>
               );
             })}
         </View>

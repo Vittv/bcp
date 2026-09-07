@@ -8,6 +8,7 @@ import { loadKjvBook, sliceKjvPassage } from "../lib/content/kjv";
 import {
   DetailPage,
   EmptyMessage,
+  IndexRow,
   noSelect,
   SplitPane,
 } from "./reference/shared";
@@ -147,36 +148,37 @@ function BibleBookList({
   useCursorScroll(cursor);
   return (
     <View style={styles.indexBody} dataSet={{ indexList: "" }}>
-      {books.map((b, i) => {
-        const isCursor = i === cursor;
+      {books.map((b) => {
         return (
-          <Pressable
+          <IndexRow
             key={b.abbrev}
-            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
+            selected={b.abbrev === selected}
             onPress={() => onSelect(b.abbrev)}
           >
-            <View style={styles.psalmRowInner}>
-              <Text
-                numberOfLines={1}
-                style={[
-                  styles.incipit,
-                  { flex: 1 },
-                  (b.abbrev === selected || isCursor) && styles.rowTextActive,
-                ]}
-              >
-                {b.book}
-              </Text>
-              <Text
-                style={[
-                  styles.rowMeta,
-                  styles.bibleChapterCount,
-                  (b.abbrev === selected || isCursor) && styles.rowTextActive,
-                ]}
-              >
-                {b.chapters} ch.
-              </Text>
-            </View>
-          </Pressable>
+            {(active) => (
+              <View style={styles.psalmRowInner}>
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.incipit,
+                    { flex: 1 },
+                    active && styles.rowTextActive,
+                  ]}
+                >
+                  {b.book}
+                </Text>
+                <Text
+                  style={[
+                    styles.rowMeta,
+                    styles.bibleChapterCount,
+                    active && styles.rowTextActive,
+                  ]}
+                >
+                  {b.chapters} ch.
+                </Text>
+              </View>
+            )}
+          </IndexRow>
         );
       })}
     </View>

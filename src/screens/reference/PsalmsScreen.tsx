@@ -14,6 +14,7 @@ import { type PsalmHit, searchPsalms } from "../../lib/reference/search";
 import {
   DetailPage,
   EmptyMessage,
+  IndexRow,
   noSelect,
   SplitPane,
   useReference,
@@ -73,9 +74,7 @@ export function PsalmsScreen({
       list={
         <PsalmIndex
           query={query}
-          // fall back to the first psalm so the pane never shows an
-          // empty hint; the row highlights as if it were picked
-          selected={openPsalm ?? 1}
+          selected={openPsalm}
           onSelect={(n) => setOpenPsalm(openPsalm === n ? null : n)}
         />
       }
@@ -172,43 +171,33 @@ function PsalmIndex({
   }
   return (
     <View style={styles.indexBody} dataSet={{ indexList: "" }}>
-      {hits.map((hit, i) => {
+      {hits.map((hit) => {
         const isSelected = hit.psalm === selected;
-        const isCursor = i === cursor;
         return (
-          <Pressable
+          <IndexRow
             key={hit.psalm}
-            style={({ hovered }) => [styles.row, hovered && styles.rowHover]}
+            selected={isSelected}
             onPress={() => onSelect(hit.psalm)}
           >
-            <View style={styles.psalmRowInner}>
-              <Text
-                style={[
-                  styles.psalmNumber,
-                  (isSelected || isCursor) && styles.rowTextActive,
-                ]}
-              >
-                {hit.psalm}
-              </Text>
-              <Text
-                numberOfLines={1}
-                style={[
-                  styles.incipit,
-                  (isSelected || isCursor) && styles.rowTextActive,
-                ]}
-              >
-                {hit.incipit}
-              </Text>
-              <Text
-                style={[
-                  styles.rowMeta,
-                  (isSelected || isCursor) && styles.rowTextActive,
-                ]}
-              >
-                {hit.verses} verse{hit.verses === 1 ? "" : "s"}
-              </Text>
-            </View>
-          </Pressable>
+            {(active) => (
+              <View style={styles.psalmRowInner}>
+                <Text
+                  style={[styles.psalmNumber, active && styles.rowTextActive]}
+                >
+                  {hit.psalm}
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={[styles.incipit, active && styles.rowTextActive]}
+                >
+                  {hit.incipit}
+                </Text>
+                <Text style={[styles.rowMeta, active && styles.rowTextActive]}>
+                  {hit.verses} verse{hit.verses === 1 ? "" : "s"}
+                </Text>
+              </View>
+            )}
+          </IndexRow>
         );
       })}
     </View>

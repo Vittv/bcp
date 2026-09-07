@@ -11,6 +11,7 @@ import type { CanticlePassage } from "../../lib/content/types";
 import {
   DetailPage,
   EmptyMessage,
+  IndexRow,
   noSelect,
   SplitPane,
   useReference,
@@ -72,7 +73,7 @@ export function CanticlesScreen({
       list={
         <CanticleIndex
           query={query}
-          selected={openCanticle ?? 1}
+          selected={openCanticle}
           onSelect={(n) => setOpenCanticle(openCanticle === n ? null : n)}
         />
       }
@@ -206,7 +207,6 @@ function CanticleIndex({
   );
   const { cursor } = useIndexKeyboard(filtered, onEnter);
   useCursorScroll(cursor);
-  const cursorItem = filtered[cursor];
   if (filtered.length === 0) {
     return <EmptyMessage message={`No canticle matches “${query}”.`} />;
   }
@@ -238,44 +238,39 @@ function CanticleIndex({
           ) : null}
           {group.items.map((c) => {
             const isSelected = c.number === selected;
-            const isCursor = c === cursorItem;
             return (
-              <Pressable
+              <IndexRow
                 key={c.number}
-                style={({ hovered }) => [
-                  styles.row,
-                  hovered && styles.rowHover,
-                ]}
+                selected={isSelected}
                 onPress={() => onSelect(isSelected ? null : c.number)}
               >
-                <View style={styles.collectRowInner}>
-                  <Text
-                    style={[
-                      styles.canticleNumber,
-                      (isSelected || isCursor) && styles.rowTextActive,
-                    ]}
-                  >
-                    {c.number}
-                  </Text>
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      styles.canticleIndexTitle,
-                      (isSelected || isCursor) && styles.rowTextActive,
-                    ]}
-                  >
-                    {c.title}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.rowMeta,
-                      (isSelected || isCursor) && styles.rowTextActive,
-                    ]}
-                  >
-                    {c.verses} verse{c.verses === 1 ? "" : "s"}
-                  </Text>
-                </View>
-              </Pressable>
+                {(active) => (
+                  <View style={styles.collectRowInner}>
+                    <Text
+                      style={[
+                        styles.canticleNumber,
+                        active && styles.rowTextActive,
+                      ]}
+                    >
+                      {c.number}
+                    </Text>
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        styles.canticleIndexTitle,
+                        active && styles.rowTextActive,
+                      ]}
+                    >
+                      {c.title}
+                    </Text>
+                    <Text
+                      style={[styles.rowMeta, active && styles.rowTextActive]}
+                    >
+                      {c.verses} verse{c.verses === 1 ? "" : "s"}
+                    </Text>
+                  </View>
+                )}
+              </IndexRow>
             );
           })}
         </View>
