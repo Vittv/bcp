@@ -160,6 +160,24 @@ export function InfoIcon({
   );
 }
 
+export function SidebarIcon({
+  size = 16,
+  strokeWidth = 2,
+  color,
+  style,
+}: IconProps) {
+  return icon(
+    size,
+    strokeWidth,
+    color,
+    style,
+    <>
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M9.5 3v18" />
+    </>,
+  );
+}
+
 export function CloseIcon({
   size = 16,
   strokeWidth = 2,

@@ -11,9 +11,9 @@ import {
   AppModal,
   dismissEscapeConsumers,
 } from "../../components/shell/AppModal";
-import { Chevron } from "../../components/shell/Chevron";
 import { HelpScreen } from "../../components/shell/HelpScreen";
 import { type HintHandle, HintLayer } from "../../components/shell/HintLayer";
+import { SidebarIcon } from "../../components/shell/Icon";
 import type { ModalType, PageId } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
 import {
@@ -790,7 +790,14 @@ export function Shell() {
       accessibilityLabel="Show sidebar"
       accessibilityRole="button"
     >
-      <Chevron direction="right" size={7} />
+      {({ hovered }) => (
+        <SidebarIcon
+          size={14}
+          color={
+            hovered ? "var(--text, #2c2020)" : "var(--text-secondary, #7a6e64)"
+          }
+        />
+      )}
     </Pressable>
   ) : null;
 

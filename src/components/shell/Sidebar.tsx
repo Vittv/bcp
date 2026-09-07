@@ -2,13 +2,13 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { IS_DESKTOP, IS_STANDALONE } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { VERSION } from "../../lib/version";
-import { Chevron } from "./Chevron";
 import {
   DownloadIcon,
   GithubIcon,
   HelpIcon,
   InfoIcon,
   SettingsIcon,
+  SidebarIcon,
 } from "./Icon";
 
 export const REPO_URL = "https://github.com/Vittv/bcp";
@@ -82,7 +82,9 @@ export function Sidebar({
           accessibilityLabel="Hide sidebar"
           accessibilityRole="button"
         >
-          <Chevron direction="left" size={6} />
+          {({ hovered }) => (
+            <SidebarIcon size={14} color={hovered ? HOVER_COLOR : IDLE_COLOR} />
+          )}
         </Pressable>
         <View style={styles.toolbarSpacer} />
         {!IS_DESKTOP && !IS_STANDALONE ? (
