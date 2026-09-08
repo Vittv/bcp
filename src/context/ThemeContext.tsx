@@ -166,6 +166,10 @@ function applyPalette(theme: ResolvedTheme) {
   r.setProperty("--today-bg", p.todayBg);
   r.setProperty("--control-hover", p.controlHover);
   r.setProperty("--selected-bg", p.selectedBg);
+  // trust the color-scheme for native chrome we do not paint: the wco
+  // window-controls overlay glyphs, scrollbars, and form controls. without
+  // it chromium keeps the overlay light even while the app runs dark
+  r.setProperty("color-scheme", theme === "dark" ? "dark" : "light");
 
   // drive the installed pwa's window chrome from the app palette instead of
   // the static light value in public/index.html. chromium re-reads this meta
@@ -197,6 +201,22 @@ function applyPalette(theme: ResolvedTheme) {
     *::-webkit-scrollbar-thumb:hover { background: ${p.textSecondary}; }
     ::selection { background: var(--control-hover, #d2cbbf); color: var(--text, #2c2020); }
     :focus-visible { outline: 2px solid ${p.accent}; outline-offset: 2px; }
+    /* installed pwa in window-controls-overlay: the top bar becomes the
+       draggable titlebar, padded clear of the overlaid window buttons.
+       env() is only defined while the overlay is genuinely active, so every
+       declaration carries a no-overlay fallback and nothing shifts in a
+       plain tab or non-wco pwa */
+    [data-bcp-wco] {
+      -webkit-app-region: drag;
+      app-region: drag;
+      height: env(titlebar-area-height, 40px) !important;
+      padding-left: calc(env(titlebar-area-x, 0px) + 12px) !important;
+      padding-right: calc(100% - env(titlebar-area-width) + 12px) !important;
+    }
+    [data-bcp-wco] [data-wco-no-drag] {
+      -webkit-app-region: no-drag;
+      app-region: no-drag;
+    }
   `;
 }
 

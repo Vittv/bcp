@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../context/ThemeContext";
 import { sanctoraleTitle } from "../../lib/calendar/sanctorale";
@@ -20,6 +21,40 @@ const MONO = '"JetBrains Mono", monospace';
 // injected script turns mousedown/double-click on it into window
 // dragging and maximize toggling
 const DRAG_DATA = { tauriDragRegion: "" };
+
+// forwarded as data-bcp-wco / data-wco-no-drag; ThemeContext injects a
+// stylesheet that turns the top bar into the pwa's draggable titlebar and
+// keeps the interactive controls clickable beside the overlaid buttons
+const WCO_DATA = { wco: "" };
+const WCO_STOP = { wcoNoDrag: "" };
+
+// true while the installed pwa runs inside window-controls-overlay (chromium
+// only). the browser merges the overlay into the app surface and sets visible
+// as soon as the user toggles the "Hide title bar" button
+function useWindowControlsOverlay(): boolean {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    // SAFETY: probes the experimental windowControlsOverlay API on Navigator,
+    // guarded by the in-existence check below and never used on native or
+    // non-chromium webviews where it is absent
+    const wco = (
+      navigator as Navigator & {
+        windowControlsOverlay?: {
+          visible: boolean;
+          addEventListener(type: "geometrychange", cb: () => void): void;
+          removeEventListener(type: "geometrychange", cb: () => void): void;
+        };
+      }
+    ).windowControlsOverlay;
+    if (!wco) return;
+    const update = () => setVisible(wco.visible);
+    update();
+    wco.addEventListener("geometrychange", update);
+    return () => wco.removeEventListener("geometrychange", update);
+  }, []);
+  return visible;
+}
 
 const SEASON_LABEL: Record<Season, string> = {
   advent: "Advent",
@@ -68,6 +103,7 @@ export function TopBar({
 }: TopBarProps) {
   const { mode, setMode, fontScale, setFontScale, resolved } = useTheme();
   const { openSaint } = useSaintPopover();
+  const wco = useWindowControlsOverlay();
 
   const pct = `${Math.round(fontScale * 100)}%`;
 
@@ -83,9 +119,11 @@ export function TopBar({
   return (
     <View
       style={[styles.bar, noSelect]}
-      dataSet={IS_TAURI ? DRAG_DATA : undefined}
+      dataSet={wco ? WCO_DATA : IS_TAURI ? DRAG_DATA : undefined}
     >
-      {IS_MACOS_TAURI && <View style={styles.macGap} />}
+      {IS_MACOS_TAURI && (
+        <View style={styles.macGap} dataSet={wco ? WCO_STOP : undefined} />
+      )}
 
       <View
         style={styles.seasonLabel}
@@ -116,12 +154,12 @@ export function TopBar({
                 onPress={() => holyDay && openSaint(holyDay)}
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${holyDayLabel} in Saints`}
-                dataSet={IS_TAURI ? DRAG_DATA : undefined}
+                dataSet={wco ? WCO_STOP : IS_TAURI ? DRAG_DATA : undefined}
               >
                 <Text
                   style={styles.countdownText}
                   numberOfLines={1}
-                  dataSet={IS_TAURI ? DRAG_DATA : undefined}
+                  dataSet={wco ? WCO_STOP : IS_TAURI ? DRAG_DATA : undefined}
                 >
                   {holyDayLabel}
                 </Text>
@@ -138,7 +176,10 @@ export function TopBar({
         )}
       </View>
 
-      <View style={styles.controls} dataSet={IS_TAURI ? DRAG_DATA : undefined}>
+      <View
+        style={styles.controls}
+        dataSet={wco ? WCO_STOP : IS_TAURI ? DRAG_DATA : undefined}
+      >
         <View style={styles.fontControl}>
           <Text style={styles.fontPct}>{pct}</Text>
           <Pressable
@@ -198,7 +239,7 @@ export function TopBar({
         </Pressable>
       </View>
 
-      {showingControls && <WindowControls />}
+      {showingControls && !wco && <WindowControls />}
     </View>
   );
 }

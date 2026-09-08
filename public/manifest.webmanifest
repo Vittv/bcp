@@ -8,6 +8,7 @@
   "start_url": "/bcp/",
   "scope": "/bcp/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay"],
   "orientation": "any",
   "background_color": "#e0dbd0",
   "theme_color": "#e0dbd0",
