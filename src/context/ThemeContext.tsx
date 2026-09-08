@@ -167,6 +167,14 @@ function applyPalette(theme: ResolvedTheme) {
   r.setProperty("--control-hover", p.controlHover);
   r.setProperty("--selected-bg", p.selectedBg);
 
+  // drive the installed pwa's window chrome from the app palette instead of
+  // the static light value in public/index.html. chromium re-reads this meta
+  // at runtime and repaints the app window title bar
+  const themeMeta = document.querySelector<HTMLMetaElement>(
+    'meta[name="theme-color"][id="theme-color"]',
+  );
+  if (themeMeta) themeMeta.content = p.bg;
+
   const id = "scrollbar-style";
   // SAFETY: we only create <style> elements with this id in applyPalette.
   let el = document.getElementById(id) as HTMLStyleElement | null;
