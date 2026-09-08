@@ -12,7 +12,7 @@ import {
   seasonLabel,
 } from "../lib/calendar/observances";
 import type { CalendarDate } from "../lib/calendar/types";
-import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../lib/fonts";
+import { CHROME_FONT, SERIF_FONT } from "../lib/fonts";
 import { useReference } from "./reference/shared";
 
 const noSelect = {
@@ -358,10 +358,10 @@ function DayModal({
       onClose={onClose}
       width={400}
       titleStyle={{
-        fontFamily: HEADING_FONT,
-        fontWeight: "700",
-        fontSize: 22,
-        letterSpacing: 0,
+        fontFamily: CHROME_FONT,
+        fontWeight: "600",
+        fontSize: 26,
+        letterSpacing: 0.2,
       }}
     >
       <Text style={[styles.modalSeason, { color: seasonColor }]}>
