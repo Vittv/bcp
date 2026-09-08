@@ -6,6 +6,11 @@ import { CHROME_FONT } from "../lib/fonts";
 import { LINUX_INSTALL_URL, LINUX_TARBALL, RELEASE_PAGE } from "../lib/release";
 import { VERSION } from "../lib/version";
 
+// AMO throttles addons.mozilla.org for many IPs, so point firefox users at the
+// canonical project page; the "Progressive Web Apps for Firefox" extension is
+// linked from there.
+const FIREFOXPWA_URL = "https://github.com/filips123/PWAsForFirefox";
+
 // Chrome and friends fire beforeinstallprompt when the page is installable;
 // capturing it lets the app offer install inline instead of relying on the
 // browser's menu. Safari and Firefox never fire it, so the button stays hidden
@@ -184,6 +189,14 @@ export function InstallScreen() {
         <Text style={styles.body}>
           .deb and .rpm packages for Debian, Ubuntu, Fedora and compatible
           distros are also on the release page.
+        </Text>
+        <Text style={styles.browserNote}>
+          On desktop Linux, Chromium-family browsers install bcp as an app
+          natively. Firefox and Zen can't yet, so install the{" "}
+          <ExternalLink href={FIREFOXPWA_URL} style={styles.link}>
+            firefoxpwa connector
+          </ExternalLink>{" "}
+          and install bcp from the browser's menu.
         </Text>
       </View>
 
