@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { IS_DESKTOP, IS_STANDALONE } from "../../lib/desktop";
+import { IS_STANDALONE, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { VERSION } from "../../lib/version";
 import {
@@ -87,7 +87,7 @@ export function Sidebar({
           )}
         </Pressable>
         <View style={styles.toolbarSpacer} />
-        {!IS_DESKTOP && !IS_STANDALONE ? (
+        {!IS_TAURI && !IS_STANDALONE ? (
           <Pressable
             style={({ hovered }) => [
               styles.toolBtn,

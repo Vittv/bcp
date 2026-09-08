@@ -46,9 +46,5 @@ plan/
 # tauri
 src-tauri/target/
 
-# electron build artifacts
-dist-electron/
-release/
-
 # local artifacts
 src-tauri/shot-full.png

@@ -41,9 +41,9 @@ import {
 import type { CalendarDate } from "../../lib/calendar/types";
 import { getKjvBookMeta } from "../../lib/content/kjv";
 import {
-  IS_DESKTOP,
-  IS_MACOS,
-  IS_WINDOWS,
+  IS_MACOS_TAURI,
+  IS_TAURI,
+  IS_WINDOWS_TAURI,
   loadWindowControls,
   saveWindowControls,
 } from "../../lib/desktop";
@@ -310,7 +310,7 @@ export function Shell() {
   // scroll-click (middle button) autoscroll, Linux and macOS desktop only:
   // their webviews (WebKitGTK, WKWebView) have no native gesture, while
   // Windows WebView2 and the plain web build keep theirs
-  const autoscroll = useAutoscroll(IS_DESKTOP && !IS_WINDOWS);
+  const autoscroll = useAutoscroll(IS_TAURI && !IS_WINDOWS_TAURI);
 
   // narrow layout for the chrome bars themselves: they keep working
   // well below the sidebar's mobile breakpoint by dropping their
@@ -943,7 +943,7 @@ export function Shell() {
         return (
           <AppModal title="Settings" onClose={closeModal} width={760}>
             <SettingsScreen
-              showWindowControls={IS_DESKTOP && !IS_MACOS}
+              showWindowControls={IS_TAURI && !IS_MACOS_TAURI}
               windowControls={windowControls}
               onWindowControlsChange={setWindowControls}
             />
