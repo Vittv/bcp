@@ -1,8 +1,17 @@
-import { memo, type ReactNode, useCallback, useEffect, useState } from "react";
+import {
+  memo,
+  type ReactNode,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Pressable, Text, View } from "react-native";
 import { ScriptureView } from "../components/office/ScriptureView";
 import { Chevron } from "../components/shell/Chevron";
 import { bibleBookName, useBible } from "../context/BibleContext";
+import { usePalette } from "../context/PaletteContext";
 import type { KjvBook, KjvBookMeta } from "../lib/content/kjv";
 import { loadKjvBook, sliceKjvPassage } from "../lib/content/kjv";
 import {
@@ -10,13 +19,11 @@ import {
   EmptyMessage,
   IndexRow,
   noSelect,
+  PickerButton,
   SplitPane,
 } from "./reference/shared";
 import { sharedStyles as styles } from "./reference/styles";
-import {
-  useCursorScroll,
-  useIndexKeyboard,
-} from "./reference/useIndexKeyboard";
+import { useIndexKeyboard } from "./reference/useIndexKeyboard";
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -31,18 +38,15 @@ export function BibleReaderScreen({
   fontScale: number;
   onScrollProgress?: (pct: number) => void;
 }) {
-  const { book, selectBook } = useBible();
+  const { book } = useBible();
+  const hint = (
+    <EmptyMessage message="Open the book picker to start reading." />
+  );
 
   if (isMobile) {
     return (
       <View style={styles.container}>
-        {book ? (
-          <DetailPage compact>
-            <BibleChapterBody />
-          </DetailPage>
-        ) : (
-          <BibleBookList onSelect={selectBook} />
-        )}
+        <DetailPage compact>{book ? <BibleChapterBody /> : hint}</DetailPage>
       </View>
     );
   }
@@ -51,8 +55,7 @@ export function BibleReaderScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      list={<BibleBookList selected={book?.abbrev} onSelect={selectBook} />}
-      detail={book ? <BibleChapterBody /> : <EmptyMessage message="" />}
+      detail={book ? <BibleChapterBody /> : hint}
       detailOpen={book !== null}
     />
   );
@@ -62,14 +65,9 @@ export function BibleReaderScreen({
 // Bar
 // ---------------------------------------------------------------------------
 
-export function BibleBar({
-  leading,
-  isMobile,
-}: {
-  leading?: ReactNode;
-  isMobile: boolean;
-}) {
-  const { book, chapter, clearBook, nextChapter, prevChapter } = useBible();
+export function BibleBar({ leading }: { leading?: ReactNode }) {
+  const { book, chapter, nextChapter, prevChapter } = useBible();
+  const palette = usePalette();
   const total = book?.chapters ?? 0;
   const atStart = chapter <= 1;
   const atEnd = total > 0 && chapter >= total;
@@ -78,49 +76,37 @@ export function BibleBar({
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
-        {isMobile && book ? (
-          <Pressable
-            style={({ hovered }) => [
-              styles.backBtn,
-              hovered && styles.rowHover,
-            ]}
-            onPress={clearBook}
-            accessibilityLabel="Back to book list"
-            accessibilityRole="button"
-          >
-            <Chevron direction="left" size={5} />
-            <Text style={styles.backText}>Back</Text>
-          </Pressable>
-        ) : null}
+        <PickerButton
+          label={book ? `${bibleBookName(book.abbrev)} ${chapter}` : "Book"}
+          meta={book ? `Ch. ${chapter} / ${total}` : undefined}
+          onPress={() => palette.open("bible")}
+        />
       </View>
       {book && total > 0 ? (
         <View style={styles.barRight}>
           <Pressable
             style={({ hovered }) => [
-              styles.backBtn,
-              hovered && styles.rowHover,
+              styles.arrowBtn,
+              hovered && styles.arrowBtnHover,
               atStart && { opacity: 0.4 },
             ]}
             onPress={prevChapter}
             disabled={atStart}
             accessibilityLabel="Previous chapter"
           >
-            <Chevron direction="left" size={5} />
+            <Chevron direction="left" size={6} />
           </Pressable>
-          <Text style={styles.backText}>
-            {bibleBookName(book.abbrev)} {chapter}
-          </Text>
           <Pressable
             style={({ hovered }) => [
-              styles.backBtn,
-              hovered && styles.rowHover,
+              styles.arrowBtn,
+              hovered && styles.arrowBtnHover,
               atEnd && { opacity: 0.4 },
             ]}
             onPress={nextChapter}
             disabled={atEnd}
             accessibilityLabel="Next chapter"
           >
-            <Chevron direction="right" size={5} />
+            <Chevron direction="right" size={6} />
           </Pressable>
         </View>
       ) : null}
@@ -132,55 +118,81 @@ export function BibleBar({
 // Book list
 // ---------------------------------------------------------------------------
 
-function BibleBookList({
-  selected,
+// memoized book row: a cursor flip re-renders only the two rows whose
+// active state changed, instead of rebuilding the whole list every move
+const BookRow = memo(function BookRow({
+  meta,
+  active,
   onSelect,
 }: {
-  selected?: string | null;
+  meta: KjvBookMeta;
+  active: boolean;
   onSelect: (abbrev: string) => void;
 }) {
+  return (
+    <IndexRow cursor={active} onPress={() => onSelect(meta.abbrev)}>
+      {(a) => (
+        <View style={styles.psalmRowInner}>
+          <Text
+            numberOfLines={1}
+            style={[styles.incipit, { flex: 1 }, a && styles.rowTextActive]}
+          >
+            {meta.book}
+          </Text>
+          <Text
+            style={[
+              styles.rowMeta,
+              styles.bibleChapterCount,
+              a && styles.rowTextActive,
+            ]}
+          >
+            {meta.chapters} ch.
+          </Text>
+        </View>
+      )}
+    </IndexRow>
+  );
+});
+
+export function BibleBookList({
+  onSelect,
+  query,
+}: {
+  onSelect: (abbrev: string) => void;
+  query?: string;
+}) {
   const { books } = useBible();
+  const deferredQuery = useDeferredValue(query ?? "");
+  const filtered = useMemo(
+    () =>
+      deferredQuery.trim() === ""
+        ? books
+        : books.filter(
+            (b) =>
+              b.book
+                .toLowerCase()
+                .includes(deferredQuery.trim().toLowerCase()) ||
+              b.abbrev
+                .toLowerCase()
+                .startsWith(deferredQuery.trim().toLowerCase()),
+          ),
+    [books, deferredQuery],
+  );
   const onEnter = useCallback(
     (_i: number, b: KjvBookMeta) => onSelect(b.abbrev),
     [onSelect],
   );
-  const { cursor } = useIndexKeyboard(books, onEnter);
-  useCursorScroll(cursor);
+  const { cursor } = useIndexKeyboard(filtered, onEnter);
+  if (filtered.length === 0) {
+    return (
+      <EmptyMessage message={`No bible book matches “${deferredQuery}”.`} />
+    );
+  }
   return (
     <View style={styles.indexBody} dataSet={{ indexList: "" }}>
-      {books.map((b) => {
-        return (
-          <IndexRow
-            key={b.abbrev}
-            selected={b.abbrev === selected}
-            onPress={() => onSelect(b.abbrev)}
-          >
-            {(active) => (
-              <View style={styles.psalmRowInner}>
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    styles.incipit,
-                    { flex: 1 },
-                    active && styles.rowTextActive,
-                  ]}
-                >
-                  {b.book}
-                </Text>
-                <Text
-                  style={[
-                    styles.rowMeta,
-                    styles.bibleChapterCount,
-                    active && styles.rowTextActive,
-                  ]}
-                >
-                  {b.chapters} ch.
-                </Text>
-              </View>
-            )}
-          </IndexRow>
-        );
-      })}
+      {filtered.map((b, i) => (
+        <BookRow key={b.abbrev} meta={b} active={i === cursor} onSelect={onSelect} />
+      ))}
     </View>
   );
 }

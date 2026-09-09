@@ -21,7 +21,7 @@ import { CloseIcon } from "./Icon";
 // dismisses the same way: Esc, the X, or clicking the dim area.
 
 type AppModalProps = {
-  title: string;
+  title?: string;
   onClose: () => void;
   children: ReactNode;
   width?: number;
@@ -37,22 +37,23 @@ const IDLE_COLOR = "var(--text-secondary, #7a6e64)";
 type EscEntry = { run: () => void };
 const escRegistry: EscEntry[] = [];
 
-// the shell owns the capture-phase keydown listener, which mounts before
-// any modal ever does, so a modal's own window listener could never win
-// the ordering. instead modals sign up here and the shell invokes them.
-function registerEsc(run: () => void): () => void {
+// the shell calls this from its global Escape handling: every mounted
+// modal closes about the same way the X does
+export function dismissEscapeConsumers(): void {
+  for (const e of escRegistry) e.run();
+}
+
+// exported for chrome that shares the modal's Escape and Android-back
+// behavior without its title-bar frame (the floating pickers): registered
+// closers are invoked by the shell's Escape path, so Esc closes them the
+// same way it closes an AppModal
+export function registerEsc(run: () => void): () => void {
   const entry = { run };
   escRegistry.push(entry);
   return () => {
     const i = escRegistry.indexOf(entry);
     if (i >= 0) escRegistry.splice(i, 1);
   };
-}
-
-// the shell calls this from its global Escape handling: every mounted
-// modal closes about the same way the X does
-export function dismissEscapeConsumers(): void {
-  for (const e of escRegistry) e.run();
 }
 
 export function AppModal({

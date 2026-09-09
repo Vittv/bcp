@@ -28,18 +28,52 @@ function isPickerSearch(el: EventTarget | null): boolean {
   return !!t?.closest?.("[data-picker-search]");
 }
 
-// vim-style row navigation for the reference index lists. tracks a keyboard
-// cursor index into the (possibly filtered) list and moves it with
-// ctrl+j / ctrl+k / ArrowUp / ArrowDown, opening the focused row on Enter.
-// the bare j/k keys are reserved for scrolling the main content pane, so the
-// picker only moves under ctrl. only active on web and only while the list is
-// on screen; normally ignores keystrokes meant for an editable field, but a
-// picker search box (data-picker-search) lets arrows+Enter drive the cursor
-// directly, so typing a filter and picking with the keyboard is one motion.
+// keep the cursor row in view as it moves. only the active picker renders an
+// index list (data-index-list), and the cursor row is the nth role=button
+// inside it (the grouped-list headings are not buttons). runs from the key
+// handler and the filter clamp, i.e. before React re-renders, so layout is
+// still cached and reads are cheap. it touches only the owning scroller, and
+// only when the row actually leaves the visible region (the cmdk/datalist
+// feel): a row above the top scrolls up, one past the bottom scrolls down.
+function scrollCursorIntoView(cursor: number): void {
+  const list = document.querySelector("[data-index-list]");
+  if (!list) return;
+  const scroller =
+    list.closest<HTMLElement>("[data-palette-list]") ??
+    list.closest<HTMLElement>("[data-split-list-scroll]");
+  if (!scroller) return;
+  // SAFETY: buttons are DOM Elements with getBoundingClientRect; the generic
+  // narrows the collection, no runtime cast is performed
+  const rows = Array.from(
+    list.querySelectorAll<HTMLElement>('[role="button"]'),
+  );
+  const row = rows[cursor];
+  if (!row) return;
+  const scrollerTop = scroller.getBoundingClientRect().top;
+  const top = row.getBoundingClientRect().top - scrollerTop;
+  const bottom = top + row.getBoundingClientRect().height;
+  if (top < 0) scroller.scrollTop += top;
+  else if (bottom > scroller.clientHeight)
+    scroller.scrollTop += bottom - scroller.clientHeight;
+}
+
+// vim/fzf-style row navigation for the reference index lists, sharing the
+// active row between keyboard and mouse exactly like cmdk. keyboard moves
+// (ctrl+j/ctrl+k and ArrowUp/ArrowDown) drive the cursor and scroll it into
+// view; the pointer drags the same cursor as a document-level mousemove that
+// picks the row under it, so both inputs paint the one highlight. the mouse
+// never scrolls: mousemove only fires when the pointer actually moves (never
+// on wheel scrolling under a static pointer) and the movement guard drops
+// stray zero-move events, so hovering can't re-anchor the cursor mid-scroll.
+// Enter opens whichever row is active. only active on web and only while a
+// list is mounted (i.e. the palette is open).
 export function useIndexKeyboard<T>(
   movable: T[],
   onEnter: (index: number, value: T) => void,
-): { cursor: number; move: (delta: number) => void } {
+): {
+  cursor: number;
+  move: (delta: number) => void;
+} {
   const [cursor, setCursor] = useState(0);
   const onEnterRef = useRef(onEnter);
   onEnterRef.current = onEnter;
@@ -50,8 +84,12 @@ export function useIndexKeyboard<T>(
 
   // a fresh (clamped) list parks the cursor back inside it: if the filter
   // collapses the rows, the cursor clamps to the tail; an unrelated identity
-  // change keeps the position the user is on
+  // change keeps the position the user is on. the scrolled position follows
+  // the clamp right away
   useEffect(() => {
+    if (movable.length === 0) return;
+    if (IS_WEB)
+      scrollCursorIntoView(Math.min(cursorRef.current, movable.length - 1));
     setCursor((c) =>
       c >= movable.length ? Math.max(0, movable.length - 1) : c,
     );
@@ -60,10 +98,53 @@ export function useIndexKeyboard<T>(
   const move = useCallback((delta: number) => {
     const n = movableRef.current.length;
     if (n === 0) return;
-    setCursor((c) => {
-      const next = c + delta;
-      return next < 0 ? 0 : next >= n ? n - 1 : next;
-    });
+    const next = Math.max(0, Math.min(n - 1, cursorRef.current + delta));
+    setCursor(next);
+    // scroll before React commits, while layout is still cached, so the
+    // follow is a single cheap read/write instead of a post-render reflow.
+    // only move()/the clamp scroll; the mouse repaint below never does
+    if (IS_WEB) scrollCursorIntoView(next);
+  }, []);
+
+  // the pointer follows the cursor (cmdk's trick): a capture-phase mousemove
+  // maps the element under the pointer onto the list's buttons and repaints
+  // the active row in place, without ever scrolling. coalesced to a single
+  // pending rAF (each move replaces the queued one) so a fast pointer scan
+  // never stacks up hit-tests past the next paint; the movement guard keeps
+  // scroll-created no-ops out
+  useEffect(() => {
+    if (!IS_WEB) return;
+    let raf = 0;
+    const onMove = (e: MouseEvent) => {
+      if (movableRef.current.length === 0) return;
+      if (e.movementX === 0 && e.movementY === 0) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        if (movableRef.current.length === 0) return;
+        const list = document.querySelector("[data-index-list]");
+        if (!list) return;
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        const row = target?.closest<HTMLElement>('[role="button"]');
+        if (!row || !list.contains(row)) return;
+        let i = 0;
+        for (const rowEl of list.querySelectorAll<HTMLElement>(
+          '[role="button"]',
+        )) {
+          if (rowEl === row) {
+            const next = Math.min(i, movableRef.current.length - 1);
+            if (next !== cursorRef.current) setCursor(next);
+            return;
+          }
+          i++;
+        }
+      });
+    };
+    window.addEventListener("mousemove", onMove, true);
+    return () => {
+      window.removeEventListener("mousemove", onMove, true);
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   useEffect(() => {
@@ -75,8 +156,10 @@ export function useIndexKeyboard<T>(
       switch (e.key) {
         case "j":
         case "k":
-          // j/k only drive the picker under ctrl; the bare keys scroll the
-          // main content pane (handled by the shell)
+          // bare j/k always types (the picker search needs its letters):
+          // only ctrl+j / ctrl+k move the cursor. ctrl+j is also the
+          // browser's downloads shortcut, so once we commit to moving we
+          // must not let the page see it
           if (!e.ctrlKey) return;
           e.preventDefault();
           e.stopImmediatePropagation();
@@ -104,40 +187,4 @@ export function useIndexKeyboard<T>(
   }, [move]);
 
   return { cursor, move };
-}
-
-// keep the cursor row in view as it moves. the active picker's index list
-// marks its container with data-index-list (see each Index's indexBody), so
-// the cursor row is the nth role=button inside it. on desktop the rows live
-// in the split-pane's own scroller ([data-split-list-scroll]), which we set
-// scrollTop on directly so the picked row always stays visible regardless of
-// how nesting affects scrollIntoView; on mobile the rows scroll with the
-// document column, where scrollIntoView is reliable. only one index renders
-// at a time.
-export function useCursorScroll(cursor: number) {
-  useEffect(() => {
-    if (!IS_WEB) return;
-    const list = document.querySelector("[data-index-list]");
-    if (!list) return;
-    // SAFETY: buttons are DOM Elements with scrollIntoView; the generic
-    // narrows the collection, no runtime cast is performed
-    const rows = Array.from(
-      list.querySelectorAll<HTMLElement>('[role="button"]'),
-    );
-    const row = rows[cursor];
-    if (!row) return;
-    const scroller = list.closest<HTMLElement>("[data-split-list-scroll]");
-    if (!scroller) {
-      row.scrollIntoView({ block: "nearest" });
-      return;
-    }
-    const sTop = scroller.getBoundingClientRect().top;
-    const rTop = row.getBoundingClientRect().top - sTop;
-    const rBottom = rTop + row.getBoundingClientRect().height;
-    const viewTop = scroller.scrollTop;
-    const viewBottom = viewTop + scroller.clientHeight;
-    if (rTop < viewTop) scroller.scrollTop = rTop;
-    else if (rBottom > viewBottom)
-      scroller.scrollTop = rBottom - scroller.clientHeight;
-  }, [cursor]);
 }

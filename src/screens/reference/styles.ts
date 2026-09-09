@@ -20,7 +20,9 @@ export const sharedStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
+    // same paddingHorizontal as the sidebar toolbar so the leading button
+    // and trailing controls sit at the same inset from their edges
+    paddingHorizontal: 6,
     backgroundColor: "var(--bg, #e0dbd0)",
     flexShrink: 0,
     // anchor for the bar's popovers (office menu, month grid). the
@@ -34,12 +36,16 @@ export const sharedStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    flexGrow: 1,
     flexShrink: 0,
+    minWidth: 0,
   },
   barRight: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    // keep the trailing controls clear of the current-pick chip
+    marginLeft: 6,
   },
   // the search fills whatever bar space the leading/back buttons leave,
   // borderless so the whole strip reads as one field; keep its height
@@ -60,36 +66,130 @@ export const sharedStyles = StyleSheet.create({
     fontSize: 14,
     color: "var(--text, #2c2020)",
   },
-  backBtn: {
-    flexDirection: "row",
+  // chapter-arrow controls on the testament bars: compact squares matching
+  // the bar's other bordered buttons, muted fill that darkens on hover
+  arrowBtn: {
+    width: 24,
+    height: 24,
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    justifyContent: "center",
     borderRadius: 4,
-    marginLeft: 8,
+    borderWidth: 1,
+    borderColor: "var(--border-content, #b5aa9e)",
+    backgroundColor: "var(--bg, #e0dbd0)",
   },
-  backText: {
+  arrowBtnHover: {
+    backgroundColor: "var(--control-hover, #d2cbbf)",
+  },
+  // the floating picker frame (aetheryte-style search tray): a dimmed
+  // backdrop, a centered card whose search field is pinned to the top and
+  // the navigation hint row pinned to the bottom, with the result list
+  // scrolling in between
+  paletteOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 100,
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  paletteTray: {
+    zIndex: 101,
+    width: "100%",
+    maxWidth: 720,
+    height: "70%",
+    maxHeight: "85%",
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: "var(--bg, #e0dbd0)",
+    borderWidth: 1,
+    borderColor: "var(--border, #c3bcb2)",
+    borderRadius: 10,
+    overflow: "hidden",
+    boxShadow: "0 8px 24px rgba(20, 15, 15, 0.18)",
+  },
+  paletteSearch: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
+    fontSize: 15,
+    color: "var(--text, #2c2020)",
+    backgroundColor: "transparent",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border, #c3bcb2)",
+    flexShrink: 0,
+  },
+  paletteBody: {
+    flex: 1,
+    minHeight: 0,
+    overflowY: "auto",
+    paddingVertical: 4,
+  },
+  paletteFooter: {
+    flexDirection: "row",
+    gap: 18,
+    alignItems: "center",
+    paddingVertical: 5,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: "var(--border, #c3bcb2)",
+    opacity: 0.85,
+    flexShrink: 0,
+  },
+  paletteHint: {
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "center",
+  },
+  paletteHintText: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "400",
     fontSize: 12,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text, #2c2020)",
+  },
+  paletteKbd: {
+    fontFamily: '"JetBrains Mono", monospace',
+    fontWeight: "400",
+    fontSize: 11,
+    color: "var(--text, #2c2020)",
+    borderWidth: 1,
+    borderColor: "var(--border, #b9b0a2)",
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
   },
   list: {
     flexGrow: 1,
   },
-  // file-manager rows: full-width hover bands over faint dividers; the
+  // file-manager rows: full-width hover bands; the
   // 18px padding sits the search text and row text on the same left edge
   row: {
-    borderBottomWidth: 1,
-    borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
+    position: "relative",
+  },
+  // the tiny red ▸ cursor that marks the active row, aligned with the
+  // search field's text (16px inset) and drawn in the gutter the item
+  // rows indent by, exactly like the aetheryte picker's selected arrow
+  pickerCursor: {
+    position: "absolute",
+    left: 16,
+    top: "50%",
+    marginTop: -8,
+    fontSize: 14,
+    lineHeight: 16,
+    color: "var(--accent, #7a3040)",
   },
   rowHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   // picked rows turn every text node accent red instead of painting a
   // background fill; hover paints the rowHover fill on top of that state.
-  // the keyboard cursor has no visual: it only picks a row on Enter
+  // the keyboard cursor lights the same text nodes, so arrows are visible
   rowTextActive: {
     color: "var(--accent, #7a3040)",
   },
@@ -98,23 +198,25 @@ export const sharedStyles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     paddingVertical: 8,
-    paddingHorizontal: 18,
+    paddingLeft: 34,
+    paddingRight: 18,
   },
   // psalm rows pin their geometry to match the collect rows exactly:
-  // 22px incipit line + 2×6px padding + 1px hairline = 35px, same as
+  // 18px incipit line + 2×8px padding + 1px hairline = 35px, same as
   // collectIndexTitle's 18 + 2×8 + 1
   psalmRowInner: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 18,
+    paddingVertical: 8,
+    paddingLeft: 34,
+    paddingRight: 18,
   },
   rowMeta: {
     marginLeft: "auto",
     fontFamily: CHROME_FONT,
     fontWeight: "500",
-    fontSize: 12,
+    fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
     fontVariant: ["tabular-nums"],
   },
@@ -130,7 +232,8 @@ export const sharedStyles = StyleSheet.create({
     opacity: 1,
   },
   indexBody: {
-    paddingBottom: 24,
+    // the split-pane variant still pads the tail, but the palette needs
+    // no extra space (the list ends exactly at the last row)
   },
   // collects desktop index rows pad 18 like rowInner; headings align
   groupHeadingIndex: {
@@ -141,7 +244,7 @@ export const sharedStyles = StyleSheet.create({
   // secondary ink, and the serif is reserved for the compare view
   collectIndexTitle: {
     fontFamily: CHROME_FONT,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
     lineHeight: 18,
     color: "var(--text-secondary, #7a6e64)",
@@ -152,7 +255,8 @@ export const sharedStyles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     paddingVertical: 8,
-    paddingHorizontal: 18,
+    paddingLeft: 34,
+    paddingRight: 18,
   },
   // saint rows carry a short date pinned to the trailing edge so the
   // calendar races itself at a glance while titles keep the ragged-left
@@ -162,7 +266,8 @@ export const sharedStyles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     paddingVertical: 8,
-    paddingHorizontal: 18,
+    paddingLeft: 34,
+    paddingRight: 18,
   },
   saintDate: {
     minWidth: 44,
@@ -170,13 +275,13 @@ export const sharedStyles = StyleSheet.create({
     textAlign: "right",
     fontFamily: CHROME_FONT,
     fontWeight: "500",
-    fontSize: 12,
+    fontSize: 11,
     color: "var(--accent, #7a3040)",
     fontVariant: ["tabular-nums"],
   },
   saintTitle: {
     fontFamily: CHROME_FONT,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
     lineHeight: 18,
     color: "var(--text-secondary, #7a6e64)",
@@ -188,24 +293,14 @@ export const sharedStyles = StyleSheet.create({
   // the pinned 35px (18px line + 2×8 padding + hairline)
   canticleIndexTitle: {
     fontFamily: CHROME_FONT,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
     lineHeight: 18,
     color: "var(--text-secondary, #7a6e64)",
     flex: 1,
   },
-  // the canticle picker stays fully sans, so its number gutter uses the
-  // same navigation voice instead of the psalm serif digit; the 28px
-  // gutter keeps every title on the same edge as the psalm rows
-  canticleNumber: {
-    width: 28,
-    textAlign: "left",
-    fontFamily: CHROME_FONT,
-    fontSize: 13,
-    fontWeight: "500",
-    color: "var(--accent, #7a3040)",
-    fontVariant: ["tabular-nums"],
-  },
+  // the canticle picker lists titles only, no number gutter: every row
+  // reads title + verse count on the same edge as the other pickers
   // rites always print one above the other at full measure: the
   // horizontal wrap is only useful at extreme widths and fights the
   // 736px column language
@@ -224,20 +319,21 @@ export const sharedStyles = StyleSheet.create({
     marginBottom: 10,
   },
   // fixed-width gutter keeps every incipit on the same edge while the
-  // number itself sits flush left, lined up with the search text
+  // number itself sits flush left, lined up with the search text; digits
+  // read in content ink, never red
   psalmNumber: {
     width: 28,
     textAlign: "left",
-    fontFamily: SERIF_SEMI_FONT,
-    fontSize: 15,
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
     fontWeight: "500",
-    color: "var(--accent, #7a3040)",
+    color: "var(--text, #2c2020)",
     fontVariant: ["tabular-nums"],
   },
   incipit: {
-    fontFamily: SERIF_FONT,
-    fontSize: 17,
-    lineHeight: 22,
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "500",
     color: "var(--text-secondary, #7a6e64)",
     flex: 1,
@@ -285,27 +381,19 @@ export const sharedStyles = StyleSheet.create({
     marginBottom: 22,
   },
   collectGroup: {
-    marginBottom: 20,
+    marginBottom: 0,
   },
   groupHeading: {
     fontFamily: CHROME_FONT,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.2,
     textTransform: "uppercase",
-    color: "var(--accent, #7a3040)",
-    marginBottom: 10,
+    color: "var(--text-secondary, #7a6e64)",
+    paddingVertical: 8,
   },
-  // the first group sits flush under the search header (no row above it
-  // to separate from), so it keeps a little top breathing room
-  groupHeadingFirst: {
-    paddingTop: 12,
-  },
-  groupRule: {
-    borderTopWidth: 1,
-    borderTopColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
-    paddingTop: 12,
-  },
+  // (groupRule removed: categories no longer carry a top border or margin,
+  // every element shares the same padded vertical rhythm as the rows)
   collectBody: {
     fontFamily: SERIF_FONT,
     fontSize: 17,
@@ -359,6 +447,66 @@ export const sharedStyles = StyleSheet.create({
     fontWeight: "600",
     color: "var(--accent, #7a3040)",
     fontVariant: ["tabular-nums"],
+  },
+  // current-pick chip for the floating pickers: a full-bar strip that takes
+  // all the space between the sidebar trigger and the trailing actions. the
+  // label leads and an optional right-aligned meta (position/verse counts)
+  // fills the rest, so the strip reads as a live caption of the page.
+  pickerBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexGrow: 1,
+    // a fixed 24px like the bar's other buttons (sidebar trigger, arrows)
+    // so the chip reads at the same height as its neighbors instead of
+    // stretching to the bar's full 30px
+    height: 24,
+    paddingHorizontal: 10,
+    paddingVertical: 1,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "var(--border-content, #b5aa9e)",
+    backgroundColor: "var(--bg, #e0dbd0)",
+  },
+  pickerBtnHover: {
+    backgroundColor: "var(--control-hover, #d2cbbf)",
+  },
+  pickerText: {
+    fontFamily: CHROME_FONT,
+    fontSize: 11,
+    fontWeight: "500",
+    color: "var(--text-secondary, #7a6e64)",
+    fontVariant: ["tabular-nums"],
+    // shrink instead of pushing the fixed-width chip open; the label
+    // truncates with ellipsis when it outgrows the chip
+    flexShrink: 1,
+  },
+  // the chip's trailing meta: right-aligned count/verse info in the same
+  // 11px muted voice as the list rows' rowMeta
+  pickerMeta: {
+    marginLeft: "auto",
+    fontFamily: CHROME_FONT,
+    fontSize: 11,
+    fontWeight: "500",
+    color: "var(--text-secondary, #7a6e64)",
+    fontVariant: ["tabular-nums"],
+    flexShrink: 0,
+  },
+  // the hotkey key-cap pinned to the far right of the chip (Ctrl+///⌘+/
+  // opens the same picker): a quieter mono voice than the palette footer
+  pickerKbd: {
+    fontFamily: '"JetBrains Mono", monospace',
+    fontWeight: "700",
+    fontSize: 11,
+    lineHeight: 15,
+    fontVariant: ["tabular-nums"],
+    color: "var(--text-secondary, #7a6e64)",
+    borderWidth: 1,
+    borderColor: "var(--border-content, #b5aa9e)",
+    borderRadius: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 1,
+    flexShrink: 0,
   },
   stepBtn: {
     width: 24,

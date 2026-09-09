@@ -201,6 +201,7 @@ function applyPalette(theme: ResolvedTheme) {
     *::-webkit-scrollbar-thumb:hover { background: ${p.textSecondary}; }
     ::selection { background: var(--control-hover, #d2cbbf); color: var(--text, #2c2020); }
     :focus-visible { outline: 2px solid ${p.accent}; outline-offset: 2px; }
+    [data-picker-search]:focus-visible { outline: none; }
     /* installed pwa in window-controls-overlay: the top bar becomes the
        draggable titlebar, padded clear of the overlaid window buttons.
        env() is only defined while the overlay is genuinely active, so every

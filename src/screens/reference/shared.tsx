@@ -8,7 +8,16 @@ import {
   useRef,
   useState,
 } from "react";
-import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  type StyleProp,
+  type TextStyle,
+} from "react-native";
+import { MagnifierIcon } from "../../components/shell/Icon";
 import type { PageId } from "../../components/shell/Sidebar";
 import type { HistoryApi, HistorySnapshot } from "../../context/HistoryContext";
 import { useHistory, useHistoryField } from "../../context/HistoryContext";
@@ -414,8 +423,17 @@ export function today(): CalendarDate {
 
 export const IS_WEB = Platform.OS === "web";
 
-// desktop: persistent index beside a detail pane; the panes scroll
-// independently and take keyboard focus as selection moves
+// platform-aware hotkey caps: macs read ⌘, everything else (including
+// linux/windows desktop webviews) reads Ctrl. always shown, on every
+// build, so the chords read as hints even where no physical keyboard
+// exists
+export const HOTKEY_MOD =
+  IS_WEB && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl";
+
+// desktop: a reading pane beside a persistent index; with no list the
+// pane fills the full column (the picker lives in a floating modal now).
+// the panes scroll independently and take keyboard focus as the
+// selection moves
 export function SplitPane({
   list,
   detail,
@@ -424,7 +442,7 @@ export function SplitPane({
   fontScale = 1,
   onScrollProgress,
 }: {
-  list: ReactNode;
+  list?: ReactNode;
   detail: ReactNode;
   detailOpen: boolean;
   header?: ReactNode;
@@ -470,12 +488,14 @@ export function SplitPane({
       >
         <View style={sharedStyles.detailPage}>{detail}</View>
       </div>
-      <div ref={listRef} tabIndex={0} style={LIST_PANE_STYLE} data-split-list>
-        {header ? <div style={SPLIT_HEADER_STYLE}>{header}</div> : null}
-        <div style={SPLIT_LIST_SCROLL_STYLE} data-split-list-scroll>
-          {list}
+      {list ? (
+        <div ref={listRef} tabIndex={0} style={LIST_PANE_STYLE} data-split-list>
+          {header ? <div style={SPLIT_HEADER_STYLE}>{header}</div> : null}
+          <div style={SPLIT_LIST_SCROLL_STYLE} data-split-list-scroll>
+            {list}
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
   // biome-ignore-end lint/a11y/noNoninteractiveTabindex: see above
@@ -512,26 +532,95 @@ export function EmptyMessage({ message }: { message: string }) {
   return <Text style={sharedStyles.empty}>{message}</Text>;
 }
 
-// the one highlight rule for every picker row: red text on the picked or
-// hovered row, a plain hover fill, and no visual for the keyboard cursor
+// the one highlight state of every picker row, shared by keyboard and mouse
+// the same way cmdk does: the active row draws accent text plus the red ▸ in
+// the indented gutter, never a background fill. the keyboard (j/k via
+// ctrl+j/ctrl+k, arrows) moves it and scrolls it into view; the pointer
+// drags the very same cursor without scrolling. any picker, any input — the
+// highlight looks identical. the picked value is deliberately NOT
+// highlighted so only what is in play right now lights up.
 export function IndexRow({
-  selected,
   onPress,
   children,
+  cursor = false,
 }: {
-  selected: boolean;
   onPress: () => void;
   children: (active: boolean) => ReactNode;
+  cursor?: boolean;
+}) {
+  return (
+    <Pressable
+      style={sharedStyles.row}
+      onPress={onPress}
+      accessibilityRole="button"
+    >
+      <>
+        {cursor && <Text style={sharedStyles.pickerCursor}>▸</Text>}
+        {children(cursor)}
+      </>
+    </Pressable>
+  );
+}
+
+// the platform-aware hotkey chip ("Ctrl /" or "⌘ K") that advertises the
+// shortcut behind a picker button, rendered on every build
+export function KeyCap({
+  label,
+  style,
+}: {
+  label: string;
+  style?: StyleProp<TextStyle>;
+}) {
+  return <Text style={[sharedStyles.pickerKbd, style]}>{label}</Text>;
+}
+
+// the bar's current-pick chip: shows what the page is displaying and
+// opens the floating picker for the page. a bordered, clickable
+// rectangle that reads in normal ink. an optional meta string is
+// right-aligned in the strip: the position/verse counts that make the
+// full-bar chip read as a live caption instead of empty space, plus a
+// key-cap pinned to the far right advertising the "/" chord that opens
+// the same picker
+export function PickerButton({
+  label,
+  meta,
+  onPress,
+}: {
+  label: string;
+  meta?: string;
+  onPress: () => void;
 }) {
   return (
     <Pressable
       style={({ hovered }) => [
-        sharedStyles.row,
-        hovered && sharedStyles.rowHover,
+        sharedStyles.pickerBtn,
+        hovered && sharedStyles.pickerBtnHover,
       ]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Change ${label}`}
     >
-      {({ hovered }) => children(selected || hovered)}
+      <MagnifierIcon size={13} color="var(--text-secondary, #7a6e64)" />
+      <Text
+        numberOfLines={1}
+        ellipsizeMode="tail"
+        style={sharedStyles.pickerText}
+      >
+        {label}
+      </Text>
+      {meta ? (
+        <Text
+          numberOfLines={1}
+          ellipsizeMode="head"
+          style={sharedStyles.pickerMeta}
+        >
+          {meta}
+        </Text>
+      ) : null}
+      <KeyCap
+        label="/"
+        style={meta ? { marginLeft: 8 } : { marginLeft: "auto" }}
+      />
     </Pressable>
   );
 }

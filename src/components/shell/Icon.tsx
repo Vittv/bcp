@@ -254,11 +254,23 @@ export function CheckIcon({
   color,
   style,
 }: IconProps) {
+  return icon(size, strokeWidth, color, style, <path d="M20 6 9 17l-5-5" />);
+}
+
+export function MagnifierIcon({
+  size = 16,
+  strokeWidth = 2,
+  color,
+  style,
+}: IconProps) {
   return icon(
     size,
     strokeWidth,
     color,
     style,
-    <path d="M20 6 9 17l-5-5" />,
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </>,
   );
 }

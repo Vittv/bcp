@@ -4,11 +4,10 @@ import {
   useCallback,
   useDeferredValue,
   useMemo,
-  useRef,
 } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { PsalmText } from "../../components/office/PsalmText";
-import { Chevron } from "../../components/shell/Chevron";
+import { usePalette } from "../../context/PaletteContext";
 import { psalmPassage } from "../../lib/content/psalter";
 import { type PsalmHit, searchPsalms } from "../../lib/reference/search";
 import {
@@ -16,11 +15,12 @@ import {
   EmptyMessage,
   IndexRow,
   noSelect,
+  PickerButton,
   SplitPane,
   useReference,
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
-import { useCursorScroll, useIndexKeyboard } from "./useIndexKeyboard";
+import { useIndexKeyboard } from "./useIndexKeyboard";
 
 export function PsalmsScreen({
   isMobile,
@@ -31,18 +31,13 @@ export function PsalmsScreen({
   fontScale: number;
   onScrollProgress?: (pct: number) => void;
 }) {
-  const { query, setQuery, openPsalm, setOpenPsalm } = useReference();
-  const desktopInputRef = useRef<TextInput>(null);
+  const { openPsalm } = useReference();
   if (isMobile) {
     return (
       <View style={styles.container}>
-        {openPsalm !== null ? (
-          <DetailPage compact>
-            <PsalmDetailBody psalm={openPsalm} />
-          </DetailPage>
-        ) : (
-          <PsalmIndex query={query} selected={null} onSelect={setOpenPsalm} />
-        )}
+        <DetailPage compact>
+          <PsalmDetailBody psalm={openPsalm ?? 1} />
+        </DetailPage>
       </View>
     );
   }
@@ -50,112 +45,78 @@ export function PsalmsScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      header={
-        <TextInput
-          ref={desktopInputRef}
-          value={query}
-          onChangeText={setQuery}
-          dataSet={{ pickerSearch: "" }}
-          placeholder="Search by number or text"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={[
-            styles.search,
-            {
-              width: "100%",
-              marginLeft: 0,
-              borderWidth: 0,
-              paddingHorizontal: 0,
-              paddingVertical: 0,
-            },
-          ]}
-          accessibilityLabel="Search psalms"
-        />
-      }
-      list={
-        <PsalmIndex
-          query={query}
-          selected={openPsalm}
-          onSelect={(n) => setOpenPsalm(openPsalm === n ? null : n)}
-        />
-      }
       detail={
         <PsalmDetailBody psalm={openPsalm ?? 1} key={`p${openPsalm ?? 1}`} />
       }
-      detailOpen={openPsalm !== null}
+      detailOpen
     />
   );
 }
 
-// the psalms bar carries the sidebar-show button; on mobile it also
-// has search (or a back button when a psalm is open). Desktop search
-// lives in the right navigator header instead.
-export function PsalmsBar({
-  leading,
-  isMobile,
-}: {
-  leading?: ReactNode;
-  isMobile: boolean;
-}) {
-  const { query, setQuery, openPsalm, setOpenPsalm } = useReference();
-  const inputRef = useRef<TextInput>(null);
-  const searching = isMobile ? openPsalm === null : false;
-
-  if (!isMobile) {
-    return (
-      <View style={[styles.bar, noSelect]}>
-        <View style={styles.barLeft}>{leading}</View>
-      </View>
-    );
-  }
-
+// the psalms bar carries the sidebar-show button and, in place of the
+// old index, the current-pick chip that re-opens the floating picker
+export function PsalmsBar({ leading }: { leading?: ReactNode }) {
+  const { openPsalm } = useReference();
+  const palette = usePalette();
+  const n = openPsalm ?? 1;
+  const verses = psalmPassage({ psalm: n })?.verses.length ?? 0;
   return (
-    <Pressable
-      style={[styles.bar, noSelect]}
-      onPress={() => inputRef.current?.focus()}
-    >
+    <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
-        {!searching ? (
-          <Pressable
-            style={({ hovered }) => [
-              styles.backBtn,
-              hovered && styles.rowHover,
-            ]}
-            onPress={() => setOpenPsalm(null)}
-            accessibilityLabel="Back to list"
-            accessibilityRole="button"
-          >
-            <Chevron direction="left" size={5} />
-            <Text style={styles.backText}>Back</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {searching ? (
-        <TextInput
-          ref={inputRef}
-          value={query}
-          onChangeText={setQuery}
-          dataSet={{ pickerSearch: "" }}
-          placeholder="Search by number or text"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={styles.search}
-          accessibilityLabel="Search psalms"
+        <PickerButton
+          label={`Psalm ${n}`}
+          meta={`${n} / 150 · ${verses} verse${verses === 1 ? "" : "s"}`}
+          onPress={() => palette.open("psalms")}
         />
-      ) : null}
-    </Pressable>
+      </View>
+    </View>
   );
 }
 
-// psalm index shared by both layouts; `selected` drives the highlight.
-// filtering runs against a deferred copy of the query so fast typing
-// never blocks the input
-function PsalmIndex({
+// memoized psalm row: a cursor flip re-renders only the two rows whose
+// active state changed, instead of rebuilding the whole list every move.
+// hit/onSelect are stable across cursor moves, so memo() bails for the
+// untouched rows
+const PsalmRow = memo(function PsalmRow({
+  hit,
+  active,
+  onSelect,
+}: {
+  hit: PsalmHit;
+  active: boolean;
+  onSelect: (psalm: number) => void;
+}) {
+  return (
+    <IndexRow cursor={active} onPress={() => onSelect(hit.psalm)}>
+      {(a) => (
+        <View style={styles.psalmRowInner}>
+          <Text style={[styles.psalmNumber, a && styles.rowTextActive]}>
+            {hit.psalm}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={[styles.incipit, a && styles.rowTextActive]}
+          >
+            {hit.incipit}
+          </Text>
+          <Text style={[styles.rowMeta, a && styles.rowTextActive]}>
+            {hit.verses} verse{hit.verses === 1 ? "" : "s"}
+          </Text>
+        </View>
+      )}
+    </IndexRow>
+  );
+});
+
+// psalm index for the floating picker; the active row follows the picker
+// cursor/hover, the picked value lives on the bar chip. filtering runs against
+// a deferred copy of the query so fast typing never blocks the input
+export function PsalmIndex({
   query,
-  selected,
   onSelect,
 }: {
   query: string;
-  selected: number | null;
   onSelect: (psalm: number) => void;
 }) {
   const deferredQuery = useDeferredValue(query);
@@ -165,41 +126,19 @@ function PsalmIndex({
     [onSelect],
   );
   const { cursor } = useIndexKeyboard(hits, onEnter);
-  useCursorScroll(cursor);
   if (hits.length === 0) {
     return <EmptyMessage message={`No psalms match “${deferredQuery}”.`} />;
   }
   return (
     <View style={styles.indexBody} dataSet={{ indexList: "" }}>
-      {hits.map((hit) => {
-        const isSelected = hit.psalm === selected;
-        return (
-          <IndexRow
-            key={hit.psalm}
-            selected={isSelected}
-            onPress={() => onSelect(hit.psalm)}
-          >
-            {(active) => (
-              <View style={styles.psalmRowInner}>
-                <Text
-                  style={[styles.psalmNumber, active && styles.rowTextActive]}
-                >
-                  {hit.psalm}
-                </Text>
-                <Text
-                  numberOfLines={1}
-                  style={[styles.incipit, active && styles.rowTextActive]}
-                >
-                  {hit.incipit}
-                </Text>
-                <Text style={[styles.rowMeta, active && styles.rowTextActive]}>
-                  {hit.verses} verse{hit.verses === 1 ? "" : "s"}
-                </Text>
-              </View>
-            )}
-          </IndexRow>
-        );
-      })}
+      {hits.map((hit, i) => (
+        <PsalmRow
+          key={hit.psalm}
+          hit={hit}
+          active={i === cursor}
+          onSelect={onSelect}
+        />
+      ))}
     </View>
   );
 }

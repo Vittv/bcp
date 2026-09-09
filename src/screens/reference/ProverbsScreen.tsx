@@ -1,14 +1,14 @@
 import {
+  memo,
   type ReactNode,
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { ScriptureView } from "../../components/office/ScriptureView";
-import { Chevron } from "../../components/shell/Chevron";
+import { usePalette } from "../../context/PaletteContext";
 import { loadKjvBook, sliceKjvPassage } from "../../lib/content/kjv";
 import type { KjvBook, KjvPassage } from "../../lib/content/types";
 import {
@@ -16,11 +16,12 @@ import {
   EmptyMessage,
   IndexRow,
   noSelect,
+  PickerButton,
   SplitPane,
   useReference,
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
-import { useCursorScroll, useIndexKeyboard } from "./useIndexKeyboard";
+import { useIndexKeyboard } from "./useIndexKeyboard";
 
 const PROVERS_CHAPTERS = 31;
 
@@ -40,6 +41,22 @@ function useProverbsBook(): KjvBook | null {
   return book;
 }
 
+// the chapter index of the floating picker needs each chapter's verse
+// count; the screen detail needs the full text, so the metadata hook is
+// shared between them
+export function useProvChapterMeta(): { chapter: number; verses: number }[] {
+  const book = useProverbsBook();
+  return useMemo(() => {
+    const list: { chapter: number; verses: number }[] = [];
+    for (let c = 1; c <= PROVERS_CHAPTERS; c++) {
+      const verses = book?.verses[String(c)];
+      const count = verses ? Object.keys(verses).length : 0;
+      list.push({ chapter: c, verses: count });
+    }
+    return list;
+  }, [book]);
+}
+
 export function ProverbsScreen({
   isMobile,
   fontScale,
@@ -49,35 +66,14 @@ export function ProverbsScreen({
   fontScale: number;
   onScrollProgress?: (pct: number) => void;
 }) {
-  const { query, setQuery, openProvChapter, setOpenProvChapter } =
-    useReference();
-  const book = useProverbsBook();
-
-  const chapterMeta = useMemo(() => {
-    const list: { chapter: number; verses: number }[] = [];
-    for (let c = 1; c <= PROVERS_CHAPTERS; c++) {
-      const verses = book?.verses[String(c)];
-      const count = verses ? Object.keys(verses).length : 0;
-      list.push({ chapter: c, verses: count });
-    }
-    return list;
-  }, [book]);
+  const { openProvChapter } = useReference();
 
   if (isMobile) {
     return (
       <View style={styles.container}>
-        {openProvChapter !== null ? (
-          <DetailPage compact>
-            <ProvChapterBody chapter={openProvChapter} />
-          </DetailPage>
-        ) : (
-          <ChapterIndex
-            chapters={chapterMeta}
-            query={query}
-            selected={null}
-            onSelect={setOpenProvChapter}
-          />
-        )}
+        <DetailPage compact>
+          <ProvChapterBody chapter={openProvChapter ?? 1} />
+        </DetailPage>
       </View>
     );
   }
@@ -85,109 +81,79 @@ export function ProverbsScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      header={
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          dataSet={{ pickerSearch: "" }}
-          placeholder="Search chapters by number"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={[
-            styles.search,
-            {
-              width: "100%",
-              marginLeft: 0,
-              borderWidth: 0,
-              paddingHorizontal: 0,
-              paddingVertical: 0,
-            },
-          ]}
-          accessibilityLabel="Search proverbs chapters"
-        />
-      }
-      list={
-        <ChapterIndex
-          chapters={chapterMeta}
-          query={query}
-          // fall back to the first chapter so the pane never shows an
-          // empty hint; the row highlights as if it were picked
-          selected={openProvChapter}
-          onSelect={(n) => setOpenProvChapter(openProvChapter === n ? null : n)}
-        />
-      }
       detail={
         <ProvChapterBody
           chapter={openProvChapter ?? 1}
           key={`c${openProvChapter ?? 1}`}
         />
       }
-      detailOpen={openProvChapter !== null}
+      detailOpen
     />
   );
 }
 
-// the proverbs bar mirrors the psalms bar: on mobile it carries search
-// (or a back button when a chapter is open). desktop search lives in the
-// right navigator header instead.
-export function ProverbsBar({
-  leading,
-  isMobile,
-}: {
-  leading?: ReactNode;
-  isMobile: boolean;
-}) {
-  const { query, setQuery, openProvChapter, setOpenProvChapter } =
-    useReference();
-  const inputRef = useRef<TextInput>(null);
-  const searching = isMobile ? openProvChapter === null : false;
-
-  if (!isMobile) {
-    return (
-      <View style={[styles.bar, noSelect]}>
-        <View style={styles.barLeft}>{leading}</View>
-      </View>
-    );
-  }
-
+// the proverbs bar mirrors the psalms bar: the sidebar-show button and
+// the current-pick chip that re-opens the floating picker
+export function ProverbsBar({ leading }: { leading?: ReactNode }) {
+  const { openProvChapter } = useReference();
+  const palette = usePalette();
+  const chapters = useProvChapterMeta();
+  const n = openProvChapter ?? 1;
+  const verses = chapters.find((c) => c.chapter === n)?.verses ?? 0;
   return (
-    <Pressable
-      style={[styles.bar, noSelect]}
-      onPress={() => inputRef.current?.focus()}
-    >
+    <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
-        {!searching ? (
-          <Pressable
-            style={({ hovered }) => [
-              styles.backBtn,
-              hovered && styles.rowHover,
-            ]}
-            onPress={() => setOpenProvChapter(null)}
-            accessibilityLabel="Back to chapters"
-            accessibilityRole="button"
-          >
-            <Chevron direction="left" size={5} />
-            <Text style={styles.backText}>Back</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {searching ? (
-        <TextInput
-          ref={inputRef}
-          value={query}
-          onChangeText={setQuery}
-          dataSet={{ pickerSearch: "" }}
-          placeholder="Search chapters by number"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={styles.search}
-          accessibilityLabel="Search proverbs chapters"
+        <PickerButton
+          label={`Proverbs ${n}`}
+          meta={`${n} / ${PROVERS_CHAPTERS} · ${verses} verse${
+            verses === 1 ? "" : "s"
+          }`}
+          onPress={() => palette.open("proverbs")}
         />
-      ) : null}
-    </Pressable>
+      </View>
+    </View>
   );
 }
 
-function ChapterIndex({
+// memoized chapter row: a cursor flip re-renders only the two rows whose
+// active state changed, instead of rebuilding the whole list every move
+const ChapterRow = memo(function ChapterRow({
+  chapter,
+  verses,
+  active,
+  selected,
+  onSelect,
+}: {
+  chapter: number;
+  verses: number;
+  active: boolean;
+  selected: number | null;
+  onSelect: (n: number | null) => void;
+}) {
+  return (
+    <IndexRow
+      cursor={active}
+      onPress={() => onSelect(selected === chapter ? null : chapter)}
+    >
+      {(a) => (
+        <View style={styles.psalmRowInner}>
+          <Text
+            numberOfLines={1}
+            style={[styles.incipit, a && styles.rowTextActive]}
+          >
+            Chapter {chapter}
+          </Text>
+          <Text style={[styles.rowMeta, a && styles.rowTextActive]}>
+            {verses} verse{verses === 1 ? "" : "s"}
+          </Text>
+        </View>
+      )}
+    </IndexRow>
+  );
+});
+
+export function ChapterIndex({
   chapters,
   query,
   selected,
@@ -212,41 +178,21 @@ function ChapterIndex({
     [selected, onSelect],
   );
   const { cursor } = useIndexKeyboard(filtered, onEnter);
-  useCursorScroll(cursor);
   if (filtered.length === 0) {
     return <EmptyMessage message={`No proverbs chapter matches “${q}”.`} />;
   }
   return (
     <View style={styles.indexBody} dataSet={{ indexList: "" }}>
-      {filtered.map((c) => {
-        const isSelected = c.chapter === selected;
-        return (
-          <IndexRow
-            key={c.chapter}
-            selected={isSelected}
-            onPress={() => onSelect(isSelected ? null : c.chapter)}
-          >
-            {(active) => (
-              <View style={styles.psalmRowInner}>
-                <Text
-                  style={[styles.psalmNumber, active && styles.rowTextActive]}
-                >
-                  {c.chapter}
-                </Text>
-                <Text
-                  numberOfLines={1}
-                  style={[styles.incipit, active && styles.rowTextActive]}
-                >
-                  Chapter {c.chapter}
-                </Text>
-                <Text style={[styles.rowMeta, active && styles.rowTextActive]}>
-                  {c.verses} verse{c.verses === 1 ? "" : "s"}
-                </Text>
-              </View>
-            )}
-          </IndexRow>
-        );
-      })}
+      {filtered.map((c, i) => (
+        <ChapterRow
+          key={c.chapter}
+          chapter={c.chapter}
+          verses={c.verses}
+          active={i === cursor}
+          selected={selected}
+          onSelect={onSelect}
+        />
+      ))}
     </View>
   );
 }

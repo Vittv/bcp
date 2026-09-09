@@ -4,10 +4,9 @@ import {
   useCallback,
   useDeferredValue,
   useMemo,
-  useRef,
 } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
-import { Chevron } from "../../components/shell/Chevron";
+import { Text, View } from "react-native";
+import { usePalette } from "../../context/PaletteContext";
 import { collectPassage } from "../../lib/content/collects";
 import type { CollectRite, CollectSection } from "../../lib/content/types";
 import { type CollectHit, searchCollects } from "../../lib/reference/search";
@@ -18,11 +17,12 @@ import {
   FIRST_COLLECT,
   IndexRow,
   noSelect,
+  PickerButton,
   SplitPane,
   useReference,
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
-import { useCursorScroll, useIndexKeyboard } from "./useIndexKeyboard";
+import { useIndexKeyboard } from "./useIndexKeyboard";
 
 const RITE_LABELS: Record<CollectRite, string> = {
   traditional: "Traditional (Rite I)",
@@ -49,23 +49,13 @@ export function CollectsScreen({
   fontScale: number;
   onScrollProgress?: (pct: number) => void;
 }) {
-  const { query, setQuery, selectedCollect, setSelectedCollect } =
-    useReference();
-  const desktopInputRef = useRef<TextInput>(null);
+  const { selectedCollect } = useReference();
   if (isMobile) {
     return (
       <View style={styles.container}>
-        {selectedCollect !== null ? (
-          <DetailPage compact>
-            <CollectCompare sel={selectedCollect} />
-          </DetailPage>
-        ) : (
-          <CollectIndex
-            query={query}
-            selected={null}
-            onSelect={setSelectedCollect}
-          />
-        )}
+        <DetailPage compact>
+          <CollectCompare sel={selectedCollect ?? FIRST_COLLECT} />
+        </DetailPage>
       </View>
     );
   }
@@ -73,112 +63,82 @@ export function CollectsScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      header={
-        <TextInput
-          ref={desktopInputRef}
-          value={query}
-          onChangeText={setQuery}
-          dataSet={{ pickerSearch: "" }}
-          placeholder="Search by title or text"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={[
-            styles.search,
-            {
-              width: "100%",
-              marginLeft: 0,
-              borderWidth: 0,
-              paddingHorizontal: 0,
-              paddingVertical: 0,
-            },
-          ]}
-          accessibilityLabel="Search collects"
-        />
-      }
-      list={
-        <CollectIndex
-          query={query}
-          // fall back to the first collect so the pane never shows an
-          // empty hint; the row highlights as if it were picked
-          selected={selectedCollect}
-          onSelect={setSelectedCollect}
-        />
-      }
       detail={
         <CollectCompare
           sel={selectedCollect ?? FIRST_COLLECT}
           key={(selectedCollect ?? FIRST_COLLECT).title}
         />
       }
-      detailOpen={selectedCollect !== null}
+      detailOpen
     />
   );
 }
 
-// the collects bar mirrors the psalms bar: on mobile it carries search
-// (or a back button when a collect is open). Desktop search lives in
-// the right navigator header instead.
-export function CollectsBar({
-  leading,
-  isMobile,
-}: {
-  leading?: ReactNode;
-  isMobile: boolean;
-}) {
-  const { query, setQuery, selectedCollect, setSelectedCollect } =
-    useReference();
-  const inputRef = useRef<TextInput>(null);
-  const searching = isMobile ? selectedCollect === null : false;
-
-  if (!isMobile) {
-    return (
-      <View style={[styles.bar, noSelect]}>
-        <View style={styles.barLeft}>{leading}</View>
-      </View>
-    );
-  }
-
+// the collects bar mirrors the psalms bar: the sidebar-show button and
+// the current-pick chip that re-opens the floating picker
+export function CollectsBar({ leading }: { leading?: ReactNode }) {
+  const { selectedCollect } = useReference();
+  const palette = usePalette();
+  const sel = selectedCollect ?? FIRST_COLLECT;
   return (
-    <Pressable
-      style={[styles.bar, noSelect]}
-      onPress={() => inputRef.current?.focus()}
-    >
+    <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
-        {!searching ? (
-          <Pressable
-            style={({ hovered }) => [
-              styles.backBtn,
-              hovered && styles.rowHover,
-            ]}
-            onPress={() => setSelectedCollect(null)}
-            accessibilityLabel="Back to list"
-            accessibilityRole="button"
-          >
-            <Chevron direction="left" size={5} />
-            <Text style={styles.backText}>Back</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {searching ? (
-        <TextInput
-          ref={inputRef}
-          value={query}
-          onChangeText={setQuery}
-          dataSet={{ pickerSearch: "" }}
-          placeholder="Search by title or text"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={styles.search}
-          accessibilityLabel="Search collects"
+        <PickerButton
+          label={sel.title}
+          meta={sectionLabel(sel.section)}
+          onPress={() => palette.open("collects")}
         />
-      ) : null}
-    </Pressable>
+      </View>
+    </View>
   );
 }
 
-// selectable collect index for the split layout: one row per collect
+// memoized collect row: a cursor flip re-renders only the two rows whose
+// active state changed, instead of rebuilding the whole list every move
+const CollectRow = memo(function CollectRow({
+  hit,
+  active,
+  selected,
+  onSelect,
+}: {
+  hit: CollectHit;
+  active: boolean;
+  selected: CollectSel | null;
+  onSelect: (c: CollectSel | null) => void;
+}) {
+  const isSelected =
+    selected?.section === hit.section && selected?.title === hit.title;
+  return (
+    <IndexRow
+      cursor={active}
+      onPress={() =>
+        onSelect(
+          isSelected
+            ? null
+            : { section: hit.section, title: hit.title },
+        )
+      }
+    >
+      {(a) => (
+        <View style={styles.collectRowInner}>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={[styles.collectIndexTitle, a && styles.rowTextActive]}
+          >
+            {hit.title}
+          </Text>
+        </View>
+      )}
+    </IndexRow>
+  );
+});
+
+// selectable collect index for the floating picker: one row per collect
 // (both rites share titles), grouped by section in printed order. same
 // deferred-query logic as the psalm index so typing never blocks
-function CollectIndex({
+export function CollectIndex({
   query,
   selected,
   onSelect,
@@ -208,7 +168,7 @@ function CollectIndex({
     [selected, onSelect],
   );
   const { cursor } = useIndexKeyboard(hits, onEnter);
-  useCursorScroll(cursor);
+  const cursorHit = hits[cursor];
   if (hits.length === 0) {
     return <EmptyMessage message={`No collects match “${deferredQuery}”.`} />;
   }
@@ -216,50 +176,20 @@ function CollectIndex({
     <View style={styles.indexBody} dataSet={{ indexList: "" }}>
       {sections.map((section) => (
         <View key={section} style={styles.collectGroup}>
-          <Text
-            style={[
-              styles.groupHeading,
-              styles.groupRule,
-              styles.groupHeadingIndex,
-            ]}
-          >
+          <Text style={[styles.groupHeading, styles.groupHeadingIndex]}>
             {sectionLabel(section)}
           </Text>
           {hits
             .filter((h) => h.section === section)
-            .map((hit) => {
-              const isSelected =
-                selected?.section === hit.section &&
-                selected?.title === hit.title;
-              return (
-                <IndexRow
-                  key={`${hit.section}:${hit.title}`}
-                  selected={isSelected}
-                  onPress={() =>
-                    onSelect(
-                      isSelected
-                        ? null
-                        : { section: hit.section, title: hit.title },
-                    )
-                  }
-                >
-                  {(active) => (
-                    <View style={styles.collectRowInner}>
-                      <Text
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                        style={[
-                          styles.collectIndexTitle,
-                          active && styles.rowTextActive,
-                        ]}
-                      >
-                        {hit.title}
-                      </Text>
-                    </View>
-                  )}
-                </IndexRow>
-              );
-            })}
+            .map((hit) => (
+              <CollectRow
+                key={`${hit.section}:${hit.title}`}
+                hit={hit}
+                active={hit === cursorHit}
+                selected={selected}
+                onSelect={onSelect}
+              />
+            ))}
         </View>
       ))}
     </View>

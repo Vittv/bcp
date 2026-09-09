@@ -4,13 +4,15 @@ import {
   useCallback,
   useDeferredValue,
   useMemo,
-  useRef,
 } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { SanctoraleCard } from "../../components/office/SanctoraleCard";
-import { Chevron } from "../../components/shell/Chevron";
 import { officeBarStyles } from "../../components/shell/OfficeTabs";
-import { monthDayShortLabel } from "../../lib/calendar/sanctorale";
+import { usePalette } from "../../context/PaletteContext";
+import {
+  monthDayShortLabel,
+  sanctoraleBySlug,
+} from "../../lib/calendar/sanctorale";
 import { type SaintHit, searchSaints } from "../../lib/reference/search";
 import {
   DetailPage,
@@ -18,11 +20,12 @@ import {
   FIRST_SAINT,
   IndexRow,
   noSelect,
+  PickerButton,
   SplitPane,
   useReference,
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
-import { useCursorScroll, useIndexKeyboard } from "./useIndexKeyboard";
+import { useIndexKeyboard } from "./useIndexKeyboard";
 
 export function SaintsScreen({
   isMobile,
@@ -33,23 +36,17 @@ export function SaintsScreen({
   fontScale: number;
   onScrollProgress?: (pct: number) => void;
 }) {
-  const { query, setQuery, openSaint, setOpenSaint, saintBio, saintLiturgy } =
-    useReference();
-  const desktopInputRef = useRef<TextInput>(null);
+  const { openSaint, saintBio, saintLiturgy } = useReference();
   if (isMobile) {
     return (
       <View style={styles.container}>
-        {openSaint !== null ? (
-          <DetailPage compact>
-            <SanctoraleCard
-              slug={openSaint}
-              showBio={saintBio}
-              showLiturgy={saintLiturgy}
-            />
-          </DetailPage>
-        ) : (
-          <SaintIndex query={query} selected={null} onSelect={setOpenSaint} />
-        )}
+        <DetailPage compact>
+          <SanctoraleCard
+            slug={openSaint ?? FIRST_SAINT}
+            showBio={saintBio}
+            showLiturgy={saintLiturgy}
+          />
+        </DetailPage>
       </View>
     );
   }
@@ -57,36 +54,6 @@ export function SaintsScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      header={
-        <TextInput
-          ref={desktopInputRef}
-          value={query}
-          onChangeText={setQuery}
-          dataSet={{ pickerSearch: "" }}
-          placeholder="Search saints by name or date"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={[
-            styles.search,
-            {
-              width: "100%",
-              marginLeft: 0,
-              borderWidth: 0,
-              paddingHorizontal: 0,
-              paddingVertical: 0,
-            },
-          ]}
-          accessibilityLabel="Search saints"
-        />
-      }
-      list={
-        <SaintIndex
-          query={query}
-          // fall back to the first saint so the pane never shows an
-          // empty hint; the row highlights as if it were picked
-          selected={openSaint}
-          onSelect={setOpenSaint}
-        />
-      }
       detail={
         <SanctoraleCard
           slug={openSaint ?? FIRST_SAINT}
@@ -95,37 +62,20 @@ export function SaintsScreen({
           showLiturgy={saintLiturgy}
         />
       }
-      detailOpen={openSaint !== null}
+      detailOpen
     />
   );
 }
 
-// the saints bar mirrors the psalms bar: on mobile it carries search
-// (or a back button when a saint is open). Desktop search lives in
-// the right navigator header instead.
-export function SaintsBar({
-  leading,
-  isMobile,
-}: {
-  leading?: ReactNode;
-  isMobile: boolean;
-}) {
-  const {
-    query,
-    setQuery,
-    openSaint,
-    setOpenSaint,
-    saintBio,
-    setSaintBio,
-    saintLiturgy,
-    setSaintLiturgy,
-  } = useReference();
-  const inputRef = useRef<TextInput>(null);
-  const searching = isMobile ? openSaint === null : false;
+// the saints bar mirrors the psalms bar: the sidebar-show button, the
+// current-pick chip that re-opens the floating picker, and the bio/liturgy
+// view toggles (shown once a saint is on screen; bio leads by default,
+// both standalone so each can be on or off independently)
+export function SaintsBar({ leading }: { leading?: ReactNode }) {
+  const { openSaint, saintBio, setSaintBio, saintLiturgy, setSaintLiturgy } =
+    useReference();
+  const palette = usePalette();
 
-  // the bio/liturgy view toggles, shown only once a saint is on screen
-  // (never during mobile search). bio leads by default; both are
-  // standalone so each can be on or off independently
   const toggles = (
     <View style={styles.saintToggles}>
       <Pressable
@@ -163,58 +113,60 @@ export function SaintsBar({
     </View>
   );
 
-  if (!isMobile) {
-    return (
-      <View style={[styles.bar, noSelect]}>
-        <View style={styles.barLeft}>{leading}</View>
-        <View style={styles.barRight}>{toggles}</View>
-      </View>
-    );
-  }
+  const sel = sanctoraleBySlug(openSaint ?? FIRST_SAINT);
 
   return (
-    <Pressable
-      style={[styles.bar, noSelect]}
-      onPress={() => inputRef.current?.focus()}
-    >
+    <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
-        {!searching ? (
-          <Pressable
-            style={({ hovered }) => [
-              styles.backBtn,
-              hovered && styles.rowHover,
-            ]}
-            onPress={() => setOpenSaint(null)}
-            accessibilityLabel="Back to list"
-            accessibilityRole="button"
-          >
-            <Chevron direction="left" size={5} />
-            <Text style={styles.backText}>Back</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {searching ? (
-        <TextInput
-          ref={inputRef}
-          value={query}
-          onChangeText={setQuery}
-          dataSet={{ pickerSearch: "" }}
-          placeholder="Search saints by name or date"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={styles.search}
-          accessibilityLabel="Search saints"
+        <PickerButton
+          label={sel?.title ?? "Saint"}
+          meta={sel ? monthDayShortLabel(sel.month, sel.day) : undefined}
+          onPress={() => palette.open("saints")}
         />
-      ) : (
-        <View style={styles.barRight}>{toggles}</View>
-      )}
-    </Pressable>
+      </View>
+      <View style={styles.barRight}>{toggles}</View>
+    </View>
   );
 }
 
-// grouped date-sorted index for the split layout: the fixed-date table
+// memoized saint row: a cursor flip re-renders only the two rows whose
+// active state changed, instead of rebuilding the whole list every move
+const SaintRow = memo(function SaintRow({
+  hit,
+  active,
+  selected,
+  onSelect,
+}: {
+  hit: SaintHit;
+  active: boolean;
+  selected: string | null;
+  onSelect: (slug: string | null) => void;
+}) {
+  const isSelected = hit.slug === selected;
+  return (
+    <IndexRow cursor={active} onPress={() => onSelect(isSelected ? null : hit.slug)}>
+      {(a) => (
+        <View style={styles.saintRowInner}>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={[styles.saintTitle, a && styles.rowTextActive]}
+          >
+            {hit.title}
+          </Text>
+          <Text style={[styles.saintDate, a && styles.rowTextActive]}>
+            {monthDayShortLabel(hit.month, hit.day)}
+          </Text>
+        </View>
+      )}
+    </IndexRow>
+  );
+});
+
+// grouped date-sorted index for the floating picker: the fixed-date table
 // races the calendar automatically, so no explicit grouping is needed
-const SaintIndex = memo(function SaintIndex({
+export const SaintIndex = memo(function SaintIndex({
   query,
   selected,
   onSelect,
@@ -231,39 +183,20 @@ const SaintIndex = memo(function SaintIndex({
     [selected, onSelect],
   );
   const { cursor } = useIndexKeyboard(hits, onEnter);
-  useCursorScroll(cursor);
   if (hits.length === 0) {
     return <EmptyMessage message={`No saints match “${deferredQuery}”.`} />;
   }
   return (
     <View style={styles.indexBody} dataSet={{ indexList: "" }}>
-      {hits.map((hit) => {
-        const isSelected = hit.slug === selected;
-        return (
-          <IndexRow
-            key={hit.slug}
-            selected={isSelected}
-            onPress={() => onSelect(isSelected ? null : hit.slug)}
-          >
-            {(active) => (
-              <View style={styles.saintRowInner}>
-                <Text
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                  style={[styles.saintTitle, active && styles.rowTextActive]}
-                >
-                  {hit.title}
-                </Text>
-                <Text
-                  style={[styles.saintDate, active && styles.rowTextActive]}
-                >
-                  {monthDayShortLabel(hit.month, hit.day)}
-                </Text>
-              </View>
-            )}
-          </IndexRow>
-        );
-      })}
+      {hits.map((hit, i) => (
+        <SaintRow
+          key={hit.slug}
+          hit={hit}
+          active={i === cursor}
+          selected={selected}
+          onSelect={onSelect}
+        />
+      ))}
     </View>
   );
 });

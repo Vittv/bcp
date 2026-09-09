@@ -1,6 +1,6 @@
-import { memo, type ReactNode, useCallback, useMemo, useRef } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
-import { Chevron } from "../../components/shell/Chevron";
+import { memo, type ReactNode, useCallback, useMemo } from "react";
+import { Text, View } from "react-native";
+import { usePalette } from "../../context/PaletteContext";
 import {
   CANTICLE_COUNT,
   canticleExists,
@@ -13,11 +13,12 @@ import {
   EmptyMessage,
   IndexRow,
   noSelect,
+  PickerButton,
   SplitPane,
   useReference,
 } from "./shared";
 import { sharedStyles as styles } from "./styles";
-import { useCursorScroll, useIndexKeyboard } from "./useIndexKeyboard";
+import { useIndexKeyboard } from "./useIndexKeyboard";
 
 export function CanticlesScreen({
   isMobile,
@@ -28,21 +29,13 @@ export function CanticlesScreen({
   fontScale: number;
   onScrollProgress?: (pct: number) => void;
 }) {
-  const { query, setQuery, openCanticle, setOpenCanticle } = useReference();
+  const { openCanticle } = useReference();
   if (isMobile) {
     return (
       <View style={styles.container}>
-        {openCanticle !== null ? (
-          <DetailPage compact>
-            <CanticleDetailBody number={openCanticle} />
-          </DetailPage>
-        ) : (
-          <CanticleIndex
-            query={query}
-            selected={null}
-            onSelect={setOpenCanticle}
-          />
-        )}
+        <DetailPage compact>
+          <CanticleDetailBody number={openCanticle ?? 1} />
+        </DetailPage>
       </View>
     );
   }
@@ -50,101 +43,44 @@ export function CanticlesScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      header={
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          dataSet={{ pickerSearch: "" }}
-          placeholder="Search by number or title"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={[
-            styles.search,
-            {
-              width: "100%",
-              marginLeft: 0,
-              borderWidth: 0,
-              paddingHorizontal: 0,
-              paddingVertical: 0,
-            },
-          ]}
-          accessibilityLabel="Search canticles"
-        />
-      }
-      list={
-        <CanticleIndex
-          query={query}
-          selected={openCanticle}
-          onSelect={(n) => setOpenCanticle(openCanticle === n ? null : n)}
-        />
-      }
       detail={
         <CanticleDetailBody
           number={openCanticle ?? 1}
           key={`c${openCanticle ?? 1}`}
         />
       }
-      detailOpen={openCanticle !== null}
+      detailOpen
     />
   );
 }
 
-// the canticles bar mirrors the psalms bar: on mobile it carries search
-// (or a back button when a canticle is open). desktop search lives in the
-// right navigator header instead.
-export function CanticlesBar({
-  leading,
-  isMobile,
-}: {
-  leading?: ReactNode;
-  isMobile: boolean;
-}) {
-  const { query, setQuery, openCanticle, setOpenCanticle } = useReference();
-  const inputRef = useRef<TextInput>(null);
-  const searching = isMobile ? openCanticle === null : false;
-
-  if (!isMobile) {
-    return (
-      <View style={[styles.bar, noSelect]}>
-        <View style={styles.barLeft}>{leading}</View>
-      </View>
-    );
-  }
-
+// the canticles bar mirrors the psalms bar: the sidebar-show button and
+// the current-pick chip that re-opens the floating picker
+export function CanticlesBar({ leading }: { leading?: ReactNode }) {
+  const { openCanticle } = useReference();
+  const palette = usePalette();
+  const n = openCanticle ?? 1;
+  const verses =
+    canticlePassage(n)?.sections.reduce((sum, s) => sum + s.verses.length, 0) ??
+    0;
+  const rite = canticleRite(n);
   return (
-    <Pressable
-      style={[styles.bar, noSelect]}
-      onPress={() => inputRef.current?.focus()}
-    >
+    <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
-        {!searching ? (
-          <Pressable
-            style={({ hovered }) => [
-              styles.backBtn,
-              hovered && styles.rowHover,
-            ]}
-            onPress={() => setOpenCanticle(null)}
-            accessibilityLabel="Back to list"
-            accessibilityRole="button"
-          >
-            <Chevron direction="left" size={5} />
-            <Text style={styles.backText}>Back</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {searching ? (
-        <TextInput
-          ref={inputRef}
-          value={query}
-          onChangeText={setQuery}
-          dataSet={{ pickerSearch: "" }}
-          placeholder="Search by number or title"
-          placeholderTextColor="var(--text-secondary, #7a6e64)"
-          style={styles.search}
-          accessibilityLabel="Search canticles"
+        <PickerButton
+          label={canticleTitle(n) ?? `Canticle ${n}`}
+          meta={[
+            `Canticle ${n}`,
+            rite,
+            `${verses} verse${verses === 1 ? "" : "s"}`,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+          onPress={() => palette.open("canticles")}
         />
-      ) : null}
-    </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -181,7 +117,42 @@ function canticleRite(number: number): string | undefined {
   return RITE_GROUPS.find((g) => g.numbers.includes(number))?.label;
 }
 
-function CanticleIndex({
+// memoized canticle row: a cursor flip re-renders only the two rows whose
+// active state changed, instead of rebuilding the whole list every move
+const CanticleRow = memo(function CanticleRow({
+  item,
+  active,
+  selected,
+  onSelect,
+}: {
+  item: { number: number; title: string; verses: number };
+  active: boolean;
+  selected: number | null;
+  onSelect: (n: number | null) => void;
+}) {
+  return (
+    <IndexRow
+      cursor={active}
+      onPress={() => onSelect(selected === item.number ? null : item.number)}
+    >
+      {(a) => (
+        <View style={styles.collectRowInner}>
+          <Text
+            numberOfLines={1}
+            style={[styles.canticleIndexTitle, a && styles.rowTextActive]}
+          >
+            {item.title}
+          </Text>
+          <Text style={[styles.rowMeta, a && styles.rowTextActive]}>
+            {item.verses} verse{item.verses === 1 ? "" : "s"}
+          </Text>
+        </View>
+      )}
+    </IndexRow>
+  );
+});
+
+export function CanticleIndex({
   query,
   selected,
   onSelect,
@@ -206,7 +177,7 @@ function CanticleIndex({
     [selected, onSelect],
   );
   const { cursor } = useIndexKeyboard(filtered, onEnter);
-  useCursorScroll(cursor);
+  const cursorItem = filtered[cursor];
   if (filtered.length === 0) {
     return <EmptyMessage message={`No canticle matches “${query}”.`} />;
   }
@@ -223,56 +194,22 @@ function CanticleIndex({
       {(q === ""
         ? groups
         : [{ label: null, numbers: [], items: filtered }]
-      ).map((group, gi) => (
+      ).map((group) => (
         <View key={group.label ?? "results"} style={styles.collectGroup}>
           {group.label ? (
-            <Text
-              style={[
-                styles.groupHeading,
-                styles.groupHeadingIndex,
-                gi === 0 && styles.groupHeadingFirst,
-              ]}
-            >
+            <Text style={[styles.groupHeading, styles.groupHeadingIndex]}>
               {group.label}
             </Text>
           ) : null}
-          {group.items.map((c) => {
-            const isSelected = c.number === selected;
-            return (
-              <IndexRow
-                key={c.number}
-                selected={isSelected}
-                onPress={() => onSelect(isSelected ? null : c.number)}
-              >
-                {(active) => (
-                  <View style={styles.collectRowInner}>
-                    <Text
-                      style={[
-                        styles.canticleNumber,
-                        active && styles.rowTextActive,
-                      ]}
-                    >
-                      {c.number}
-                    </Text>
-                    <Text
-                      numberOfLines={1}
-                      style={[
-                        styles.canticleIndexTitle,
-                        active && styles.rowTextActive,
-                      ]}
-                    >
-                      {c.title}
-                    </Text>
-                    <Text
-                      style={[styles.rowMeta, active && styles.rowTextActive]}
-                    >
-                      {c.verses} verse{c.verses === 1 ? "" : "s"}
-                    </Text>
-                  </View>
-                )}
-              </IndexRow>
-            );
-          })}
+          {group.items.map((c) => (
+            <CanticleRow
+              key={c.number}
+              item={c}
+              active={c === cursorItem}
+              selected={selected}
+              onSelect={onSelect}
+            />
+          ))}
         </View>
       ))}
     </View>
