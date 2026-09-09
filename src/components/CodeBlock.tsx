@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { CHROME_FONT } from "../lib/fonts";
+import { CheckIcon, CopyIcon } from "./shell/Icon";
 
 // Code blocks theme themselves through the app palette: the raised surface
 // background and border read correctly in both light and dark, and the mono
@@ -65,16 +66,18 @@ export function CodeBlock({ value, label }: CodeBlockProps) {
         <Pressable
           onPress={onCopy}
           accessibilityRole="button"
-          accessibilityLabel="Copy command"
+          accessibilityLabel={copied ? "Copied" : "Copy command"}
           style={({ hovered }) => [
             styles.copyBtn,
             copied && styles.copyBtnDone,
             hovered && styles.copyBtnHover,
           ]}
         >
-          <Text style={[styles.copyText, copied && styles.copyTextDone]}>
-            {copied ? "Copied" : "Copy"}
-          </Text>
+          {copied ? (
+            <CheckIcon size={16} color="var(--text, #2c2020)" />
+          ) : (
+            <CopyIcon size={16} color="var(--text-secondary, #7a6e64)" />
+          )}
         </Pressable>
       </View>
     </View>
@@ -136,14 +139,5 @@ const styles = StyleSheet.create({
   },
   copyBtnDone: {
     backgroundColor: "var(--today-bg, rgba(122, 48, 64, 0.16))",
-  },
-  copyText: {
-    fontFamily: CHROME_FONT,
-    fontSize: 13,
-    color: "var(--accent, #7a3040)",
-    fontWeight: "600",
-  },
-  copyTextDone: {
-    color: "var(--text, #2c2020)",
   },
 });

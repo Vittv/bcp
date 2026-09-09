@@ -1,89 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { CodeBlock } from "../components/CodeBlock";
 import { ExternalLink } from "../components/ExternalLink";
+import { Note } from "../components/Note";
+import { Step, Steps } from "../components/Steps";
 import { CHROME_FONT } from "../lib/fonts";
-import { LINUX_INSTALL_URL, LINUX_TARBALL, RELEASE_PAGE } from "../lib/release";
+import { LINUX_INSTALL_URL, LINUX_TARBALL, PWA_URL, RELEASE_PAGE } from "../lib/release";
 import { VERSION } from "../lib/version";
 
-// AMO throttles addons.mozilla.org for many IPs, so point firefox users at the
-// canonical project page; the "Progressive Web Apps for Firefox" extension is
-// linked from there.
 const FIREFOXPWA_URL = "https://github.com/filips123/PWAsForFirefox";
 
-// Chrome and friends fire beforeinstallprompt when the page is installable;
-// capturing it lets the app offer install inline instead of relying on the
-// browser's menu. Safari and Firefox never fire it, so the button stays hidden
-// and the manual instructions below cover those paths.
-type InstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-};
-
-function useInstallPrompt() {
-  const [available, setAvailable] = useState(false);
-  const [standalone, setStandalone] = useState(false);
-  const eventRef = useRef<InstallPromptEvent | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    // installed PWAs run under a standalone display mode (or navigator.standalone
-    // on iOS); there is nothing left to install, so the buttons must not appear
-    const updateStandalone = () => {
-      const modes = ["standalone", "fullscreen", "minimal-ui"];
-      const inApp =
-        modes.some((m) => window.matchMedia(`(display-mode: ${m})`).matches) ||
-        ("standalone" in navigator &&
-          (navigator as { standalone?: boolean }).standalone === true);
-      setStandalone(inApp);
-    };
-    updateStandalone();
-    const mq = window.matchMedia("(display-mode: standalone)");
-    mq.addEventListener?.("change", updateStandalone);
-
-    const onBip = (e: Event) => {
-      e.preventDefault();
-      eventRef.current = e as InstallPromptEvent;
-      setAvailable(true);
-    };
-    const onInstalled = () => {
-      setAvailable(false);
-      updateStandalone();
-    };
-    window.addEventListener("beforeinstallprompt", onBip);
-    window.addEventListener("appinstalled", onInstalled);
-    return () => {
-      mq.removeEventListener?.("change", updateStandalone);
-      window.removeEventListener("beforeinstallprompt", onBip);
-      window.removeEventListener("appinstalled", onInstalled);
-    };
-  }, []);
-
-  const install = async () => {
-    const ev = eventRef.current;
-    if (!ev) return;
-    setAvailable(false);
-    eventRef.current = null;
-    await ev.prompt();
-    await ev.userChoice.catch(() => {});
-  };
-
-  return { available, standalone, install };
-}
-
 export function InstallScreen() {
-  const prompt = useInstallPrompt();
-  const [installHint, setInstallHint] = useState(false);
-
-  const onAndroidPress = () => {
-    if (prompt.available) {
-      prompt.install();
-    } else {
-      setInstallHint(true);
-    }
-  };
-
   return (
     <View>
       <View style={styles.section}>
@@ -97,24 +23,35 @@ export function InstallScreen() {
         </ExternalLink>
       </View>
 
-      <View style={styles.section}>
+      <View style={styles.sectionDivider}>
+        <Text style={styles.groupLabel}>Desktop</Text>
         <Text style={styles.label}>Linux</Text>
         <ExternalLink href={LINUX_TARBALL} style={styles.link}>
           Rootless tarball ({VERSION})
         </ExternalLink>
         <Text style={styles.body}>
-          Extract a binary and desktop entry into your user directories. No root
-          or AppImage needed; requires the system webview.
+          Needs no root or AppImage; requires the system webview.
         </Text>
         <CodeBlock value={`curl -LsS ${LINUX_INSTALL_URL} | bash`} />
         <Text style={styles.body}>
-          The installer adds the binary to your PATH, registers the app in the
-          desktop menu (including its icon), and cleans up when you uninstall.
+          Adds the binary to your PATH, registers the app in the desktop menu
+          (including its icon), and cleans up on uninstall.
         </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>macOS</Text>
+        <Note>
+          <Text style={styles.noteText}>
+            The native app renders with the system WebKitGTK. If fonts look
+            wrong, use the Web app (PWA) option instead.
+          </Text>
+        </Note>
+        <Text style={styles.subLabel}>Debian, Ubuntu, Fedora</Text>
+        <Text style={styles.body}>
+          .deb and .rpm packages for Debian, Ubuntu, Fedora and compatible
+          distros are also on the release page.
+        </Text>
+        <ExternalLink href={RELEASE_PAGE} style={styles.link}>
+          Open the .deb and .rpm packages
+        </ExternalLink>
+        <Text style={[styles.label, styles.labelSpaced]}>macOS</Text>
         <Text style={styles.body}>
           Universal disk image (Apple Silicon and Intel) from the release page.
           Drag the app into Applications.
@@ -122,10 +59,7 @@ export function InstallScreen() {
         <ExternalLink href={RELEASE_PAGE} style={styles.link}>
           Get the macOS app
         </ExternalLink>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Windows</Text>
+        <Text style={[styles.label, styles.labelSpaced]}>Windows</Text>
         <Text style={styles.body}>
           NSIS installer (.exe) or MSI from the release page. Uses the system
           WebView2, so no separate runtime download is needed.
@@ -133,75 +67,84 @@ export function InstallScreen() {
         <ExternalLink href={RELEASE_PAGE} style={styles.link}>
           Get the Windows app
         </ExternalLink>
+        <Note>
+          <Text style={styles.noteText}>
+            The installers aren't code-signed, so Windows SmartScreen will warn
+            on first launch. Click More info, then Run anyway.
+          </Text>
+        </Note>
       </View>
 
-      <View style={styles.section}>
+      <View style={styles.sectionDivider}>
+        <Text style={styles.groupLabel}>Web app (PWA)</Text>
+        <Text style={styles.label}>Any OS</Text>
+        <Text style={styles.body}>
+          bcp runs in any modern browser and installs into its own window with
+          its own launcher icon.
+        </Text>
+        <Steps>
+          <Step n={1}>
+            Open{" "}
+            <ExternalLink href={PWA_URL} style={styles.inlineLink}>
+              bcp
+            </ExternalLink>{" "}
+            in a Chromium-based browser.
+          </Step>
+          <Step n={2}>Click the install icon at the right end of the address bar.</Step>
+          <Step n={3}>Confirm the install prompt.</Step>
+        </Steps>
+        <Note>
+          <Text style={styles.noteText}>
+            Firefox-based browsers can't install web apps; add the{" "}
+            <ExternalLink href={FIREFOXPWA_URL} style={styles.link}>
+              firefoxpwa connector
+            </ExternalLink>{" "}
+            first, then install bcp from the browser's menu.
+          </Text>
+        </Note>
+      </View>
+
+      <View style={styles.sectionDivider}>
+        <Text style={styles.groupLabel}>Mobile (PWA)</Text>
         <Text style={styles.label}>Android</Text>
-        <Text style={styles.body}>
-          bcp is available as an installable web app that runs offline with its
-          own launcher icon.
-        </Text>
-        <Text style={styles.browserNote}>
-          Chrome, Edge, Samsung Internet and Opera can install the app; Firefox
-          on Android doesn't support installing, so use the menu there instead.
-        </Text>
-        {prompt.standalone ? (
-          <Text style={styles.installedBadge}>Installed on this device</Text>
-        ) : (
-          <>
-            <Pressable
-              onPress={onAndroidPress}
-              accessibilityRole="button"
-              accessibilityLabel="Install bcp app"
-              style={({ hovered }) => [
-                styles.installBtn,
-                hovered && styles.installBtnHover,
-              ]}
-            >
-              <Text style={styles.installText}>Install bcp</Text>
-            </Pressable>
-            {installHint && (
-              <Text style={styles.hint}>
-                Your browser isn't offering install for this page right now; use
-                the menu's Install option instead.
-              </Text>
-            )}
-          </>
-        )}
+        <Steps>
+          <Step n={1}>
+            Open{" "}
+            <ExternalLink href={PWA_URL} style={styles.inlineLink}>
+              bcp
+            </ExternalLink>{" "}
+            in any browser.
+          </Step>
+          <Step n={2}>Tap the Menu, then Install app or Add to Home Screen.</Step>
+        </Steps>
+        <Note>
+          <Text style={styles.noteText}>
+            On some older phones Firefox needs a small home-screen helper app
+            first; it offers to install it when you try to install a web app.
+          </Text>
+        </Note>
+        <Text style={[styles.label, styles.labelSpaced]}>iPhone and iPad</Text>
+        <Steps>
+          <Step n={1}>
+            Open{" "}
+            <ExternalLink href={PWA_URL} style={styles.inlineLink}>
+              bcp
+            </ExternalLink>{" "}
+            in Safari.
+          </Step>
+          <Step n={2}>Tap Share, then Add to Home Screen.</Step>
+        </Steps>
+        <Note>
+          <Text style={styles.noteText}>
+            This works in Safari only. Chrome and Firefox on iOS are
+            WebKit-based, so their Add to Home Screen is a bookmark, not an
+            app.
+          </Text>
+        </Note>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>iOS</Text>
-        <Text style={styles.body}>
-          On iPhone and iPad, bcp is a home-screen web app. To add it, open the
-          app in Safari, tap the Share button, then choose Add to Home Screen
-          and confirm. It launches full-screen from its own icon and works
-          offline.
-        </Text>
-        <Text style={styles.browserNote}>
-          This works in Safari only. Chrome and Firefox on iOS are WebKit-based,
-          so their Add to Home Screen is a bookmark, not an app.
-        </Text>
-      </View>
-
-      <View style={styles.sectionLast}>
-        <Text style={styles.label}>All platforms</Text>
-        <Text style={styles.body}>
-          .deb and .rpm packages for Debian, Ubuntu, Fedora and compatible
-          distros are also on the release page.
-        </Text>
-        <Text style={styles.browserNote}>
-          On desktop Linux, Chromium-family browsers install bcp as an app
-          natively. Firefox and Zen can't yet, so install the{" "}
-          <ExternalLink href={FIREFOXPWA_URL} style={styles.link}>
-            firefoxpwa connector
-          </ExternalLink>{" "}
-          and install bcp from the browser's menu.
-        </Text>
-      </View>
-
-      <View style={styles.sectionLast}>
-        <Text style={styles.label}>Updates</Text>
+      <View style={styles.sectionDivider}>
+        <Text style={styles.groupLabel}>Updates</Text>
         <Text style={styles.body}>
           The desktop app checks the release page for a newer version. In
           Settings, choose Check for Updates to download and install the latest
@@ -219,15 +162,35 @@ export function InstallScreen() {
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 24,
+    marginBottom: 30,
   },
-  sectionLast: {
-    marginBottom: 24,
+  sectionDivider: {
+    borderTopWidth: 1,
+    borderTopColor: "var(--border-content, #b5aa9e)",
+    paddingTop: 20,
+    marginBottom: 30,
+  },
+  groupLabel: {
+    fontFamily: CHROME_FONT,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "var(--text, #2c2020)",
+    marginBottom: 16,
   },
   label: {
     fontFamily: CHROME_FONT,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
+    color: "var(--text, #2c2020)",
+    marginBottom: 8,
+  },
+  labelSpaced: {
+    marginTop: 24,
+  },
+  subLabel: {
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
+    fontWeight: "500",
     color: "var(--text, #2c2020)",
     marginBottom: 8,
   },
@@ -247,53 +210,18 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
     marginBottom: 8,
   },
-  installBtn: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 22,
-    paddingVertical: 11,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
-    backgroundColor: "var(--bg-raised, #ece7dd)",
-    textDecorationLine: "none",
-  },
-  installBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
-  },
-  installText: {
+  inlineLink: {
     fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 14,
-    letterSpacing: 0.3,
+    fontWeight: "400",
+    fontSize: 15,
     color: "var(--accent, #7a3040)",
+    textDecorationLine: "underline",
   },
-  installedBadge: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
-    backgroundColor: "var(--bg-raised, #ece7dd)",
-    fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
-  },
-  hint: {
+  noteText: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
-    fontSize: 13,
+    fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
-    lineHeight: 20,
-    marginTop: 10,
-  },
-  browserNote: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "400",
-    fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
-    lineHeight: 20,
-    marginBottom: 8,
+    lineHeight: 21,
   },
 });
