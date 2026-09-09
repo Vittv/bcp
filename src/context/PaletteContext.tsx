@@ -17,7 +17,8 @@ export type PaletteScope =
   | "collects"
   | "saints"
   | "proverbs"
-  | "bible";
+  | "bible"
+  | "search";
 
 type PaletteState = {
   scope: PaletteScope | null;
@@ -39,9 +40,10 @@ export function isPaletteActive(): boolean {
   return paletteActive;
 }
 
-// same module pattern as the open flag: the shell's Ctrl+/ hotkey hands
-// the current page's scope to whatever bar would have been clicked, since
-// the shell itself renders above the provider and cannot call usePalette
+// same module pattern as the open flag: the shell's keydown handler (and
+// anything above the provider tree) hands a scope to whatever bar would
+// have been clicked, routing Ctrl+/ to the page's own picker and Ctrl+K /
+// Cmd+K to the global search palette
 let openScope: ((scope: PaletteScope) => void) | null = null;
 export function requestPalette(scope: PaletteScope): void {
   openScope?.(scope);

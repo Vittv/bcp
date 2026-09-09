@@ -17,6 +17,8 @@ export const SHORTCUTS: {
       { keys: ["f"], label: "Open link hints" },
       { keys: ["Ctrl+j"], label: "Move down a list picker" },
       { keys: ["Ctrl+k"], label: "Move up a list picker" },
+      { keys: ["/"], label: "Open this page's picker" },
+      { keys: ["Ctrl+K"], label: "Search the whole prayer book" },
     ],
   },
   {

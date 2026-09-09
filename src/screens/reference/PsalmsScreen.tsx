@@ -5,7 +5,8 @@ import {
   useDeferredValue,
   useMemo,
 } from "react";
-import { Text, View } from "react-native";
+import { Text, View, Pressable } from "react-native";
+import { Chevron } from "../../components/shell/Chevron";
 import { PsalmText } from "../../components/office/PsalmText";
 import { usePalette } from "../../context/PaletteContext";
 import { psalmPassage } from "../../lib/content/psalter";
@@ -54,21 +55,54 @@ export function PsalmsScreen({
 }
 
 // the psalms bar carries the sidebar-show button and, in place of the
-// old index, the current-pick chip that re-opens the floating picker
+// old index, the current-pick chip that re-opens the floating picker,
+// with prev/next arrows clamped to 1-150 (the linear sequence the page
+// is read in)
+const PSALM_COUNT = 150;
 export function PsalmsBar({ leading }: { leading?: ReactNode }) {
-  const { openPsalm } = useReference();
+  const { openPsalm, setOpenPsalm } = useReference();
   const palette = usePalette();
   const n = openPsalm ?? 1;
   const verses = psalmPassage({ psalm: n })?.verses.length ?? 0;
+  const atStart = n <= 1;
+  const atEnd = n >= PSALM_COUNT;
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
         <PickerButton
           label={`Psalm ${n}`}
-          meta={`${n} / 150 · ${verses} verse${verses === 1 ? "" : "s"}`}
+          meta={`${n} / ${PSALM_COUNT} · ${verses} verse${
+            verses === 1 ? "" : "s"
+          }`}
           onPress={() => palette.open("psalms")}
         />
+      </View>
+      <View style={styles.barRight}>
+        <Pressable
+          style={({ hovered }) => [
+            styles.arrowBtn,
+            hovered && styles.arrowBtnHover,
+            atStart && { opacity: 0.4 },
+          ]}
+          onPress={() => setOpenPsalm(n - 1)}
+          disabled={atStart}
+          accessibilityLabel="Previous psalm"
+        >
+          <Chevron direction="left" size={6} />
+        </Pressable>
+        <Pressable
+          style={({ hovered }) => [
+            styles.arrowBtn,
+            hovered && styles.arrowBtnHover,
+            atEnd && { opacity: 0.4 },
+          ]}
+          onPress={() => setOpenPsalm(n + 1)}
+          disabled={atEnd}
+          accessibilityLabel="Next psalm"
+        >
+          <Chevron direction="right" size={6} />
+        </Pressable>
       </View>
     </View>
   );

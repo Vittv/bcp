@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { usePalette } from "../../context/PaletteContext";
 import { useTheme } from "../../context/ThemeContext";
 import { sanctoraleTitle } from "../../lib/calendar/sanctorale";
 import type { Season } from "../../lib/calendar/types";
 import { IS_MACOS_TAURI, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
+import { KeyCap, HOTKEY_MOD } from "../../screens/reference/shared";
 import { useSaintPopover } from "../office/SaintPopover";
-import { MoonIcon, SunIcon, SystemIcon } from "./Icon";
+import {
+  MagnifierIcon,
+  MoonIcon,
+  SunIcon,
+  SystemIcon,
+} from "./Icon";
 import { WindowControls } from "./WindowControls";
 
 // transparent-background cross glyphs, one per theme, so the in-app mark
@@ -103,6 +110,7 @@ export function TopBar({
 }: TopBarProps) {
   const { mode, setMode, fontScale, setFontScale, resolved } = useTheme();
   const { openSaint } = useSaintPopover();
+  const palette = usePalette();
   const wco = useWindowControlsOverlay();
 
   const pct = `${Math.round(fontScale * 100)}%`;
@@ -180,6 +188,20 @@ export function TopBar({
         style={styles.controls}
         dataSet={wco ? WCO_STOP : IS_TAURI ? DRAG_DATA : undefined}
       >
+        <Pressable
+          style={({ hovered }) => [
+            styles.searchTrigger,
+            hovered && styles.searchTriggerHover,
+          ]}
+          onPress={() => palette.open("search")}
+          accessibilityRole="button"
+          accessibilityLabel="Search the whole prayer book"
+        >
+          <MagnifierIcon size={13} color="var(--text-secondary, #7a6e64)" />
+          <Text style={styles.searchText}>Search</Text>
+          <KeyCap label={`${HOTKEY_MOD} K`} />
+        </Pressable>
+
         <View style={styles.fontControl}>
           <Text style={styles.fontPct}>{pct}</Text>
           <Pressable
@@ -327,6 +349,28 @@ const styles = StyleSheet.create({
   },
   hover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
+  },
+  // the global-search trigger: a fuller descendant of aetheryte's cmd
+  // trigger, stretching the top bar's full 40px so search reads as a
+  // control of the chrome rather than a chip of the page beneath
+  searchTrigger: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "stretch",
+    gap: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "var(--border-content, #b5aa9e)",
+  },
+  searchTriggerHover: {
+    backgroundColor: "var(--control-hover, #d2cbbf)",
+  },
+  searchText: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
+    fontSize: 12,
+    color: "var(--text-secondary, #7a6e64)",
   },
   themeBtn: {
     width: 28,

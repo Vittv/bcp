@@ -6,7 +6,8 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Chevron } from "../../components/shell/Chevron";
 import { ScriptureView } from "../../components/office/ScriptureView";
 import { usePalette } from "../../context/PaletteContext";
 import { loadKjvBook, sliceKjvPassage } from "../../lib/content/kjv";
@@ -93,13 +94,16 @@ export function ProverbsScreen({
 }
 
 // the proverbs bar mirrors the psalms bar: the sidebar-show button and
-// the current-pick chip that re-opens the floating picker
+// the current-pick chip that re-opens the floating picker, with prev/next
+// arrows clamped to 1-31 across the book's linear sequence
 export function ProverbsBar({ leading }: { leading?: ReactNode }) {
-  const { openProvChapter } = useReference();
+  const { openProvChapter, setOpenProvChapter } = useReference();
   const palette = usePalette();
   const chapters = useProvChapterMeta();
   const n = openProvChapter ?? 1;
   const verses = chapters.find((c) => c.chapter === n)?.verses ?? 0;
+  const atStart = n <= 1;
+  const atEnd = n >= PROVERS_CHAPTERS;
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
@@ -111,6 +115,32 @@ export function ProverbsBar({ leading }: { leading?: ReactNode }) {
           }`}
           onPress={() => palette.open("proverbs")}
         />
+      </View>
+      <View style={styles.barRight}>
+        <Pressable
+          style={({ hovered }) => [
+            styles.arrowBtn,
+            hovered && styles.arrowBtnHover,
+            atStart && { opacity: 0.4 },
+          ]}
+          onPress={() => setOpenProvChapter(n - 1)}
+          disabled={atStart}
+          accessibilityLabel="Previous chapter"
+        >
+          <Chevron direction="left" size={6} />
+        </Pressable>
+        <Pressable
+          style={({ hovered }) => [
+            styles.arrowBtn,
+            hovered && styles.arrowBtnHover,
+            atEnd && { opacity: 0.4 },
+          ]}
+          onPress={() => setOpenProvChapter(n + 1)}
+          disabled={atEnd}
+          accessibilityLabel="Next chapter"
+        >
+          <Chevron direction="right" size={6} />
+        </Pressable>
       </View>
     </View>
   );

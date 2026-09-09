@@ -274,3 +274,24 @@ export function MagnifierIcon({
     </>,
   );
 }
+
+// bulleted list glyph: three text-length lines with pinned-left dots,
+// reads as "browse this list of entries" without echoing the sidebar's
+// equal-width hamburger
+export function ListIcon({
+  size = 16,
+  strokeWidth = 2,
+  color,
+  style,
+}: IconProps) {
+  return icon(
+    size,
+    strokeWidth,
+    color,
+    style,
+    <>
+      <path d="M9 6h12M9 12h12M9 18h12" />
+      <path d="M3 6h2M3 12h2M3 18h2" />
+    </>,
+  );
+}

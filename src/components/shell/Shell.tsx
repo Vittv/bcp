@@ -654,16 +654,23 @@ export function Shell() {
         }
         return;
       }
-      // Ctrl+/ opens this page's own picker (Ctrl+K is held for the future
-      // global search). guarded by the editable check above, so slashes
-      // typed into any search field still type
-      if (e.ctrlKey && e.key === "/") {
+      // "/" opens this page's own picker ("?" is shift+"/" and keeps its
+      // help meaning); Ctrl+K / Cmd+K opens the global search palette.
+      // both are guarded by the editable check above, so keys typed into
+      // any search field still type
+      if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
         const scope = SCOPE_FOR_PAGE[page];
         if (scope) {
           e.preventDefault();
           e.stopImmediatePropagation();
           requestPalette(scope);
         }
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        requestPalette("search");
         return;
       }
       // while hint mode is open every key drives the hint layer
@@ -695,8 +702,9 @@ export function Shell() {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const key = e.key;
       switch (key) {
+        // "/" is consumed by the picker chord above; "?" (US shift+"/")
+        // alone opens help
         case "?":
-        case "/":
           if (e.shiftKey) {
             e.preventDefault();
             e.stopImmediatePropagation();

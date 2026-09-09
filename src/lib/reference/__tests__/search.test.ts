@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { searchCollects, searchPsalms, searchSaints } from "../search";
+import {
+  searchCollects,
+  searchPalette,
+  searchPsalms,
+  searchSaints,
+} from "../search";
 
 describe("searchPsalms", () => {
   test("empty query lists every psalm without snippets", () => {
@@ -135,5 +140,84 @@ describe("searchSaints", () => {
 
   test("unknown text yields no results", () => {
     expect(searchSaints("xyzzyplugh")).toHaveLength(0);
+  });
+});
+
+describe("searchPalette", () => {
+  test("empty or blank query is intentionally empty", () => {
+    for (const q of ["", "   "]) {
+      expect(searchPalette(q)).toEqual([]);
+    }
+  });
+
+  test("matches psalms by number and by verse text", () => {
+    const byNum = searchPalette("119");
+    expect(byNum.some((e) => e.section === "psalms" && e.run.kind === "psalm" && e.run.psalm === 119)).toBe(true);
+
+    const byText = searchPalette("shepherd");
+    expect(byText.some((e) => e.section === "psalms" && e.run.kind === "psalm" && e.run.psalm === 23)).toBe(true);
+    expect(byText[0].section).toBe("psalms");
+  });
+
+  test("lists proverbs chapters for a plain chapter number", () => {
+    const hits = searchPalette("prov 3");
+    const prov = hits.filter((e) => e.section === "proverbs");
+    expect(prov.length).toBeGreaterThan(0);
+    expect(prov.every((e) => e.run.kind === "proverb")).toBe(true);
+    expect(prov.some((e) => e.run.kind === "proverb" && e.run.chapter === 3)).toBe(true);
+  });
+
+  test("matches a canticle by title", () => {
+    const hits = searchPalette("mary");
+    const cants = hits.filter((e) => e.section === "canticles");
+    expect(cants.some((e) => e.run.kind === "canticle")).toBe(true);
+    expect(cants[0]?.label).toContain("Mary");
+  });
+
+  test("matches collects by title and by text", () => {
+    const byTitle = searchPalette("for peace").filter((e) => e.section === "collects");
+    expect(byTitle.some((e) => e.label.includes("Peace"))).toBe(true);
+
+    const byText = searchPalette("cast away the works of darkness").filter(
+      (e) => e.section === "collects",
+    );
+    expect(byText.length).toBeGreaterThan(0);
+  });
+
+  test("matches a saint by name variant", () => {
+    const slugs = searchPalette("saint james").reduce<string[]>((acc, e) => {
+      if (e.run.kind === "saint") acc.push(e.run.slug);
+      return acc;
+    }, []);
+    expect(new Set(slugs)).toEqual(
+      new Set(["philip-and-james", "st-james", "st-james-of-jerusalem"]),
+    );
+  });
+
+  test("matches bible books by name and abbreviation", () => {
+    const gen = searchPalette("gen").filter((e) => e.section === "bible");
+    expect(gen.some((e) => e.label === "Genesis")).toBe(true);
+
+    const byName = searchPalette("john").filter((e) => e.section === "bible");
+    expect(byName.some((e) => e.label === "John")).toBe(true);
+  });
+
+  test("no results for unknown text", () => {
+    expect(searchPalette("xyzzyplugh")).toEqual([]);
+  });
+
+  test("every section is reachable through its own vocabulary", () => {
+    const probes: [string, string][] = [
+      ["psalms", "shepherd"],
+      ["proverbs", "prov"],
+      ["canticles", "mary"],
+      ["collects", "peace"],
+      ["saints", "james"],
+      ["bible", "gen"],
+    ];
+    for (const [section, query] of probes) {
+      const hits = searchPalette(query).filter((e) => e.section === section);
+      expect(hits.length).toBeGreaterThan(0);
+    }
   });
 });

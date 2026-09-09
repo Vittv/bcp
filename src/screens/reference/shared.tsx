@@ -17,7 +17,7 @@ import {
   type StyleProp,
   type TextStyle,
 } from "react-native";
-import { MagnifierIcon } from "../../components/shell/Icon";
+import { ListIcon } from "../../components/shell/Icon";
 import type { PageId } from "../../components/shell/Sidebar";
 import type { HistoryApi, HistorySnapshot } from "../../context/HistoryContext";
 import { useHistory, useHistoryField } from "../../context/HistoryContext";
@@ -600,7 +600,7 @@ export function PickerButton({
       accessibilityRole="button"
       accessibilityLabel={`Change ${label}`}
     >
-      <MagnifierIcon size={13} color="var(--text-secondary, #7a6e64)" />
+      <ListIcon size={13} color="var(--text-secondary, #7a6e64)" />
       <Text
         numberOfLines={1}
         ellipsizeMode="tail"

@@ -97,6 +97,12 @@ export const sharedStyles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 16,
   },
+  // auto-height mode: the global search anchors to the top, so its search
+  // field begins exactly where the scoped pickers' does (15% down, the
+  // top edge of their fixed 70% frame) and the card grows downward
+  paletteOverlayAuto: {
+    justifyContent: "flex-start",
+  },
   paletteTray: {
     zIndex: 101,
     width: "100%",
@@ -111,6 +117,14 @@ export const sharedStyles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
     boxShadow: "0 8px 24px rgba(20, 15, 15, 0.18)",
+  },
+  // the global search palette sizes to its results instead of claiming
+  // the scoped picker's fixed 70%: an empty query renders as a slim
+  // card that grows as results stream in, with the picker's fixed
+  // height merely capping the tall end of a long query
+  paletteTrayAuto: {
+    height: "auto",
+    maxHeight: "70%",
   },
   paletteSearch: {
     fontFamily: CHROME_FONT,
@@ -130,6 +144,12 @@ export const sharedStyles = StyleSheet.create({
     minHeight: 0,
     overflowY: "auto",
     paddingVertical: 4,
+  },
+  // auto-height mode: shrink instead of grow, so the body hugs its rows
+  paletteBodyAuto: {
+    flexGrow: 0,
+    flexShrink: 1,
+    flexBasis: "auto",
   },
   paletteFooter: {
     flexDirection: "row",
