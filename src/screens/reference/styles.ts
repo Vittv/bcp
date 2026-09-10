@@ -103,6 +103,16 @@ export const sharedStyles = StyleSheet.create({
   paletteOverlayAuto: {
     justifyContent: "flex-start",
   },
+  // coarse-pointer phones: the tray drops its own 15% line is applied as
+  // pixels in SearchPalette (percent margins resolve against the container
+  // width, not height, so "15%" would sit far too high on a narrow phone)
+  paletteOverlayMobile: {
+    justifyContent: "flex-start",
+  },
+  paletteTrayMobile: {
+    height: "55%",
+    maxHeight: "55%",
+  },
   paletteTray: {
     zIndex: 101,
     width: "100%",
@@ -255,9 +265,10 @@ export const sharedStyles = StyleSheet.create({
     // the split-pane variant still pads the tail, but the palette needs
     // no extra space (the list ends exactly at the last row)
   },
-  // collects desktop index rows pad 18 like rowInner; headings align
+  // headings sit on the cursor arrow's 16px track so the active-row ▸
+  // points up into its category; item rows keep their deeper 34px gutter
   groupHeadingIndex: {
-    paddingLeft: 18,
+    paddingLeft: 16,
   },
   // collect titles are navigation labels rather than prayed text, so
   // they stay sans; like the sidebar nav they sit in the muted
@@ -477,11 +488,10 @@ export const sharedStyles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     flexGrow: 1,
-    // a fixed 24px like the bar's other buttons (sidebar trigger, arrows)
-    // so the chip reads at the same height as its neighbors instead of
-    // stretching to the bar's full 30px
+    // fixed 24px like the bar's other buttons (sidebar trigger, arrows);
+    // 6px side padding matches the global-search trigger's breathing
     height: 24,
-    paddingHorizontal: 10,
+    paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 5,
     borderWidth: 1,
@@ -497,9 +507,11 @@ export const sharedStyles = StyleSheet.create({
     fontWeight: "500",
     color: "var(--text-secondary, #7a6e64)",
     fontVariant: ["tabular-nums"],
-    // shrink instead of pushing the fixed-width chip open; the label
-    // truncates with ellipsis when it outgrows the chip
+    // shrink instead of pushing the chip open; min-width: 0 lets a flex text
+    // node shrink below its content width so the label ellipsizes on
+    // narrow bars
     flexShrink: 1,
+    minWidth: 0,
   },
   // the chip's trailing meta: right-aligned count/verse info in the same
   // 11px muted voice as the list rows' rowMeta
@@ -516,7 +528,7 @@ export const sharedStyles = StyleSheet.create({
   // opens the same picker): a quieter mono voice than the palette footer
   pickerKbd: {
     fontFamily: '"JetBrains Mono", monospace',
-    fontWeight: "700",
+    fontWeight: "500",
     fontSize: 11,
     lineHeight: 15,
     fontVariant: ["tabular-nums"],

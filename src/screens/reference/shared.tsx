@@ -423,12 +423,17 @@ export function today(): CalendarDate {
 
 export const IS_WEB = Platform.OS === "web";
 
-// platform-aware hotkey caps: macs read ⌘, everything else (including
-// linux/windows desktop webviews) reads Ctrl. always shown, on every
-// build, so the chords read as hints even where no physical keyboard
-// exists
+// the PWA is the only mobile distribution; primary-pointer coercion marks
+// phones and tablets, which drive every coarse-pointer placement decision
+// in the app chrome
+export const COARSE_POINTER =
+  IS_WEB && typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+
+// platform-aware hotkey caps: macs read ⌘, everything else Ctrl. caps are
+// desktop-only affordances, so they drop wherever the pointer is coarse
 export const HOTKEY_MOD =
   IS_WEB && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl";
+export const SHOW_HOTKEY_CAP = IS_WEB && !COARSE_POINTER;
 
 // desktop: a reading pane beside a persistent index; with no list the
 // pane fills the full column (the picker lives in a floating modal now).
@@ -617,10 +622,12 @@ export function PickerButton({
           {meta}
         </Text>
       ) : null}
-      <KeyCap
-        label="/"
-        style={meta ? { marginLeft: 8 } : { marginLeft: "auto" }}
-      />
+      {SHOW_HOTKEY_CAP ? (
+        <KeyCap
+          label="/"
+          style={meta ? { marginLeft: 8 } : { marginLeft: "auto" }}
+        />
+      ) : null}
     </Pressable>
   );
 }

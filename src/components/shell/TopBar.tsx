@@ -6,7 +6,12 @@ import { sanctoraleTitle } from "../../lib/calendar/sanctorale";
 import type { Season } from "../../lib/calendar/types";
 import { IS_MACOS_TAURI, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
-import { KeyCap, HOTKEY_MOD } from "../../screens/reference/shared";
+import {
+  COARSE_POINTER,
+  HOTKEY_MOD,
+  KeyCap,
+  SHOW_HOTKEY_CAP,
+} from "../../screens/reference/shared";
 import { useSaintPopover } from "../office/SaintPopover";
 import {
   MagnifierIcon,
@@ -198,8 +203,10 @@ export function TopBar({
           accessibilityLabel="Search the whole prayer book"
         >
           <MagnifierIcon size={13} color="var(--text-secondary, #7a6e64)" />
-          <Text style={styles.searchText}>Search</Text>
-          <KeyCap label={`${HOTKEY_MOD} K`} />
+          {COARSE_POINTER ? null : (
+            <Text style={styles.searchText}>Search</Text>
+          )}
+          {SHOW_HOTKEY_CAP ? <KeyCap label={`${HOTKEY_MOD} K`} /> : null}
         </Pressable>
 
         <View style={styles.fontControl}>
@@ -329,7 +336,8 @@ const styles = StyleSheet.create({
   fontControl: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 2,
+    gap: 1,
+    marginRight: -4,
   },
   fontPct: {
     fontFamily: MONO,
@@ -358,7 +366,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "stretch",
     gap: 6,
-    paddingHorizontal: 10,
+    paddingHorizontal: 6,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: "var(--border-content, #b5aa9e)",

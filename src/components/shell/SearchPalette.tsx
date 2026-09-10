@@ -16,7 +16,13 @@ import {
   View,
 } from "react-native";
 import { sharedStyles as styles } from "../../screens/reference/styles";
+import { COARSE_POINTER } from "../../screens/reference/shared";
 import { registerEsc } from "./AppModal";
+
+// coarse-pointer (phone/tablet): the tray is shorter and sits at the same
+// 15% top offset as the global search so the on-screen keyboard has room
+// beneath it
+const MOBILE_TRAY = COARSE_POINTER;
 
 // the floating picker every reference page opens instead of the old
 // right-hand split-pane index. the frame matches the site's search tray:
@@ -65,10 +71,12 @@ export function SearchPalette({
     if (searchable) inputRef.current?.focus();
   }, [searchable]);
 
-  // the global palette anchors at the top of the frame the scoped
-  // pickers occupy: their 70% tray is centered, so its top edge sits
-  // 15% down the viewport; matching that makes the empty card begin in
-  // exactly the same place and grow downward from there
+  // scoped pickers (web): their fixed tray centers to start 15% down the
+  // viewport; the global palette uses the same pixels as a top margin so
+  // the empty card begins in exactly the same place and grows downward
+  // from there. pixels rather than a CSS percentage, because percent
+  // margins resolve against the container width and would sit too high on
+  // a narrow phone
   const autoTop = useMemo(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return 40;
     return Math.round(window.innerHeight * 0.15);
@@ -97,6 +105,7 @@ export function SearchPalette({
       style={[
         styles.paletteOverlay,
         autoHeight && styles.paletteOverlayAuto,
+        MOBILE_TRAY && styles.paletteOverlayMobile,
       ]}
     >
       <Pressable
@@ -109,7 +118,9 @@ export function SearchPalette({
         style={[
           styles.paletteTray,
           autoHeight && styles.paletteTrayAuto,
-          autoHeight && { marginTop: autoTop },
+          MOBILE_TRAY && !autoHeight && styles.paletteTrayMobile,
+          MOBILE_TRAY && autoHeight && { maxHeight: "55%" },
+          (autoHeight || MOBILE_TRAY) && { marginTop: autoTop },
         ]}
       >
         {searchable ? (

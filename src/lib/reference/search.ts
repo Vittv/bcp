@@ -208,52 +208,48 @@ function pushEntries(out: PaletteEntry[], entries: PaletteEntry[]): void {
   }
 }
 
-// one merged result list across every picker section, in printed order.
-// an empty query yields nothing: the global palette starts blank and only
-// fills as the user types.
-export function searchPalette(query: string): PaletteEntry[] {
-  const q = query.trim();
-  if (!q) return [];
-  const out: PaletteEntry[] = [];
-  const lower = q.toLowerCase();
-
-  // psalms: number, "psalm N" prefix, or verse-text matches
-  const psalmHits = searchPsalms(q).slice(0, PER_SECTION_CAP);
-  pushEntries(
-    out,
-    psalmHits.map((h) => ({
+function psalmEntries(query: string, cap = Infinity): PaletteEntry[] {
+  return searchPsalms(query)
+    .slice(0, cap)
+    .map((h) => ({
       id: `psalm:${h.psalm}`,
       section: "psalms",
       label: h.incipit || `Psalm ${h.psalm}`,
       detail: `Psalm ${h.psalm} · ${h.verses} verse${h.verses === 1 ? "" : "s"}`,
       run: { kind: "psalm", psalm: h.psalm },
-    })),
-  );
+    }));
+}
 
-  // proverbs: "proverbs"/"prov"/"chapter n", or a bare digit sequence
+function proverbEntries(lower: string, cap = Infinity): PaletteEntry[] {
   const provNum = lower.match(/(?:chapter\D*)?(\d+)/)?.[1];
-  if (lower.includes("prov") || lower.includes("chapter") || provNum) {
-    const provHits: PaletteEntry[] = [];
-    for (let n = 1; n <= 31 && provHits.length < PER_SECTION_CAP; n++) {
-      const matched =
-        provNum !== undefined
-          ? String(n).includes(provNum)
-          : lower.includes("prov");
-      if (!matched) continue;
-      provHits.push({
-        id: `proverb:${n}`,
-        section: "proverbs",
-        label: `Chapter ${n}`,
-        run: { kind: "proverb", chapter: n },
-      });
-    }
-    pushEntries(out, provHits);
+  if (
+    provNum === undefined &&
+    !lower.includes("prov") &&
+    !lower.includes("chapter")
+  ) {
+    return [];
   }
+  const out: PaletteEntry[] = [];
+  for (let n = 1; n <= 31 && out.length < cap; n++) {
+    const matched =
+      provNum !== undefined
+        ? String(n).includes(provNum)
+        : lower.includes("prov");
+    if (!matched) continue;
+    out.push({
+      id: `proverb:${n}`,
+      section: "proverbs",
+      label: `Chapter ${n}`,
+      run: { kind: "proverb", chapter: n },
+    });
+  }
+  return out;
+}
 
-  // canticles: "canticle(s)" or a number lists in order, otherwise title
+function canticleEntries(lower: string, cap = Infinity): PaletteEntry[] {
   const canticleWild = lower.includes("canticle") || /^\d+$/.test(lower);
-  const canticleHits: PaletteEntry[] = [];
-  for (let n = 1; n <= 21 && canticleHits.length < PER_SECTION_CAP; n++) {
+  const out: PaletteEntry[] = [];
+  for (let n = 1; n <= 21 && out.length < cap; n++) {
     if (!canticleExists(n)) continue;
     const title = canticleTitle(n) ?? "";
     const verses =
@@ -266,7 +262,7 @@ export function searchPalette(query: string): PaletteEntry[] {
       title.toLowerCase().includes(lower) ||
       String(n).startsWith(lower);
     if (!matched) continue;
-    canticleHits.push({
+    out.push({
       id: `canticle:${n}`,
       section: "canticles",
       label: title,
@@ -274,33 +270,112 @@ export function searchPalette(query: string): PaletteEntry[] {
       run: { kind: "canticle", number: n },
     });
   }
-  pushEntries(out, canticleHits);
+  return out;
+}
 
-  // collects: any rite's title or text
-  const collectHits = searchCollects(q).slice(0, PER_SECTION_CAP);
-  pushEntries(
-    out,
-    collectHits.map((h) => ({
+function collectEntries(query: string, cap = Infinity): PaletteEntry[] {
+  return searchCollects(query)
+    .slice(0, cap)
+    .map((h) => ({
       id: `collect:${h.section}:${h.title}`,
       section: "collects",
       label: h.title,
       detail: collectSectionLabel(h.section),
       run: { kind: "collect", section: h.section, title: h.title },
-    })),
-  );
+    }));
+}
 
-  // saints and holy days by proper title or name variant
-  const saintHits = searchSaints(q).slice(0, PER_SECTION_CAP);
-  pushEntries(
-    out,
-    saintHits.map((h) => ({
+function saintEntries(query: string, cap = Infinity): PaletteEntry[] {
+  return searchSaints(query)
+    .slice(0, cap)
+    .map((h) => ({
       id: `saint:${h.slug}`,
       section: "saints",
       label: h.title,
       detail: monthDayShortLabel(h.month, h.day),
       run: { kind: "saint", slug: h.slug },
-    })),
+    }));
+}
+
+// a query that is exactly a category name lists that whole section, so
+// "psalm" returns all 150, "bible" every chapter, and "old/new testament"
+// that half; anything more specific keeps the normal capped matches
+type BibleExpansion = { testament?: "OT" | "NT" };
+
+function bibleKeyword(lower: string): BibleExpansion | null {
+  if (lower === "bible") return {};
+  const t = lower.match(/^(old|new) testament$/)?.[1];
+  return t ? { testament: t === "old" ? "OT" : "NT" } : null;
+}
+
+function sectionKeyword(lower: string): PaletteSection | null {
+  const keywords: [PaletteSection, readonly string[]][] = [
+    ["psalms", ["psalm", "psalms"]],
+    ["proverbs", ["proverb", "proverbs", "prov"]],
+    ["canticles", ["canticle", "canticles"]],
+    ["collects", ["collect", "collects"]],
+    ["saints", ["saint", "saints"]],
+  ];
+  for (const [section, names] of keywords) {
+    if (names.includes(lower)) return section;
+  }
+  return null;
+}
+
+function expandSection(section: PaletteSection): PaletteEntry[] {
+  switch (section) {
+    case "psalms":
+      return psalmEntries("");
+    case "proverbs":
+      return proverbEntries("prov");
+    case "canticles":
+      return canticleEntries("canticle");
+    case "collects":
+      return collectEntries("");
+    case "saints":
+      return saintEntries("");
+    default:
+      return [];
+  }
+}
+
+function expandBible(expansion: BibleExpansion): PaletteEntry[] {
+  const books = getAllKjvBooks().filter(
+    (b) => !expansion.testament || b.testament === expansion.testament,
   );
+  const out: PaletteEntry[] = [];
+  for (const b of books) {
+    for (let chapter = 1; chapter <= b.chapters; chapter++) {
+      out.push({
+        id: `bible:${b.abbrev}:${chapter}`,
+        section: "bible",
+        label: `${b.book} ${chapter}`,
+        run: { kind: "bible", book: b.abbrev, chapter },
+      });
+    }
+  }
+  return out;
+}
+
+// one merged result list across every picker section, in printed order.
+// an empty query stays blank; an exact section name expands to its full
+// listing, otherwise each section returns capped content matches.
+export function searchPalette(query: string): PaletteEntry[] {
+  const q = query.trim();
+  if (!q) return [];
+  const out: PaletteEntry[] = [];
+  const lower = q.toLowerCase();
+
+  const bibleExpansion = bibleKeyword(lower);
+  if (bibleExpansion) return expandBible(bibleExpansion);
+  const section = sectionKeyword(lower);
+  if (section) return expandSection(section);
+
+  pushEntries(out, psalmEntries(q, PER_SECTION_CAP));
+  pushEntries(out, proverbEntries(lower, PER_SECTION_CAP));
+  pushEntries(out, canticleEntries(lower, PER_SECTION_CAP));
+  pushEntries(out, collectEntries(q, PER_SECTION_CAP));
+  pushEntries(out, saintEntries(q, PER_SECTION_CAP));
 
   // bible: full book names and abbreviations
   const bibleHits = getAllKjvBooks()

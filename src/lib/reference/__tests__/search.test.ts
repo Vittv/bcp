@@ -220,4 +220,55 @@ describe("searchPalette", () => {
       expect(hits.length).toBeGreaterThan(0);
     }
   });
+
+  test("a bare section name expands to its full listing", () => {
+    const psalms = searchPalette("psalm");
+    expect(psalms).toHaveLength(150);
+    expect(psalms.every((e) => e.section === "psalms")).toBe(true);
+    expect(psalms[0].run.kind).toBe("psalm");
+    const first = psalms[0].run;
+    if (first.kind === "psalm") expect(first.psalm).toBe(1);
+    const last = psalms[149].run;
+    expect(last.kind).toBe("psalm");
+    if (last.kind === "psalm") expect(last.psalm).toBe(150);
+
+    const plural = searchPalette("PSALMS");
+    expect(plural.map((e) => e.label)).toEqual(psalms.map((e) => e.label));
+
+    expect(searchPalette("collects")).toHaveLength(142);
+    expect(searchPalette("saints")).toHaveLength(36);
+    expect(searchPalette("proverbs")).toHaveLength(31);
+  });
+
+  test("bible expands to every chapter, restricable to a testament", () => {
+    const bible = searchPalette("bible");
+    expect(bible.length).toBe(1189);
+    expect(bible[0]).toMatchObject({
+      section: "bible",
+      label: "Genesis 1",
+      run: { kind: "bible", book: "Gen", chapter: 1 },
+    });
+
+    const nt = searchPalette("new testament");
+    expect(nt.length).toBe(260);
+    expect(nt.every((e) => e.run.kind === "bible")).toBe(true);
+    expect(nt.at(-1)).toMatchObject({ label: "Revelation 22" });
+
+    const ot = searchPalette("old testament");
+    expect(ot.length).toBe(929);
+  });
+
+  test("expansion keywords do not swallow specific queries", () => {
+    // "psalm 20" stays an exact psalms match, not a 150-row dump
+    const psalm20 = searchPalette("psalm 20");
+    expect(psalm20.some((e) => e.run.kind === "psalm" && e.run.psalm === 20))
+      .toBe(true);
+    expect(psalm20.length).toBeLessThan(150);
+
+    // "prov 3" lists chapter 3, not all 31
+    const prov3 = searchPalette("prov 3");
+    expect(prov3.some((e) => e.run.kind === "proverb" && e.run.chapter === 3))
+      .toBe(true);
+    expect(prov3.length).toBeLessThan(31);
+  });
 });
