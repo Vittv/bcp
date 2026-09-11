@@ -11,6 +11,10 @@
 </p>
 
 <p align="center">
+  Free, forever. All liturgical content is public domain.
+</p>
+
+<p align="center">
   <img src="assets/preview.png" width="820" alt="bcp Daily Office preview">
 </p>
 
@@ -22,6 +26,11 @@
 - Scripture search, per-lesson progress, and automatic scrolling
 - Light and dark themes with a season-aware palette
 - No distractions: static build, offline-capable, installable
+
+## Support
+
+bcp is free and always will be. If you'd like to say thanks, you can
+[support it on Ko-fi](https://ko-fi.com/vittv)!
 
 ## Development
 
@@ -103,4 +112,5 @@ The web app (Android and iPhone) never needs an update. It always runs the newes
 
 ## License
 
-MIT
+bcp is free and always will be, with no ads, accounts, or paywall. All the
+liturgical content is in the public domain; the app code itself is MIT.
