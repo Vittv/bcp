@@ -52,6 +52,7 @@ function isTextField(el: HTMLElement): boolean {
   const tag = el.tagName;
   if (tag === "TEXTAREA") return true;
   if (tag === "INPUT") {
+    // SAFETY: the INPUT tag check above guarantees this node is an input
     const type = (el as HTMLInputElement).type;
     return (
       type === "" ||

@@ -16,13 +16,23 @@
 // everything is deterministic, so re-running on the same master leaves
 // every output byte-for-byte unchanged.
 import { execFileSync } from "node:child_process";
-import { copyFileSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import {
+  copyFileSync,
+  mkdirSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import icongen from "icon-gen";
 import sharp from "sharp";
 
-const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const ROOT = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+);
 const DEFAULT_MASTER = path.join(
   ROOT,
   "assets",
@@ -85,11 +95,10 @@ async function write(buf, rel) {
 async function tauriDesktopSet(iconPath) {
   const tmp = path.join(ROOT, ".tmp-icons");
   rmSync(tmp, { recursive: true, force: true });
-  execFileSync(
-    "bunx",
-    ["tauri", "icon", iconPath, "-o", tmp],
-    { cwd: ROOT, stdio: "inherit" },
-  );
+  execFileSync("bunx", ["tauri", "icon", iconPath, "-o", tmp], {
+    cwd: ROOT,
+    stdio: "inherit",
+  });
   const target = path.join(ROOT, "src-tauri", "icons");
   const ignore = new Set(["icon.icns"]); // replaced deterministically below
   for (const name of readdirSync(tmp)) {
@@ -110,34 +119,56 @@ async function deterministicIcns(iconPath) {
   });
   const icns = report.find((f) => f.endsWith(".icns"));
   if (!icns) throw new Error("icon-gen produced no icns");
-  copyFileSync(
-    icns,
-    path.join(ROOT, "src-tauri", "icons", "icon.icns"),
-  );
+  copyFileSync(icns, path.join(ROOT, "src-tauri", "icons", "icon.icns"));
   console.log("wrote src-tauri/icons/icon.icns (icon-gen)");
 }
 
 async function main() {
-  const master = process.argv[2] ? path.resolve(process.argv[2]) : DEFAULT_MASTER;
+  const master = process.argv[2]
+    ? path.resolve(process.argv[2])
+    : DEFAULT_MASTER;
   if (!statSync(master, { throwIfNoEntry: false })) {
     throw new Error(`master not found: ${master}`);
   }
 
   // mobile / expo: full-bleed opaque
-  write(await sharp(master).resize(1024, 1024).ensureAlpha().png().toBuffer(), "assets/icon.png");
-  write(await sharp(master).resize(64, 64).ensureAlpha().png().toBuffer(), "assets/favicon.png");
+  write(
+    await sharp(master).resize(1024, 1024).ensureAlpha().png().toBuffer(),
+    "assets/icon.png",
+  );
+  write(
+    await sharp(master).resize(64, 64).ensureAlpha().png().toBuffer(),
+    "assets/favicon.png",
+  );
 
   // android adaptive stack
-  write(await canvas(512, [BG[0], BG[1], BG[2], 255]).png().toBuffer(), "assets/android-icon-background.png");
-  write(await placeCross(master, 512, 317), "assets/android-icon-foreground.png"); // cross 317/512 (62%)
-  write(await placeCross(master, 432, 267, true), "assets/android-icon-monochrome.png"); // white, 267/432
+  write(
+    await canvas(512, [BG[0], BG[1], BG[2], 255]).png().toBuffer(),
+    "assets/android-icon-background.png",
+  );
+  write(
+    await placeCross(master, 512, 317),
+    "assets/android-icon-foreground.png",
+  ); // cross 317/512 (62%)
+  write(
+    await placeCross(master, 432, 267, true),
+    "assets/android-icon-monochrome.png",
+  ); // white, 267/432
 
   // web pwa
-  write(await sharp(master).resize(192, 192).ensureAlpha().png().toBuffer(), "public/icons/icon-192.png");
-  write(await sharp(master).resize(512, 512).ensureAlpha().png().toBuffer(), "public/icons/icon-512.png");
+  write(
+    await sharp(master).resize(192, 192).ensureAlpha().png().toBuffer(),
+    "public/icons/icon-192.png",
+  );
+  write(
+    await sharp(master).resize(512, 512).ensureAlpha().png().toBuffer(),
+    "public/icons/icon-512.png",
+  );
   write(
     await sharp(await canvas(512, [BG[0], BG[1], BG[2], 255]).png().toBuffer())
-      .composite([{ input: await placeCross(master, 512, 264), left: 0, top: 0 }])
+      .composite([
+        { input: await placeCross(master, 512, 264), left: 0, top: 0 },
+      ])
       .png()
       .toBuffer(),
     "public/icons/maskable-512.png",

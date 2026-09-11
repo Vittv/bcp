@@ -223,10 +223,7 @@ const CanticleDetailBody = memo(function CanticleDetailBody({
 }: {
   number: number;
 }) {
-  const passage = useMemo(
-    () => canticlePassage(number) as CanticlePassage | undefined,
-    [number],
-  );
+  const passage = useMemo(() => canticlePassage(number), [number]);
   if (!passage) return null;
   const verses = passage.sections.reduce((s, x) => s + x.verses.length, 0);
   return (

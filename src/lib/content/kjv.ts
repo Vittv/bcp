@@ -517,6 +517,7 @@ export async function loadKjvBook(
     // SAFETY: filename is validated by filenameForBook against known books,
     // so kjvBookImports is guaranteed to have a typed key for it
     const bookKey = kjvBookImports[filename];
+    // biome-ignore lint/performance/noDynamicNamespaceImportAccess: the validated key selects from the whole-book namespace, which exists to be indexed
     const bookModule = bookKey ? kjvBooks[bookKey] : undefined;
     if (!bookModule) {
       console.error(`KJV book ${filename} not found in static imports`);

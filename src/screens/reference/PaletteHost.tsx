@@ -2,8 +2,8 @@ import { SearchPalette } from "../../components/shell/SearchPalette";
 import { useBible } from "../../context/BibleContext";
 import { useNavigation } from "../../context/NavigationContext";
 import { usePalette } from "../../context/PaletteContext";
-import type { CollectSection } from "../../lib/content/types";
 import { getKjvBookMeta } from "../../lib/content/kjv";
+import type { CollectSection } from "../../lib/content/types";
 import type { PaletteEntry } from "../../lib/reference/search";
 import { BibleBookList } from "../BibleReaderScreen";
 import { CanticleIndex } from "./CanticlesScreen";
@@ -45,6 +45,8 @@ export function PaletteHost() {
         break;
       case "collect":
         ref.setSelectedCollect({
+          // SAFETY: the global palette indexes collects only under the known
+          // sections, so the run's section string is a valid CollectSection id
           section: run.section as CollectSection,
           title: run.title,
         });

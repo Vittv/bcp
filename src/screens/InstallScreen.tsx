@@ -4,7 +4,12 @@ import { ExternalLink } from "../components/ExternalLink";
 import { Note } from "../components/Note";
 import { Step, Steps } from "../components/Steps";
 import { CHROME_FONT } from "../lib/fonts";
-import { LINUX_INSTALL_URL, LINUX_TARBALL, PWA_URL, RELEASE_PAGE } from "../lib/release";
+import {
+  LINUX_INSTALL_URL,
+  LINUX_TARBALL,
+  PWA_URL,
+  RELEASE_PAGE,
+} from "../lib/release";
 import { VERSION } from "../lib/version";
 
 const FIREFOXPWA_URL = "https://github.com/filips123/PWAsForFirefox";
@@ -90,7 +95,9 @@ export function InstallScreen() {
             </ExternalLink>{" "}
             in a Chromium-based browser.
           </Step>
-          <Step n={2}>Click the install icon at the right end of the address bar.</Step>
+          <Step n={2}>
+            Click the install icon at the right end of the address bar.
+          </Step>
           <Step n={3}>Confirm the install prompt.</Step>
         </Steps>
         <Note>
@@ -115,7 +122,9 @@ export function InstallScreen() {
             </ExternalLink>{" "}
             in any browser.
           </Step>
-          <Step n={2}>Tap the Menu, then Install app or Add to Home Screen.</Step>
+          <Step n={2}>
+            Tap the Menu, then Install app or Add to Home Screen.
+          </Step>
         </Steps>
         <Note>
           <Text style={styles.noteText}>
@@ -137,8 +146,7 @@ export function InstallScreen() {
         <Note>
           <Text style={styles.noteText}>
             This works in Safari only. Chrome and Firefox on iOS are
-            WebKit-based, so their Add to Home Screen is a bookmark, not an
-            app.
+            WebKit-based, so their Add to Home Screen is a bookmark, not an app.
           </Text>
         </Note>
       </View>

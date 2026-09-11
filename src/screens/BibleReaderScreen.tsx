@@ -191,7 +191,12 @@ export function BibleBookList({
   return (
     <View style={styles.indexBody} dataSet={{ indexList: "" }}>
       {filtered.map((b, i) => (
-        <BookRow key={b.abbrev} meta={b} active={i === cursor} onSelect={onSelect} />
+        <BookRow
+          key={b.abbrev}
+          meta={b}
+          active={i === cursor}
+          onSelect={onSelect}
+        />
       ))}
     </View>
   );

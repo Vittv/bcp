@@ -15,8 +15,8 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { sharedStyles as styles } from "../../screens/reference/styles";
 import { COARSE_POINTER } from "../../screens/reference/shared";
+import { sharedStyles as styles } from "../../screens/reference/styles";
 import { registerEsc } from "./AppModal";
 
 // coarse-pointer (phone/tablet): the tray is shorter and sits at the same
@@ -145,10 +145,7 @@ export function SearchPalette({
           </div>
         ) : (
           <View
-            style={[
-              styles.paletteBody,
-              autoHeight && styles.paletteBodyAuto,
-            ]}
+            style={[styles.paletteBody, autoHeight && styles.paletteBodyAuto]}
             dataSet={{ paletteList: "" }}
           >
             {render(query, setQuery)}

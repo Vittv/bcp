@@ -1,11 +1,6 @@
 import { StyleSheet } from "react-native";
 import { officeBarStyles } from "../../components/shell/OfficeTabs";
-import {
-  CHROME_FONT,
-  HEADING_FONT,
-  SERIF_FONT,
-  SERIF_SEMI_FONT,
-} from "../../lib/fonts";
+import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../../lib/fonts";
 
 // styles shared across the Psalms, Collects, and Offices reference pages
 export const sharedStyles = StyleSheet.create({

@@ -152,10 +152,24 @@ describe("searchPalette", () => {
 
   test("matches psalms by number and by verse text", () => {
     const byNum = searchPalette("119");
-    expect(byNum.some((e) => e.section === "psalms" && e.run.kind === "psalm" && e.run.psalm === 119)).toBe(true);
+    expect(
+      byNum.some(
+        (e) =>
+          e.section === "psalms" &&
+          e.run.kind === "psalm" &&
+          e.run.psalm === 119,
+      ),
+    ).toBe(true);
 
     const byText = searchPalette("shepherd");
-    expect(byText.some((e) => e.section === "psalms" && e.run.kind === "psalm" && e.run.psalm === 23)).toBe(true);
+    expect(
+      byText.some(
+        (e) =>
+          e.section === "psalms" &&
+          e.run.kind === "psalm" &&
+          e.run.psalm === 23,
+      ),
+    ).toBe(true);
     expect(byText[0].section).toBe("psalms");
   });
 
@@ -164,7 +178,9 @@ describe("searchPalette", () => {
     const prov = hits.filter((e) => e.section === "proverbs");
     expect(prov.length).toBeGreaterThan(0);
     expect(prov.every((e) => e.run.kind === "proverb")).toBe(true);
-    expect(prov.some((e) => e.run.kind === "proverb" && e.run.chapter === 3)).toBe(true);
+    expect(
+      prov.some((e) => e.run.kind === "proverb" && e.run.chapter === 3),
+    ).toBe(true);
   });
 
   test("matches a canticle by title", () => {
@@ -175,7 +191,9 @@ describe("searchPalette", () => {
   });
 
   test("matches collects by title and by text", () => {
-    const byTitle = searchPalette("for peace").filter((e) => e.section === "collects");
+    const byTitle = searchPalette("for peace").filter(
+      (e) => e.section === "collects",
+    );
     expect(byTitle.some((e) => e.label.includes("Peace"))).toBe(true);
 
     const byText = searchPalette("cast away the works of darkness").filter(
@@ -261,14 +279,16 @@ describe("searchPalette", () => {
   test("expansion keywords do not swallow specific queries", () => {
     // "psalm 20" stays an exact psalms match, not a 150-row dump
     const psalm20 = searchPalette("psalm 20");
-    expect(psalm20.some((e) => e.run.kind === "psalm" && e.run.psalm === 20))
-      .toBe(true);
+    expect(
+      psalm20.some((e) => e.run.kind === "psalm" && e.run.psalm === 20),
+    ).toBe(true);
     expect(psalm20.length).toBeLessThan(150);
 
     // "prov 3" lists chapter 3, not all 31
     const prov3 = searchPalette("prov 3");
-    expect(prov3.some((e) => e.run.kind === "proverb" && e.run.chapter === 3))
-      .toBe(true);
+    expect(
+      prov3.some((e) => e.run.kind === "proverb" && e.run.chapter === 3),
+    ).toBe(true);
     expect(prov3.length).toBeLessThan(31);
   });
 });

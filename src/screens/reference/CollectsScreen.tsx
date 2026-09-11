@@ -113,11 +113,7 @@ const CollectRow = memo(function CollectRow({
     <IndexRow
       cursor={active}
       onPress={() =>
-        onSelect(
-          isSelected
-            ? null
-            : { section: hit.section, title: hit.title },
-        )
+        onSelect(isSelected ? null : { section: hit.section, title: hit.title })
       }
     >
       {(a) => (

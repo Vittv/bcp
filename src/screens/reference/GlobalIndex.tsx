@@ -2,9 +2,9 @@ import { memo, useCallback, useMemo } from "react";
 import { Text, View } from "react-native";
 import {
   PALETTE_SECTION_ORDER,
-  searchPalette,
   type PaletteEntry,
   type PaletteSection,
+  searchPalette,
 } from "../../lib/reference/search";
 import { EmptyMessage, IndexRow } from "./shared";
 import { sharedStyles as styles } from "./styles";

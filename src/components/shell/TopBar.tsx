@@ -13,12 +13,7 @@ import {
   SHOW_HOTKEY_CAP,
 } from "../../screens/reference/shared";
 import { useSaintPopover } from "../office/SaintPopover";
-import {
-  MagnifierIcon,
-  MoonIcon,
-  SunIcon,
-  SystemIcon,
-} from "./Icon";
+import { MagnifierIcon, MoonIcon, SunIcon, SystemIcon } from "./Icon";
 import { WindowControls } from "./WindowControls";
 
 // transparent-background cross glyphs, one per theme, so the in-app mark

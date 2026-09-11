@@ -1,10 +1,14 @@
 import {
-  SANCTORALE_ENTRIES,
   monthDayShortLabel,
+  SANCTORALE_ENTRIES,
   sanctoraleDateLabel,
   sanctoraleNameVariants,
 } from "../calendar/sanctorale";
-import { canticleExists, canticlePassage, canticleTitle } from "../content/canticles";
+import {
+  canticleExists,
+  canticlePassage,
+  canticleTitle,
+} from "../content/canticles";
 import { allCollects, collectText } from "../content/collects";
 import { getAllKjvBooks } from "../content/kjv";
 import {

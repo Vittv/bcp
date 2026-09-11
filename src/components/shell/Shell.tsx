@@ -32,8 +32,8 @@ import {
 } from "../../context/NavigationContext";
 import {
   isPaletteActive,
-  type PaletteScope,
   PaletteProvider,
+  type PaletteScope,
   requestPalette,
 } from "../../context/PaletteContext";
 import { useTheme } from "../../context/ThemeContext";

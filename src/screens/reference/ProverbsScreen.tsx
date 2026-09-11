@@ -7,8 +7,8 @@ import {
   useState,
 } from "react";
 import { Pressable, Text, View } from "react-native";
-import { Chevron } from "../../components/shell/Chevron";
 import { ScriptureView } from "../../components/office/ScriptureView";
+import { Chevron } from "../../components/shell/Chevron";
 import { usePalette } from "../../context/PaletteContext";
 import { loadKjvBook, sliceKjvPassage } from "../../lib/content/kjv";
 import type { KjvBook, KjvPassage } from "../../lib/content/types";

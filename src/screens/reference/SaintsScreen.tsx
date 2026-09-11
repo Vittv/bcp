@@ -145,7 +145,10 @@ const SaintRow = memo(function SaintRow({
 }) {
   const isSelected = hit.slug === selected;
   return (
-    <IndexRow cursor={active} onPress={() => onSelect(isSelected ? null : hit.slug)}>
+    <IndexRow
+      cursor={active}
+      onPress={() => onSelect(isSelected ? null : hit.slug)}
+    >
       {(a) => (
         <View style={styles.saintRowInner}>
           <Text

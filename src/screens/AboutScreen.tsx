@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { ExternalLink } from "../components/ExternalLink";
 import { REPO_URL } from "../components/shell/Sidebar";
@@ -19,8 +20,8 @@ export function AboutScreen() {
         </Text>
         <Text style={styles.body}>
           The whole app runs offline: the calendar, the texts, and the desktop
-          shell all work without a network connection. No account, no login,
-          no tracking.
+          shell all work without a network connection. No account, no login, no
+          tracking.
         </Text>
       </View>
 
@@ -38,21 +39,21 @@ export function AboutScreen() {
 
       <View style={styles.sectionLast}>
         <Text style={styles.label}>Links</Text>
-        <ExternalLink href={RELEASE_PAGE} style={styles.link}>
+        <ExternalLink href={RELEASE_PAGE} style={web.link}>
           Get the app: download the latest release
         </ExternalLink>
         <ExternalLink
           href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}
-          style={styles.link}
+          style={web.link}
         >
           Contribute to bcp
         </ExternalLink>
-        <ExternalLink href={REPO_URL} style={styles.link}>
+        <ExternalLink href={REPO_URL} style={web.link}>
           Source code on GitHub
         </ExternalLink>
-        <ExternalLink href={KO_FI_URL} style={styles.donateLink}>
-          <span style={styles.link}>Support on Ko-fi</span>
-          <img src={KO_FI_ICON} alt="Ko-fi" style={styles.donateIcon} />
+        <ExternalLink href={KO_FI_URL} style={web.donateLink}>
+          <span style={web.link}>Support on Ko-fi</span>
+          <img src={KO_FI_ICON} alt="Ko-fi" style={web.donateIcon} />
         </ExternalLink>
         <Text style={styles.value}>Version {VERSION}</Text>
       </View>
@@ -82,6 +83,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 12,
   },
+  body: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "400",
+    fontSize: 15,
+    color: "var(--text-secondary, #7a6e64)",
+    lineHeight: 23,
+    marginBottom: 8,
+  },
+});
+
+// the links and the donate row render as plain web anchors and an image
+// (ExternalLink creates <a> directly), so their style objects are real CSS
+// properties rather than react-native sheet entries
+const web: Record<string, CSSProperties> = {
   link: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
@@ -103,12 +118,4 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     verticalAlign: "middle",
   },
-  body: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "400",
-    fontSize: 15,
-    color: "var(--text-secondary, #7a6e64)",
-    lineHeight: 23,
-    marginBottom: 8,
-  },
-});
+};

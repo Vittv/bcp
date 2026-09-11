@@ -148,6 +148,7 @@ export async function loadWebBook(
     // SAFETY: filename is validated by webFilenameFor against known books,
     // so webBookImports is guaranteed to have a typed key for it
     const bookKey = webBookImports[filename];
+    // biome-ignore lint/performance/noDynamicNamespaceImportAccess: the validated key selects from the whole-book namespace, which exists to be indexed
     const bookModule = bookKey ? webBooks[bookKey] : undefined;
     if (!bookModule) {
       console.error(`WEB book ${filename} not found in static imports`);

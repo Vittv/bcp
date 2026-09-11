@@ -5,9 +5,9 @@ import {
   useDeferredValue,
   useMemo,
 } from "react";
-import { Text, View, Pressable } from "react-native";
-import { Chevron } from "../../components/shell/Chevron";
+import { Pressable, Text, View } from "react-native";
 import { PsalmText } from "../../components/office/PsalmText";
+import { Chevron } from "../../components/shell/Chevron";
 import { usePalette } from "../../context/PaletteContext";
 import { psalmPassage } from "../../lib/content/psalter";
 import { type PsalmHit, searchPsalms } from "../../lib/reference/search";

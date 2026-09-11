@@ -12,10 +12,10 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Text,
-  View,
   type StyleProp,
+  Text,
   type TextStyle,
+  View,
 } from "react-native";
 import { ListIcon } from "../../components/shell/Icon";
 import type { PageId } from "../../components/shell/Sidebar";
@@ -163,6 +163,8 @@ function useIndexPicker<K extends IndexPickerKey>(
   queryRef: MutableRefObject<string>,
 ): [HistorySnapshot[K], (v: HistorySnapshot[K]) => void] {
   const [value, setValue] = useState<HistorySnapshot[K]>(
+    // SAFETY: every index-picker key is nullable, and null is the
+    // closed/picker state this picker starts in
     null as HistorySnapshot[K],
   );
   const valueRef = useRef(value);
@@ -178,6 +180,8 @@ function useIndexPicker<K extends IndexPickerKey>(
         history?.record();
       }
       setValue(v);
+      // SAFETY: key is a keyof HistorySnapshot, so the computed object is
+      // exactly a partial snapshot
       history?.push({ [key]: v } as Partial<HistorySnapshot>);
     },
     [page, pageId, key, history, queryRef],
@@ -427,7 +431,9 @@ export const IS_WEB = Platform.OS === "web";
 // phones and tablets, which drive every coarse-pointer placement decision
 // in the app chrome
 export const COARSE_POINTER =
-  IS_WEB && typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+  IS_WEB &&
+  typeof window !== "undefined" &&
+  window.matchMedia("(pointer: coarse)").matches;
 
 // platform-aware hotkey caps: macs read ⌘, everything else Ctrl. caps are
 // desktop-only affordances, so they drop wherever the pointer is coarse
@@ -559,10 +565,8 @@ export function IndexRow({
       onPress={onPress}
       accessibilityRole="button"
     >
-      <>
-        {cursor && <Text style={sharedStyles.pickerCursor}>▸</Text>}
-        {children(cursor)}
-      </>
+      {cursor && <Text style={sharedStyles.pickerCursor}>▸</Text>}
+      {children(cursor)}
     </Pressable>
   );
 }
