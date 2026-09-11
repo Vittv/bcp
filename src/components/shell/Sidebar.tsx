@@ -253,10 +253,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   navItem: {
-    paddingVertical: 8,
+    paddingVertical: 9,
     paddingHorizontal: 10,
     marginHorizontal: 8,
-    marginVertical: 1,
     borderRadius: 4,
   },
   navItemHover: {

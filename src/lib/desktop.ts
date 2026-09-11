@@ -30,6 +30,16 @@ export const IS_WINDOWS_TAURI =
   typeof navigator !== "undefined" &&
   /Windows/i.test(navigator.userAgent);
 
+// Chromium on Linux has no dependable native middle-button autoscroll, so
+// the desktop gesture is custom there too. Firefox keeps its own native
+// one; the Tauri shell is handled separately by IS_WINDOWS_TAURI / IS_TAURI.
+export const IS_LINUX_CHROMIUM =
+  typeof navigator !== "undefined" &&
+  !IS_TAURI &&
+  !/Android/i.test(navigator.userAgent) &&
+  /Linux/i.test(navigator.userAgent) &&
+  /Chrome/i.test(navigator.userAgent);
+
 const WINDOW_CONTROLS_KEY = "windowControls";
 
 export function loadWindowControls(): boolean {

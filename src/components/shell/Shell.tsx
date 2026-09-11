@@ -47,6 +47,7 @@ import {
 import type { CalendarDate } from "../../lib/calendar/types";
 import { getKjvBookMeta } from "../../lib/content/kjv";
 import {
+  IS_LINUX_CHROMIUM,
   IS_MACOS_TAURI,
   IS_TAURI,
   IS_WINDOWS_TAURI,
@@ -189,16 +190,16 @@ function AutoscrollGlyph({ indicator }: { indicator: AutoscrollIndicator }) {
           d="M11 15 L20 6 L29 15"
           fill="none"
           stroke="#000000"
-          strokeWidth="3"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <circle cx="20" cy="20" r="2.5" fill="#000000" />
+        <circle cx="20" cy="20" r="2" fill="#000000" />
         <path
           d="M11 25 L20 34 L29 25"
           fill="none"
           stroke="#000000"
-          strokeWidth="3"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -314,10 +315,13 @@ export function Shell() {
     return () => sub.remove();
   }, [mobileOpen]);
 
-  // scroll-click (middle button) autoscroll, Linux and macOS desktop only:
-  // their webviews (WebKitGTK, WKWebView) have no native gesture, while
-  // Windows WebView2 and the plain web build keep theirs
-  const autoscroll = useAutoscroll(IS_TAURI && !IS_WINDOWS_TAURI);
+  // scroll-click (middle button) autoscroll, custom where no native gesture
+  // is dependable: the Linux and macOS desktop shells (WebKitGTK, WKWebView
+  // have none) and Chromium on Linux. Windows WebView2 and the rest of the
+  // web keep their native behaviours.
+  const autoscroll = useAutoscroll(
+    (IS_TAURI && !IS_WINDOWS_TAURI) || IS_LINUX_CHROMIUM,
+  );
 
   // narrow layout for the chrome bars themselves: they keep working
   // well below the sidebar's mobile breakpoint by dropping their
@@ -1330,7 +1334,6 @@ const styles = StyleSheet.create({
     height: 40,
     marginLeft: -20,
     marginTop: -20,
-    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.35)",
   },
   content: {
     flex: 1,
