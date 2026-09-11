@@ -165,22 +165,37 @@ export function BibleProvider({
         restoredRef.current = false;
       } else if (_pendingRefTarget) {
         const t = pageTestament(page);
-        setTestament(t);
         const ref = _pendingRefTarget;
         _pendingRefTarget = null;
         const found =
           ALL_BOOKS[t].find((b) => b.abbrev === ref.abbrev) ?? ALL_BOOKS[t][0];
+        const ch = Math.min(Math.max(1, ref.chapter), found.chapters);
+        setTestament(t);
         setBook(found);
-        setChapter(Math.min(Math.max(1, ref.chapter), found.chapters));
+        setChapter(ch);
+        // the navigation entry carried this ref, but its chapter may have
+        // been clamped; fold the exact position in so any later restore of
+        // this entry replays the same book
+        history?.replace({
+          bible: { abbrev: found.abbrev, chapter: ch },
+        });
       } else {
         const t = pageTestament(page);
-        setTestament(t);
         const pos = resolvePos(t, loadPos(t));
+        setTestament(t);
         setBook(pos.book);
         setChapter(pos.chapter);
+        // the navigation entry was pushed before this position existed (it
+        // comes from storage, not the navigate call), so fold it into the top
+        // snapshot: replaying this entry must restore the book, not clear it
+        if (pos.book) {
+          history?.replace({
+            bible: { abbrev: pos.book.abbrev, chapter: pos.chapter },
+          });
+        }
       }
     }
-  }, [page]);
+  }, [page, history?.replace]);
 
   // persist position + report to status bar (only while on a bible page)
   useEffect(() => {
@@ -189,6 +204,36 @@ export function BibleProvider({
       onReadingChange?.(`${bibleBookName(book.abbrev)} ${chapter}`);
     }
   }, [page, testament, book, chapter, onReadingChange]);
+
+  // mirror the live position for the status-bar re-announce below, which
+  // reads current values at restore time (before any commit lands)
+  const bookRef = useRef(book);
+  bookRef.current = book;
+  const chapterRef = useRef(chapter);
+  chapterRef.current = chapter;
+  const pageRef = useRef(page);
+  pageRef.current = page;
+
+  // the shell clears the status bar on every history restore, and the report
+  // effect above only re-fires when book/chapter/page actually change. an
+  // in-place restore (the mobile drawer's record-and-back, Back/Forward to
+  // the same position) leaves the bible exactly where it was, so re-announce
+  // the label here against the target entry instead
+  useEffect(() => {
+    if (!history) return;
+    return history.onRestored((entry) => {
+      const ref = entry.bible ?? null;
+      if (!ref) return;
+      if (
+        !isBiblePage(pageRef.current) ||
+        ref.abbrev !== bookRef.current?.abbrev ||
+        ref.chapter !== chapterRef.current
+      ) {
+        return;
+      }
+      onReadingChange?.(`${bibleBookName(ref.abbrev)} ${ref.chapter}`);
+    });
+  }, [history, onReadingChange]);
 
   // scroll to top when chapter advances (skip initial mount, skip going backward)
   const prevChapterRef = useRef(chapter);

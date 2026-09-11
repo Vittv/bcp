@@ -39,6 +39,11 @@ export type HistorySnapshot = {
 
 export type HistoryApi = {
   push: (change: Partial<HistorySnapshot>) => void;
+  // rewrite the current entry instead of adding a step, used to fold a
+  // position materialized without a navigation (e.g. a bible book restored
+  // from storage on page entry) into the top snapshot so a later restore
+  // of that entry sees the same value the page actually holds
+  replace: (change: Partial<HistorySnapshot>) => void;
   // record the live snapshot as its own step, used to reify a filtered
   // index list before opening a detail so Back returns to that list
   record: () => void;
@@ -47,7 +52,7 @@ export type HistoryApi = {
     get: () => HistorySnapshot[K],
     apply: (v: HistorySnapshot[K]) => void,
   ) => () => void;
-  onRestored: (fn: () => void) => () => void;
+  onRestored: (fn: (entry: Partial<HistorySnapshot>) => void) => () => void;
   isRestoring: () => boolean;
 };
 
@@ -56,6 +61,7 @@ const Ctx = createContext<HistoryApi | null>(null);
 function makeApi(controller: HistoryController<HistorySnapshot>): HistoryApi {
   return {
     push: (change) => controller.push(change),
+    replace: (change) => controller.replace(change),
     record: () => controller.record(),
     register: <K extends keyof HistorySnapshot>(
       key: K,
