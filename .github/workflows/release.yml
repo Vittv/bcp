@@ -65,8 +65,15 @@ jobs:
           node-version: 20
       - name: Install JS dependencies
         run: bun install --frozen-lockfile
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
       - name: Export web bundle at webview root
-        run: BASE_URL=/ bunx expo export -p web
+        env:
+          BASE_URL: /
+        run: bunx expo export -p web
       - name: Set up Rust toolchain (macOS universal)
         if: runner.os == 'macOS'
         run: |
