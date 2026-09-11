@@ -1,6 +1,11 @@
 import { StyleSheet, Text, View } from "react-native";
+import { ExternalLink } from "../components/ExternalLink";
+import { REPO_URL } from "../components/shell/Sidebar";
 import { CHROME_FONT } from "../lib/fonts";
+import { KO_FI_URL, RELEASE_PAGE } from "../lib/release";
 import { VERSION } from "../lib/version";
+
+const KO_FI_ICON = require("../../assets/app_icons/ko-fi.png");
 
 export function AboutScreen() {
   return (
@@ -14,49 +19,41 @@ export function AboutScreen() {
         </Text>
         <Text style={styles.body}>
           The whole app runs offline: the calendar, the texts, and the desktop
-          shell all work without a network connection.
+          shell all work without a network connection. No account, no login,
+          no tracking.
         </Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>Stack</Text>
+        <Text style={styles.label}>Free, forever</Text>
         <Text style={styles.body}>
-          UI: Expo and React Native for Web in TypeScript, bundled with Metro;
-          the same code ships as a PWA and as the desktop app.
+          bcp is free and always will be: no ads, no accounts, no paywall, now
+          or in the future.
         </Text>
         <Text style={styles.body}>
-          Desktop: Tauri 2 (Rust) wrapping the static web export, using the
-          system webview (WebView2 on Windows, WKWebView on macOS, WebKitGTK on
-          Linux).
-        </Text>
-        <Text style={styles.body}>
-          Toolchain: Bun for runtime and tests, Biome and oxlint for linting and
-          formatting, zod for validating vendored content at load.
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Content</Text>
-        <Text style={styles.body}>
-          Office liturgies, the psalter (all 150 psalms), canticles, and
-          collects come from the 1979 Book of Common Prayer, which is in the
-          public domain.
-        </Text>
-        <Text style={styles.body}>
-          Readings follow the Daily Office Lectionary (two-year cycle), vendored
-          from an MIT-licensed JSON source and parsed locally; the liturgical
-          calendar (seasons, colors, feasts) is computed from the Gregorian
-          Easter computus.
-        </Text>
-        <Text style={styles.body}>
-          Body text is set in Crimson Pro and headings in Playfair Display, both
-          licensed under the SIL Open Font License.
+          All the content it reads is in the public domain; the app code itself
+          is MIT.
         </Text>
       </View>
 
       <View style={styles.sectionLast}>
-        <Text style={styles.label}>License</Text>
-        <Text style={styles.body}>Code: MIT. Texts: public domain.</Text>
+        <Text style={styles.label}>Links</Text>
+        <ExternalLink href={RELEASE_PAGE} style={styles.link}>
+          Get the app: download the latest release
+        </ExternalLink>
+        <ExternalLink
+          href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}
+          style={styles.link}
+        >
+          Contribute to bcp
+        </ExternalLink>
+        <ExternalLink href={REPO_URL} style={styles.link}>
+          Source code on GitHub
+        </ExternalLink>
+        <ExternalLink href={KO_FI_URL} style={styles.donateLink}>
+          <span style={styles.link}>Support on Ko-fi</span>
+          <img src={KO_FI_ICON} alt="Ko-fi" style={styles.donateIcon} />
+        </ExternalLink>
         <Text style={styles.value}>Version {VERSION}</Text>
       </View>
     </View>
@@ -83,6 +80,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 8,
+    marginTop: 12,
+  },
+  link: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "400",
+    fontSize: 15,
+    color: "var(--accent, #7a3040)",
+    textDecorationLine: "underline",
+    marginBottom: 8,
+  },
+  donateLink: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    textDecorationLine: "none",
+    marginBottom: 8,
+  },
+  donateIcon: {
+    width: 20,
+    height: 16,
+    flexShrink: 0,
+    verticalAlign: "middle",
   },
   body: {
     fontFamily: CHROME_FONT,

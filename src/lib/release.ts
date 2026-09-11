@@ -14,3 +14,5 @@ export const LINUX_INSTALL_URL = `https://raw.githubusercontent.com/${RELEASE_RE
 // Pages. iOS and Android both install it from here rather than from a native
 // store build right now.
 export const PWA_URL = "https://vittv.github.io/bcp/";
+
+export const KO_FI_URL = "https://ko-fi.com/vittv";

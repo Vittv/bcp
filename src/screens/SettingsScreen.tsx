@@ -152,9 +152,17 @@ export function SettingsScreen({
       {IS_TAURI ? (
         <View style={styles.section}>
           <Text style={styles.label}>Updates</Text>
-          {updateStatus === "idle" || updateStatus === "upToDate" ? (
+          {updateStatus === "idle" ||
+          updateStatus === "checking" ||
+          updateStatus === "upToDate" ? (
             <View style={styles.row}>
-              <Text style={styles.actionBtn} onPress={checkForUpdates}>
+              <Text
+                style={[
+                  styles.option,
+                  updateStatus === "checking" && styles.optionActive,
+                ]}
+                onPress={checkForUpdates}
+              >
                 Check for Updates
               </Text>
             </View>
