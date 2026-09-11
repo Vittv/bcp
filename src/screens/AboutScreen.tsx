@@ -52,7 +52,7 @@ export function AboutScreen() {
           Source code on GitHub
         </ExternalLink>
         <ExternalLink href={KO_FI_URL} style={web.donateLink}>
-          <span style={web.link}>Support on Ko-fi</span>
+          <span style={web.link}>If bcp is useful to you, support it on Ko-fi</span>
           <img src={KO_FI_ICON} alt="Ko-fi" style={web.donateIcon} />
         </ExternalLink>
         <Text style={styles.value}>Version {VERSION}</Text>

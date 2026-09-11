@@ -1,21 +1,20 @@
 <p align="center">
-  <img src="assets/icon.png" width="128" style="border-radius: 26px" alt="bcp icon: the Canterbury cross on maroon">
+  <img src="assets/icon-rounded.png" width="128" alt="bcp icon: the Canterbury cross on maroon">
 </p>
 
 <h1 align="center">bcp</h1>
 
 <p align="center">
-  The Book of Common Prayer (1979, The Episcopal Church) Daily Office.
-  A lightweight, offline-capable reader that runs in the browser and as a
-  Tauri desktop app.
+  <img src="assets/preview-rounded.png" width="820" alt="bcp Daily Office preview">
+</p>
+
+<p align="center">
+  bcp, a lightweight, offline-capable Daily Office reader that runs in the
+  browser and as a Tauri desktop app.
 </p>
 
 <p align="center">
   Free, forever. All liturgical content is public domain.
-</p>
-
-<p align="center">
-  <img src="assets/preview.png" width="820" alt="bcp Daily Office preview">
 </p>
 
 ## Features
@@ -29,7 +28,7 @@
 
 ## Support
 
-bcp is free and always will be. If you'd like to say thanks, you can
+bcp is free and always will be. If bcp is useful to you, you can
 [support it on Ko-fi](https://ko-fi.com/vittv)!
 
 ## Development
