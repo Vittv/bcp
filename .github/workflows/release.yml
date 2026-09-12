@@ -88,6 +88,7 @@ jobs:
           releaseName: "bcp ${{ github.ref_name }}"
           releaseDraft: true
           releaseBody: "Latest build of bcp for ${{ matrix.platform }}."
+          generateReleaseNotes: true
           args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }}
       - name: Assemble rootless Linux tarball
         if: runner.os == 'Linux'
