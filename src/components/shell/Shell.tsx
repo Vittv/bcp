@@ -340,14 +340,43 @@ export function Shell() {
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
-  const [showRubrics, setShowRubrics] = useState(false);
-  const [showSpeakers, setShowSpeakers] = useState(false);
+  const [showRubrics, setShowRubricsRaw] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("rubrics") === "true";
+    }
+    return false;
+  });
+  const [showSpeakers, setShowSpeakersRaw] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("speakers") === "true";
+    }
+    return false;
+  });
   const [devotions, setDevotionsRaw] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("devotions") === "true";
     }
     return false;
   });
+
+  const setShowRubrics = (update: boolean | ((prev: boolean) => boolean)) => {
+    setShowRubricsRaw((prev) => {
+      const next = typeof update === "function" ? update(prev) : update;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("rubrics", String(next));
+      }
+      return next;
+    });
+  };
+  const setShowSpeakers = (update: boolean | ((prev: boolean) => boolean)) => {
+    setShowSpeakersRaw((prev) => {
+      const next = typeof update === "function" ? update(prev) : update;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("speakers", String(next));
+      }
+      return next;
+    });
+  };
 
   const setDevotions = (v: boolean) => {
     setDevotionsRaw(v);
