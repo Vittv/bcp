@@ -138,24 +138,25 @@ describe("composeOffice: Advent 1 2026", () => {
 });
 
 describe("composeOffice: the evening boundary", () => {
-  test("Evening Prayer composes the next day's readings", () => {
-    // Nov 29 2026 (Sunday) evening belongs to Nov 30, St. Andrew.
+  test("Evening Prayer prays the day's own office", () => {
+    // Nov 29 2026 (Sunday, Advent 1): the evening is its own, not St. Andrew's.
     const doc = composeOffice(
       { year: 2026, month: 11, day: 29 },
       "evening-rite-two",
     );
-    expect(doc.entryTitle).toBe("Saint Andrew the Apostle");
-    expect(psalmNumbers(doc)).toEqual([96, 100]);
+    expect(doc.entryTitle).toBe("The First Sunday of Advent");
+    expect(psalmNumbers(doc)).toEqual([111, 112, 113]);
     // SAFETY: nodesOf filters by kind.
     const lessons = nodesOf(doc, "lessons")[0] as Extract<
       ComposedNode,
       { kind: "lessons" }
     >;
     expect(lessons.lessons.map((l) => l.ref)).toEqual([
-      "Isa 55:1–5",
-      "John 1:35–42",
+      "Isa 1:1–9",
+      "2 Pet 3:1–10",
+      "Matt 25:1–13",
     ]);
-    expect(collectOf(doc)?.passage.title).toBe("Saint Andrew");
+    expect(collectOf(doc)?.passage.title).toBe("First Sunday of Advent");
   });
 
   test("Christmas Eve evening uses its appointed special readings", () => {
@@ -181,23 +182,74 @@ describe("composeOffice: the evening boundary", () => {
     );
   });
 
-  test("the eve of a holy day reads the holy day's office", () => {
+  test("a printed eve of a holy day reads the eve entry and the feast's collect", () => {
+    // Eve of Holy Cross (Sep 13 2024, Friday evening) has its own appointed
+    // reading and borrows the feast's collect.
     const doc = composeOffice(
-      { year: 2026, month: 7, day: 21 },
+      { year: 2024, month: 9, day: 13 },
       "evening-rite-two",
     );
-    expect(doc.entryTitle).toBe("Saint Mary Magdalene");
-    expect(psalmNumbers(doc)).toEqual([30, 149]);
+    expect(doc.entryTitle).toBe("Eve of Holy Cross");
+    expect(psalmNumbers(doc)).toEqual([46, 87]);
     // SAFETY: nodesOf filters by kind.
     const lessons = nodesOf(doc, "lessons")[0] as Extract<
       ComposedNode,
       { kind: "lessons" }
     >;
     expect(lessons.lessons.map((l) => l.ref)).toEqual([
-      "Exod 15:19–21",
-      "2 Cor 1:3–7",
+      "1 Kgs 8:22–30",
+      "Eph 2:11–22",
     ]);
-    expect(collectOf(doc)?.passage.title).toBe("Saint Mary Magdalene");
+    expect(collectOf(doc)?.passage.title).toBe("Holy Cross Day");
+  });
+
+  test("a holy day without a printed eve leaves the prior evening ordinary", () => {
+    // St. Mary Magdalene (Jul 21 2026, Tuesday) has no appointed eve, so the
+    // weekday keeps its own office.
+    const doc = composeOffice(
+      { year: 2026, month: 7, day: 21 },
+      "evening-rite-two",
+    );
+    expect(doc.entryTitle).toBeNull();
+    expect(psalmNumbers(doc)).toEqual([68]);
+    // SAFETY: nodesOf filters by kind.
+    const lessons = nodesOf(doc, "lessons")[0] as Extract<
+      ComposedNode,
+      { kind: "lessons" }
+    >;
+    expect(lessons.lessons.map((l) => l.ref)).toEqual([
+      "Judg 2:1–5, 11–23",
+      "Rom 16:17–27",
+      "Matt 27:32–44",
+    ]);
+    expect(collectOf(doc)?.passage.title).toBe("Proper 12");
+  });
+
+  test("every part of a holy day names the day", () => {
+    // Holy Cross Day (Sep 14 2026): the title shows on all offices, and the
+    // evening reads the day's own appointed office (Ps 118, Gen 3:1-15,
+    // 1 Pet 3:17-22) rather than the next day.
+    const ids = [
+      "morning-rite-two",
+      "noonday",
+      "owe",
+      "evening-rite-two",
+      "compline",
+    ] as const;
+    for (const id of ids) {
+      const doc = composeOffice({ year: 2026, month: 9, day: 14 }, id);
+      expect(doc.entryTitle).toBe("Holy Cross Day");
+    }
+    const evening = composeOffice(
+      { year: 2026, month: 9, day: 14 },
+      "evening-rite-two",
+    );
+    expect(psalmNumbers(evening)).toEqual([118]);
+    expect(lessonRefsOf(evening)).toEqual(["Gen 3:1–15", "1 Pet 3:17–22"]);
+    for (const id of ["noonday", "owe", "compline"] as const) {
+      const doc = composeOffice({ year: 2026, month: 9, day: 14 }, id);
+      expect(nodesOf(doc, "lessons")).toHaveLength(0);
+    }
   });
 
   test("the fixed-date Eve of All Saints reads the eve entry and the feast's collect", () => {
@@ -419,13 +471,17 @@ describe("composeOffice: preferences and other offices", () => {
   });
 
   test("alternative lessons are hidden unless requested", () => {
-    const date = { year: 2026, month: 8, day: 14 };
+    const date = { year: 2026, month: 9, day: 15 };
     const doc = composeOffice(date, "evening-rite-two");
     // SAFETY: nodesOf filters by kind.
     const lessons = nodesOf(doc, "lessons").flatMap(
       (n) => (n as Extract<ComposedNode, { kind: "lessons" }>).lessons,
     );
-    expect(lessons.map((l) => l.ref)).toEqual(["Jer 31:1–14", "John 19:23–27"]);
+    expect(lessons.map((l) => l.ref)).toEqual([
+      "Esth 5:1–14",
+      "Acts 18:12–28",
+      "Luke 3:15–22",
+    ]);
     const withAlt = composeOffice(date, "evening-rite-two", {
       ...DEFAULT_PREFS,
       showAlternates: true,
@@ -435,10 +491,10 @@ describe("composeOffice: preferences and other offices", () => {
       (n) => (n as Extract<ComposedNode, { kind: "lessons" }>).lessons,
     );
     expect(altLessons.map((l) => l.ref)).toEqual([
-      "Jer 31:1–14",
-      "Zech 2:10–13",
-      "John 19:23–27",
-      "Acts 1:6–14",
+      "Esth 5:1–14",
+      "Jdt 8:9–17; 9:1, 7–10",
+      "Acts 18:12–28",
+      "Luke 3:15–22",
     ]);
   });
 

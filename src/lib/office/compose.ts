@@ -191,16 +191,17 @@ export function composeOffice(
   if (!found) throw new Error(`unknown office ${officeId}`);
   const evening = isEveningOffice(officeId);
 
-  // the liturgical day begins at evening, so Evening Prayer composes the
-  // next day's readings and psalms (save for the appointed evening specials,
-  // e.g. Christmas Eve, whose readings belong to the current date).
-  const litDate = evening ? addDays(date, 1) : date;
+  // the 1979 Daily Office Lectionary assigns each date its own office, so
+  // every part of the day carries that date's entry. the only exceptions are
+  // the appointed "Eve of ..." evenings (e.g. Christmas Eve, Eve of Holy
+  // Cross), which keep their own printed evening readings and borrow the
+  // following day's collect.
+  const slot = resolve(date);
+  const eveningSpecial = evening ? entryForEvening(slot) : undefined;
+  const litDate = evening && slot.evening ? addDays(date, 1) : date;
   const litSlot = resolve(litDate);
-  const eveningSpecial = evening ? entryForEvening(resolve(date)) : undefined;
-  const slot = eveningSpecial ? resolve(date) : litSlot;
   const entry =
-    eveningSpecial ??
-    (isMorningOffice(officeId) || evening ? entryForDay(slot) : undefined);
+    eveningSpecial ?? (found.rite === null ? undefined : entryForDay(slot));
 
   const ctx: ComposeContext = {
     date,
