@@ -105,13 +105,13 @@ export const BASE_OFFICES: {
   name: string;
 }[] = [
   { id: "morning", label: "Morning", name: "Morning Prayer" },
-  { id: "evening", label: "Evening", name: "Evening Prayer" },
   { id: "noonday", label: "Noonday", name: "Noonday Prayer" },
   {
     id: "owe",
     label: "Order",
     name: "Order of Worship for the Evening",
   },
+  { id: "evening", label: "Evening", name: "Evening Prayer" },
   { id: "compline", label: "Compline", name: "Compline" },
 ];
 

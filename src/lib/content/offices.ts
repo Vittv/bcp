@@ -12,10 +12,10 @@ const all = { ...offices, ...devotions };
 const ORDER: OfficeId[] = [
   "morning-rite-one",
   "morning-rite-two",
-  "evening-rite-one",
-  "evening-rite-two",
   "noonday",
   "owe",
+  "evening-rite-one",
+  "evening-rite-two",
   "compline",
 ];
 

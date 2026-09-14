@@ -76,3 +76,13 @@ and checksum in this note.
   Compline) use the RSV translation and are not compared against the BCP
   psalter. Post-extraction correction: OWE Phos hilaron line "we sing your
   praised, O God" fixed to the printed "we sing your praises, O God".
+  Another post-extraction correction: the Daily Devotions print the heading
+  "The Lord's Prayer" but the office forms print bare "Our Father"; a
+  matching heading item was inserted above the prayer in all six offices
+  that include it (both Rites of Morning and Evening Prayer, Noonday, and
+  Compline; not OWE, which prints no Lord's Prayer) so the office text is
+  labeled the same way the devotions are.
+  Another post-extraction correction: Rite One evening carried the E-text
+  heading "The Apostle's Creed"; the printed book reads "The Apostles'
+  Creed", as do the other three daily offices, so the heading was fixed
+  there.

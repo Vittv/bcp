@@ -13,10 +13,10 @@ type TextItem = Extract<OfficeItem, { kind: "text" }>;
 const OFFICE_IDS = [
   "morning-rite-one",
   "morning-rite-two",
-  "evening-rite-one",
-  "evening-rite-two",
   "noonday",
   "owe",
+  "evening-rite-one",
+  "evening-rite-two",
   "compline",
 ] as const;
 
@@ -70,13 +70,13 @@ describe("offices", () => {
 
   test("per-office item counts are stable", () => {
     const counts: Record<(typeof OFFICE_IDS)[number], number> = {
-      "morning-rite-one": 294,
-      "evening-rite-one": 143,
-      "morning-rite-two": 365,
-      noonday: 68,
+      "morning-rite-one": 295,
+      "evening-rite-one": 144,
+      "morning-rite-two": 366,
+      noonday: 69,
       owe: 71,
-      "evening-rite-two": 150,
-      compline: 116,
+      "evening-rite-two": 151,
+      compline: 117,
     };
     for (const id of OFFICE_IDS) {
       const total = officeSections(id).reduce((n, s) => n + s.items.length, 0);
@@ -128,6 +128,24 @@ describe("offices", () => {
     ]);
   });
 
+  test("the daily offices head the creed and attribute it to all", () => {
+    for (const id of [
+      "morning-rite-one",
+      "evening-rite-one",
+      "morning-rite-two",
+      "evening-rite-two",
+    ] as const) {
+      const section = officeSection(id, "creed");
+      expect(section?.heading, id).toBe("The Apostles' Creed");
+      const creed = section?.items.find(
+        (i): i is TextItem =>
+          i.kind === "text" &&
+          i.text.startsWith("I believe in God, the Father"),
+      );
+      expect(creed?.speaker, id).toBe("all");
+    }
+  });
+
   test("the Creed and Confession are attributed to all", () => {
     const creed = officeSection("morning-rite-two", "creed")?.items.find(
       (i): i is TextItem =>
@@ -166,6 +184,37 @@ describe("offices", () => {
       (i) => i.kind === "heading" && i.text.startsWith("6 "),
     );
     expect(dox).toBeUndefined();
+  });
+
+  test("the Lord's Prayer carries its heading in every office that prints it", () => {
+    // the Daily Devotions label the prayer "The Lord's Prayer"; the offices
+    // now match that, with the heading immediately above the Our Father.
+    for (const id of [
+      "morning-rite-one",
+      "evening-rite-one",
+      "morning-rite-two",
+      "evening-rite-two",
+      "noonday",
+      "compline",
+    ] as const) {
+      const items = officeSections(id).flatMap((s) => s.items);
+      const at = items.findIndex(
+        (i) => i.kind === "text" && i.text.startsWith("Our Father"),
+      );
+      expect(at, id).toBeGreaterThan(0);
+      expect(items[at - 1], id).toEqual({
+        kind: "heading",
+        text: "The Lord's Prayer",
+      });
+    }
+    // the Order of Worship for the Evening prints no Lord's Prayer.
+    const owe = officeSections("owe").flatMap((s) => s.items);
+    expect(owe).not.toContainEqual(
+      expect.objectContaining({
+        kind: "text",
+        text: expect.stringContaining("Our Father"),
+      }),
+    );
   });
 
   test("the Lord's Prayer doxology follows only the daily offices", () => {
