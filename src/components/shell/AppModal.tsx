@@ -132,13 +132,16 @@ export function AppModal({
 
 const styles = StyleSheet.create({
   backdrop: {
-    position: "absolute",
+    // fixed rather than absolute: the modal is often opened from a nested
+    // pane (the calendar, the saint popover), whose position context would
+    // otherwise clip the dim to that pane instead of the whole app
+    position: "fixed",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     zIndex: 100,
-    backgroundColor: "rgba(20, 15, 15, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
     alignItems: "center",
     justifyContent: "center",
     padding: 16,
