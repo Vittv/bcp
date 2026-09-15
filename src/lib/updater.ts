@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { IS_TAURI } from "./desktop";
+import { IS_LINUX_TAURI, IS_TAURI } from "./desktop";
 
 export type UpdateStatus =
   | "idle"
@@ -42,6 +42,15 @@ export function useUpdateStatus(auto = false) {
     setStatus("installing");
     setMessage("");
     try {
+      if (IS_LINUX_TAURI) {
+        // rootless install: re-run install-linux.sh for the pending version,
+        // which swaps in the fresh binary; the command relaunches into it
+        // itself because tauri's restart cannot respawn a replaced binary
+        if (!version) throw new Error("no pending update to install");
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("run_rootless_update", { version });
+        return;
+      }
       const { check: checkUpdate } = await import("@tauri-apps/plugin-updater");
       const update = await checkUpdate();
       if (!update) {
@@ -55,7 +64,7 @@ export function useUpdateStatus(auto = false) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, []);
+  }, [version]);
 
   // one auto-check per mount, so the banner fires on launch without
   // polling or re-checking on every navigation

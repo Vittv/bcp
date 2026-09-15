@@ -30,6 +30,15 @@ export const IS_WINDOWS_TAURI =
   typeof navigator !== "undefined" &&
   /Windows/i.test(navigator.userAgent);
 
+// rootless self-managed tauri install: the per-user tarball layout that
+// scripts/install-linux.sh puts in ~/.local/share/bcp. the tauri updater
+// can't touch it (that requires system deb/rpm), so updates re-run the
+// installer instead
+export const IS_LINUX_TAURI =
+  IS_TAURI &&
+  typeof navigator !== "undefined" &&
+  /Linux/i.test(navigator.userAgent);
+
 // Chromium on Linux has no dependable native middle-button autoscroll, so
 // the desktop gesture is custom there too. Firefox keeps its own native
 // one; the Tauri shell is handled separately by IS_WINDOWS_TAURI / IS_TAURI.

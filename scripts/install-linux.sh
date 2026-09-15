@@ -99,7 +99,10 @@ install_from_dir() {
   payload="$1"
   log "Installing bcp to $APP_DIR"
   mkdir -p "$APP_DIR" "$BIN_DIR" "$DATA_DIR"
-  cp "$payload/bin/bcp" "$APP_DIR/bcp"
+  # mv rather than cp: during an in-app update the current binary is live,
+  # and overwriting it in place fails with ETXTBSY. rename(2) over the path
+  # swaps the entry while the old inode keeps serving the running process.
+  mv -f "$payload/bin/bcp" "$APP_DIR/bcp"
   chmod 0755 "$APP_DIR/bcp"
   ln -sf "$APP_DIR/bcp" "$BIN_DIR/bcp"
 
