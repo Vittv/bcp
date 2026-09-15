@@ -10,6 +10,7 @@ import {
   SettingsIcon,
   SidebarIcon,
 } from "./Icon";
+import { UpdateBanner } from "./UpdateBanner";
 
 export const REPO_URL = "https://github.com/Vittv/bcp";
 
@@ -163,6 +164,7 @@ export function Sidebar({
           ))}
         </View>
       </View>
+      <UpdateBanner />
       <View style={styles.footer}>
         <Text style={styles.footerText} numberOfLines={1}>
           {`bcp · v${VERSION}`}

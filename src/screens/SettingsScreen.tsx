@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { IS_TAURI } from "../lib/desktop";
 import { CHROME_FONT } from "../lib/fonts";
+import { useUpdateStatus } from "../lib/updater";
 
 const THEME_OPTIONS = [
   { id: "light" as const, label: "Light" },
@@ -24,48 +24,7 @@ export function SettingsScreen({
 }: SettingsScreenProps) {
   const { mode, setMode, fontScale, setFontScale, fontMode, setFontMode } =
     useTheme();
-  const [updateStatus, setUpdateStatus] = useState<
-    "checking" | "upToDate" | "available" | "error" | "installing" | "idle"
-  >("idle");
-  const [updateVersion, setUpdateVersion] = useState<string | null>(null);
-  const [updateMessage, setUpdateMessage] = useState("");
-
-  async function checkForUpdates() {
-    setUpdateStatus("checking");
-    setUpdateMessage("");
-    try {
-      const { check } = await import("@tauri-apps/plugin-updater");
-      const update = await check();
-      if (!update) {
-        setUpdateStatus("upToDate");
-        return;
-      }
-      setUpdateVersion(update.version);
-      setUpdateStatus("available");
-    } catch (error) {
-      setUpdateStatus("error");
-      setUpdateMessage(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  async function installUpdate() {
-    setUpdateStatus("installing");
-    setUpdateMessage("");
-    try {
-      const { check } = await import("@tauri-apps/plugin-updater");
-      const update = await check();
-      if (!update) {
-        setUpdateStatus("upToDate");
-        return;
-      }
-      await update.downloadAndInstall();
-      const { relaunch } = await import("@tauri-apps/plugin-process");
-      await relaunch();
-    } catch (error) {
-      setUpdateStatus("error");
-      setUpdateMessage(error instanceof Error ? error.message : String(error));
-    }
-  }
+  const { status, version, message, check, install } = useUpdateStatus();
 
   return (
     <View>
@@ -152,40 +111,38 @@ export function SettingsScreen({
       {IS_TAURI ? (
         <View style={styles.section}>
           <Text style={styles.label}>Updates</Text>
-          {updateStatus === "idle" ||
-          updateStatus === "checking" ||
-          updateStatus === "upToDate" ? (
+          {status === "idle" || status === "checking" || status === "upToDate" ? (
             <View style={styles.row}>
               <Text
                 style={[
                   styles.option,
-                  updateStatus === "checking" && styles.optionActive,
+                  status === "checking" && styles.optionActive,
                 ]}
-                onPress={checkForUpdates}
+                onPress={check}
               >
                 Check for Updates
               </Text>
             </View>
           ) : null}
-          {updateStatus === "checking" ? (
+          {status === "checking" ? (
             <Text style={styles.value}>Checking for updates…</Text>
           ) : null}
-          {updateStatus === "installing" ? (
+          {status === "installing" ? (
             <Text style={styles.value}>Downloading and installing…</Text>
           ) : null}
-          {updateStatus === "upToDate" ? (
+          {status === "upToDate" ? (
             <Text style={styles.value}>You are on the latest version.</Text>
           ) : null}
-          {updateStatus === "available" ? (
+          {status === "available" ? (
             <View style={styles.row}>
-              <Text style={styles.actionBtn} onPress={installUpdate}>
-                Install update {updateVersion}
+              <Text style={styles.actionBtn} onPress={install}>
+                Install update {version}
               </Text>
             </View>
           ) : null}
-          {updateStatus === "error" ? (
+          {status === "error" ? (
             <Text style={[styles.body, styles.bodySpaced]}>
-              Could not check for updates: {updateMessage}
+              Could not check for updates: {message}
             </Text>
           ) : null}
         </View>
