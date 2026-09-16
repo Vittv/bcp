@@ -99,3 +99,21 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: bcp-linux-${{ matrix.arch }}.tar.gz
+
+  # Gate after the matrix publishes: every artifact the desktop updater will
+  # consume (latest.json, per-platform installers, signatures) must exist and
+  # agree with the tag before the draft release can be reviewed. write needed
+  # because draft release assets are visible to collaborators only.
+  validate:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Verify version declarations are in sync
+        run: bun run check:sync
+      - name: Verify release artifacts and latest.json
+        run: bun run check:release "${{ github.ref_name }}"

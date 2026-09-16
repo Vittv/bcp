@@ -45,6 +45,9 @@
     "version": "bun scripts/bump-version.ts",
     "icons": "bun run tools/icons/regenerate.mjs",
     "desktop:dev": "BASE_URL=/ expo export -p web && tauri dev",
-    "desktop:build": "BASE_URL=/ expo export -p web && NO_STRIP=1 tauri build"
+    "desktop:build": "BASE_URL=/ expo export -p web && NO_STRIP=1 tauri build",
+    "check:sync": "bun scripts/check-version-sync.ts",
+    "check:guard": "bun scripts/check-webview-guard.ts",
+    "check:release": "bun scripts/check-release.ts"
   }
 }

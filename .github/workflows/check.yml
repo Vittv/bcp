@@ -1,0 +1,48 @@
+name: Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  js:
+    name: Lint, types, tests, release gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Lint
+        run: bun run check
+      - name: Typecheck
+        run: bunx tsc --noEmit
+      - name: Test
+        run: bun test src/
+      - name: Version sync
+        run: bun run check:sync
+      - name: WebView guard
+        run: bun run check:guard
+  rust:
+    name: cargo check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: System dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - name: Export web bundle
+        env:
+          BASE_URL: /
+        run: bunx expo export -p web
+      - uses: dtolnay/rust-toolchain@stable
+      - name: cargo check
+        working-directory: src-tauri
+        run: cargo check
