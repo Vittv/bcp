@@ -5,10 +5,58 @@
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use tauri::Manager;
+
 // set while the rootless installer runs; the banner and the settings
 // section use separate hook instances, so both could be pressed at once
 // without a guard. second trigger bails out instead of racing two mv's.
 static UPDATE_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
+
+// the webview profile caches the embedded bundle, and on windows the pwa
+// worker registers inside the shell because tauri serves
+// http://tauri.localhost there. a stale worker keeps serving the previous
+// bundle, so once per released version the sweep below clears the profile's
+// origin data and reloads: the fresh bundle renders and the next update
+// check runs against a clean profile. the ui reports the binary version
+// (useAppVersion) so the shown version always matches what the updater
+// compares.
+static WEBVIEW_SWEPT: AtomicBool = AtomicBool::new(false);
+
+const SWEEP_STALE_WEBVIEW_JS: &str = r#"
+(async () => {
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    const keys = await caches.keys();
+    await Promise.all(regs.map((r) => r.unregister()));
+    await Promise.all(keys.map((k) => caches.delete(k)));
+  } catch (_) {}
+  location.reload();
+})();
+"#;
+
+fn sweep_stale_webview(webview: &tauri::Webview) {
+    if WEBVIEW_SWEPT.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    let version = webview.package_info().version.to_string();
+    let Some(data_dir) = webview.path().app_data_dir().ok() else { return };
+    let marker = data_dir.join("webview-sweep");
+    if std::fs::read_to_string(&marker).map(|s| s == version).unwrap_or(false) {
+        return;
+    }
+    // clears the whole webview2 profile (service worker, caches, http cache)
+    // in one call; only windows ever registered the stale worker
+    #[cfg(target_os = "windows")]
+    let _ = webview.clear_all_browsing_data();
+    // unregister workers and drop caches in-page, awaiting both, then reload
+    // once so the fresh embedded bundle renders without a stale worker and
+    // the next install from inside the app computes against a clean profile
+    let _ = webview.eval(SWEEP_STALE_WEBVIEW_JS);
+    if let Some(parent) = marker.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let _ = std::fs::write(marker, version);
+}
 
 // Rootless linux updater. bcp installs per-user via scripts/install-linux.sh
 // (binary lives in ~/.local/share/bcp), which the tauri updater cannot reach,
@@ -137,6 +185,11 @@ fn main() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![run_rootless_update])
+        .on_page_load(|webview, payload| {
+            if payload.event() == tauri::webview::PageLoadEvent::Finished {
+                sweep_stale_webview(webview);
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running the bcp desktop app")
 }

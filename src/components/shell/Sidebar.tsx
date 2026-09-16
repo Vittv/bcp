@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { IS_STANDALONE, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
-import { VERSION } from "../../lib/version";
+import { useAppVersion } from "../../lib/version";
 import {
   DownloadIcon,
   GithubIcon,
@@ -66,6 +66,7 @@ export function Sidebar({
   onHide,
   onOpenModal,
 }: SidebarProps) {
+  const version = useAppVersion();
   const sections = SECTION_ORDER.map((section) => ({
     section,
     items: NAV.filter((item) => (item.section ?? "") === section),
@@ -167,7 +168,7 @@ export function Sidebar({
       <UpdateBanner />
       <View style={styles.footer}>
         <Text style={styles.footerText} numberOfLines={1}>
-          {`bcp · v${VERSION}`}
+          {`bcp · v${version}`}
         </Text>
         <View style={styles.toolbarSpacer} />
         <Pressable

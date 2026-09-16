@@ -42,10 +42,17 @@
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
     <!-- register the service worker statically instead of from the bundle so it
-         is in place before first paint and survives bundle errors. The desktop
-         shell (tauri:// protocol) and other non-http contexts skip it. -->
+         is in place before first paint and survives bundle errors. the desktop
+         shell never registers it: on macos/linux tauri serves a non-http scheme,
+         and on windows http://tauri.localhost matches the guard below, so the
+         internals check keeps the shell out and the embedded bundle remains the
+         only content the webview can render. -->
     <script>
-      if (window.location.protocol.startsWith("http") && "serviceWorker" in navigator) {
+      if (
+        !window.__TAURI_INTERNALS__ &&
+        window.location.protocol.startsWith("http") &&
+        "serviceWorker" in navigator
+      ) {
         window.addEventListener("load", () => {
           navigator.serviceWorker.register("sw.js").catch(() => {});
         });

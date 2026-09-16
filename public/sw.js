@@ -1,10 +1,12 @@
-// Runtime-caching service worker for the GitHub Pages deployment.
-// Asset filenames are content-hashed by expo export, so anything under
+// runtime-caching service worker for the GitHub Pages deployment.
+// asset filenames are content-hashed by expo export, so anything under
 // _expo/static/ and assets/ is immutable: cache-first is safe and keeps
-// the app fully offline after one visit. The document itself and the
+// the app fully offline after one visit. the document itself and the
 // manifest are revalidated in the background so updates land on the
-// next load. Registered only when served from the /bcp/ Pages path;
-// the desktop shell (tauri:// protocol) never hits this file.
+// next load. registered only when not inside the tauri desktop shell
+// (public/index.html skips registration there), because a stale worker
+// inside the webview would keep serving an old embedded bundle after an
+// app update on windows, where tauri serves http://tauri.localhost.
 const VERSION = "v1";
 const CACHE = `bcp-${VERSION}`;
 

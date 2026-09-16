@@ -4,11 +4,12 @@ import { ExternalLink } from "../components/ExternalLink";
 import { REPO_URL } from "../components/shell/Sidebar";
 import { CHROME_FONT } from "../lib/fonts";
 import { KO_FI_URL, RELEASE_PAGE } from "../lib/release";
-import { VERSION } from "../lib/version";
+import { useAppVersion } from "../lib/version";
 
 const KO_FI_ICON = require("../../assets/app_icons/ko-fi.png");
 
 export function AboutScreen() {
+  const version = useAppVersion();
   return (
     <View>
       <View style={styles.section}>
@@ -52,10 +53,12 @@ export function AboutScreen() {
           Source code on GitHub
         </ExternalLink>
         <ExternalLink href={KO_FI_URL} style={web.donateLink}>
-          <span style={web.link}>If bcp is useful to you, support it on Ko-fi</span>
+          <span style={web.link}>
+            If bcp is useful to you, support it on Ko-fi
+          </span>
           <img src={KO_FI_ICON} alt="Ko-fi" style={web.donateIcon} />
         </ExternalLink>
-        <Text style={styles.value}>Version {VERSION}</Text>
+        <Text style={styles.value}>Version {version}</Text>
       </View>
     </View>
   );

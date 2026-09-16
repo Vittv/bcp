@@ -156,7 +156,10 @@ export function InstallScreen() {
         <Text style={styles.body}>
           The desktop app checks the release page for a newer version. In
           Settings, choose Check for Updates to download and install the latest
-          build, then relaunch. New releases appear there automatically.
+          build, then relaunch. New releases appear there automatically. The
+          version shown in the sidebar and About always reflects the installed
+          binary, and the app clears the webview's cached bundle once per
+          update, so an older frontend can't linger after an install.
         </Text>
         <Text style={styles.body}>
           The web app (Android and iPhone) never needs an update. It always runs
