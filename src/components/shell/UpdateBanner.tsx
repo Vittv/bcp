@@ -24,7 +24,10 @@ export function UpdateBanner() {
             version {version} available
           </Text>
           <Pressable
-            style={({ hovered }) => [styles.updateBtn, hovered && styles.updateBtnHover]}
+            style={({ hovered }) => [
+              styles.updateBtn,
+              hovered && styles.updateBtnHover,
+            ]}
             onPress={install}
             accessibilityRole="button"
             accessibilityLabel={`Update to version ${version}`}

@@ -111,7 +111,9 @@ export function SettingsScreen({
       {IS_TAURI ? (
         <View style={styles.section}>
           <Text style={styles.label}>Updates</Text>
-          {status === "idle" || status === "checking" || status === "upToDate" ? (
+          {status === "idle" ||
+          status === "checking" ||
+          status === "upToDate" ? (
             <View style={styles.row}>
               <Text
                 style={[
