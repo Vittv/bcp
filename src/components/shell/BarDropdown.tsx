@@ -23,6 +23,8 @@ export function BarDropdown<T extends string>({
   accessibilityLabel,
   mono = false,
   menuWidth = 128,
+  align = "end",
+  accent = false,
 }: {
   value: T;
   options: readonly DropdownOption<T>[];
@@ -30,6 +32,11 @@ export function BarDropdown<T extends string>({
   accessibilityLabel: string;
   mono?: boolean;
   menuWidth?: number;
+  // which edge the menu hangs from; "start" lets a chip at the bar's left
+  // edge open rightward instead of spilling off screen
+  align?: "start" | "end";
+  // paint the trigger label in the accent color
+  accent?: boolean;
 }) {
   const { resolved } = useTheme();
   const [open, setOpen] = useState(false);
@@ -56,7 +63,13 @@ export function BarDropdown<T extends string>({
         accessibilityLabel={accessibilityLabel}
       >
         <Chevron direction={open ? "up" : "down"} size={5} />
-        <Text style={[officeBarStyles.toggleText, labelStyle]}>
+        <Text
+          style={[
+            officeBarStyles.toggleText,
+            labelStyle,
+            accent && styles.accentText,
+          ]}
+        >
           {current?.label}
         </Text>
       </Pressable>
@@ -72,6 +85,7 @@ export function BarDropdown<T extends string>({
             style={[
               styles.menu,
               { width: menuWidth, backgroundColor: SHEET_BG[resolved] },
+              align === "start" ? { left: 0 } : { right: 0 },
             ]}
           >
             {options.map((o) => {
@@ -123,6 +137,9 @@ const styles = StyleSheet.create({
   mono: {
     fontFamily: MONO,
   },
+  accentText: {
+    color: "var(--accent, #7a3040)",
+  },
   // full-viewport dismiss layer; the huge offsets escape the bar's box
   backdrop: {
     position: "absolute",
@@ -135,7 +152,6 @@ const styles = StyleSheet.create({
   menu: {
     position: "absolute",
     top: 30,
-    right: 0,
     zIndex: 50,
     padding: 4,
     borderRadius: 8,

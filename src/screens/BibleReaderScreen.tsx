@@ -81,25 +81,18 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
-        {book && total > 0 ? (
-          <Pressable
-            style={({ hovered }) => [
-              styles.pickerBtn,
-              { flexGrow: 0, flexShrink: 0 },
-              hovered && styles.pickerBtnHover,
-            ]}
-            onPress={() => palette.open("bible-chapter")}
-            accessibilityRole="button"
-            accessibilityLabel={`Change chapter: ${chapter} of ${total}`}
-          >
-            <Text
-              numberOfLines={1}
-              style={[styles.pickerText, { flexShrink: 0 }]}
-            >
-              {`Ch. ${chapter} / ${total}`}
-            </Text>
-          </Pressable>
-        ) : null}
+        {/* translation picker: reads the active translation and opens the
+            full list. the code reads in accent red, the app's selected-state
+            color, in both bar and menu */}
+        <BarDropdown
+          value={translation}
+          options={TRANSLATION_OPTIONS}
+          onChange={setTranslation}
+          mono
+          accent
+          align="start"
+          accessibilityLabel="Bible translation"
+        />
         <PickerButton
           label={book ? bibleBookName(book.abbrev) : "Book"}
           onPress={() => palette.open("bible")}
@@ -108,6 +101,23 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
       <View style={styles.barRight}>
         {book && total > 0 ? (
           <>
+            <Pressable
+              style={({ hovered }) => [
+                styles.pickerBtn,
+                { flexGrow: 0, flexShrink: 0 },
+                hovered && styles.pickerBtnHover,
+              ]}
+              onPress={() => palette.open("bible-chapter")}
+              accessibilityRole="button"
+              accessibilityLabel={`Change chapter: ${chapter} of ${total}`}
+            >
+              <Text
+                numberOfLines={1}
+                style={[styles.pickerText, { flexShrink: 0 }]}
+              >
+                {`Ch. ${chapter} / ${total}`}
+              </Text>
+            </Pressable>
             <Pressable
               style={({ hovered }) => [
                 styles.arrowBtn,
@@ -134,16 +144,6 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
             </Pressable>
           </>
         ) : null}
-        {/* translation picker: reads the active translation and opens the
-            full list. kept neutral (no accent) so it never competes with the
-            arrows; the red active state lives in Settings */}
-        <BarDropdown
-          value={translation}
-          options={TRANSLATION_OPTIONS}
-          onChange={setTranslation}
-          mono
-          accessibilityLabel="Bible translation"
-        />
       </View>
     </View>
   );
