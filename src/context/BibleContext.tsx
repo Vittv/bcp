@@ -85,6 +85,7 @@ type BibleState = {
   clearBook: () => void;
   nextChapter: () => void;
   prevChapter: () => void;
+  selectChapter: (n: number) => void;
   goToRef: (abbrev: string, chapter: number) => void;
   restoreRef: (ref: { abbrev: string; chapter: number } | null) => void;
 };
@@ -298,6 +299,18 @@ export function BibleProvider({
     }
   }, [book, chapter, history]);
 
+  // direct jump from the chapter picker; the guard keeps the live chapter
+  // in the history trail just like next/prev
+  const selectChapter = useCallback(
+    (n: number) => {
+      if (book && n >= 1 && n <= book.chapters && n !== chapter) {
+        setChapter(n);
+        history?.push({ bible: { abbrev: book.abbrev, chapter: n } });
+      }
+    },
+    [book, chapter, history],
+  );
+
   const goToRef = useCallback((abbrev: string, chapter: number) => {
     _pendingRefTarget = { abbrev, chapter };
   }, []);
@@ -345,6 +358,7 @@ export function BibleProvider({
         clearBook,
         nextChapter,
         prevChapter,
+        selectChapter,
         goToRef,
         restoreRef,
       }}

@@ -18,6 +18,7 @@ export type PaletteScope =
   | "saints"
   | "proverbs"
   | "bible"
+  | "bible-chapter"
   | "search";
 
 type PaletteState = {

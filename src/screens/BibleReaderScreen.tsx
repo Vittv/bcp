@@ -76,9 +76,27 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
+        {book && total > 0 ? (
+          <Pressable
+            style={({ hovered }) => [
+              styles.pickerBtn,
+              { flexGrow: 0, flexShrink: 0 },
+              hovered && styles.pickerBtnHover,
+            ]}
+            onPress={() => palette.open("bible-chapter")}
+            accessibilityRole="button"
+            accessibilityLabel={`Change chapter: ${chapter} of ${total}`}
+          >
+            <Text
+              numberOfLines={1}
+              style={[styles.pickerText, { flexShrink: 0 }]}
+            >
+              {`Ch. ${chapter} / ${total}`}
+            </Text>
+          </Pressable>
+        ) : null}
         <PickerButton
-          label={book ? `${bibleBookName(book.abbrev)} ${chapter}` : "Book"}
-          meta={book ? `Ch. ${chapter} / ${total}` : undefined}
+          label={book ? bibleBookName(book.abbrev) : "Book"}
           onPress={() => palette.open("bible")}
         />
       </View>
@@ -195,6 +213,87 @@ export function BibleBookList({
           key={b.abbrev}
           meta={b}
           active={i === cursor}
+          onSelect={onSelect}
+        />
+      ))}
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Chapter list (chapter picker palette)
+// ---------------------------------------------------------------------------
+
+// memoized chapter row: a cursor flip re-renders only the two rows whose
+// active state changed; the open chapter carries a "Current" marker
+const BibleChapterRow = memo(function BibleChapterRow({
+  chapter,
+  active,
+  selected,
+  onSelect,
+}: {
+  chapter: number;
+  active: boolean;
+  selected: number;
+  onSelect: (n: number) => void;
+}) {
+  return (
+    <IndexRow cursor={active} onPress={() => onSelect(chapter)}>
+      {(a) => (
+        <View style={styles.psalmRowInner}>
+          <Text
+            numberOfLines={1}
+            style={[styles.incipit, { flex: 1 }, a && styles.rowTextActive]}
+          >
+            Chapter {chapter}
+          </Text>
+          {selected === chapter ? (
+            <Text style={[styles.rowMeta, a && styles.rowTextActive]}>
+              Current
+            </Text>
+          ) : null}
+        </View>
+      )}
+    </IndexRow>
+  );
+});
+
+// chapter index for one bible book, searchable by number like the proverbs
+// chapter index; picking lands on the chapter and closes the palette
+export function BibleChapterList({
+  chapters,
+  query,
+  selected,
+  onSelect,
+}: {
+  chapters: number[];
+  query: string;
+  selected: number;
+  onSelect: (n: number) => void;
+}) {
+  const q = query.trim();
+  const filtered = useMemo(() => {
+    if (q === "") return chapters;
+    const num = parseInt(q, 10);
+    if (Number.isNaN(num)) return [];
+    return chapters.filter((c) => String(c).startsWith(String(num)));
+  }, [chapters, q]);
+  const onEnter = useCallback(
+    (_i: number, c: number) => onSelect(c),
+    [onSelect],
+  );
+  const { cursor } = useIndexKeyboard(filtered, onEnter);
+  if (filtered.length === 0) {
+    return <EmptyMessage message={`No bible chapter matches “${q}”.`} />;
+  }
+  return (
+    <View style={styles.indexBody} dataSet={{ indexList: "" }}>
+      {filtered.map((c, i) => (
+        <BibleChapterRow
+          key={c}
+          chapter={c}
+          active={i === cursor}
+          selected={selected}
           onSelect={onSelect}
         />
       ))}

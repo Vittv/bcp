@@ -1,11 +1,11 @@
 import { SearchPalette } from "../../components/shell/SearchPalette";
-import { useBible } from "../../context/BibleContext";
+import { bibleBookName, useBible } from "../../context/BibleContext";
 import { useNavigation } from "../../context/NavigationContext";
 import { usePalette } from "../../context/PaletteContext";
 import { getKjvBookMeta } from "../../lib/content/kjv";
 import type { CollectSection } from "../../lib/content/types";
 import type { PaletteEntry } from "../../lib/reference/search";
-import { BibleBookList } from "../BibleReaderScreen";
+import { BibleBookList, BibleChapterList } from "../BibleReaderScreen";
 import { CanticleIndex } from "./CanticlesScreen";
 import { CollectIndex } from "./CollectsScreen";
 import { GlobalIndex } from "./GlobalIndex";
@@ -14,14 +14,14 @@ import { PsalmIndex } from "./PsalmsScreen";
 import { SaintIndex } from "./SaintsScreen";
 import { useReference } from "./shared";
 
-// one modal, seven scopes: each page's own index renders inside the shared
+// one modal, eight scopes: each page's own index renders inside the shared
 // picker window, so the floating picker is the exact same list (with its
 // same keyboard handling) the side pane always was. picking applies the
 // selection through the page's own setter and closes the window.
 export function PaletteHost() {
   const { scope, close } = usePalette();
   const ref = useReference();
-  const { selectBook } = useBible();
+  const { book, chapter, selectBook, selectChapter } = useBible();
   const { navigateTo } = useNavigation();
   const chapterMeta = useProvChapterMeta();
 
@@ -180,6 +180,25 @@ export function PaletteHost() {
           )}
         />
       );
+    case "bible-chapter":
+      return book ? (
+        <SearchPalette
+          placeholder={`Search ${bibleBookName(book.abbrev)} chapters by number`}
+          searchLabel={`Search ${bibleBookName(book.abbrev)} chapters`}
+          onClose={close}
+          render={(query) => (
+            <BibleChapterList
+              chapters={Array.from({ length: book.chapters }, (_, i) => i + 1)}
+              query={query}
+              selected={chapter}
+              onSelect={(n) => {
+                selectChapter(n);
+                close();
+              }}
+            />
+          )}
+        />
+      ) : null;
     case "search":
       return (
         <SearchPalette
