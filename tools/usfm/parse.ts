@@ -55,7 +55,14 @@ function unwrapMarkers(s: string): string {
 }
 
 export function cleanVerseText(raw: string): string {
-  return unwrapMarkers(stripFootnotesAndRefs(raw)).replace(/\s+/g, " ").trim();
+  return (
+    unwrapMarkers(stripFootnotesAndRefs(raw))
+      .replace(/\s+/g, " ")
+      // a stripped footnote or cross-ref leaves a space before the
+      // punctuation that followed it
+      .replace(/\s+([.,;:!?])/g, "$1")
+      .trim()
+  );
 }
 
 export function parseUsfmText(usfm: string): ParsedBook {
