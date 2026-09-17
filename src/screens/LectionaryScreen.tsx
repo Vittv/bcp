@@ -50,39 +50,37 @@ export function LectionaryBar({
             styles.dayBtn,
             hovered && sharedStyles.rowHover,
           ]}
-          onPress={onPrevDate}
-          accessibilityLabel="Previous day"
-          accessibilityRole="button"
-        >
-          <Chevron direction="left" size={5} />
-          <Text style={styles.dayBtnText}>Prev</Text>
-        </Pressable>
-        <Pressable
-          style={({ hovered }) => [
-            styles.dayBtn,
-            hovered && sharedStyles.rowHover,
-          ]}
-          onPress={onNextDate}
-          accessibilityLabel="Next day"
-          accessibilityRole="button"
-        >
-          <Text style={styles.dayBtnText}>Next</Text>
-          <Chevron direction="right" size={5} />
-        </Pressable>
-        <Pressable
-          style={({ hovered }) => [
-            styles.dayBtn,
-            hovered && sharedStyles.rowHover,
-            isToday && styles.dayBtnDim,
-          ]}
           onPress={onToday}
           disabled={isToday}
           accessibilityLabel="Today"
           accessibilityRole="button"
         >
-          <Text style={[styles.dayBtnText, isToday && styles.dayBtnTextDim]}>
+          <Text style={[styles.dayBtnText, isToday && styles.dayBtnTextActive]}>
             Today
           </Text>
+        </Pressable>
+        {/* day arrows reusing the scripture sections' square arrow buttons */}
+        <Pressable
+          style={({ hovered }) => [
+            sharedStyles.arrowBtn,
+            hovered && sharedStyles.arrowBtnHover,
+          ]}
+          onPress={onPrevDate}
+          accessibilityLabel="Previous day"
+          accessibilityRole="button"
+        >
+          <Chevron direction="left" size={6} />
+        </Pressable>
+        <Pressable
+          style={({ hovered }) => [
+            sharedStyles.arrowBtn,
+            hovered && sharedStyles.arrowBtnHover,
+          ]}
+          onPress={onNextDate}
+          accessibilityLabel="Next day"
+          accessibilityRole="button"
+        >
+          <Chevron direction="right" size={6} />
         </Pressable>
       </View>
     </View>
@@ -274,10 +272,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "var(--text-secondary, #7a6e64)",
   },
-  dayBtnDim: {
-    opacity: 0.45,
-  },
-  dayBtnTextDim: {
-    color: "var(--text-tertiary, #a89c90)",
+  // when the viewed day is today, the button reads as the active day like
+  // the calendar's Today control instead of a disabled dim
+  dayBtnTextActive: {
+    color: "var(--accent, #7a3040)",
+    fontWeight: "600",
   },
 });
