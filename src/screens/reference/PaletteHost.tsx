@@ -129,8 +129,8 @@ export function PaletteHost() {
     case "saints":
       return (
         <SearchPalette
-          placeholder="Search saints by name or date"
-          searchLabel="Search saints"
+          placeholder="Search holy days by name or date"
+          searchLabel="Search holy days"
           onClose={close}
           render={(query) => (
             <SaintIndex

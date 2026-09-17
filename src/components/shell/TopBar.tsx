@@ -161,7 +161,7 @@ export function TopBar({
                 ]}
                 onPress={() => holyDay && openSaint(holyDay)}
                 accessibilityRole="button"
-                accessibilityLabel={`Open ${holyDayLabel} in Saints`}
+                accessibilityLabel={`Open ${holyDayLabel} in Holy Days`}
                 dataSet={wco ? WCO_STOP : IS_TAURI ? DRAG_DATA : undefined}
               >
                 <Text

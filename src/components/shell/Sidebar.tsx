@@ -36,7 +36,7 @@ const NAV: { id: PageId; label: string; section?: string }[] = [
   { id: "offices", label: "Offices" },
   { id: "canticles", label: "Canticles", section: "reference" },
   { id: "collects", label: "Collects", section: "reference" },
-  { id: "saints", label: "Saints", section: "reference" },
+  { id: "saints", label: "Holy Days", section: "reference" },
   { id: "psalms", label: "Psalms", section: "scripture" },
   { id: "proverbs", label: "Proverbs", section: "scripture" },
   { id: "old-testament", label: "Old Testament", section: "scripture" },

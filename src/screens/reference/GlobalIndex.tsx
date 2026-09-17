@@ -15,7 +15,7 @@ const SECTION_HEADINGS: Record<PaletteSection, string> = {
   proverbs: "Proverbs",
   canticles: "Canticles",
   collects: "Collects",
-  saints: "Saints",
+  saints: "Holy Days",
   bible: "Bible",
 };
 

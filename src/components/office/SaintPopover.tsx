@@ -72,7 +72,7 @@ export function SaintPopoverProvider({ children }: { children: ReactNode }) {
               onPress={openInSaints}
               accessibilityRole="button"
             >
-              <Text style={styles.saintsBtnText}>Open in Saints</Text>
+              <Text style={styles.saintsBtnText}>Open in Holy Days</Text>
             </Pressable>
           }
         >

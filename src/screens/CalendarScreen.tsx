@@ -384,7 +384,7 @@ function DayModal({
             >
               <Text style={styles.modalRowName}>{obs.name}</Text>
               <Text style={styles.modalRowGo}>
-                {obs.slug ? "Open in Saints" : "Go to day"} ›
+                {obs.slug ? "Open in Holy Days" : "Go to day"} ›
               </Text>
             </Pressable>
           ))

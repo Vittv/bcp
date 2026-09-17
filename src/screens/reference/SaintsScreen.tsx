@@ -120,7 +120,7 @@ export function SaintsBar({ leading }: { leading?: ReactNode }) {
       <View style={styles.barLeft}>
         {leading}
         <PickerButton
-          label={sel?.title ?? "Saint"}
+          label={sel?.title ?? "Holy day"}
           meta={sel ? monthDayShortLabel(sel.month, sel.day) : undefined}
           onPress={() => palette.open("saints")}
         />
@@ -187,7 +187,7 @@ export const SaintIndex = memo(function SaintIndex({
   );
   const { cursor } = useIndexKeyboard(hits, onEnter);
   if (hits.length === 0) {
-    return <EmptyMessage message={`No saints match “${deferredQuery}”.`} />;
+    return <EmptyMessage message={`No holy days match “${deferredQuery}”.`} />;
   }
   return (
     <View style={styles.indexBody} dataSet={{ indexList: "" }}>
