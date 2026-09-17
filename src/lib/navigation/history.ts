@@ -50,7 +50,11 @@ export type HistoryController<S> = {
   // the no-op guard in push() would drop that entry (it is identical), so
   // this bypasses the guard on purpose.
   record: () => void;
-  onRestored: (fn: (entry: Partial<S>) => void) => () => void;
+  // the listener gets the restored entry plus whether any field actually
+  // changed against the live state. a pop that restores the state the app
+  // already holds (undoing the drawer's own recorded step) reports false, so
+  // callers can close transient chrome without clearing a live reading.
+  onRestored: (fn: (entry: Partial<S>, changed: boolean) => void) => () => void;
   isRestoring: () => boolean;
   start: () => void;
   stop: () => void;
@@ -78,7 +82,7 @@ export function createHistoryController<S extends object>(
 ): HistoryController<S> {
   const suppliers = new Map<keyof S, () => S[keyof S]>();
   const appliers = new Map<keyof S, (v: S[keyof S]) => void>();
-  const restored = new Set<(entry: Partial<S>) => void>();
+  const restored = new Set<(entry: Partial<S>, changed: boolean) => void>();
   let seeded = false;
   let restoring = false;
 
@@ -138,6 +142,7 @@ export function createHistoryController<S extends object>(
   const restore = (entry: Partial<S>) => {
     restoring = true;
     try {
+      let changed = false;
       const keys = Object.keys(entry);
       for (const key of keys) {
         // SAFETY: Object.keys over a Partial<S> entry yields keyof S keys
@@ -149,12 +154,15 @@ export function createHistoryController<S extends object>(
           // apply only when the field actually changes. a restore that lands
           // on the state the page already holds (revisiting the same entry)
           // skips the setState instead of re-rendering over an equal value;
-          // the restored listeners still fire for chrome cleanup below
+          // the restored listeners still fire, carrying the changed flag
           const read = suppliers.get(k);
-          if (!read || !sameValue(read(), value)) apply(value);
+          if (!read || !sameValue(read(), value)) {
+            apply(value);
+            changed = true;
+          }
         }
       }
-      for (const fn of restored) fn(entry);
+      for (const fn of restored) fn(entry, changed);
     } finally {
       restoring = false;
     }
@@ -187,7 +195,9 @@ export function createHistoryController<S extends object>(
     appliers.delete(key);
   };
 
-  const onRestored = (fn: (entry: Partial<S>) => void): (() => void) => {
+  const onRestored = (
+    fn: (entry: Partial<S>, changed: boolean) => void,
+  ): (() => void) => {
     restored.add(fn);
     return () => {
       restored.delete(fn);

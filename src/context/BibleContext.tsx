@@ -206,36 +206,6 @@ export function BibleProvider({
     }
   }, [page, testament, book, chapter, onReadingChange]);
 
-  // mirror the live position for the status-bar re-announce below, which
-  // reads current values at restore time (before any commit lands)
-  const bookRef = useRef(book);
-  bookRef.current = book;
-  const chapterRef = useRef(chapter);
-  chapterRef.current = chapter;
-  const pageRef = useRef(page);
-  pageRef.current = page;
-
-  // the shell clears the status bar on every history restore, and the report
-  // effect above only re-fires when book/chapter/page actually change. an
-  // in-place restore (the mobile drawer's record-and-back, Back/Forward to
-  // the same position) leaves the bible exactly where it was, so re-announce
-  // the label here against the target entry instead
-  useEffect(() => {
-    if (!history) return;
-    return history.onRestored((entry) => {
-      const ref = entry.bible ?? null;
-      if (!ref) return;
-      if (
-        !isBiblePage(pageRef.current) ||
-        ref.abbrev !== bookRef.current?.abbrev ||
-        ref.chapter !== chapterRef.current
-      ) {
-        return;
-      }
-      onReadingChange?.(`${bibleBookName(ref.abbrev)} ${ref.chapter}`);
-    });
-  }, [history, onReadingChange]);
-
   // scroll to top when chapter advances (skip initial mount, skip going backward)
   const prevChapterRef = useRef(chapter);
   useEffect(() => {

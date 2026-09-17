@@ -289,6 +289,29 @@ describe("createHistoryController", () => {
     expect(applied).toEqual([8]);
   });
 
+  it("reports whether a restore actually changed a field", () => {
+    const platform = makePlatform();
+    const ctl = createHistoryController<Snap>(platform);
+    let psalm: number | null = 5;
+    ctl.register(
+      "psalm",
+      () => psalm,
+      (v) => {
+        psalm = v;
+      },
+    );
+    const seen: boolean[] = [];
+    ctl.onRestored((_entry, changed) => {
+      seen.push(changed);
+    });
+    ctl.start();
+    // an identical entry (undoing a recorded step) changes nothing
+    platform.pop({ psalm: 5 });
+    // a real navigation does
+    platform.pop({ psalm: 8 });
+    expect(seen).toEqual([false, true]);
+  });
+
   it("unregister removes a field from pushes and restores", () => {
     const platform = makePlatform();
     const ctl = createHistoryController<Snap>(platform);

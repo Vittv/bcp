@@ -483,15 +483,15 @@ export function Shell() {
       () => tabRef.current,
       (v) => setTab(v),
     );
-    const offRestored = historyController.onRestored(() => {
+    const offRestored = historyController.onRestored((_entry, changed) => {
       // a history navigation must never leave transient chrome open over a
       // different page: the mobile drawer closes, and any modal and office
-      // reading clear. a pop that undoes the drawer's own recorded step
-      // restores the exact page the drawer opened on, so the extra cleanup
-      // below is harmless there
+      // reading clear. a pop that changes no snapshot field only undoes the
+      // drawer's own recorded step, so the reading and scroll stay put
       drawerRecord.current = null;
       setMobileOpen(false);
       setModal(null);
+      if (!changed) return;
       setReading(null);
       scrollToTop();
     });

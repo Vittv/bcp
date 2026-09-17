@@ -52,7 +52,9 @@ export type HistoryApi = {
     get: () => HistorySnapshot[K],
     apply: (v: HistorySnapshot[K]) => void,
   ) => () => void;
-  onRestored: (fn: (entry: Partial<HistorySnapshot>) => void) => () => void;
+  onRestored: (
+    fn: (entry: Partial<HistorySnapshot>, changed: boolean) => void,
+  ) => () => void;
   isRestoring: () => boolean;
 };
 
