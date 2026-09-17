@@ -6,7 +6,7 @@ import { IS_TAURI } from "./desktop";
 // file and the three build-manifest versions so they stay in sync. the
 // desktop shell ignores it and reports the binary version instead (see
 // useAppVersion), because the updater compares against that.
-export const VERSION = "0.3.0";
+export const VERSION = "0.3.1";
 
 // in the desktop shell the compiled-in binary version is the update truth:
 // the updater compares it against latest.json, so the ui reports the binary

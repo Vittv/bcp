@@ -7,6 +7,7 @@
  * with a version rewrites package.json first, then propagates to:
  *
  *   - src-tauri/Cargo.toml        (Rust crate version)
+ *   - src-tauri/Cargo.lock        (locked crate package entry)
  *   - src-tauri/tauri.conf.json   (bundle version)
  *   - src/lib/version.ts          (sidebar/about display)
  *
@@ -23,6 +24,7 @@ import { join } from "node:path";
 const ROOT = join(import.meta.dir, "..");
 const PKG_PATH = join(ROOT, "package.json");
 const CARGO_PATH = join(ROOT, "src-tauri/Cargo.toml");
+const CARGO_LOCK_PATH = join(ROOT, "src-tauri/Cargo.lock");
 const TAURI_PATH = join(ROOT, "src-tauri/tauri.conf.json");
 const VERSION_PATH = join(ROOT, "src/lib/version.ts");
 
@@ -77,6 +79,17 @@ async function main() {
   if (cargoNext !== cargo) {
     await writeFile(CARGO_PATH, cargoNext);
     console.log(`  ✓ src-tauri/Cargo.toml -> ${version}`);
+  }
+
+  // Cargo.lock: the package entry for the crate mirrors Cargo.toml
+  const lock = await readFile(CARGO_LOCK_PATH, "utf8");
+  const lockNext = lock.replace(
+    /(name = "bcp"\nversion = ")[\d.]+(")/,
+    `$1${version}$2`,
+  );
+  if (lockNext !== lock) {
+    await writeFile(CARGO_LOCK_PATH, lockNext);
+    console.log(`  ✓ src-tauri/Cargo.lock -> ${version}`);
   }
 
   // tauri.conf.json: JSON version field, edited in place to keep formatting
