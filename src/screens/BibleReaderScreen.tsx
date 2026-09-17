@@ -9,14 +9,15 @@ import {
 } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ScriptureView } from "../components/office/ScriptureView";
+import { BarDropdown } from "../components/shell/BarDropdown";
 import { Chevron } from "../components/shell/Chevron";
-import { officeBarStyles } from "../components/shell/OfficeTabs";
 import { bibleBookName, useBible } from "../context/BibleContext";
 import { usePalette } from "../context/PaletteContext";
 import { useTranslation } from "../context/TranslationContext";
 import { loadScriptureBook } from "../lib/content/bible";
 import type { KjvBook, KjvBookMeta } from "../lib/content/kjv";
 import { sliceKjvPassage } from "../lib/content/kjv";
+import { TRANSLATION_OPTIONS } from "../lib/translations";
 import {
   DetailPage,
   EmptyMessage,
@@ -27,10 +28,6 @@ import {
 } from "./reference/shared";
 import { sharedStyles as styles } from "./reference/styles";
 import { useIndexKeyboard } from "./reference/useIndexKeyboard";
-
-// the translation abbreviation reads as a technical token, so it uses the
-// app's mono face (as keycaps and status text do)
-const MONO = '"JetBrains Mono", monospace';
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -79,7 +76,6 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
   const total = book?.chapters ?? 0;
   const atStart = chapter <= 1;
   const atEnd = total > 0 && chapter >= total;
-  const onWeb = translation === "web";
 
   return (
     <View style={[styles.bar, noSelect]}>
@@ -138,28 +134,16 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
             </Pressable>
           </>
         ) : null}
-        {/* single-word translation switch: reads the active translation and
-            flips the whole app on click. kept neutral (no accent) so it never
-            competes with the arrows; the red active state lives in Settings */}
-        <Pressable
-          style={({ hovered }) => [
-            officeBarStyles.toggle,
-            officeBarStyles.modeToggle,
-            hovered && officeBarStyles.tabHover,
-          ]}
-          onPress={() => setTranslation(onWeb ? "kjv" : "web")}
-          accessibilityRole="button"
-          accessibilityState={{ selected: onWeb }}
-          accessibilityLabel={
-            onWeb
-              ? "Bible translation: WEB. Switch to King James Version."
-              : "Bible translation: KJV. Switch to World English Bible."
-          }
-        >
-          <Text style={[officeBarStyles.toggleText, { fontFamily: MONO }]}>
-            {onWeb ? "WEB" : "KJV"}
-          </Text>
-        </Pressable>
+        {/* translation picker: reads the active translation and opens the
+            full list. kept neutral (no accent) so it never competes with the
+            arrows; the red active state lives in Settings */}
+        <BarDropdown
+          value={translation}
+          options={TRANSLATION_OPTIONS}
+          onChange={setTranslation}
+          mono
+          accessibilityLabel="Bible translation"
+        />
       </View>
     </View>
   );

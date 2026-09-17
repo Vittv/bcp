@@ -3,6 +3,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useTranslation } from "../context/TranslationContext";
 import { IS_TAURI } from "../lib/desktop";
 import { CHROME_FONT } from "../lib/fonts";
+import { TRANSLATION_OPTIONS } from "../lib/translations";
 import { useUpdateStatus } from "../lib/updater";
 
 const MONO = '"JetBrains Mono", monospace';
@@ -11,11 +12,6 @@ const THEME_OPTIONS = [
   { id: "light" as const, label: "Light" },
   { id: "dark" as const, label: "Dark" },
   { id: "system" as const, label: "System" },
-];
-
-const TRANSLATION_OPTIONS = [
-  { id: "kjv" as const, label: "KJV" },
-  { id: "web" as const, label: "WEB" },
 ];
 
 type SettingsScreenProps = {
@@ -70,7 +66,7 @@ export function SettingsScreen({
           ))}
         </View>
         <Text style={[styles.body, styles.bodySpaced]}>
-          WEB: World English Bible (British Edition). KJV: King James Version.
+          {TRANSLATION_OPTIONS.find((o) => o.id === translation)?.description}
         </Text>
       </View>
 
