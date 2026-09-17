@@ -195,8 +195,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   toggle: {
+    // every bar chip (picker, arrows, toggles, dropdown) is a fixed 24px
+    // so they line up across the bar
+    height: 24,
+    justifyContent: "center",
     paddingHorizontal: 10,
-    paddingVertical: 4,
     borderRadius: 4,
   },
   // the mode switch (Daily Devotions) reads as a primary control: a bordered
