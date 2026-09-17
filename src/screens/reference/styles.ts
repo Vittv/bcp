@@ -38,9 +38,10 @@ export const sharedStyles = StyleSheet.create({
   barRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    // every chip gap in the bar matches the two arrows' spacing
+    gap: 4,
     // keep the trailing controls clear of the current-pick chip
-    marginLeft: 6,
+    marginLeft: 4,
   },
   // the search fills whatever bar space the leading/back buttons leave,
   // borderless so the whole strip reads as one field; keep its height
@@ -481,7 +482,8 @@ export const sharedStyles = StyleSheet.create({
   pickerBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    // same gap as the bar's arrow buttons so chips and arrows space evenly
+    gap: 4,
     flexGrow: 1,
     // fixed 24px like the bar's other buttons (sidebar trigger, arrows);
     // 6px side padding matches the global-search trigger's breathing

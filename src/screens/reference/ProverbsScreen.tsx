@@ -10,7 +10,9 @@ import { Pressable, Text, View } from "react-native";
 import { ScriptureView } from "../../components/office/ScriptureView";
 import { Chevron } from "../../components/shell/Chevron";
 import { usePalette } from "../../context/PaletteContext";
-import { loadKjvBook, sliceKjvPassage } from "../../lib/content/kjv";
+import { useTranslation } from "../../context/TranslationContext";
+import { loadScriptureBook } from "../../lib/content/bible";
+import { sliceKjvPassage } from "../../lib/content/kjv";
 import type { KjvBook, KjvPassage } from "../../lib/content/types";
 import {
   DetailPage,
@@ -29,16 +31,17 @@ const PROVERS_CHAPTERS = 31;
 // the whole book loads once and stays cached; every chapter's verse count
 // and full text derive from that single in-memory object
 function useProverbsBook(): KjvBook | null {
+  const { translation } = useTranslation();
   const [book, setBook] = useState<KjvBook | null>(null);
   useEffect(() => {
     let cancelled = false;
-    loadKjvBook("Proverbs").then((b) => {
+    loadScriptureBook(translation, "Proverbs").then((b) => {
       if (!cancelled) setBook(b);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [translation]);
   return book;
 }
 

@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Shell } from "./src/components/shell/Shell";
 import { ThemeProvider } from "./src/context/ThemeContext";
+import { TranslationProvider } from "./src/context/TranslationContext";
 
 // the PWA plumbing for the GitHub Pages deployment (manifest link and service
 // worker registration) lives statically in public/index.html, which Expo uses
@@ -23,8 +24,10 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <Shell />
-        <StatusBar style="dark" />
+        <TranslationProvider>
+          <Shell />
+          <StatusBar style="dark" />
+        </TranslationProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

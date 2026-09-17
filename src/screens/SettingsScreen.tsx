@@ -1,13 +1,21 @@
 import { StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
+import { useTranslation } from "../context/TranslationContext";
 import { IS_TAURI } from "../lib/desktop";
 import { CHROME_FONT } from "../lib/fonts";
 import { useUpdateStatus } from "../lib/updater";
+
+const MONO = '"JetBrains Mono", monospace';
 
 const THEME_OPTIONS = [
   { id: "light" as const, label: "Light" },
   { id: "dark" as const, label: "Dark" },
   { id: "system" as const, label: "System" },
+];
+
+const TRANSLATION_OPTIONS = [
+  { id: "kjv" as const, label: "KJV" },
+  { id: "web" as const, label: "WEB" },
 ];
 
 type SettingsScreenProps = {
@@ -24,6 +32,7 @@ export function SettingsScreen({
 }: SettingsScreenProps) {
   const { mode, setMode, fontScale, setFontScale, fontMode, setFontMode } =
     useTheme();
+  const { translation, setTranslation } = useTranslation();
   const { status, version, message, check, install } = useUpdateStatus();
 
   return (
@@ -41,6 +50,28 @@ export function SettingsScreen({
             </Text>
           ))}
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Bible Translation</Text>
+        <View style={styles.row}>
+          {TRANSLATION_OPTIONS.map(({ id, label }) => (
+            <Text
+              key={id}
+              style={[
+                styles.option,
+                styles.optionMono,
+                translation === id && styles.optionActive,
+              ]}
+              onPress={() => setTranslation(id)}
+            >
+              {label}
+            </Text>
+          ))}
+        </View>
+        <Text style={[styles.body, styles.bodySpaced]}>
+          WEB: World English Bible (British Edition). KJV: King James Version.
+        </Text>
       </View>
 
       <View style={styles.section}>
@@ -194,6 +225,11 @@ const styles = StyleSheet.create({
     color: "var(--accent, #7a3040)",
     borderColor: "var(--accent, #7a3040)",
     fontWeight: "600",
+  },
+  // translation abbreviations read as technical tokens, so they use the
+  // app's mono face like keycaps and status text
+  optionMono: {
+    fontFamily: MONO,
   },
   actionBtn: {
     fontFamily: CHROME_FONT,

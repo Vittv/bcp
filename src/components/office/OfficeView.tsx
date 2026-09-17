@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "../../context/TranslationContext";
+import { getScripturePassagesFromDolRef } from "../../lib/content/bible";
 import type { KjvPassage, OfficeSpeaker } from "../../lib/content/types";
-import { getWebPassagesFromDolRef } from "../../lib/content/web";
 import {
   CHROME_FONT,
   HEADING_FONT,
@@ -37,17 +38,18 @@ function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
 }
 
 function LessonRow({ lesson }: { lesson: ComposedLesson }) {
+  const { translation } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    getWebPassagesFromDolRef(lesson.ref).then((ps) => {
+    getScripturePassagesFromDolRef(translation, lesson.ref).then((ps) => {
       if (!cancelled) setPassages(ps);
     });
     return () => {
       cancelled = true;
     };
-  }, [lesson.ref]);
+  }, [lesson.ref, translation]);
 
   return (
     <View style={styles.lessonRow}>

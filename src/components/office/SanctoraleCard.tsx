@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "../../context/TranslationContext";
 import {
   sanctoraleBySlug,
   sanctoraleDateLabel,
 } from "../../lib/calendar/sanctorale";
+import { getScripturePassagesFromDolRef } from "../../lib/content/bible";
 import { collectPassage } from "../../lib/content/collects";
 import { parsePsalmCitation } from "../../lib/content/psalms";
 import { psalmPassage } from "../../lib/content/psalter";
 import type { KjvPassage } from "../../lib/content/types";
-import { getWebPassagesFromDolRef } from "../../lib/content/web";
 import {
   CHROME_FONT,
   HEADING_FONT,
@@ -30,17 +31,18 @@ const RITE_LABELS: Record<string, string> = {
 // combined canon (KJV for the OT/NT, WEB for the Apocrypha) render their
 // text, others stay citation-only.
 function LessonRow({ ref }: { ref: string }) {
+  const { translation } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    getWebPassagesFromDolRef(ref).then((ps) => {
+    getScripturePassagesFromDolRef(translation, ref).then((ps) => {
       if (!cancelled) setPassages(ps);
     });
     return () => {
       cancelled = true;
     };
-  }, [ref]);
+  }, [ref, translation]);
 
   if (passages.length === 0) {
     return (

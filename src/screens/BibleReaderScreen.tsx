@@ -10,10 +10,13 @@ import {
 import { Pressable, Text, View } from "react-native";
 import { ScriptureView } from "../components/office/ScriptureView";
 import { Chevron } from "../components/shell/Chevron";
+import { officeBarStyles } from "../components/shell/OfficeTabs";
 import { bibleBookName, useBible } from "../context/BibleContext";
 import { usePalette } from "../context/PaletteContext";
+import { useTranslation } from "../context/TranslationContext";
+import { loadScriptureBook } from "../lib/content/bible";
 import type { KjvBook, KjvBookMeta } from "../lib/content/kjv";
-import { loadKjvBook, sliceKjvPassage } from "../lib/content/kjv";
+import { sliceKjvPassage } from "../lib/content/kjv";
 import {
   DetailPage,
   EmptyMessage,
@@ -24,6 +27,10 @@ import {
 } from "./reference/shared";
 import { sharedStyles as styles } from "./reference/styles";
 import { useIndexKeyboard } from "./reference/useIndexKeyboard";
+
+// the translation abbreviation reads as a technical token, so it uses the
+// app's mono face (as keycaps and status text do)
+const MONO = '"JetBrains Mono", monospace';
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -67,10 +74,12 @@ export function BibleReaderScreen({
 
 export function BibleBar({ leading }: { leading?: ReactNode }) {
   const { book, chapter, nextChapter, prevChapter } = useBible();
+  const { translation, setTranslation } = useTranslation();
   const palette = usePalette();
   const total = book?.chapters ?? 0;
   const atStart = chapter <= 1;
   const atEnd = total > 0 && chapter >= total;
+  const onWeb = translation === "web";
 
   return (
     <View style={[styles.bar, noSelect]}>
@@ -100,34 +109,58 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
           onPress={() => palette.open("bible")}
         />
       </View>
-      {book && total > 0 ? (
-        <View style={styles.barRight}>
-          <Pressable
-            style={({ hovered }) => [
-              styles.arrowBtn,
-              hovered && styles.arrowBtnHover,
-              atStart && { opacity: 0.4 },
-            ]}
-            onPress={prevChapter}
-            disabled={atStart}
-            accessibilityLabel="Previous chapter"
-          >
-            <Chevron direction="left" size={6} />
-          </Pressable>
-          <Pressable
-            style={({ hovered }) => [
-              styles.arrowBtn,
-              hovered && styles.arrowBtnHover,
-              atEnd && { opacity: 0.4 },
-            ]}
-            onPress={nextChapter}
-            disabled={atEnd}
-            accessibilityLabel="Next chapter"
-          >
-            <Chevron direction="right" size={6} />
-          </Pressable>
-        </View>
-      ) : null}
+      <View style={styles.barRight}>
+        {book && total > 0 ? (
+          <>
+            <Pressable
+              style={({ hovered }) => [
+                styles.arrowBtn,
+                hovered && styles.arrowBtnHover,
+                atStart && { opacity: 0.4 },
+              ]}
+              onPress={prevChapter}
+              disabled={atStart}
+              accessibilityLabel="Previous chapter"
+            >
+              <Chevron direction="left" size={6} />
+            </Pressable>
+            <Pressable
+              style={({ hovered }) => [
+                styles.arrowBtn,
+                hovered && styles.arrowBtnHover,
+                atEnd && { opacity: 0.4 },
+              ]}
+              onPress={nextChapter}
+              disabled={atEnd}
+              accessibilityLabel="Next chapter"
+            >
+              <Chevron direction="right" size={6} />
+            </Pressable>
+          </>
+        ) : null}
+        {/* single-word translation switch: reads the active translation and
+            flips the whole app on click. kept neutral (no accent) so it never
+            competes with the arrows; the red active state lives in Settings */}
+        <Pressable
+          style={({ hovered }) => [
+            officeBarStyles.toggle,
+            officeBarStyles.modeToggle,
+            hovered && officeBarStyles.tabHover,
+          ]}
+          onPress={() => setTranslation(onWeb ? "kjv" : "web")}
+          accessibilityRole="button"
+          accessibilityState={{ selected: onWeb }}
+          accessibilityLabel={
+            onWeb
+              ? "Bible translation: WEB. Switch to King James Version."
+              : "Bible translation: KJV. Switch to World English Bible."
+          }
+        >
+          <Text style={[officeBarStyles.toggleText, { fontFamily: MONO }]}>
+            {onWeb ? "WEB" : "KJV"}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -308,6 +341,7 @@ export function BibleChapterList({
 const BibleChapterBody = memo(function BibleChapterBody() {
   const { book, chapter, nextChapter, prevChapter, selectBook, books } =
     useBible();
+  const { translation } = useTranslation();
   const [bookData, setBookData] = useState<KjvBook | null | undefined>(
     undefined,
   );
@@ -316,13 +350,13 @@ const BibleChapterBody = memo(function BibleChapterBody() {
     setBookData(undefined);
     if (!book) return;
     let active = true;
-    loadKjvBook(book.abbrev).then((d) => {
+    loadScriptureBook(translation, book.abbrev).then((d) => {
       if (active) setBookData(d);
     });
     return () => {
       active = false;
     };
-  }, [book]);
+  }, [book, translation]);
 
   const passage = bookData && book ? sliceKjvPassage(bookData, chapter) : null;
 
@@ -364,7 +398,7 @@ const BibleChapterBody = memo(function BibleChapterBody() {
       ) : bookData === undefined ? (
         <Text style={styles.bibleLoading}>Loading…</Text>
       ) : (
-        <Text style={styles.bibleLoading}>KJV text not available.</Text>
+        <Text style={styles.bibleLoading}>Text not available.</Text>
       )}
 
       <View style={styles.bibleBottomNav}>

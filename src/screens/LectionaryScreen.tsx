@@ -11,8 +11,10 @@ import { sectionHeading } from "../components/office/contentHeadings";
 import { PsalmText } from "../components/office/PsalmText";
 import { ScriptureView } from "../components/office/ScriptureView";
 import { Chevron } from "../components/shell/Chevron";
+import { useTranslation } from "../context/TranslationContext";
 import type { CalendarDate } from "../lib/calendar/types";
 import { lectionaryForDate } from "../lib/content";
+import { getScripturePassagesFromDolRef } from "../lib/content/bible";
 import type {
   LectionaryLesson,
   LectionaryOffice,
@@ -20,7 +22,6 @@ import type {
 import { parsePsalmCitation } from "../lib/content/psalms";
 import { psalmPassage } from "../lib/content/psalter";
 import type { KjvPassage } from "../lib/content/types";
-import { getWebPassagesFromDolRef } from "../lib/content/web";
 import { CHROME_FONT, HEADING_FONT, SERIF_ITALIC_FONT } from "../lib/fonts";
 import { dayLabel } from "../lib/office";
 import { noSelect } from "./reference/shared";
@@ -88,18 +89,19 @@ export function LectionaryBar({
 }
 
 function LessonRow({ lesson }: { lesson: LectionaryLesson }) {
+  const { translation } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setPassages(null);
-    getWebPassagesFromDolRef(lesson.ref).then((ps) => {
+    getScripturePassagesFromDolRef(translation, lesson.ref).then((ps) => {
       if (!cancelled) setPassages(ps);
     });
     return () => {
       cancelled = true;
     };
-  }, [lesson.ref]);
+  }, [lesson.ref, translation]);
 
   return (
     <View style={styles.lesson}>

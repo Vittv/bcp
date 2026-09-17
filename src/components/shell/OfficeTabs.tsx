@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   togglesRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 4,
   },
   tab: {
     paddingHorizontal: 10,
