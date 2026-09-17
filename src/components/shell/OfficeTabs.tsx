@@ -38,6 +38,26 @@ const TABS: { id: TabId; label: string; short: string }[] = [
   { id: "compline", label: "Compline", short: "Comp" },
 ];
 
+// a toggle label that may bold on activate without reflowing the bar: an
+// invisible bold twin reserves the widest metrics while the visible text
+// floats above it, so nothing beside the chip moves when it flips
+function SteadyToggleText({ text, on }: { text: string; on: boolean }) {
+  return (
+    <View style={styles.steadyText}>
+      <Text style={[styles.toggleText, styles.steadyTextGhost]}>{text}</Text>
+      <Text
+        style={[
+          styles.toggleText,
+          styles.steadyTextLabel,
+          on && styles.toggleTextOn,
+        ]}
+      >
+        {text}
+      </Text>
+    </View>
+  );
+}
+
 type OfficeTabsProps = {
   leading?: ReactNode;
   active: TabId;
@@ -69,6 +89,24 @@ export function OfficeTabs({
     <View style={[styles.bar, noSelect, compact && styles.barCompact]}>
       <View style={[styles.tabsLeft, compact && styles.groupCompact]}>
         {leading}
+        <Pressable
+          style={({ hovered }) => [
+            styles.toggle,
+            styles.modeToggle,
+            compact && styles.itemCompact,
+            hovered && styles.tabHover,
+            devotions && styles.modeToggleOn,
+          ]}
+          onPress={onToggleDevotions}
+          accessibilityRole="button"
+          accessibilityState={{ selected: devotions }}
+          accessibilityLabel="Daily Devotions"
+        >
+          <SteadyToggleText
+            text={shortLabels ? "Devotions" : "Daily Devotions"}
+            on={devotions}
+          />
+        </Pressable>
         {TABS.map((t) => {
           const isActive = active === t.id;
           return (
@@ -97,9 +135,7 @@ export function OfficeTabs({
           ]}
           onPress={onToggleRubrics}
         >
-          <Text style={[styles.toggleText, showRubrics && styles.toggleTextOn]}>
-            Rubrics
-          </Text>
+          <SteadyToggleText text="Rubrics" on={showRubrics} />
         </Pressable>
         <Pressable
           style={({ hovered }) => [
@@ -109,23 +145,7 @@ export function OfficeTabs({
           ]}
           onPress={onToggleSpeakers}
         >
-          <Text
-            style={[styles.toggleText, showSpeakers && styles.toggleTextOn]}
-          >
-            Speakers
-          </Text>
-        </Pressable>
-        <Pressable
-          style={({ hovered }) => [
-            styles.toggle,
-            compact && styles.itemCompact,
-            hovered && styles.tabHover,
-          ]}
-          onPress={onToggleDevotions}
-        >
-          <Text style={[styles.toggleText, devotions && styles.toggleTextOn]}>
-            Devotions
-          </Text>
+          <SteadyToggleText text="Speakers" on={showSpeakers} />
         </Pressable>
       </View>
     </View>
@@ -179,6 +199,17 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 4,
   },
+  // the mode switch (Daily Devotions) reads as a primary control: a bordered
+  // chip in the left group, accent border while active
+  modeToggle: {
+    borderWidth: 1,
+    borderColor: "var(--border-content, #b5aa9e)",
+    borderRadius: 4,
+    backgroundColor: "var(--bg, #e0dbd0)",
+  },
+  modeToggleOn: {
+    borderColor: "var(--accent, #7a3040)",
+  },
   toggleText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
@@ -188,6 +219,23 @@ const styles = StyleSheet.create({
   toggleTextOn: {
     color: "var(--accent, #7a3040)",
     fontWeight: "700",
+  },
+  // invisible bold twin reserves the widest metrics so the visible label
+  // can switch weight without reflowing the row
+  steadyText: {
+    position: "relative",
+    alignSelf: "center",
+  },
+  steadyTextGhost: {
+    opacity: 0,
+    fontWeight: "700",
+  },
+  steadyTextLabel: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    textAlign: "center",
   },
   barCompact: {
     paddingHorizontal: 6,
