@@ -113,7 +113,7 @@ const LightPalette = {
   scrollbar: "#a09589",
   todayBg: "rgba(122, 48, 64, 0.16)",
   controlHover: "#d2cbbf",
-  selectedBg: "#dbd7cd",
+  selectedBg: "#ece7dd",
 };
 
 const DarkPalette = {
@@ -133,7 +133,7 @@ const DarkPalette = {
   scrollbar: "#5a5759",
   todayBg: "rgba(200, 95, 139, 0.30)",
   controlHover: "#282628",
-  selectedBg: "#2b292b",
+  selectedBg: "#262425",
 };
 
 // literal popover surface colors, keyed by resolved theme. applied as an
