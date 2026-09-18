@@ -408,11 +408,23 @@ export function Shell() {
   dateRef.current = date;
   const tabRef = useRef(tab);
   tabRef.current = tab;
+  const modalRef = useRef(modal);
+  modalRef.current = modal;
+  const mobileOpenRef = useRef(mobileOpen);
+  mobileOpenRef.current = mobileOpen;
 
   // web only: the JSON of the current top-of-history entry when it is the
   // drawer's own record (see the record effect below). kept so re-opening
   // the drawer without navigating in between never stacks another entry.
   const drawerRecord = useRef<string | null>(null);
+  // web only: the modal's own recorded step, mirroring drawerRecord. the
+  // modal records on open so Back pops an entry that closes just it, and a
+  // UI dismiss (X, Esc, backdrop) consumes that step like the drawer does.
+  const modalRecord = useRef<string | null>(null);
+  // web only: true while our own history.back() consumes a closed layer's
+  // phantom step, so that pop does not re-close the drawer kept open beneath
+  // a dismissed modal
+  const consumingStep = useRef(false);
 
   // web only: reify the drawer-opening as its own history step, so the
   // system back button has an entry to pop even at the app root (where back
@@ -426,6 +438,18 @@ export function Shell() {
     historyController.record();
     drawerRecord.current = JSON.stringify(window.history.state ?? null) ?? null;
   }, [mobileOpen, historyController]);
+
+  // reify the modal-open as its own history step, exactly like the drawer:
+  // it records on top of the drawer's step when both are open, so Back pops
+  // the modal's step first and close-the-modal takes priority over
+  // close-the-drawer instead of leaving the PWA or stepping the page
+  useEffect(() => {
+    if (!historyController || !modal) return;
+    const top = JSON.stringify(window.history.state ?? null) ?? null;
+    if (top === modalRecord.current) return;
+    historyController.record();
+    modalRecord.current = JSON.stringify(window.history.state ?? null) ?? null;
+  }, [modal, historyController]);
 
   // whenever the drawer closes while its recorded step is still the top of
   // history, consume that step via history.back() so Back behaves exactly as
@@ -442,6 +466,20 @@ export function Shell() {
     drawerRecord.current = null;
     window.history.back();
   }, [mobileOpen, historyController]);
+
+  // a UI dismiss of the modal (X, Esc, backdrop) consumes its recorded step
+  // via history.back() the way the drawer-close path does, so Back never
+  // stops on a phantom modal entry. consumingStep tells the resulting pop
+  // that this is our own consumption, so the drawer below stays open.
+  useEffect(() => {
+    if (modal) return;
+    if (!historyController || !modalRecord.current) return;
+    const top = JSON.stringify(window.history.state ?? null) ?? null;
+    if (top !== modalRecord.current) return;
+    modalRecord.current = null;
+    consumingStep.current = true;
+    window.history.back();
+  }, [modal, historyController]);
 
   const scrollToTop = useCallback(() => {
     const el = scrollRef.current;
@@ -486,12 +524,30 @@ export function Shell() {
     const offRestored = historyController.onRestored((_entry, changed) => {
       // a history navigation must never leave transient chrome open over a
       // different page: the mobile drawer closes, and any modal and office
-      // reading clear. a pop that changes no snapshot field only undoes the
-      // drawer's own recorded step, so the reading and scroll stay put
+      // reading clear. a pop that changes no snapshot field undoes a
+      // transient step instead, so the reading and scroll stay put
+      const consumed = consumingStep.current;
+      consumingStep.current = false;
+      if (!changed) {
+        // the open modal owns the topmost transient step, so its pop closes
+        // just the modal and leaves the drawer's step for the next Back,
+        // which is the priority a phone Back grants the modal over the
+        // sidebar. without a modal, a user Back closes the drawer; our own
+        // consumption of a dismissed modal's phantom step changes nothing
+        if (modalRef.current) {
+          modalRecord.current = null;
+          setModal(null);
+          return;
+        }
+        if (consumed) return;
+        if (mobileOpenRef.current) setMobileOpen(false);
+        drawerRecord.current = null;
+        return;
+      }
       drawerRecord.current = null;
+      modalRecord.current = null;
       setMobileOpen(false);
       setModal(null);
-      if (!changed) return;
       setReading(null);
       scrollToTop();
     });
