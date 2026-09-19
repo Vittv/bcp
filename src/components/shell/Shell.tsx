@@ -37,12 +37,15 @@ import {
   requestPalette,
 } from "../../context/PaletteContext";
 import { useTheme } from "../../context/ThemeContext";
+import type { SanctoraleEntry } from "../../lib/calendar";
 import {
   addDays,
   colorFor,
   daysUntilNextSeason,
+  diffDays,
   resolve,
   seasonFor,
+  upcomingSanctoraleEntry,
 } from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
 import { getKjvBookMeta } from "../../lib/content/kjv";
@@ -94,11 +97,34 @@ import { TopBar } from "./TopBar";
 
 type TabId = "morning" | "noonday" | "evening" | "compline";
 
+// the sidebar's trailing info for the Today row mirrors the office tabs
+const OFFICE_LABEL: Record<TabId, string> = {
+  morning: "Morning",
+  noonday: "Noonday",
+  evening: "Evening",
+  compline: "Compline",
+};
+
 function officeForHour(hour: number): TabId {
   if (hour < 12) return "morning";
   if (hour < 17) return "noonday";
   if (hour < 21) return "evening";
   return "compline";
+}
+
+// sidebar Holy Days detail: the days until the next fixed feast ("today" on
+// a feast day), wrapping to the start of the sanctorale when the year ends
+function holyDayCountdown(entry: SanctoraleEntry, from: CalendarDate): string {
+  const sameYear =
+    entry.month > from.month ||
+    (entry.month === from.month && entry.day >= from.day);
+  const target = {
+    year: sameYear ? from.year : from.year + 1,
+    month: entry.month,
+    day: entry.day,
+  };
+  const days = diffDays(target, from);
+  return days === 0 ? "today" : `in ${days}d`;
 }
 
 function today(): CalendarDate {
@@ -141,21 +167,22 @@ function ensureSidebarAnimStyle() {
 @keyframes bcp-sidebar-in {
   from { opacity: 0; transform: var(--bcp-from, translateY(-8px)); }
 }
-:root {
-  --bcp-drawer-width: min(84vw, 380px);
-}
-@keyframes bcp-drawer-in {
-  from { transform: translateX(calc(-1 * var(--bcp-drawer-width))); }
-}
 .bcp-sidebar-in {
   animation: bcp-sidebar-in 150ms cubic-bezier(0.2, 0.9, 0.3, 1);
 }
-.bcp-drawer-in {
-  animation: bcp-drawer-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
-}
 .bcp-sidebar-in-left { --bcp-from: translateX(-8px); }
+.bcp-drawer-spring {
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bcp-nav:focus-visible, .bcp-btn:focus-visible {
+  outline: 2px solid var(--accent, #7a3040);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
 @media (prefers-reduced-motion: reduce) {
-  .bcp-sidebar-in, .bcp-drawer-in { animation: none; }
+  .bcp-sidebar-in, .bcp-drawer-spring {
+    animation: none; transition: none;
+  }
 }`;
   document.head.appendChild(el);
 }
@@ -253,12 +280,24 @@ export function Shell() {
 
   // Transient mobile drawer open/close state; deliberately not persisted.
   const [mobileOpen, setMobileOpen] = useState(false);
+  // web only: live drawer position while a drag tracks the finger (0 closed,
+  // 1 open); null means the spring owns the transform. mobileOpen only flips
+  // once a drag commits, so history records one step per open, not per move.
+  const [drawerProgress, setDrawerProgress] = useState<number | null>(null);
 
   // Effective visibility: on mobile the drawer rides its transient state; on
   // desktop it follows the persisted preference. Resizing back to desktop
   // therefore restores the user's deliberate desktop choice, while a hidden
   // choice stays hidden.
   const sidebarVisible = isMobile ? mobileOpen : desktopVisible;
+
+  // web only: the drawer's rendered position and spring/drag handling. the
+  // drawer stays mounted on mobile (slid fully off-screen when closed) so
+  // both directions animate and a drag can begin from the closed state
+  const draggingDrawer = drawerProgress !== null;
+  const drawerProgressValue = drawerProgress ?? (mobileOpen ? 1 : 0);
+  const drawerWidth =
+    typeof window === "undefined" ? 0 : Math.round(window.innerWidth);
 
   const openSidebar = useCallback(() => {
     if (isMobile) setMobileOpen(true);
@@ -290,14 +329,16 @@ export function Shell() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  // mobile drawer gestures: any right-swipe opens the drawer, a left-swipe
-  // (over content or the drawer) closes it. a modal takes precedence over
-  // the sheltered drawer, so a swipe over modal content never opens it.
+  // mobile drawer drag: any horizontal drag opens or closes the drawer with
+  // the edge following the finger (Discord-style, full-screen). a modal takes
+  // precedence over the sheltered drawer, so a swipe over modal content never
+  // opens it.
   const swipeHandlers = useDrawerSwipe({
     enabled: isMobile && modal === null,
     open: mobileOpen,
     onOpen: () => setMobileOpen(true),
     onClose: () => setMobileOpen(false),
+    onProgress: setDrawerProgress,
   });
 
   // Android hardware back hides the mobile drawer before the OS ever gets a
@@ -829,8 +870,10 @@ export function Shell() {
         case "Escape":
           e.preventDefault();
           // any open modal (AppModal-registered, e.g. the saint lookup)
-          // closes first; the go-chord state clears either way
+          // closes first; then the full-screen mobile drawer; the go-chord
+          // state clears either way
           dismissEscapeConsumers();
+          if (isMobile && mobileOpenRef.current) setMobileOpen(false);
           e.stopImmediatePropagation();
           clearGo();
           return;
@@ -903,7 +946,7 @@ export function Shell() {
       window.removeEventListener("keydown", onKeyDown, true);
       if (goTimer) clearTimeout(goTimer);
     };
-  }, [modal, handleNavigateTo, page, date, goToPage]);
+  }, [modal, handleNavigateTo, page, date, goToPage, isMobile]);
 
   const document = composeOffice(
     date,
@@ -923,6 +966,15 @@ export function Shell() {
   const { days: daysUntilNext, label: nextSeason } = daysUntilNextSeason(
     today(),
   );
+
+  // the sidebar's per-row trailing info, kept to the two rows where the
+  // context is truly live: the office of the hour for Today, and the
+  // countdown to the next fixed feast on Holy Days
+  const nextFeast = upcomingSanctoraleEntry(today());
+  const sidebarDetail: Partial<Record<PageId, string>> = {
+    today: OFFICE_LABEL[officeForHour(new Date().getHours())],
+    saints: nextFeast ? holyDayCountdown(nextFeast, today()) : undefined,
+  };
 
   const scrollRafRef = useRef<number | null>(null);
   // shared sink for scroll progress: the outer document scroller reports
@@ -1186,20 +1238,18 @@ export function Shell() {
                         position: "relative",
                       }}
                     >
-                      {sidebarVisible ? (
+                      {isMobile ? (
                         <div
-                          className={
-                            isMobile
-                              ? "bcp-drawer-in"
-                              : "bcp-sidebar-in bcp-sidebar-in-left"
-                          }
+                          data-bcp-drawer
+                          className={draggingDrawer ? "" : "bcp-drawer-spring"}
                           style={{
-                            width: isMobile ? "min(84vw, 380px)" : "25%",
-                            minWidth: isMobile ? undefined : 200,
-                            maxWidth: isMobile ? undefined : 340,
-                            flexShrink: 0,
+                            transform: `translateX(${
+                              (drawerProgressValue - 1) * drawerWidth
+                            }px)`,
                             touchAction: "pan-y",
-                            ...(isMobile ? styles.sidebarOverlay : undefined),
+                            pointerEvents:
+                              drawerProgressValue < 0.01 ? "none" : "auto",
+                            ...styles.sidebarOverlay,
                           }}
                         >
                           <Sidebar
@@ -1207,6 +1257,27 @@ export function Shell() {
                             onSelect={handlePageSelect}
                             onHide={hideSidebar}
                             onOpenModal={setModal}
+                            detail={sidebarDetail}
+                            dragging={draggingDrawer}
+                          />
+                        </div>
+                      ) : sidebarVisible ? (
+                        <div
+                          className="bcp-sidebar-in bcp-sidebar-in-left"
+                          style={{
+                            width: "25%",
+                            minWidth: 200,
+                            maxWidth: 340,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Sidebar
+                            active={page}
+                            onSelect={handlePageSelect}
+                            onHide={hideSidebar}
+                            onOpenModal={setModal}
+                            detail={sidebarDetail}
+                            dragging={draggingDrawer}
                           />
                         </div>
                       ) : null}
@@ -1245,6 +1316,7 @@ export function Shell() {
                           }}
                         >
                           <div
+                            key={page}
                             style={{
                               boxSizing: "border-box",
                               width: "100%",
@@ -1271,13 +1343,14 @@ export function Shell() {
                           >
                             {content}
                           </div>
-                          {isMobile && sidebarVisible ? (
+                          {isMobile ? (
                             <div
-                              onClick={() => setMobileOpen(false)}
                               aria-hidden="true"
                               style={{
                                 ...styles.backdrop,
-                                touchAction: "pan-y",
+                                opacity: 0.35 * drawerProgressValue,
+                                pointerEvents:
+                                  drawerProgressValue < 0.01 ? "none" : "auto",
                               }}
                             />
                           ) : null}
@@ -1345,6 +1418,8 @@ export function Shell() {
                           onSelect={handlePageSelect}
                           onHide={hideSidebar}
                           onOpenModal={setModal}
+                          detail={sidebarDetail}
+                          dragging={draggingDrawer}
                         />
                       </View>
                     ) : null}
@@ -1425,6 +1500,7 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
+    width: "100%",
     zIndex: 30,
   },
   backdrop: {

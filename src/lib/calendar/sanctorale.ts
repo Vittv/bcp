@@ -184,6 +184,21 @@ export function sanctoraleBySlug(slug: string): SanctoraleEntry | undefined {
   return bySlug.get(slug);
 }
 
+/** the next sanctorale entry at or after `date` (today included), wrapping. */
+export function upcomingSanctoraleEntry(
+  date: CalendarDate,
+): SanctoraleEntry | undefined {
+  for (const entry of SANCTORALE_ENTRIES) {
+    if (
+      entry.month > date.month ||
+      (entry.month === date.month && entry.day >= date.day)
+    ) {
+      return entry;
+    }
+  }
+  return SANCTORALE_ENTRIES[0];
+}
+
 /** the proper title for a sanctorale slug (the StatusBar's display name). */
 export function sanctoraleTitle(slug: string): string | undefined {
   return bySlug.get(slug)?.title;

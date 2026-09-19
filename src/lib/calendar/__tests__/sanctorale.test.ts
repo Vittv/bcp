@@ -13,6 +13,7 @@ import {
   sanctoraleNameVariants,
   sanctoraleTitle,
   tokenizeSanctoraleMentions,
+  upcomingSanctoraleEntry,
   validateSanctorale,
 } from "../sanctorale";
 
@@ -93,6 +94,35 @@ describe("date resolution", () => {
     }
     expect(eveForDate({ year: 2026, month: 2, day: 2 })).toBeUndefined();
     expect(eveForDate({ year: 2026, month: 11, day: 1 })).toBeUndefined();
+  });
+});
+
+describe("upcomingSanctoraleEntry", () => {
+  test("returns the next feast at or after a plain date", () => {
+    expect(
+      upcomingSanctoraleEntry({ year: 2026, month: 9, day: 18 })?.slug,
+    ).toBe("st-matthew");
+    expect(
+      upcomingSanctoraleEntry({ year: 2026, month: 9, day: 22 })?.slug,
+    ).toBe("st-michael-and-all-angels");
+  });
+
+  test("includes the feast on its own day", () => {
+    expect(
+      upcomingSanctoraleEntry({ year: 2026, month: 9, day: 21 })?.slug,
+    ).toBe("st-matthew");
+    expect(
+      upcomingSanctoraleEntry({ year: 2026, month: 12, day: 28 })?.slug,
+    ).toBe("holy-innocents");
+  });
+
+  test("wraps to the start of the year after the last entry", () => {
+    expect(
+      upcomingSanctoraleEntry({ year: 2026, month: 12, day: 29 })?.slug,
+    ).toBe("confession-of-st-peter");
+    expect(
+      upcomingSanctoraleEntry({ year: 2026, month: 1, day: 1 })?.slug,
+    ).toBe("confession-of-st-peter");
   });
 });
 

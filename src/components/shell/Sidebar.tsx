@@ -30,7 +30,7 @@ export type PageId =
 export type ModalType = "install" | "settings" | "about" | "help";
 
 const NAV: { id: PageId; label: string; section?: string }[] = [
-  { id: "today", label: "Today" },
+  { id: "today", label: "Daily Office" },
   { id: "calendar", label: "Calendar" },
   { id: "lectionary", label: "Lectionary" },
   { id: "offices", label: "Offices" },
@@ -58,6 +58,12 @@ type SidebarProps = {
   onSelect: (id: PageId) => void;
   onHide: () => void;
   onOpenModal: (modal: ModalType) => void;
+  // per-row trailing context (the season, countdown, office of the hour...);
+  // rows without a detail keep today's single label
+  detail?: Partial<Record<PageId, string>>;
+  // true while a drawer drag tracks the finger; a drag released over a row
+  // is a gesture, not a tap, so it must not navigate on release
+  dragging?: boolean;
 };
 
 export function Sidebar({
@@ -65,6 +71,8 @@ export function Sidebar({
   onSelect,
   onHide,
   onOpenModal,
+  detail,
+  dragging,
 }: SidebarProps) {
   const version = useAppVersion();
   const sections = SECTION_ORDER.map((section) => ({
@@ -76,9 +84,11 @@ export function Sidebar({
     <View style={[styles.sidebar, noSelect]}>
       <View style={styles.toolbar}>
         <Pressable
-          style={({ hovered }) => [
+          dataSet={{ bcpBtn: "" }}
+          style={({ hovered, pressed }) => [
             styles.toolBtn,
-            hovered && styles.toolBtnHover,
+            hovered && !pressed && styles.toolBtnHover,
+            pressed && styles.toolBtnPressed,
           ]}
           onPress={onHide}
           accessibilityLabel="Hide sidebar"
@@ -91,9 +101,11 @@ export function Sidebar({
         <View style={styles.toolbarSpacer} />
         {!IS_TAURI && !IS_STANDALONE ? (
           <Pressable
-            style={({ hovered }) => [
+            dataSet={{ bcpBtn: "" }}
+            style={({ hovered, pressed }) => [
               styles.toolBtn,
-              hovered && styles.toolBtnHover,
+              hovered && !pressed && styles.toolBtnHover,
+              pressed && styles.toolBtnPressed,
             ]}
             onPress={() => onOpenModal("install")}
             accessibilityLabel="Install"
@@ -108,9 +120,11 @@ export function Sidebar({
           </Pressable>
         ) : null}
         <Pressable
-          style={({ hovered }) => [
+          dataSet={{ bcpBtn: "" }}
+          style={({ hovered, pressed }) => [
             styles.toolBtn,
-            hovered && styles.toolBtnHover,
+            hovered && !pressed && styles.toolBtnHover,
+            pressed && styles.toolBtnPressed,
           ]}
           onPress={() => onOpenModal("settings")}
           accessibilityLabel="Settings"
@@ -124,9 +138,11 @@ export function Sidebar({
           )}
         </Pressable>
         <Pressable
-          style={({ hovered }) => [
+          dataSet={{ bcpBtn: "" }}
+          style={({ hovered, pressed }) => [
             styles.toolBtn,
-            hovered && styles.toolBtnHover,
+            hovered && !pressed && styles.toolBtnHover,
+            pressed && styles.toolBtnPressed,
           ]}
           onPress={() => onOpenModal("help")}
           accessibilityLabel="Help and shortcuts"
@@ -147,17 +163,29 @@ export function Sidebar({
                 return (
                   <Pressable
                     key={item.id}
-                    onPress={() => onSelect(item.id)}
-                    style={({ hovered }) => [
+                    dataSet={{ bcpNav: "" }}
+                    accessibilityRole="link"
+                    onPress={() => {
+                      if (dragging) return;
+                      onSelect(item.id);
+                    }}
+                    style={({ hovered, pressed }) => [
                       styles.navItem,
-                      hovered && styles.navItemHover,
+                      hovered && !pressed && styles.navItemHover,
+                      pressed && styles.navItemPressed,
                     ]}
                   >
                     <Text
                       style={[styles.navText, isActive && styles.navTextActive]}
+                      numberOfLines={1}
                     >
                       {item.label}
                     </Text>
+                    {detail?.[item.id] ? (
+                      <Text style={styles.navDetail} numberOfLines={1}>
+                        {detail[item.id]}
+                      </Text>
+                    ) : null}
                   </Pressable>
                 );
               })}
@@ -172,9 +200,11 @@ export function Sidebar({
         </Text>
         <View style={styles.toolbarSpacer} />
         <Pressable
-          style={({ hovered }) => [
+          dataSet={{ bcpBtn: "" }}
+          style={({ hovered, pressed }) => [
             styles.aboutBtn,
-            hovered && styles.aboutBtnHover,
+            hovered && !pressed && styles.aboutBtnHover,
+            pressed && styles.toolBtnPressed,
           ]}
           accessibilityLabel="Visit the repository on GitHub"
           accessibilityRole="link"
@@ -185,9 +215,11 @@ export function Sidebar({
           <GithubIcon size={14} color={IDLE_COLOR} />
         </Pressable>
         <Pressable
-          style={({ hovered }) => [
+          dataSet={{ bcpBtn: "" }}
+          style={({ hovered, pressed }) => [
             styles.aboutBtn,
-            hovered && styles.aboutBtnHover,
+            hovered && !pressed && styles.aboutBtnHover,
+            pressed && styles.toolBtnPressed,
           ]}
           onPress={() => onOpenModal("about")}
           accessibilityLabel="About"
@@ -236,6 +268,9 @@ const styles = StyleSheet.create({
   toolBtnHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
+  toolBtnPressed: {
+    backgroundColor: "var(--selected-bg, #ece7dd)",
+  },
   // nav items: the active row is marked by accent text alone, while hover
   // keeps the control-hover fill
   scroll: {
@@ -260,19 +295,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginHorizontal: 8,
     borderRadius: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
   },
   navItemHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
+  },
+  navItemPressed: {
+    backgroundColor: "var(--selected-bg, #ece7dd)",
   },
   navText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
+    flexShrink: 0,
   },
   navTextActive: {
     color: "var(--accent, #7a3040)",
     fontWeight: "600",
+  },
+  navDetail: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
+    fontSize: 11,
+    color: "var(--text-secondary, #7a6e64)",
+    opacity: 0.7,
+    // long details (feast names) ellipsize within the trailing space rather
+    // than squeeze the row label
+    flexShrink: 1,
   },
   footer: {
     height: 24,

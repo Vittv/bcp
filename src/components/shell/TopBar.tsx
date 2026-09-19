@@ -189,9 +189,11 @@ export function TopBar({
         dataSet={wco ? WCO_STOP : IS_TAURI ? DRAG_DATA : undefined}
       >
         <Pressable
-          style={({ hovered }) => [
+          dataSet={{ bcpBtn: "" }}
+          style={({ hovered, pressed }) => [
             styles.searchTrigger,
-            hovered && styles.searchTriggerHover,
+            hovered && !pressed && styles.searchTriggerHover,
+            pressed && styles.searchTriggerPressed,
           ]}
           onPress={() => palette.open("search")}
           accessibilityRole="button"
@@ -207,13 +209,23 @@ export function TopBar({
         <View style={styles.fontControl}>
           <Text style={styles.fontPct}>{pct}</Text>
           <Pressable
-            style={({ hovered }) => [styles.fontBtn, hovered && styles.hover]}
+            dataSet={{ bcpBtn: "" }}
+            style={({ hovered, pressed }) => [
+              styles.fontBtn,
+              hovered && !pressed && styles.hover,
+              pressed && styles.pressed,
+            ]}
             onPress={() => setFontScale(fontScale - 0.05)}
           >
             <Text style={styles.controlText}>A−</Text>
           </Pressable>
           <Pressable
-            style={({ hovered }) => [styles.fontBtn, hovered && styles.hover]}
+            dataSet={{ bcpBtn: "" }}
+            style={({ hovered, pressed }) => [
+              styles.fontBtn,
+              hovered && !pressed && styles.hover,
+              pressed && styles.pressed,
+            ]}
             onPress={() => setFontScale(fontScale + 0.05)}
           >
             <Text style={styles.controlText}>A+</Text>
@@ -221,7 +233,12 @@ export function TopBar({
         </View>
 
         <Pressable
-          style={({ hovered }) => [styles.themeBtn, hovered && styles.hover]}
+          dataSet={{ bcpBtn: "" }}
+          style={({ hovered, pressed }) => [
+            styles.themeBtn,
+            hovered && !pressed && styles.hover,
+            pressed && styles.pressed,
+          ]}
           onPress={() =>
             setMode(
               mode === "light" ? "dark" : mode === "dark" ? "system" : "light",
@@ -353,6 +370,9 @@ const styles = StyleSheet.create({
   hover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
+  pressed: {
+    backgroundColor: "var(--selected-bg, #ece7dd)",
+  },
   // the global-search trigger: a fuller descendant of aetheryte's cmd
   // trigger, stretching the top bar's full 40px so search reads as a
   // control of the chrome rather than a chip of the page beneath
@@ -368,6 +388,9 @@ const styles = StyleSheet.create({
   },
   searchTriggerHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
+  },
+  searchTriggerPressed: {
+    backgroundColor: "var(--selected-bg, #ece7dd)",
   },
   searchText: {
     fontFamily: CHROME_FONT,
