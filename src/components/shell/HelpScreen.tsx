@@ -10,6 +10,8 @@ export const SHORTCUTS: {
     rows: [
       { keys: ["j", "↓"], label: "Scroll down" },
       { keys: ["k", "↑"], label: "Scroll up" },
+      { keys: ["h", "←"], label: "Previous page" },
+      { keys: ["l", "→"], label: "Next page" },
       { keys: ["d"], label: "Scroll half page down" },
       { keys: ["u"], label: "Scroll half page up" },
       { keys: ["g", "g"], label: "Top of page" },

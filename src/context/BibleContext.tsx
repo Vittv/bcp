@@ -11,6 +11,7 @@ import type { PageId } from "../components/shell/Sidebar";
 import { useHistory, useHistoryField } from "../context/HistoryContext";
 import type { KjvBookMeta } from "../lib/content/kjv";
 import { getBooksByTestament, getKjvBookMeta } from "../lib/content/kjv";
+import { registerPageStepper } from "../lib/input/sequenceNav";
 
 export type Testament = "OT" | "NT";
 
@@ -280,6 +281,56 @@ export function BibleProvider({
     },
     [book, chapter, history],
   );
+
+  // the arrow-key sequence of the bible page, matching the reading pane's
+  // bottom nav exactly: a chapter step, then the next/previous book at the
+  // chapter's edge, so right/left walk the testament linearly. the raw
+  // setters deliberately skip the push the UI arrows make, so arrow strides
+  // never leave their own back/forward steps
+  const stepChapter = useCallback(
+    (delta: number): boolean => {
+      if (!book) return false;
+      if (delta > 0) {
+        if (chapter < book.chapters) {
+          setChapter((c) => c + 1);
+          return true;
+        }
+        const idx = books.findIndex((b) => b.abbrev === book.abbrev);
+        const nextBook =
+          idx >= 0 && idx < books.length - 1 ? books[idx + 1] : null;
+        if (nextBook) {
+          setBook(nextBook);
+          setChapter(1);
+          return true;
+        }
+        return false;
+      }
+      if (delta < 0) {
+        if (chapter > 1) {
+          setChapter((c) => c - 1);
+          return true;
+        }
+        const idx = books.findIndex((b) => b.abbrev === book.abbrev);
+        const prevBook = idx > 0 ? books[idx - 1] : null;
+        if (prevBook) {
+          setBook(prevBook);
+          setChapter(1);
+          return true;
+        }
+        return false;
+      }
+      return false;
+    },
+    [book, chapter, books],
+  );
+
+  // register the chapter stepper for the shell's arrow keys while a bible
+  // page is active; unregistering on leave keeps the table current
+  useEffect(() => {
+    if (!isBiblePage(page)) return;
+    registerPageStepper(page, stepChapter);
+    return () => registerPageStepper(page, null);
+  }, [page, stepChapter]);
 
   const goToRef = useCallback((abbrev: string, chapter: number) => {
     _pendingRefTarget = { abbrev, chapter };

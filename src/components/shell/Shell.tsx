@@ -54,6 +54,7 @@ import {
   loadWindowControls,
   saveWindowControls,
 } from "../../lib/desktop";
+import { stepPageSequence } from "../../lib/input/sequenceNav";
 import { activeScrollTarget } from "../../lib/input/vim";
 import {
   createHistoryController,
@@ -791,6 +792,30 @@ export function Shell() {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const key = e.key;
       switch (key) {
+        case "ArrowLeft":
+        case "ArrowRight":
+        case "h":
+        case "l": {
+          // left/right and h/l walk the scripture page's reading sequence
+          // (its index, e.g. the psalm number or chapter list), not browser
+          // history: right and l step forward, left and h backward. psalms,
+          // proverbs and the bible pages register their steppers
+          const forward = key === "ArrowRight" || key === "l";
+          if (stepPageSequence(page, forward ? 1 : -1)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            // the swap can leave focus parked somewhere non-scrollable (a
+            // bible chapter step re-parks it on the outer scroller, which
+            // stays hidden on reference pages); re-focus the real scroller
+            // so the next down/up scrolls the new page without a click
+            requestAnimationFrame(() => {
+              activeScrollTarget(scrollRef.current)?.focus({
+                preventScroll: true,
+              });
+            });
+          }
+          return;
+        }
         // "/" is consumed by the picker chord above; "?" (US shift+"/")
         // alone opens help
         case "?":

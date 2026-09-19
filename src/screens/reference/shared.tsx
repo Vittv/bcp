@@ -27,7 +27,10 @@ import {
 } from "../../lib/calendar/sanctorale";
 import type { CalendarDate } from "../../lib/calendar/types";
 import { canticleTitle } from "../../lib/content/canticles";
+import { psalmNumbers } from "../../lib/content/psalter";
 import type { CollectSection, OfficeId } from "../../lib/content/types";
+import type { PageStepper } from "../../lib/input/sequenceNav";
+import { registerPageStepper, stepLinear } from "../../lib/input/sequenceNav";
 import { searchCollects } from "../../lib/reference/search";
 import { sharedStyles } from "./styles";
 
@@ -161,7 +164,11 @@ function useIndexPicker<K extends IndexPickerKey>(
   page: PageId,
   history: HistoryApi | null,
   queryRef: MutableRefObject<string>,
-): [HistorySnapshot[K], (v: HistorySnapshot[K]) => void] {
+): [
+  HistorySnapshot[K],
+  (v: HistorySnapshot[K]) => void,
+  (v: HistorySnapshot[K]) => void,
+] {
   const [value, setValue] = useState<HistorySnapshot[K]>(
     // SAFETY: every index-picker key is nullable, and null is the
     // closed/picker state this picker starts in
@@ -187,9 +194,11 @@ function useIndexPicker<K extends IndexPickerKey>(
     [page, pageId, key, history, queryRef],
   );
   // the applier is the raw state setter, so a restored snapshot replays
-  // both branches: a value reopens the detail, null returns to the picker
+  // both branches: a value reopens the detail, null returns to the picker.
+  // the raw setter is also handed out for moves that must not leave a
+  // back/forward step behind, like the shell's arrow-key stepping
   useHistoryField(key, () => value, setValue);
-  return [value, open];
+  return [value, open, setValue];
 }
 
 export type ReferenceState = {
@@ -262,7 +271,7 @@ export function ReferenceProvider({
   // the five index pickers share one restorable-field implementation:
   // opening pushes the pick, the mobile back pushes null, and restores
   // replay both branches through the raw setter
-  const [openPsalm, setOpenPsalm] = useIndexPicker(
+  const [openPsalm, setOpenPsalm, setPsalmRaw] = useIndexPicker(
     "psalm",
     "psalms",
     page,
@@ -283,7 +292,7 @@ export function ReferenceProvider({
     history,
     queryRef,
   );
-  const [openProvChapter, setOpenProvChapter] = useIndexPicker(
+  const [openProvChapter, setOpenProvChapter, setProverbRaw] = useIndexPicker(
     "proverb",
     "proverbs",
     page,
@@ -339,6 +348,47 @@ export function ReferenceProvider({
     },
     [history],
   );
+
+  // build the stepper for one scripture page: a +1/-1 walk through that
+  // page's index, mirroring its bar arrows (psalms and proverbs clamp the
+  // same 1..n run the arrows do). the raw setters skip the push the UI
+  // arrows make, so arrow strides never leave their own back/forward steps
+  const sequenceStepFor = useCallback(
+    (p: PageId): PageStepper | null => {
+      switch (p) {
+        case "psalms": {
+          const max = psalmNumbers().length;
+          return (delta) => {
+            const n = stepLinear(openPsalm ?? 1, 1, max, delta);
+            if (n === null) return false;
+            setPsalmRaw(n);
+            return true;
+          };
+        }
+        case "proverbs": {
+          // 31 chapters, the same count the proverbs screen hard-codes
+          return (delta) => {
+            const n = stepLinear(openProvChapter ?? 1, 1, 31, delta);
+            if (n === null) return false;
+            setProverbRaw(n);
+            return true;
+          };
+        }
+        default:
+          return null;
+      }
+    },
+    [openPsalm, setPsalmRaw, openProvChapter, setProverbRaw],
+  );
+
+  // register the active scripture page's stepper for the shell's arrow
+  // keys; unregistering on leave keeps the registry current
+  useEffect(() => {
+    const step = sequenceStepFor(page);
+    if (!step) return;
+    registerPageStepper(page, step);
+    return () => registerPageStepper(page, null);
+  }, [page, sequenceStepFor]);
 
   // register the fields restore replays. raw setters only: a restore
   // must re-create the state, never push a follow-up entry. the query is
