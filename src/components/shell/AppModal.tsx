@@ -7,18 +7,19 @@ import {
   StyleSheet,
   Text,
   type TextStyle,
+  useWindowDimensions,
   View,
   type ViewStyle,
 } from "react-native";
-import { CHROME_FONT } from "../../lib/fonts";
+import { HEADING_FONT } from "../../lib/fonts";
 import { CloseIcon } from "./Icon";
 
-// A reusable floating-window modal (feishin/zennotes inspiration): a centered
-// card with a title bar and close button, a scrollable body, an optional
-// pinned footer bar, and a dimmed backdrop. On phones it becomes a
-// full-screen sheet. The three chrome panels (Settings, Install, About) and
-// the saint mention lookup share this so their chrome matches. Every modal
-// dismisses the same way: Esc, the X, or clicking the dim area.
+// a reusable floating-window modal: a centered card with a title bar and
+// close button, a scrollable body, an optional pinned footer bar, and a
+// dimmed backdrop. On phones it becomes a full-screen sheet. The three
+// chrome panels (Settings, Install, About) and the saint mention lookup
+// share this so their chrome matches. Every modal dismisses the same way:
+// Esc, the X, or clicking the dim area.
 
 type AppModalProps = {
   title?: string;
@@ -29,6 +30,15 @@ type AppModalProps = {
   titleStyle?: StyleProp<TextStyle>;
   /** a non-scrolling bar pinned under the body (button stays reachable) */
   footer?: ReactNode;
+  /** the body stops scrolling for a caller-managed two-pane layout; the
+   *  card keeps its normal height and the panes scroll internally */
+  stretchBody?: boolean;
+  /** hide the title bar (title + close X) for surfaces that close another
+   *  way, e.g. settings' Done button */
+  titleBar?: boolean;
+  /** fixed card height in px; the card otherwise sizes to its content.
+   *  clamped to the viewport so short windows still fit */
+  height?: number;
 };
 
 const HOVER_COLOR = "var(--text, #2c2020)";
@@ -63,11 +73,22 @@ export function AppModal({
   footer,
   titleStyle,
   width = 760,
+  stretchBody = false,
+  titleBar = true,
+  height,
 }: AppModalProps) {
+  const { height: viewportHeight } = useWindowDimensions();
+  // clamp a fixed target against the viewport so short windows still fit
+  const fixedHeight =
+    height == null ? undefined : Math.min(height, viewportHeight * 0.92);
   // SAFETY: RN-web's StyleSheet values widen to a union TypeScript rejects
   // against the expected StyleProp; each is a valid runtime RN style, so the
   // narrowing below is sound.
-  const cardStyle = { ...styles.card, width } as StyleProp<ViewStyle>;
+  const cardStyle = {
+    ...styles.card,
+    width,
+    height: fixedHeight ?? undefined,
+  } as StyleProp<ViewStyle>;
   // SAFETY: background/frame style is a plain ViewStyle at runtime.
   const backdropStyle = styles.backdrop as StyleProp<ViewStyle>;
   // SAFETY: title-bar is a plain ViewStyle at runtime.
@@ -75,7 +96,9 @@ export function AppModal({
   // SAFETY: title is a TextStyle at runtime.
   const baseTitleStyle = styles.title as StyleProp<TextStyle>;
   // SAFETY: body panel is a plain ViewStyle at runtime.
-  const bodyStyle = styles.body as StyleProp<ViewStyle>;
+  const bodyStyle = (
+    stretchBody ? styles.bodyStretch : styles.body
+  ) as StyleProp<ViewStyle>;
   // SAFETY: footer bar is a plain ViewStyle at runtime.
   const footerStyle = styles.footer as StyleProp<ViewStyle>;
   // SAFETY: close button and its hover state are both ViewStyle at runtime.
@@ -104,25 +127,30 @@ export function AppModal({
         accessibilityLabel="Dismiss dialog"
       />
       <View style={cardStyle}>
-        <View style={titleBarStyle}>
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={[baseTitleStyle, titleStyle]}
-          >
-            {title}
-          </Text>
-          <Pressable
-            onPress={onClose}
-            style={({ hovered }) => closeBtnStyle(hovered)}
-            accessibilityRole="button"
-            accessibilityLabel={`Close ${title}`}
-          >
-            {({ hovered }) => (
-              <CloseIcon size={16} color={hovered ? HOVER_COLOR : IDLE_COLOR} />
-            )}
-          </Pressable>
-        </View>
+        {titleBar ? (
+          <View style={titleBarStyle}>
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={[baseTitleStyle, titleStyle]}
+            >
+              {title}
+            </Text>
+            <Pressable
+              onPress={onClose}
+              style={({ hovered }) => closeBtnStyle(hovered)}
+              accessibilityRole="button"
+              accessibilityLabel={`Close ${title}`}
+            >
+              {({ hovered }) => (
+                <CloseIcon
+                  size={16}
+                  color={hovered ? HOVER_COLOR : IDLE_COLOR}
+                />
+              )}
+            </Pressable>
+          </View>
+        ) : null}
         <View style={bodyStyle}>{children}</View>
         {footer ? <View style={footerStyle}>{footer}</View> : null}
       </View>
@@ -170,7 +198,7 @@ const styles = StyleSheet.create({
     userSelect: "none",
   },
   title: {
-    fontFamily: CHROME_FONT,
+    fontFamily: HEADING_FONT,
     fontWeight: "600",
     fontSize: 28,
     letterSpacing: 0.2,
@@ -195,6 +223,18 @@ const styles = StyleSheet.create({
     overflowY: "auto",
     paddingHorizontal: 20,
     paddingVertical: 20,
+    backgroundColor: "var(--bg, #e0dbd0)",
+  },
+  // two-pane bodies (settings rail + content) scroll inside their own panes;
+  // the frame itself just stretches to the card and clips
+  bodyStretch: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minHeight: 0,
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+    padding: 0,
     backgroundColor: "var(--bg, #e0dbd0)",
   },
   footer: {

@@ -30,6 +30,7 @@ import {
   type NavigateToRef,
   NavigationContext,
 } from "../../context/NavigationContext";
+import { useOfficeSettings } from "../../context/OfficeSettingsContext";
 import {
   isPaletteActive,
   PaletteProvider,
@@ -299,6 +300,19 @@ export function Shell() {
   const drawerWidth =
     typeof window === "undefined" ? 0 : Math.round(window.innerWidth);
 
+  // viewport width, only to feed the toolbar label-fit test below
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === "undefined" ? 0 : window.innerWidth,
+  );
+
+  // labeled toolbar pills only where the pane has room: the desktop column
+  // clamps to 200-340px, so at 25% width labels fit from ~1088px up; the
+  // mobile drawer is full-width and native always labels
+  const toolbarLabels =
+    Platform.OS !== "web" ||
+    isMobile ||
+    Math.min(340, Math.max(200, viewportWidth * 0.25)) >= 272;
+
   const openSidebar = useCallback(() => {
     if (isMobile) setMobileOpen(true);
     else setDesktopVisible(true);
@@ -329,10 +343,16 @@ export function Shell() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   // mobile drawer drag: any horizontal drag opens or closes the drawer with
-  // the edge following the finger (Discord-style, full-screen). a modal takes
-  // precedence over the sheltered drawer, so a swipe over modal content never
-  // opens it.
+  // the edge following the finger, full-screen. a modal takes precedence over
+  // the sheltered drawer, so a swipe over modal content never opens it.
   const swipeHandlers = useDrawerSwipe({
     enabled: isMobile && modal === null,
     open: mobileOpen,
@@ -382,50 +402,14 @@ export function Shell() {
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
-  const [showRubrics, setShowRubricsRaw] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("rubrics") === "true";
-    }
-    return false;
-  });
-  const [showSpeakers, setShowSpeakersRaw] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("speakers") === "true";
-    }
-    return false;
-  });
-  const [devotions, setDevotionsRaw] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("devotions") === "true";
-    }
-    return false;
-  });
-
-  const setShowRubrics = (update: boolean | ((prev: boolean) => boolean)) => {
-    setShowRubricsRaw((prev) => {
-      const next = typeof update === "function" ? update(prev) : update;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("rubrics", String(next));
-      }
-      return next;
-    });
-  };
-  const setShowSpeakers = (update: boolean | ((prev: boolean) => boolean)) => {
-    setShowSpeakersRaw((prev) => {
-      const next = typeof update === "function" ? update(prev) : update;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("speakers", String(next));
-      }
-      return next;
-    });
-  };
-
-  const setDevotions = (v: boolean) => {
-    setDevotionsRaw(v);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("devotions", String(v));
-    }
-  };
+  const {
+    showRubrics,
+    setShowRubrics,
+    showSpeakers,
+    setShowSpeakers,
+    devotions,
+    setDevotions,
+  } = useOfficeSettings();
   const scrollRef = useRef<HTMLDivElement>(null);
   const hintsRef = useRef<HintHandle>(null);
 
@@ -1159,8 +1143,17 @@ export function Shell() {
     switch (modal) {
       case "settings":
         return (
-          <AppModal title="Settings" onClose={closeModal} width={760}>
+          <AppModal
+            title="Settings"
+            onClose={closeModal}
+            width={1040}
+            height={900}
+            stretchBody
+            titleBar={false}
+          >
             <SettingsScreen
+              mobile={isMobile}
+              onClose={closeModal}
               showWindowControls={IS_TAURI && !IS_MACOS_TAURI}
               windowControls={windowControls}
               onWindowControlsChange={setWindowControls}
@@ -1259,6 +1252,7 @@ export function Shell() {
                             onOpenModal={setModal}
                             detail={sidebarDetail}
                             dragging={draggingDrawer}
+                            showLabels={toolbarLabels}
                           />
                         </div>
                       ) : sidebarVisible ? (
@@ -1278,6 +1272,7 @@ export function Shell() {
                             onOpenModal={setModal}
                             detail={sidebarDetail}
                             dragging={draggingDrawer}
+                            showLabels={toolbarLabels}
                           />
                         </div>
                       ) : null}
@@ -1420,6 +1415,7 @@ export function Shell() {
                           onOpenModal={setModal}
                           detail={sidebarDetail}
                           dragging={draggingDrawer}
+                          showLabels={toolbarLabels}
                         />
                       </View>
                     ) : null}
@@ -1487,10 +1483,10 @@ const styles = StyleSheet.create({
     height: 24,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--surface, #d5cfc4)",
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    borderColor: "var(--border, #cbc5bb)",
   },
   auxShowBtnHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
