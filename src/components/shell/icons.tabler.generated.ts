@@ -41,6 +41,8 @@ export const GLYPHS: Record<string, [string, Record<string, string>][]> = {
     ["path", { d: "M12 15v3" }],
   ],
   Check: [["path", { d: "M5 12l5 5l10 -10" }]],
+  ChevronLeft: [["path", { d: "M15 6l-6 6l6 6" }]],
+  ChevronRight: [["path", { d: "M9 6l6 6l-6 6" }]],
   Clock: [
     ["path", { d: "M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" }],
     ["path", { d: "M12 7v5l3 3" }],

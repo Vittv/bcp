@@ -13,6 +13,8 @@ import { HelpScreen } from "../components/shell/HelpScreen";
 import {
   BibleIcon,
   BookIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   CloseIcon,
   DesktopIcon,
   DownloadIcon,
@@ -60,10 +62,11 @@ type SectionId = SettingsSectionId;
 // the settings modal is a slim bar with the active section's eyebrow title
 // and the close X over a rail of grouped small stroke icons beside the
 // section's pane; the rail head's mag-glass field filters the categories as
-// you type. phones swap the rail for a chip row since a fixed sidebar
-// wastes a narrow screen. about, help, and install are the app's other
-// chrome panels, hoisted into the same modal so every entry point shares
-// one box and one rail.
+// you type. phones trade the rail for a settings list that drills into each
+// section the way a system settings app does: rows carry icon, label, and
+// chevron, and the section page slides in with a back button where the rail
+// search sat. about, help, and install are the app's other chrome panels,
+// hoisted into the same modal so every entry point shares one box.
 const SECTION_ICONS: Record<SectionId, ReactNode> = {
   appearance: <SunIcon size={15} />,
   typography: <TypographyIcon size={15} />,
@@ -83,13 +86,13 @@ const GROUPS: { title: string; categoryIds: SectionId[] }[] = [
 ];
 
 // every sidebar entry point and palette run lands directly as its section;
-// "settings" (and nothing) falls back to the first category. hidden sections
-// (install on a desktop build, desktop in a browser tab) never appear as the
-// initial selection
+// the bare settings button returns null so phones start on the section list
+// and desktop falls back to the first category. hidden sections (install on
+// a desktop build, desktop in a browser tab) never appear as a landing spot
 function initialSection(
   modal: ModalType | SettingsSectionId | undefined,
-): SectionId {
-  if (!modal || modal === "settings") return "appearance";
+): SectionId | null {
+  if (!modal || modal === "settings") return null;
   return modal;
 }
 
@@ -100,7 +103,8 @@ const visibleCategories = () =>
   visibleSettings().map((s) => ({ ...s, icon: SECTION_ICONS[s.id] }));
 
 type SettingsScreenProps = {
-  // phones replace the rail with a chip row; the modal turns sheet-like
+  // phones replace the rail with a settings list that drills into sections;
+  // the modal turns sheet-like
   mobile?: boolean;
   onClose: () => void;
   // the sidebar button or global palette that opened the modal lands on
@@ -121,8 +125,11 @@ export function SettingsScreen({
   onWindowControlsChange,
 }: SettingsScreenProps) {
   const visible = visibleCategories();
-  const [activeCategory, setActiveCategory] = useState<SectionId>(() => {
+  const [activeCategory, setActiveCategory] = useState<SectionId | null>(() => {
     const requestedSection = initialSection(requested);
+    // phones land on the section list; a sidebar or palette entry point
+    // passes a real section and lands on its page instead
+    if (requestedSection === null) return mobile ? null : "appearance";
     return visible.some((c) => c.id === requestedSection)
       ? requestedSection
       : "appearance";
@@ -144,8 +151,8 @@ export function SettingsScreen({
   const active =
     categories.find((c) => c.id === activeCategory) ?? categories[0];
 
-  const content = (() => {
-    switch (active?.id) {
+  const contentFor = (id: SectionId | undefined): ReactNode => {
+    switch (id) {
       case "appearance":
         return <AppearanceSettings mode={theme.mode} setMode={theme.setMode} />;
       case "typography":
@@ -195,139 +202,251 @@ export function SettingsScreen({
       case "help":
         return <HelpScreen />;
     }
-  })();
+    return null;
+  };
+
+  // phones only reach this branch with a section open, so the active
+  // category is always a real section
+  const mobileActive =
+    visible.find((c) => c.id === activeCategory) ?? visible[0];
 
   return (
     <View style={styles.frame}>
       <View style={mobile ? styles.chromeMobile : styles.chrome}>
         {mobile ? (
-          <View style={styles.chipsRow}>
-            {categories.map((c) => {
-              const activeChip = active?.id === c.id;
-              return (
+          activeCategory === null ? (
+            <>
+              <View style={styles.mobileHead}>
+                <View style={styles.mobileHeadSearch}>
+                  <SettingsSearch query={query} onChange={setQuery} />
+                </View>
                 <Pressable
-                  key={c.id}
-                  onPress={() => setActiveCategory(c.id)}
+                  onPress={onClose}
                   style={({ hovered }) => [
-                    styles.chip,
-                    activeChip && styles.chipActive,
-                    hovered && !activeChip && styles.chipHover,
+                    styles.paneCloseBtn,
+                    hovered && styles.paneCloseBtnHover,
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close settings"
                 >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      activeChip && styles.chipTextActive,
-                    ]}
-                  >
-                    {c.railTitle ?? c.title}
-                  </Text>
+                  {({ hovered }) => (
+                    <CloseIcon
+                      size={16}
+                      color={hovered ? HOVER_COLOR : IDLE_COLOR}
+                    />
+                  )}
                 </Pressable>
-              );
-            })}
-          </View>
-        ) : (
-          <View style={styles.rail}>
-            <View style={styles.railHead}>
-              <SettingsSearch query={query} onChange={setQuery} />
-            </View>
-            <ScrollView style={styles.railScroll}>
-              {groups.map((group) => (
-                <View key={group.title}>
-                  <Text style={styles.groupTitle}>{group.title}</Text>
-                  {group.categoryIds.map((id) => {
-                    const cat =
-                      categories.find((c) => c.id === id) ?? categories[0];
-                    const activeRow = active?.id === id;
-                    return (
-                      <Pressable
-                        key={id}
-                        onPress={() => setActiveCategory(id)}
-                        style={({ hovered }) => [
-                          styles.railRow,
-                          activeRow && styles.railRowActive,
-                          hovered && !activeRow && styles.railRowHover,
+              </View>
+              {groups.length > 0 ? (
+                <ScrollView
+                  style={styles.mobileList}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {groups.map((group) => (
+                    <View key={group.title}>
+                      <Text style={styles.mobileGroupTitle}>{group.title}</Text>
+                      {group.categoryIds.map((id) => {
+                        const cat =
+                          categories.find((c) => c.id === id) ?? categories[0];
+                        return (
+                          <Pressable
+                            key={id}
+                            onPress={() => setActiveCategory(id)}
+                            style={({ hovered }) => [
+                              styles.mobileRow,
+                              hovered && styles.mobileRowHover,
+                            ]}
+                          >
+                            <View style={railIconStyle(false)}>{cat.icon}</View>
+                            <Text
+                              style={styles.mobileRowLabel}
+                              numberOfLines={1}
+                            >
+                              {cat.railTitle ?? cat.title}
+                            </Text>
+                            <ChevronRightIcon
+                              size={14}
+                              color="var(--text-secondary, #7a6e64)"
+                            />
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  ))}
+                </ScrollView>
+              ) : (
+                <Text style={styles.mobileEmpty}>
+                  No settings match the search.
+                </Text>
+              )}
+            </>
+          ) : (
+            <>
+              <View style={styles.mobileHead}>
+                <Pressable
+                  onPress={() => setActiveCategory(null)}
+                  style={({ hovered }) => [
+                    styles.backButton,
+                    hovered && styles.backButtonHover,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Back to settings"
+                >
+                  {({ hovered }) => (
+                    <>
+                      <ChevronLeftIcon
+                        size={14}
+                        color={hovered ? HOVER_COLOR : IDLE_COLOR}
+                      />
+                      <Text
+                        style={[
+                          styles.backText,
+                          hovered && styles.backTextHover,
                         ]}
                       >
-                        <View style={railIconStyle(activeRow)}>{cat.icon}</View>
-                        <Text
-                          style={[
-                            styles.railRowLabel,
-                            activeRow && styles.railRowLabelActive,
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {cat.railTitle ?? cat.title}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              ))}
-            </ScrollView>
-            <View style={styles.railFoot}>
-              <Text style={styles.railFootText}>
-                Settings save automatically on this device.
-              </Text>
-            </View>
-          </View>
-        )}
-
-        <View style={styles.pane}>
-          <View style={styles.paneHead}>
-            {mobile ? (
-              <SettingsSearch query={query} onChange={setQuery} />
-            ) : (
-              <Text style={styles.eyebrow} numberOfLines={1}>
-                {active ? (active.railTitle ?? active.title) : "Search"}
-              </Text>
-            )}
-            <Pressable
-              onPress={onClose}
-              style={({ hovered }) => [
-                styles.paneCloseBtn,
-                hovered && styles.paneCloseBtnHover,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Close settings"
-            >
-              {({ hovered }) => (
-                <CloseIcon
-                  size={16}
-                  color={hovered ? HOVER_COLOR : IDLE_COLOR}
-                />
-              )}
-            </Pressable>
-          </View>
-          <ScrollView
-            style={styles.paneScroll}
-            contentContainerStyle={styles.paneScrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {active ? (
-              <>
+                        Settings
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+                <Text style={styles.mobileHeadTitle} numberOfLines={1}>
+                  {mobileActive.railTitle ?? mobileActive.title}
+                </Text>
+                <Pressable
+                  onPress={onClose}
+                  style={({ hovered }) => [
+                    styles.paneCloseBtn,
+                    hovered && styles.paneCloseBtnHover,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close settings"
+                >
+                  {({ hovered }) => (
+                    <CloseIcon
+                      size={16}
+                      color={hovered ? HOVER_COLOR : IDLE_COLOR}
+                    />
+                  )}
+                </Pressable>
+              </View>
+              <ScrollView
+                style={styles.paneScroll}
+                contentContainerStyle={styles.mobilePaneScrollContent}
+                showsVerticalScrollIndicator={false}
+              >
                 <View style={styles.paneIntro}>
-                  <Text style={styles.paneTitle}>{active.title}</Text>
+                  <Text style={styles.paneTitle}>{mobileActive.title}</Text>
                   <Text style={styles.paneDescription}>
-                    {active.description}
+                    {mobileActive.description}
                   </Text>
                 </View>
-                {content}
-              </>
-            ) : (
-              <Text style={styles.noMatches}>
-                No settings match the search.
-              </Text>
-            )}
-          </ScrollView>
-        </View>
+                {contentFor(mobileActive.id)}
+              </ScrollView>
+            </>
+          )
+        ) : (
+          <>
+            <View style={styles.rail}>
+              <View style={styles.railHead}>
+                <SettingsSearch query={query} onChange={setQuery} />
+              </View>
+              <ScrollView style={styles.railScroll}>
+                {groups.map((group) => (
+                  <View key={group.title}>
+                    <Text style={styles.groupTitle}>{group.title}</Text>
+                    {group.categoryIds.map((id) => {
+                      const cat =
+                        categories.find((c) => c.id === id) ?? categories[0];
+                      const activeRow = active?.id === id;
+                      return (
+                        <Pressable
+                          key={id}
+                          onPress={() => setActiveCategory(id)}
+                          style={({ hovered }) => [
+                            styles.railRow,
+                            activeRow && styles.railRowActive,
+                            hovered && !activeRow && styles.railRowHover,
+                          ]}
+                        >
+                          <View style={railIconStyle(activeRow)}>
+                            {cat.icon}
+                          </View>
+                          <Text
+                            style={[
+                              styles.railRowLabel,
+                              activeRow && styles.railRowLabelActive,
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {cat.railTitle ?? cat.title}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                ))}
+              </ScrollView>
+              <View style={styles.railFoot}>
+                <Text style={styles.railFootText}>
+                  Settings save automatically on this device.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.pane}>
+              <View style={styles.paneHead}>
+                <Text style={styles.eyebrow} numberOfLines={1}>
+                  {active ? (active.railTitle ?? active.title) : "Search"}
+                </Text>
+                <Pressable
+                  onPress={onClose}
+                  style={({ hovered }) => [
+                    styles.paneCloseBtn,
+                    hovered && styles.paneCloseBtnHover,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close settings"
+                >
+                  {({ hovered }) => (
+                    <CloseIcon
+                      size={16}
+                      color={hovered ? HOVER_COLOR : IDLE_COLOR}
+                    />
+                  )}
+                </Pressable>
+              </View>
+              <ScrollView
+                style={styles.paneScroll}
+                contentContainerStyle={styles.paneScrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {active ? (
+                  <>
+                    <View style={styles.paneIntro}>
+                      <Text style={styles.paneTitle}>{active.title}</Text>
+                      <Text style={styles.paneDescription}>
+                        {active.description}
+                      </Text>
+                    </View>
+                    {contentFor(active?.id)}
+                  </>
+                ) : (
+                  <Text style={styles.noMatches}>
+                    No settings match the search.
+                  </Text>
+                )}
+              </ScrollView>
+            </View>
+          </>
+        )}
       </View>
     </View>
   );
 }
 
-// the rail's mag-glass field filters the categories and chips as you type;
-// the same token matcher behind it later feeds the global cmd+K palette
+// the mag-glass field filters the rail categories on desktop and the settings
+// list on phones as you type; the same token matcher behind it feeds the
+// global cmd+K palette
 function SettingsSearch({
   query,
   onChange,
@@ -788,44 +907,104 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: "var(--text-secondary, #7a6e64)",
   },
-  chipsRow: {
+  // the phone layout's 44px head: search (or back + section title) with the
+  // close X, exactly the height of the desktop seats
+  mobileHead: {
+    flexShrink: 0,
+    height: 44,
     flexDirection: "row",
-    flexWrap: "nowrap",
+    alignItems: "center",
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderBottomColor: "var(--border, #c9c1b2)",
-    flexShrink: 0,
-    // the tab chips overflow sideways instead of wrapping, so the modal
-    // keeps its height and the row scrolls on narrow screens
-    overflowX: "auto",
   },
-  chip: {
-    flexShrink: 0,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "var(--border, #c9c1b2)",
-    backgroundColor: "var(--surface, #d5cfc4)",
+  mobileHeadSearch: {
+    flex: 1,
+    minWidth: 0,
   },
-  chipActive: {
-    borderColor: "var(--accent, #7a3040)",
+  mobileHeadTitle: {
+    flex: 1,
+    minWidth: 0,
+    fontFamily: CHROME_FONT,
+    fontWeight: "600",
+    fontSize: 11,
+    letterSpacing: 2.2,
+    textTransform: "uppercase",
+    color: "var(--text-secondary, #7a6e64)",
+    textAlign: "center",
+  },
+  // the detail page's back control: chevron plus the previous screen's name,
+  // the same recipe the system settings list uses
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    height: 34,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+  backButtonHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
-  chipHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
-  },
-  chipText: {
+  backText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 13,
     color: "var(--text-secondary, #7a6e64)",
   },
-  chipTextActive: {
-    color: "var(--accent, #7a3040)",
+  backTextHover: {
+    color: "var(--text, #2c2020)",
+  },
+  mobileList: {
+    flex: 1,
+    minHeight: 0,
+  },
+  mobileGroupTitle: {
+    fontFamily: CHROME_FONT,
     fontWeight: "600",
+    fontSize: 10,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: "var(--text-secondary, #7a6e64)",
+    opacity: 0.6,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  // a tappable system-settings row: icon, label, and the trailing chevron
+  // that marks the drill-down
+  mobileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    height: 40,
+    marginHorizontal: 8,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+  mobileRowHover: {
+    backgroundColor: "var(--control-hover, #d2cbbf)",
+  },
+  mobileRowLabel: {
+    flex: 1,
+    minWidth: 0,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
+    fontSize: 14,
+    color: "var(--text-secondary, #7a6e64)",
+  },
+  mobileEmpty: {
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
+    color: "var(--text-secondary, #7a6e64)",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+  },
+  mobilePaneScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 40,
   },
   pane: {
     flex: 1,

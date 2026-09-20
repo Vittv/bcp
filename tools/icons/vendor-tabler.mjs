@@ -1,5 +1,5 @@
 // Vendors bcp's icon subset from @tabler/icons-react (MIT) into a data module
-// so Metro resolves only the 22 used glyphs instead of the whole pack (the
+// so Metro resolves only the 27 used glyphs instead of the whole pack (the
 // package ships one bundled entry, no per-icon exports map, so importing from
 // the index drags in ~6k icons). Run `bun tools/icons/vendor-tabler.mjs`
 // after bumping @tabler/icons-react to refresh the file.
@@ -13,6 +13,8 @@ const NAMES = [
   "BrandGithub",
   "Calendar",
   "Check",
+  "ChevronLeft",
+  "ChevronRight",
   "Clock",
   "Copy",
   "Cross",
