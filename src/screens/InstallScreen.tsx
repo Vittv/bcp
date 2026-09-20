@@ -19,7 +19,7 @@ export function InstallScreen() {
     <View>
       <View style={styles.section}>
         <Text style={styles.body}>
-          bcp is a desktop app for macOS, Windows and Linux, a web app for
+          BCP is a desktop app for macOS, Windows and Linux, a web app for
           Android and iPhone, and this installable web app. Pick your platform
           below; each option installs the newest version.
         </Text>
@@ -84,14 +84,14 @@ export function InstallScreen() {
         <Text style={styles.groupLabel}>Web app (PWA)</Text>
         <Text style={styles.label}>Any OS</Text>
         <Text style={styles.body}>
-          bcp runs in any modern browser and installs into its own window with
+          BCP runs in any modern browser and installs into its own window with
           its own launcher icon.
         </Text>
         <Steps>
           <Step n={1}>
             Open{" "}
             <ExternalLink href={PWA_URL} style={styles.inlineLink}>
-              bcp
+              BCP
             </ExternalLink>{" "}
             in a Chromium-based browser.
           </Step>
@@ -106,7 +106,7 @@ export function InstallScreen() {
             <ExternalLink href={FIREFOXPWA_URL} style={styles.link}>
               firefoxpwa connector
             </ExternalLink>{" "}
-            first, then install bcp from the browser's menu.
+            first, then install BCP from the browser's menu.
           </Text>
         </Note>
       </View>
@@ -118,7 +118,7 @@ export function InstallScreen() {
           <Step n={1}>
             Open{" "}
             <ExternalLink href={PWA_URL} style={styles.inlineLink}>
-              bcp
+              BCP
             </ExternalLink>{" "}
             in any browser.
           </Step>
@@ -137,7 +137,7 @@ export function InstallScreen() {
           <Step n={1}>
             Open{" "}
             <ExternalLink href={PWA_URL} style={styles.inlineLink}>
-              bcp
+              BCP
             </ExternalLink>{" "}
             in Safari.
           </Step>

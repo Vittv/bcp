@@ -114,6 +114,11 @@ const LightPalette = {
   todayBg: "rgba(122, 48, 64, 0.16)",
   controlHover: "#d2cbbf",
   selectedBg: "#ece7dd",
+  // button plate: resting controls read as touchable without leaning on
+  // their borders
+  surface: "#d5cfc4",
+  // keycap fill: recessed, darker than the surface
+  keyBg: "rgba(44, 32, 32, 0.09)",
 };
 
 const DarkPalette = {
@@ -134,6 +139,11 @@ const DarkPalette = {
   todayBg: "rgba(200, 95, 139, 0.30)",
   controlHover: "#282628",
   selectedBg: "#262425",
+  // button plate: resting controls read as touchable without leaning on
+  // their borders
+  surface: "#232122",
+  // keycap fill: recessed, darker than the surface
+  keyBg: "rgba(0, 0, 0, 0.32)",
 };
 
 // literal popover surface colors, keyed by resolved theme. applied as an
@@ -166,6 +176,8 @@ function applyPalette(theme: ResolvedTheme) {
   r.setProperty("--today-bg", p.todayBg);
   r.setProperty("--control-hover", p.controlHover);
   r.setProperty("--selected-bg", p.selectedBg);
+  r.setProperty("--surface", p.surface);
+  r.setProperty("--key-bg", p.keyBg);
   // trust the color-scheme for native chrome we do not paint: the wco
   // window-controls overlay glyphs, scrollbars, and form controls. without
   // it chromium keeps the overlay light even while the app runs dark

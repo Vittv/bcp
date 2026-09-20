@@ -13,7 +13,7 @@ export function AboutScreen() {
   return (
     <View>
       <View style={styles.section}>
-        <Text style={styles.label}>bcp</Text>
+        <Text style={styles.label}>BCP</Text>
         <Text style={styles.body}>
           A reader for the Daily Office of the Book of Common Prayer (1979, The
           Episcopal Church): Morning Prayer, Noonday Prayer, Evening Prayer, and
@@ -29,7 +29,7 @@ export function AboutScreen() {
       <View style={styles.section}>
         <Text style={styles.label}>Free, forever</Text>
         <Text style={styles.body}>
-          bcp is free and always will be: no ads, no accounts, no paywall, now
+          BCP is free and always will be: no ads, no accounts, no paywall, now
           or in the future.
         </Text>
         <Text style={styles.body}>
@@ -47,14 +47,14 @@ export function AboutScreen() {
           href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}
           style={web.link}
         >
-          Contribute to bcp
+          Contribute to BCP
         </ExternalLink>
         <ExternalLink href={REPO_URL} style={web.link}>
           Source code on GitHub
         </ExternalLink>
         <ExternalLink href={KO_FI_URL} style={web.donateLink}>
           <span style={web.link}>
-            If bcp is useful to you, support it on Ko-fi
+            If BCP is useful to you, support it on Ko-fi
           </span>
           <img src={KO_FI_ICON} alt="Ko-fi" style={web.donateIcon} />
         </ExternalLink>

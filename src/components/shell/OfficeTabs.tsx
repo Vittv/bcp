@@ -206,9 +206,9 @@ const styles = StyleSheet.create({
   // chip in the left group, accent border while active
   modeToggle: {
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    borderColor: "var(--border, #cbc5bb)",
     borderRadius: 4,
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--surface, #d5cfc4)",
   },
   modeToggleOn: {
     borderColor: "var(--accent, #7a3040)",

@@ -141,7 +141,7 @@ export function TopBar({
           source={resolved === "dark" ? ICON_DARK : ICON_LIGHT}
           style={styles.appIcon}
           resizeMode="contain"
-          accessibilityLabel="bcp"
+          accessibilityLabel="BCP"
         />
         <Text
           style={styles.seasonText}
@@ -384,7 +384,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    borderColor: "var(--border, #cbc5bb)",
+    backgroundColor: "var(--surface, #d5cfc4)",
   },
   searchTriggerHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",

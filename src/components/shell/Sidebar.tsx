@@ -1,14 +1,32 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { ReactNode } from "react";
+import {
+  Pressable,
+  type StyleProp,
+  StyleSheet,
+  Text,
+  View,
+  type ViewStyle,
+} from "react-native";
 import { IS_STANDALONE, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { useAppVersion } from "../../lib/version";
 import {
+  BibleIcon,
+  BookIcon,
+  BookmarkIcon,
+  CalendarIcon,
+  ClockIcon,
+  CrossIcon,
+  CrownIcon,
   DownloadIcon,
   GithubIcon,
   HelpIcon,
   InfoIcon,
+  ListIcon,
+  MusicIcon,
   SettingsIcon,
   SidebarIcon,
+  StarIcon,
 } from "./Icon";
 import { UpdateBanner } from "./UpdateBanner";
 
@@ -29,19 +47,64 @@ export type PageId =
 
 export type ModalType = "install" | "settings" | "about" | "help";
 
-const NAV: { id: PageId; label: string; section?: string }[] = [
-  { id: "today", label: "Daily Office" },
-  { id: "calendar", label: "Calendar" },
-  { id: "lectionary", label: "Lectionary" },
-  { id: "offices", label: "Offices" },
-  { id: "canticles", label: "Canticles", section: "reference" },
-  { id: "collects", label: "Collects", section: "reference" },
-  { id: "saints", label: "Holy Days", section: "reference" },
-  { id: "psalms", label: "Psalms", section: "scripture" },
-  { id: "proverbs", label: "Proverbs", section: "scripture" },
-  { id: "old-testament", label: "Old Testament", section: "scripture" },
-  { id: "new-testament", label: "New Testament", section: "scripture" },
-];
+// nav rows: dimmed icons beside short labels, grouped under the small-caps
+// section titles; the trailing detail (season, countdown...) stays right
+const NAV: { id: PageId; label: string; section?: string; icon: ReactNode }[] =
+  [
+    { id: "today", label: "Daily Office", icon: <BookIcon size={15} /> },
+    { id: "calendar", label: "Calendar", icon: <CalendarIcon size={15} /> },
+    { id: "lectionary", label: "Lectionary", icon: <ListIcon size={15} /> },
+    { id: "offices", label: "Offices", icon: <ClockIcon size={15} /> },
+    {
+      id: "canticles",
+      label: "Canticles",
+      section: "reference",
+      icon: <MusicIcon size={15} />,
+    },
+    {
+      id: "collects",
+      label: "Collects",
+      section: "reference",
+      icon: <CrossIcon size={15} />,
+    },
+    {
+      id: "saints",
+      label: "Holy Days",
+      section: "reference",
+      icon: <StarIcon size={15} />,
+    },
+    {
+      id: "psalms",
+      label: "Psalms",
+      section: "scripture",
+      icon: <BookmarkIcon size={15} />,
+    },
+    {
+      id: "proverbs",
+      label: "Proverbs",
+      section: "scripture",
+      icon: <CrownIcon size={15} />,
+    },
+    {
+      id: "old-testament",
+      label: "Old Testament",
+      section: "scripture",
+      icon: <BibleIcon size={15} />,
+    },
+    {
+      id: "new-testament",
+      label: "New Testament",
+      section: "scripture",
+      icon: <BibleIcon size={15} />,
+    },
+  ];
+
+// small-caps section headers, flush with the icon column
+const SECTIONS = [
+  { id: "", title: "Prayer" },
+  { id: "reference", title: "Reference" },
+  { id: "scripture", title: "Scripture" },
+] as const;
 
 const noSelect = {
   userSelect: "none" as const,
@@ -51,7 +114,53 @@ const noSelect = {
 const HOVER_COLOR = "var(--text, #2c2020)";
 const IDLE_COLOR = "var(--text-secondary, #7a6e64)";
 
-const SECTION_ORDER = ["", "reference", "scripture"] as const;
+// a toolbar pill: bordered, icon plus optional label, hover fill, no pressed
+// state; `subtle` drops border and plate while keeping the pill anatomy
+function ToolButton({
+  label,
+  onPress,
+  accessibilityLabel,
+  subtle = false,
+  footer = false,
+  children,
+}: {
+  label?: string;
+  onPress: () => void;
+  accessibilityLabel: string;
+  subtle?: boolean;
+  footer?: boolean;
+  children: (color: string) => ReactNode;
+}) {
+  return (
+    <Pressable
+      dataSet={{ bcpBtn: "" }}
+      style={({ hovered }) => [
+        styles.toolBtn,
+        subtle && styles.toolBtnSubtle,
+        label ? styles.toolBtnLabeled : null,
+        footer && styles.toolBtnFooter,
+        hovered && styles.toolBtnHover,
+      ]}
+      onPress={onPress}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+    >
+      {({ hovered }) => (
+        <>
+          {children(hovered ? HOVER_COLOR : IDLE_COLOR)}
+          {label ? (
+            <Text
+              style={[styles.toolBtnText, hovered && styles.toolBtnTextHover]}
+              numberOfLines={1}
+            >
+              {label}
+            </Text>
+          ) : null}
+        </>
+      )}
+    </Pressable>
+  );
+}
 
 type SidebarProps = {
   active: PageId;
@@ -64,6 +173,9 @@ type SidebarProps = {
   // true while a drawer drag tracks the finger; a drag released over a row
   // is a gesture, not a tap, so it must not navigate on release
   dragging?: boolean;
+  // true when the toolbar has room for icon+label pills (the desktop pane
+  // above ~272px); narrow panes and native keep icon-only squares
+  showLabels?: boolean;
 };
 
 export function Sidebar({
@@ -73,11 +185,13 @@ export function Sidebar({
   onOpenModal,
   detail,
   dragging,
+  showLabels = true,
 }: SidebarProps) {
   const version = useAppVersion();
-  const sections = SECTION_ORDER.map((section) => ({
-    section,
-    items: NAV.filter((item) => (item.section ?? "") === section),
+  const sections = SECTIONS.map(({ id, title }) => ({
+    id,
+    title,
+    items: NAV.filter((item) => (item.section ?? "") === id),
   }));
 
   return (
@@ -85,10 +199,9 @@ export function Sidebar({
       <View style={styles.toolbar}>
         <Pressable
           dataSet={{ bcpBtn: "" }}
-          style={({ hovered, pressed }) => [
+          style={({ hovered }) => [
             styles.toolBtn,
-            hovered && !pressed && styles.toolBtnHover,
-            pressed && styles.toolBtnPressed,
+            hovered && styles.toolBtnHover,
           ]}
           onPress={onHide}
           accessibilityLabel="Hide sidebar"
@@ -100,64 +213,36 @@ export function Sidebar({
         </Pressable>
         <View style={styles.toolbarSpacer} />
         {!IS_TAURI && !IS_STANDALONE ? (
-          <Pressable
-            dataSet={{ bcpBtn: "" }}
-            style={({ hovered, pressed }) => [
-              styles.toolBtn,
-              hovered && !pressed && styles.toolBtnHover,
-              pressed && styles.toolBtnPressed,
-            ]}
+          <ToolButton
+            label={showLabels ? "Install" : undefined}
             onPress={() => onOpenModal("install")}
             accessibilityLabel="Install"
-            accessibilityRole="button"
           >
-            {({ hovered }) => (
-              <DownloadIcon
-                size={14}
-                color={hovered ? HOVER_COLOR : IDLE_COLOR}
-              />
-            )}
-          </Pressable>
+            {(color) => <DownloadIcon size={14} color={color} />}
+          </ToolButton>
         ) : null}
-        <Pressable
-          dataSet={{ bcpBtn: "" }}
-          style={({ hovered, pressed }) => [
-            styles.toolBtn,
-            hovered && !pressed && styles.toolBtnHover,
-            pressed && styles.toolBtnPressed,
-          ]}
+        <ToolButton
+          label={showLabels ? "Settings" : undefined}
           onPress={() => onOpenModal("settings")}
           accessibilityLabel="Settings"
-          accessibilityRole="button"
         >
-          {({ hovered }) => (
-            <SettingsIcon
-              size={14}
-              color={hovered ? HOVER_COLOR : IDLE_COLOR}
-            />
-          )}
-        </Pressable>
-        <Pressable
-          dataSet={{ bcpBtn: "" }}
-          style={({ hovered, pressed }) => [
-            styles.toolBtn,
-            hovered && !pressed && styles.toolBtnHover,
-            pressed && styles.toolBtnPressed,
-          ]}
+          {(color) => <SettingsIcon size={14} color={color} />}
+        </ToolButton>
+        <ToolButton
+          label={showLabels ? "Help" : undefined}
           onPress={() => onOpenModal("help")}
           accessibilityLabel="Help and shortcuts"
-          accessibilityRole="button"
         >
-          {({ hovered }) => (
-            <HelpIcon size={14} color={hovered ? HOVER_COLOR : IDLE_COLOR} />
-          )}
-        </Pressable>
+          {(color) => <HelpIcon size={14} color={color} />}
+        </ToolButton>
       </View>
       <View style={styles.scroll}>
         <View style={styles.nav}>
-          {sections.map(({ section, items }, idx) => (
-            <View key={section || "main"} style={styles.section}>
-              {section && idx > 0 && <View style={styles.sectionDivider} />}
+          {sections.map(({ id, title, items }) => (
+            <View key={id || "main"} style={styles.section}>
+              <Text style={styles.sectionTitle} numberOfLines={1}>
+                {title}
+              </Text>
               {items.map((item) => {
                 const isActive = active === item.id;
                 return (
@@ -169,18 +254,24 @@ export function Sidebar({
                       if (dragging) return;
                       onSelect(item.id);
                     }}
-                    style={({ hovered, pressed }) => [
+                    style={({ hovered }) => [
                       styles.navItem,
-                      hovered && !pressed && styles.navItemHover,
-                      pressed && styles.navItemPressed,
+                      isActive && styles.navItemActive,
+                      hovered && styles.navItemHover,
                     ]}
                   >
-                    <Text
-                      style={[styles.navText, isActive && styles.navTextActive]}
-                      numberOfLines={1}
-                    >
-                      {item.label}
-                    </Text>
+                    <View style={styles.navLabel}>
+                      <View style={navIconStyle(isActive)}>{item.icon}</View>
+                      <Text
+                        style={[
+                          styles.navText,
+                          isActive && styles.navTextActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {item.label}
+                      </Text>
+                    </View>
                     {detail?.[item.id] ? (
                       <Text style={styles.navDetail} numberOfLines={1}>
                         {detail[item.id]}
@@ -196,43 +287,39 @@ export function Sidebar({
       <UpdateBanner />
       <View style={styles.footer}>
         <Text style={styles.footerText} numberOfLines={1}>
-          {`bcp · v${version}`}
+          {`BCP · v${version}`}
         </Text>
         <View style={styles.toolbarSpacer} />
-        <Pressable
-          dataSet={{ bcpBtn: "" }}
-          style={({ hovered, pressed }) => [
-            styles.aboutBtn,
-            hovered && !pressed && styles.aboutBtnHover,
-            pressed && styles.toolBtnPressed,
-          ]}
-          accessibilityLabel="Visit the repository on GitHub"
-          accessibilityRole="link"
+        <ToolButton
+          subtle
+          footer
+          label={showLabels ? "Source" : undefined}
           onPress={() => {
             window.open(REPO_URL, "_blank", "noreferrer");
           }}
+          accessibilityLabel="Visit the repository on GitHub"
         >
-          <GithubIcon size={14} color={IDLE_COLOR} />
-        </Pressable>
-        <Pressable
-          dataSet={{ bcpBtn: "" }}
-          style={({ hovered, pressed }) => [
-            styles.aboutBtn,
-            hovered && !pressed && styles.aboutBtnHover,
-            pressed && styles.toolBtnPressed,
-          ]}
+          {(color) => <GithubIcon size={14} color={color} />}
+        </ToolButton>
+        <ToolButton
+          subtle
+          footer
+          label={showLabels ? "About" : undefined}
           onPress={() => onOpenModal("about")}
           accessibilityLabel="About"
-          accessibilityRole="button"
         >
-          {({ hovered }) => (
-            <InfoIcon size={14} color={hovered ? HOVER_COLOR : IDLE_COLOR} />
-          )}
-        </Pressable>
+          {(color) => <InfoIcon size={14} color={color} />}
+        </ToolButton>
       </View>
     </View>
   );
 }
+
+// SAFETY: the icon wrapper carries `color` (so the svg strokes inherit it via
+// currentColor), which RN's ViewStyle type rejects; it is a plain ViewStyle at
+// runtime, same as the settings rail's icon column.
+const navIconStyle = (active: boolean): StyleProp<ViewStyle> =>
+  [styles.navIcon, active && styles.navIconActive] as StyleProp<ViewStyle>;
 
 const styles = StyleSheet.create({
   sidebar: {
@@ -257,22 +344,44 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   toolBtn: {
-    width: 24,
+    minWidth: 24,
     height: 24,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    gap: 5,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    borderColor: "var(--border, #cbc5bb)",
+    backgroundColor: "var(--surface, #d5cfc4)",
+  },
+  toolBtnSubtle: {
+    borderWidth: 0,
+    backgroundColor: "transparent",
+  },
+  // icon+label pills grow from the 24px square to hug their content
+  toolBtnLabeled: {
+    height: 26,
+    paddingHorizontal: 8,
+  },
+  // footer pills stay 24px to match the statusbar strip
+  toolBtnFooter: {
+    height: 24,
+    paddingHorizontal: 6,
   },
   toolBtnHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
-  toolBtnPressed: {
-    backgroundColor: "var(--selected-bg, #ece7dd)",
+  toolBtnText: {
+    fontFamily: CHROME_FONT,
+    fontSize: 11,
+    fontWeight: "500",
+    color: "var(--text-secondary, #7a6e64)",
   },
-  // nav items: the active row is marked by accent text alone, while hover
-  // keeps the control-hover fill
+  toolBtnTextHover: {
+    color: "var(--text, #2c2020)",
+  },
   scroll: {
     flex: 1,
     overflowY: "auto",
@@ -284,11 +393,19 @@ const styles = StyleSheet.create({
   section: {
     paddingVertical: 4,
   },
-  sectionDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
-    marginHorizontal: 10,
-    marginBottom: 4,
+  // small-caps group header, flush with the rows' label column
+  sectionTitle: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "600",
+    fontSize: 10,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    color: "var(--text-secondary, #7a6e64)",
+    opacity: 0.6,
+    marginHorizontal: 8,
+    paddingHorizontal: 10,
+    marginTop: 6,
+    marginBottom: 2,
   },
   navItem: {
     paddingVertical: 9,
@@ -300,18 +417,38 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
+  navLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  navIcon: {
+    width: 18,
+    alignItems: "center",
+    color: "var(--text-secondary, #7a6e64)",
+    // idle icons recede; the active row pops at full accent
+    opacity: 0.6,
+  },
+  navIconActive: {
+    color: "var(--accent, #7a3040)",
+    opacity: 1,
+  },
   navItemHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
-  navItemPressed: {
-    backgroundColor: "var(--selected-bg, #ece7dd)",
+  navItemActive: {
+    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   navText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 14,
     color: "var(--text-secondary, #7a6e64)",
-    flexShrink: 0,
+    // long labels ellipsize within the icon+label group rather than fight
+    // the trailing detail
+    flexShrink: 1,
   },
   navTextActive: {
     color: "var(--accent, #7a3040)",
@@ -342,15 +479,5 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary, #7a6e64)",
-  },
-  aboutBtn: {
-    width: 24,
-    height: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 4,
-  },
-  aboutBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
 });

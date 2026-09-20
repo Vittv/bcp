@@ -71,8 +71,8 @@ export const sharedStyles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
-    backgroundColor: "var(--bg, #e0dbd0)",
+    borderColor: "var(--border, #cbc5bb)",
+    backgroundColor: "var(--surface, #d5cfc4)",
   },
   arrowBtnHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
@@ -492,8 +492,8 @@ export const sharedStyles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
-    backgroundColor: "var(--bg, #e0dbd0)",
+    borderColor: "var(--border, #cbc5bb)",
+    backgroundColor: "var(--surface, #d5cfc4)",
   },
   pickerBtnHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
@@ -530,8 +530,8 @@ export const sharedStyles = StyleSheet.create({
     lineHeight: 15,
     fontVariant: ["tabular-nums"],
     color: "var(--text-secondary, #7a6e64)",
-    borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    // a soft filled keycap, recessed and darker than the surface
+    backgroundColor: "var(--key-bg, rgba(44, 32, 32, 0.09))",
     borderRadius: 4,
     paddingHorizontal: 7,
     paddingVertical: 1,
@@ -770,7 +770,8 @@ export const sharedStyles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    borderColor: "var(--border, #cbc5bb)",
+    backgroundColor: "var(--surface, #d5cfc4)",
   },
   bibleNavBtnHover: {
     backgroundColor: "var(--control-hover, rgba(44, 32, 32, 0.06))",
