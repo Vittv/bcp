@@ -185,7 +185,9 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   button: {
-    width: 30,
+    // 40px per button is the standard desktop convention for custom
+    // titlebars; anything tighter makes the group feel cramped
+    width: 40,
     height: 40,
     alignItems: "center",
     justifyContent: "center",
