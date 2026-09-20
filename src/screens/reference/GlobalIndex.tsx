@@ -17,6 +17,7 @@ const SECTION_HEADINGS: Record<PaletteSection, string> = {
   collects: "Collects",
   saints: "Holy Days",
   bible: "Bible",
+  settings: "Settings",
 };
 
 // memoized global row: a cursor flip re-renders only the two rows whose

@@ -89,6 +89,8 @@ export const sharedStyles = StyleSheet.create({
     bottom: 0,
     zIndex: 100,
     backgroundColor: "rgba(0, 0, 0, 0.45)",
+    // slight blur behind the tray keeps the page readable under the dim
+    backdropFilter: "blur(3px)",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 16,

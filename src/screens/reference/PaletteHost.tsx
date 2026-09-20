@@ -5,6 +5,7 @@ import { usePalette } from "../../context/PaletteContext";
 import { getKjvBookMeta } from "../../lib/content/kjv";
 import type { CollectSection } from "../../lib/content/types";
 import type { PaletteEntry } from "../../lib/reference/search";
+import { requestOpenSettingsSection } from "../../lib/settings";
 import { BibleBookList, BibleChapterList } from "../BibleReaderScreen";
 import { CanticleIndex } from "./CanticlesScreen";
 import { CollectIndex } from "./CollectsScreen";
@@ -67,6 +68,9 @@ export function PaletteHost() {
         }
         break;
       }
+      case "settings":
+        requestOpenSettingsSection(run.section);
+        break;
     }
   };
 

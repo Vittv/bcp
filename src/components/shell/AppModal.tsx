@@ -170,6 +170,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 100,
     backgroundColor: "rgba(0, 0, 0, 0.45)",
+    // a slight blur keeps the page readable behind the dim instead of
+    // flattening it into noise; subtle enough to stay an accent
+    backdropFilter: "blur(3px)",
     alignItems: "center",
     justifyContent: "center",
     padding: 16,

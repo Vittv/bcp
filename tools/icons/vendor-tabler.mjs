@@ -30,14 +30,12 @@ const NAMES = [
   "Settings",
   "Star",
   "Sun",
+  "Typography",
   "X",
 ];
 
 const root = new URL("../..", import.meta.url).pathname;
-const iconsDir = join(
-  root,
-  "node_modules/@tabler/icons-react/dist/esm/icons",
-);
+const iconsDir = join(root, "node_modules/@tabler/icons-react/dist/esm/icons");
 const out = join(root, "src/components/shell/icons.tabler.generated.ts");
 
 // import() can't take a plain path string on some setups, so read + eval the
@@ -50,7 +48,9 @@ async function glyph(name) {
   if (start < 0 || end < 0) {
     throw new Error(`could not find __iconNode in ${file}`);
   }
-  const node = JSON.parse(src.slice(start + "const __iconNode = ".length, end + 1));
+  const node = JSON.parse(
+    src.slice(start + "const __iconNode = ".length, end + 1),
+  );
   return node.map(([tag, attrs]) => {
     const { key: _key, ...rest } = attrs;
     return [tag, rest];

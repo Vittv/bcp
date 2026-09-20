@@ -18,6 +18,8 @@ import {
   psalmVerseCount,
 } from "../content/psalter";
 import type { CollectSection } from "../content/types";
+import { filterSearch } from "../search";
+import { type SettingsSectionId, visibleSettings } from "../settings";
 
 export type PsalmHit = {
   psalm: number;
@@ -161,7 +163,8 @@ export type PaletteSection =
   | "canticles"
   | "collects"
   | "saints"
-  | "bible";
+  | "bible"
+  | "settings";
 
 export type PaletteRun =
   | { kind: "psalm"; psalm: number }
@@ -169,7 +172,8 @@ export type PaletteRun =
   | { kind: "canticle"; number: number }
   | { kind: "collect"; section: string; title: string }
   | { kind: "saint"; slug: string }
-  | { kind: "bible"; book: string; chapter: number };
+  | { kind: "bible"; book: string; chapter: number }
+  | { kind: "settings"; section: SettingsSectionId };
 
 export type PaletteEntry = {
   id: string;
@@ -187,6 +191,7 @@ export const PALETTE_SECTION_ORDER: PaletteSection[] = [
   "collects",
   "saints",
   "bible",
+  "settings",
 ];
 
 // per-section and total caps keep a long query (e.g. a psalm text) from
@@ -301,6 +306,20 @@ function saintEntries(query: string, cap = Infinity): PaletteEntry[] {
     }));
 }
 
+// settings sections fold into the same palette using the shared rail-search
+// matcher, so "theme" or "shortcuts" reaches the matching settings pane
+function settingsEntries(query: string, cap = Infinity): PaletteEntry[] {
+  return filterSearch(query, visibleSettings())
+    .slice(0, cap)
+    .map((s) => ({
+      id: `settings:${s.id}`,
+      section: "settings",
+      label: s.title,
+      detail: s.description,
+      run: { kind: "settings", section: s.id },
+    }));
+}
+
 // a query that is exactly a category name lists that whole section, so
 // "psalm" returns all 150, "bible" every chapter, and "old/new testament"
 // that half; anything more specific keeps the normal capped matches
@@ -319,6 +338,7 @@ function sectionKeyword(lower: string): PaletteSection | null {
     ["canticles", ["canticle", "canticles"]],
     ["collects", ["collect", "collects"]],
     ["saints", ["saint", "saints"]],
+    ["settings", ["settings", "preferences"]],
   ];
   for (const [section, names] of keywords) {
     if (names.includes(lower)) return section;
@@ -338,6 +358,8 @@ function expandSection(section: PaletteSection): PaletteEntry[] {
       return collectEntries("");
     case "saints":
       return saintEntries("");
+    case "settings":
+      return settingsEntries("");
     default:
       return [];
   }
@@ -380,6 +402,7 @@ export function searchPalette(query: string): PaletteEntry[] {
   pushEntries(out, canticleEntries(lower, PER_SECTION_CAP));
   pushEntries(out, collectEntries(q, PER_SECTION_CAP));
   pushEntries(out, saintEntries(q, PER_SECTION_CAP));
+  pushEntries(out, settingsEntries(q, PER_SECTION_CAP));
 
   // bible: full book names and abbreviations
   const bibleHits = getAllKjvBooks()

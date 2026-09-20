@@ -101,3 +101,4 @@ export const MusicIcon = tabler("Music");
 export const StarIcon = tabler("Star");
 export const CrownIcon = tabler("Crown");
 export const CrossIcon = tabler("Cross");
+export const TypographyIcon = tabler("Typography");

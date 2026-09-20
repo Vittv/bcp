@@ -214,6 +214,14 @@ function applyPalette(theme: ResolvedTheme) {
     ::selection { background: var(--control-hover, #d2cbbf); color: var(--text, #2c2020); }
     :focus-visible { outline: 2px solid ${p.accent}; outline-offset: 2px; }
     [data-picker-search]:focus-visible { outline: none; }
+    /* the settings search lights up as one block: the focusing input pulls
+       the accent ring around the whole pill (mag glass, field, clear), like
+       the desktop chat's search, instead of ringing the input in isolation */
+    [data-settings-search]:focus-within {
+      outline: 2px solid ${p.accent};
+      outline-offset: 1px;
+    }
+    [data-settings-search] :focus-visible { outline: none; }
     /* installed pwa in window-controls-overlay: the top bar becomes the
        draggable titlebar, padded clear of the overlaid window buttons.
        env() is only defined while the overlay is genuinely active, so every

@@ -11,7 +11,6 @@ import {
   AppModal,
   dismissEscapeConsumers,
 } from "../../components/shell/AppModal";
-import { HelpScreen } from "../../components/shell/HelpScreen";
 import { type HintHandle, HintLayer } from "../../components/shell/HintLayer";
 import { SidebarIcon } from "../../components/shell/Icon";
 import type { ModalType, PageId } from "../../components/shell/Sidebar";
@@ -66,10 +65,12 @@ import {
 } from "../../lib/navigation/history";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
-import { AboutScreen } from "../../screens/AboutScreen";
+import {
+  registerOpenSettingsSection,
+  type SettingsSectionId,
+} from "../../lib/settings";
 import { BibleBar, BibleReaderScreen } from "../../screens/BibleReaderScreen";
 import { CalendarScreen } from "../../screens/CalendarScreen";
-import { InstallScreen } from "../../screens/InstallScreen";
 import {
   LectionaryBar,
   LectionaryScreen,
@@ -256,6 +257,10 @@ export function Shell() {
   // page), so reference searches reset each time a page is entered
   const [navKey, setNavKey] = useState(0);
   const [modal, setModal] = useState<ModalType | null>(null);
+  // a specific settings section the global palette requested (e.g. landed
+  // on Typography); null means the modal opens on its entry-point section
+  const [settingsSection, setSettingsSection] =
+    useState<SettingsSectionId | null>(null);
   const [reading, setReading] = useState<string | null>(null);
   const [scrollPct, setScrollPct] = useState(0);
 
@@ -477,6 +482,17 @@ export function Shell() {
     modalRecord.current = JSON.stringify(window.history.state ?? null) ?? null;
   }, [modal, historyController]);
 
+  // the global palette hands the settings modal a section to land on through
+  // a module bridge (same pattern as the palette's own request route), since
+  // the modal lives above the palette host in the provider tree
+  useEffect(() => {
+    registerOpenSettingsSection((section) => {
+      setSettingsSection(section);
+      setModal("settings");
+    });
+    return () => registerOpenSettingsSection(null);
+  }, []);
+
   // whenever the drawer closes while its recorded step is still the top of
   // history, consume that step via history.back() so Back behaves exactly as
   // if the drawer never opened. a dismiss (swipe, backdrop, hide button) only
@@ -563,6 +579,7 @@ export function Shell() {
         if (modalRef.current) {
           modalRecord.current = null;
           setModal(null);
+          setSettingsSection(null);
           return;
         }
         if (consumed) return;
@@ -574,6 +591,7 @@ export function Shell() {
       modalRecord.current = null;
       setMobileOpen(false);
       setModal(null);
+      setSettingsSection(null);
       setReading(null);
       scrollToTop();
     });
@@ -766,6 +784,7 @@ export function Shell() {
           e.preventDefault();
           e.stopImmediatePropagation();
           setModal(null);
+          setSettingsSection(null);
         }
         return;
       }
@@ -1137,11 +1156,19 @@ export function Shell() {
   const auxRow = getAuxRow();
   const content = getContent();
 
-  const closeModal = () => setModal(null);
+  const closeModal = () => {
+    setModal(null);
+    setSettingsSection(null);
+  };
 
   const modalContent = (() => {
     switch (modal) {
+      // install, settings, about, and help all open the same settings modal;
+      // the sidebar button sets which section the modal starts on
       case "settings":
+      case "install":
+      case "about":
+      case "help":
         return (
           <AppModal
             title="Settings"
@@ -1154,28 +1181,11 @@ export function Shell() {
             <SettingsScreen
               mobile={isMobile}
               onClose={closeModal}
+              initialSection={settingsSection ?? modal}
               showWindowControls={IS_TAURI && !IS_MACOS_TAURI}
               windowControls={windowControls}
               onWindowControlsChange={setWindowControls}
             />
-          </AppModal>
-        );
-      case "install":
-        return (
-          <AppModal title="Install" onClose={closeModal} width={760}>
-            <InstallScreen />
-          </AppModal>
-        );
-      case "about":
-        return (
-          <AppModal title="About" onClose={closeModal} width={760}>
-            <AboutScreen />
-          </AppModal>
-        );
-      case "help":
-        return (
-          <AppModal title="Help & Shortcuts" onClose={closeModal} width={760}>
-            <HelpScreen />
           </AppModal>
         );
       default:
