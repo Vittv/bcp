@@ -79,10 +79,17 @@ jobs:
         run: |
           rustup target add aarch64-apple-darwin x86_64-apple-darwin
       - name: Read release notes
+        # Windows runners default to PowerShell, which cannot run the bash
+        # heredoc below; bash is present on every runner via Git for Windows.
+        shell: bash
         run: |
           {
             echo 'RELEASE_BODY<<EOF'
             cat RELEASE.md
+            # RELEASE.md is not guaranteed to end in a newline; without this
+            # separator the EOF terminator would be glued to the last line and
+            # the file command would fail to find its closing delimiter.
+            if [ -n "$(tail -c 1 RELEASE.md)" ]; then echo; fi
             echo 'EOF'
           } >> "$GITHUB_ENV"
       - name: Build and publish release with Tauri
