@@ -360,14 +360,15 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     backgroundColor: "transparent",
   },
-  // icon+label pills grow from the 24px square to hug their content
+  // labeled pills keep the 24px row height, widening only for the label so
+  // icon-only and labeled buttons stay flush with the bar chips
   toolBtnLabeled: {
-    height: 26,
     paddingHorizontal: 8,
   },
-  // footer pills stay 24px to match the statusbar strip
+  // footer pills sit at 20px so their hover leaves breathing room inside
+  // the 24px footer strip instead of filling it edge to edge
   toolBtnFooter: {
-    height: 24,
+    height: 20,
     paddingHorizontal: 6,
   },
   toolBtnHover: {
