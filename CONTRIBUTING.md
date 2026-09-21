@@ -67,15 +67,22 @@ desktop update-banner notes, and the GitHub Release body. Write it before
 releasing: a `# bcp vX.Y.Z` title line, `##`/`###` sections, prose and bullets,
 and a trailing `**Full Changelog**: <url>` line.
 
-Run the Release workflow manually with a version (for example `0.2.0`); the
-bump job updates the version files, regenerates `src/lib/changelog.ts` from
-`RELEASE.md` (so the app ships the notes bundled, not fetched at runtime),
-commits, tags, and pushes. Pushing the `v*` tag builds each platform natively
-(`.deb`/`.rpm`/tarball/`.dmg`/`.exe`/`.msi`) and publishes a draft GitHub Release
-whose body is `RELEASE.md`. Pushing a `v*` tag directly also builds, but with
-whatever versions are already in the tree. `deploy.yml` ships the web PWA to
-GitHub Pages. The Linux install one-liner in the README pulls
-`scripts/install-linux.sh` from `main`.
+Releasing is done by you, not CI, so every release commit stays under your
+identity:
+
+1. Write the notes in `RELEASE.md` for the version you're about to ship.
+2. Run `bun scripts/bump-version.ts x.y.z`: it updates every version
+   declaration and regenerates `src/lib/changelog.ts` from `RELEASE.md` (the
+   app ships the notes bundled, not fetched at runtime).
+3. Check the gates: `bun run check:sync` and `bun run check:changelog --release`.
+4. Commit `chore(release): x.y.z`, then push the branch and the tag:
+   `git tag vx.y.z && git push origin main && git push origin vx.y.z`.
+   Pushing the `v*` tag builds each platform natively
+   (`.deb`/`.rpm`/tarball/`.dmg`/`.exe`/`.msi`) and publishes a draft GitHub
+   Release whose body is `RELEASE.md`, then a validate job gates the artifacts.
+   `deploy.yml` ships the web PWA to GitHub Pages. The Linux install one-liner
+   in the README pulls `scripts/install-linux.sh` from `main`.
+5. Review the draft release and publish it on GitHub.
 
 Notes for contributors:
 
