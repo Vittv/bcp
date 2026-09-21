@@ -10,9 +10,10 @@ import { CHROME_FONT } from "../../lib/fonts";
 import { ExternalLink } from "../ExternalLink";
 
 // renders the release-notes grammar (sections, paragraphs, bullets and the
-// trailing full-changelog link) as views sharing the app chrome. the `# `
-// title line is skipped: the modal header shows it. markdown is parsed once
-// per render; sources are tiny release notes, so the cost is negligible.
+// trailing full-changelog link) as views sharing the app chrome. the notes
+// carry no `# ` title line: the modal header shows the version, and a stray
+// `# ` line parses as a title block that renders nothing. markdown is parsed
+// once per render; sources are tiny release notes, so the cost is negligible.
 const MONO = '"JetBrains Mono", monospace';
 
 // inline spans render as nested <Text>, with links as real anchors so the

@@ -14,7 +14,7 @@
  */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { CHANGELOG_MARKDOWN } from "../src/lib/changelog";
+import { CHANGELOG_MARKDOWN, CHANGELOG_VERSION } from "../src/lib/changelog";
 
 const ROOT = join(import.meta.dir, "..");
 
@@ -28,9 +28,12 @@ async function main() {
     failures.push("src/lib/changelog.ts differs from RELEASE.md");
   }
 
-  const title = CHANGELOG_MARKDOWN.match(/^# .*?v(\d+\.\d+\.\d+)/);
-  if (!title) {
-    failures.push("RELEASE.md must start with a `# bcp vX.Y.Z` title line");
+  if (/^# /.test(notes)) {
+    failures.push(
+      "RELEASE.md must not start with a `# ` title line: the release page " +
+        "and the modal header already show the version, so a title line " +
+        "would repeat it",
+    );
   }
   if (!/^\*\*Full Changelog\*\*:/m.test(CHANGELOG_MARKDOWN)) {
     failures.push(
@@ -40,13 +43,13 @@ async function main() {
 
   if (release) {
     // SAFETY: package.json always carries a string version field; parsed only
-    // to compare against the notes' title, never re-serialized.
+    // to compare against the vendored notes' version, never re-serialized.
     const pkg = JSON.parse(
       await readFile(join(ROOT, "package.json"), "utf8"),
     ) as { version: string };
-    if (title && title[1] !== pkg.version) {
+    if (CHANGELOG_VERSION !== pkg.version) {
       failures.push(
-        `notes describe v${title[1]} but package.json is ${pkg.version}`,
+        `vendored notes are v${CHANGELOG_VERSION} but package.json is ${pkg.version}`,
       );
     }
   }
@@ -57,7 +60,7 @@ async function main() {
     process.exit(1);
   }
   console.log(
-    `✓ changelog vendored from RELEASE.md${release ? ` for v${title?.[1]}` : ""}`,
+    `✓ changelog vendored from RELEASE.md${release ? ` for v${CHANGELOG_VERSION}` : ""}`,
   );
 }
 

@@ -1,5 +1,3 @@
-# bcp v0.3.3
-
 ## Changelog, in the app
 
 The app now carries its own changelog. After an update it opens a window with the release notes for the version that just landed, and when a newer desktop build is available the notes show up in the update banner before you install.

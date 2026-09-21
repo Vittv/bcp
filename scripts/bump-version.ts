@@ -113,9 +113,9 @@ async function main() {
     console.log(`  ✓ src/lib/version.ts -> ${version}`);
   }
 
-  // src/lib/changelog.ts: the vendored release notes from RELEASE.md carry
-  // their own title, so this regenerates them (and warns below if the title
-  // and the bump disagree) instead of forcing a rewrite here
+  // src/lib/changelog.ts: the vendored release notes. the version does not
+  // live in RELEASE.md anymore, so regenerating them here (after package.json
+  // was bumped) is how CHANGELOG_VERSION follows the new version
   await buildChangelog();
 
   console.log(`\n✓ Version is now ${version} everywhere`);

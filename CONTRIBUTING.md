@@ -64,8 +64,10 @@ The two TopBar marks `assets/app_icons/cross_light_192.png` and
 One source of truth: `RELEASE.md` at the repo root carries the release notes for
 the next release. The same markdown becomes the in-app Changelog window, the
 desktop update-banner notes, and the GitHub Release body. Write it before
-releasing: a `# bcp vX.Y.Z` title line, `##`/`###` sections, prose and bullets,
-and a trailing `**Full Changelog**: <url>` line.
+releasing: `##`/`###` sections, prose and bullets, and a trailing
+`**Full Changelog**: <url>` line. It must not open with a `# ` title line: the
+release page and the in-app modal header already show "BCP <version>", so a
+title line would repeat it.
 
 Releasing is done by you, not CI, so every release commit stays under your
 identity:

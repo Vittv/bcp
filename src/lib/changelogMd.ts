@@ -3,9 +3,11 @@
  * Tiny markdown parser for release notes, kept deliberately small because
  * RELEASE.md is the only input and the modal renders it with plain views.
  *
- * The grammar mirrors build-changelog.ts: a `# ` title, `## `/`### `
- * sections, paragraphs, `- `/`* ` bullet runs, inline **bold**, `code` and
- * [links](url), and a trailing `**Full Changelog**: <url>` footer link.
+ * The grammar mirrors build-changelog.ts: `## `/`### ` sections, paragraphs,
+ * `- `/`* ` bullet runs, inline **bold**, `code` and [links](url), and a
+ * trailing `**Full Changelog**: <url>` footer link. A `# ` title line still
+ * parses (as a block the modal renders nothing for), since RELEASE.md must
+ * not carry one.
  * Everything else is treated as prose so an unexpected line never crashes
  * the modal.
  */
