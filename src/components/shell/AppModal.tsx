@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   titleBar: {
-    height: 52,
+    height: 44,
     flexDirection: "row",
     alignItems: "center",
     paddingLeft: 20,

@@ -6,7 +6,7 @@ import {
   parseChangelogMarkdown,
   parseInline,
 } from "../../lib/changelogMd";
-import { CHROME_FONT, HEADING_FONT } from "../../lib/fonts";
+import { CHROME_FONT } from "../../lib/fonts";
 import { ExternalLink } from "../ExternalLink";
 
 // renders the release-notes grammar (sections, paragraphs, bullets and the
@@ -123,22 +123,22 @@ export function MarkdownView({ markdown }: { markdown: string }) {
 
 const styles = StyleSheet.create({
   heading2: {
-    fontFamily: HEADING_FONT,
+    fontFamily: CHROME_FONT,
     fontWeight: "600",
-    fontSize: 21,
-    lineHeight: 28,
+    fontSize: 18,
+    lineHeight: 25,
     color: "var(--text, #2c2020)",
-    marginTop: 22,
-    marginBottom: 6,
+    marginTop: 12,
+    marginBottom: 4,
   },
   heading3: {
-    fontFamily: HEADING_FONT,
+    fontFamily: CHROME_FONT,
     fontWeight: "600",
-    fontSize: 17,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 21,
     color: "var(--text, #2c2020)",
-    marginTop: 16,
-    marginBottom: 4,
+    marginTop: 10,
+    marginBottom: 3,
   },
   paragraph: {
     fontFamily: CHROME_FONT,

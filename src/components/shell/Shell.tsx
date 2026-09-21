@@ -65,6 +65,7 @@ import {
   loadWindowControls,
   saveWindowControls,
 } from "../../lib/desktop";
+import { CHROME_FONT } from "../../lib/fonts";
 import { stepPageSequence } from "../../lib/input/sequenceNav";
 import { activeScrollTarget } from "../../lib/input/vim";
 import {
@@ -1297,11 +1298,12 @@ export function Shell() {
       case "changelog":
         return (
           <AppModal
-            title={`bcp ${changelogSource?.version ?? appVersion}`}
+            title={`BCP ${changelogSource?.version ?? appVersion}`}
             onClose={closeModal}
             width={640}
             height={640}
             stretchBody
+            titleStyle={{ fontFamily: CHROME_FONT }}
           >
             <ChangelogScreen
               markdown={changelogSource?.markdown ?? CHANGELOG_MARKDOWN}
