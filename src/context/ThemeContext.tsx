@@ -148,7 +148,7 @@ const DarkPalette = {
 
 // literal popover surface colors, keyed by resolved theme. applied as an
 // inline style (not a stylesheet class) so the sheet can never end up
-// unpainted — class-based backgrounds were reported showing content
+// unpainted, class-based backgrounds were reported showing content
 // through the dropdowns
 export const SHEET_BG: Record<ResolvedTheme, string> = {
   light: LightPalette.bg,

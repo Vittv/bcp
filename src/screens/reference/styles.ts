@@ -22,7 +22,7 @@ export const sharedStyles = StyleSheet.create({
     flexShrink: 0,
     // anchor for the bar's popovers (office menu, month grid). the
     // explicit z-index also lifts this whole bar above the content
-    // column that follows it in DOM order — RNW gives the bar
+    // column that follows it in DOM order, RNW gives the bar
     // z-index:0, which made the page paint over the popovers
     position: "relative",
     zIndex: 2,
@@ -456,7 +456,7 @@ export const sharedStyles = StyleSheet.create({
     color: "var(--text-secondary, #7a6e64)",
     marginBottom: 18,
   },
-  // date trigger: a chip like every other control in these bars — no
+  // date trigger: a chip like every other control in these bars, no
   // border, the bar's single 11px type scale, accent red per the
   // standing decision that date/office triggers read in red
   dateBtn: {
@@ -625,7 +625,7 @@ export const sharedStyles = StyleSheet.create({
     color: "var(--accent, #7a3040)",
     fontWeight: "700",
   },
-  // office picker tabs in the desktop bar — spread directly from the
+  // office picker tabs in the desktop bar, spread directly from the
   // Today page's OfficeTabs stylesheet so the two bars cannot drift
   offTabs: {
     ...officeBarStyles.tabsLeft,

@@ -290,7 +290,7 @@ function keepOccasionalCollect(title: string, weekdayOfDate: number): boolean {
   );
 }
 
-// personal mode suppresses rubrics by default — they are liturgical
+// personal mode suppresses rubrics by default, they are liturgical
 // instructions for a service, not spoken text in solo prayer.
 function showRubrics(prefs: OfficePrefs): boolean {
   return prefs.showRubrics && !prefs.personalMode;

@@ -133,10 +133,10 @@ export function refOfficeId(
 }
 
 export const OFFICE_NAMES: Record<RefOfficeId, string> = {
-  "morning-rite-one": "Morning Prayer — Rite One",
-  "morning-rite-two": "Morning Prayer — Rite Two",
-  "evening-rite-one": "Evening Prayer — Rite One",
-  "evening-rite-two": "Evening Prayer — Rite Two",
+  "morning-rite-one": "Morning Prayer, Rite One",
+  "morning-rite-two": "Morning Prayer, Rite Two",
+  "evening-rite-one": "Evening Prayer, Rite One",
+  "evening-rite-two": "Evening Prayer, Rite Two",
   noonday: "Noonday Prayer",
   owe: "Order of Worship for the Evening",
   compline: "Compline",
@@ -597,7 +597,7 @@ export function EmptyMessage({ message }: { message: string }) {
 // the same way cmdk does: the active row draws accent text plus the red ▸ in
 // the indented gutter, never a background fill. the keyboard (j/k via
 // ctrl+j/ctrl+k, arrows) moves it and scrolls it into view; the pointer
-// drags the very same cursor without scrolling. any picker, any input — the
+// drags the very same cursor without scrolling. any picker, any input, the
 // highlight looks identical. the picked value is deliberately NOT
 // highlighted so only what is in play right now lights up.
 export function IndexRow({
