@@ -16,6 +16,9 @@ export function useUpdateStatus(auto = false) {
   const [status, setStatus] = useState<UpdateStatus>("idle");
   const [version, setVersion] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  // the release notes the remote release carries (the same RELEASE.md that
+  // feeds the in-app changelog), shown before the update is installed
+  const [body, setBody] = useState<string | null>(null);
   const hasChecked = useRef(false);
 
   const check = useCallback(async () => {
@@ -30,6 +33,7 @@ export function useUpdateStatus(auto = false) {
         return;
       }
       setVersion(update.version);
+      setBody(update.body ?? null);
       setStatus("available");
     } catch (error) {
       setStatus("error");
@@ -57,6 +61,8 @@ export function useUpdateStatus(auto = false) {
         setStatus("upToDate");
         return;
       }
+      setVersion(update.version);
+      setBody(update.body ?? null);
       await update.downloadAndInstall();
       const { relaunch } = await import("@tauri-apps/plugin-process");
       await relaunch();
@@ -74,5 +80,5 @@ export function useUpdateStatus(auto = false) {
     void check();
   }, [auto, check]);
 
-  return { status, version, message, check, install };
+  return { status, version, message, body, check, install };
 }

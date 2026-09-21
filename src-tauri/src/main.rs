@@ -120,6 +120,30 @@ fn run_rootless_update_linux(app: &tauri::AppHandle, version: String) -> Result<
     Ok(())
 }
 
+// Changelog "seen" marker, stored in a file rather than webview storage:
+// the windows webview sweep clears all browsing data once per released
+// version, which would reset a localStorage marker every update and make
+// the post-update notes never open there. the value is opaque JSON written
+// by the js side, so no deserialization lives in Rust.
+#[tauri::command]
+fn get_changelog_prefs(app: tauri::AppHandle) -> String {
+    let Ok(data_dir) = app.path().app_data_dir() else {
+        return String::new();
+    };
+    std::fs::read_to_string(data_dir.join("changelog.json")).unwrap_or_default()
+}
+
+#[tauri::command]
+fn set_changelog_prefs(app: tauri::AppHandle, prefs: String) -> Result<(), String> {
+    let data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|err| err.to_string())?;
+    std::fs::create_dir_all(&data_dir).map_err(|err| err.to_string())?;
+    let marker = data_dir.join("changelog.json");
+    std::fs::write(marker, prefs).map_err(|err| err.to_string())
+}
+
 fn main() {
     // Buffer transport for the WebKitGTK compositor. The DMA-BUF path
     // crashes on some NVIDIA proprietary driver combos ("Error 71"
@@ -184,7 +208,11 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![run_rootless_update])
+        .invoke_handler(tauri::generate_handler![
+            run_rootless_update,
+            get_changelog_prefs,
+            set_changelog_prefs
+        ])
         .on_page_load(|webview, payload| {
             if payload.event() == tauri::webview::PageLoadEvent::Finished {
                 sweep_stale_webview(webview);

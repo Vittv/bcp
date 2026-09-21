@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { requestOpenChangelog } from "../../lib/changelogPrefs";
 import { IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { useUpdateStatus } from "../../lib/updater";
@@ -7,12 +8,15 @@ import { useUpdateStatus } from "../../lib/updater";
 // band at the bottom of the sidebar, just above the footer. runs the
 // shared updater flow on press and relaunches on success.
 export function UpdateBanner() {
-  const { status, version, install } = useUpdateStatus(true);
+  const { status, version, body, install } = useUpdateStatus(true);
 
   if (!IS_TAURI) return null;
   if (status !== "available" && status !== "installing") return null;
 
   const installing = status === "installing";
+  // the pending version is always set when a build is available; the fallback
+  // keeps this branch's strict string props honest for the typechecker
+  const nextVersion = version ?? "";
 
   return (
     <View style={styles.banner}>
@@ -21,8 +25,23 @@ export function UpdateBanner() {
       ) : (
         <>
           <Text style={styles.text} numberOfLines={1}>
-            version {version} available
+            version {nextVersion} available
           </Text>
+          {body ? (
+            <Pressable
+              style={({ hovered }) => [
+                styles.changelogBtn,
+                hovered && styles.changelogBtnHover,
+              ]}
+              onPress={() =>
+                requestOpenChangelog({ markdown: body, version: nextVersion })
+              }
+              accessibilityRole="button"
+              accessibilityLabel="Read what changed in this version"
+            >
+              <Text style={styles.changelogText}>Changelog</Text>
+            </Pressable>
+          ) : null}
           <Pressable
             style={({ hovered }) => [
               styles.updateBtn,
@@ -30,7 +49,7 @@ export function UpdateBanner() {
             ]}
             onPress={install}
             accessibilityRole="button"
-            accessibilityLabel={`Update to version ${version}`}
+            accessibilityLabel={`Update to version ${nextVersion}`}
           >
             <Text style={styles.updateText}>Update</Text>
           </Pressable>
@@ -77,5 +96,22 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontSize: 12,
     color: "var(--accent, #7a3040)",
+  },
+  changelogBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 4,
+    overflow: "hidden",
+    borderWidth: 0,
+  },
+  changelogBtnHover: {
+    backgroundColor: "var(--control-hover, #d2cbbf)",
+  },
+  changelogText: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
+    fontSize: 12,
+    color: "var(--accent, #7a3040)",
+    textDecorationLine: "underline",
   },
 });

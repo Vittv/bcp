@@ -34,7 +34,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.conf.json src/lib/version.ts
+          git add package.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.conf.json src/lib/version.ts src/lib/changelog.ts
           git commit -m "chore(release): ${{ github.event.inputs.version }}"
           git tag "v${{ github.event.inputs.version }}"
           git push origin HEAD
@@ -78,6 +78,13 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Read release notes
+        run: |
+          {
+            echo 'RELEASE_BODY<<EOF'
+            cat RELEASE.md
+            echo 'EOF'
+          } >> "$GITHUB_ENV"
       - name: Build and publish release with Tauri
         uses: tauri-apps/tauri-action@v0
         env:
@@ -87,8 +94,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: "bcp ${{ github.ref_name }}"
           releaseDraft: true
-          releaseBody: "Latest build of bcp (Linux, macOS, and Windows)."
-          generateReleaseNotes: true
+          releaseBody: ${{ env.RELEASE_BODY }}
           args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }}
       - name: Assemble rootless Linux tarball
         if: runner.os == 'Linux'
@@ -114,5 +120,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - name: Verify version declarations are in sync
         run: bun run check:sync
+      - name: Verify the changelog matches the release
+        run: bun run check:changelog --release
       - name: Verify release artifacts and latest.json
         run: bun run check:release "${{ github.ref_name }}"

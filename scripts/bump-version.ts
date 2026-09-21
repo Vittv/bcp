@@ -10,6 +10,7 @@
  *   - src-tauri/Cargo.lock        (locked crate package entry)
  *   - src-tauri/tauri.conf.json   (bundle version)
  *   - src/lib/version.ts          (sidebar/about display)
+ *   - src/lib/changelog.ts        (vendored release notes, from RELEASE.md)
  *
  * JSON files are edited in place (by replacing only the version value) so
  * their existing formatting, which biome enforces, is left untouched.
@@ -20,6 +21,7 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { buildChangelog } from "./build-changelog";
 
 const ROOT = join(import.meta.dir, "..");
 const PKG_PATH = join(ROOT, "package.json");
@@ -110,6 +112,11 @@ async function main() {
     await writeFile(VERSION_PATH, versionNext);
     console.log(`  ✓ src/lib/version.ts -> ${version}`);
   }
+
+  // src/lib/changelog.ts: the vendored release notes from RELEASE.md carry
+  // their own title, so this regenerates them (and warns below if the title
+  // and the bump disagree) instead of forcing a rewrite here
+  await buildChangelog();
 
   console.log(`\n✓ Version is now ${version} everywhere`);
 }

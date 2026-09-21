@@ -19,6 +19,7 @@ import {
   CrossIcon,
   CrownIcon,
   DownloadIcon,
+  FileTextIcon,
   GithubIcon,
   HelpIcon,
   InfoIcon,
@@ -45,7 +46,7 @@ export type PageId =
   | "old-testament"
   | "new-testament";
 
-export type ModalType = "install" | "settings" | "about" | "help";
+export type ModalType = "install" | "settings" | "about" | "help" | "changelog";
 
 // nav rows: dimmed icons beside short labels, grouped under the small-caps
 // section titles; the trailing detail (season, countdown...) stays right
@@ -300,6 +301,15 @@ export function Sidebar({
           accessibilityLabel="Visit the repository on GitHub"
         >
           {(color) => <GithubIcon size={14} color={color} />}
+        </ToolButton>
+        <ToolButton
+          subtle
+          footer
+          label={showLabels ? "Changelog" : undefined}
+          onPress={() => onOpenModal("changelog")}
+          accessibilityLabel="Changelog"
+        >
+          {(color) => <FileTextIcon size={14} color={color} />}
         </ToolButton>
         <ToolButton
           subtle

@@ -92,7 +92,9 @@ const GROUPS: { title: string; categoryIds: SectionId[] }[] = [
 function initialSection(
   modal: ModalType | SettingsSectionId | undefined,
 ): SectionId | null {
-  if (!modal || modal === "settings") return null;
+  // settings and changelog are shell modals, not settings sections, so they
+  // land on the default (null) instead of a nonexistent row
+  if (!modal || modal === "settings" || modal === "changelog") return null;
   return modal;
 }
 

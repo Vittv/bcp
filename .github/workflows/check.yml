@@ -25,6 +25,8 @@ jobs:
         run: bun test src/
       - name: Version sync
         run: bun run check:sync
+      - name: Changelog sync
+        run: bun run check:changelog
       - name: WebView guard
         run: bun run check:guard
   rust:

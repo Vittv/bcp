@@ -78,7 +78,9 @@ function tabler(name: string) {
 }
 
 export const DownloadIcon = tabler("Download");
+export const FileTextIcon = tabler("FileText");
 export const SettingsIcon = tabler("Settings");
+export const SparklesIcon = tabler("Sparkles");
 export const SunIcon = tabler("Sun");
 export const MoonIcon = tabler("Moon");
 export const SystemIcon = tabler("DeviceDesktop");

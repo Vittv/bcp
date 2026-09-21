@@ -61,12 +61,20 @@ The two TopBar marks `assets/app_icons/cross_light_192.png` and
 
 ## Releases
 
+One source of truth: `RELEASE.md` at the repo root carries the release notes for
+the next release. The same markdown becomes the in-app Changelog window, the
+desktop update-banner notes, and the GitHub Release body. Write it before
+releasing: a `# bcp vX.Y.Z` title line, `##`/`###` sections, prose and bullets,
+and a trailing `**Full Changelog**: <url>` line.
+
 Run the Release workflow manually with a version (for example `0.2.0`); the
-bump job updates the version files, commits, tags, and pushes. Pushing the `v*`
-tag builds each platform natively (`.deb`/`.rpm`/tarball/`.dmg`/`.exe`/`.msi`)
-and publishes a draft GitHub Release. Pushing a `v*` tag directly also builds,
-but with whatever versions are already in the tree. `deploy.yml` ships the web
-PWA to GitHub Pages. The Linux install one-liner in the README pulls
+bump job updates the version files, regenerates `src/lib/changelog.ts` from
+`RELEASE.md` (so the app ships the notes bundled, not fetched at runtime),
+commits, tags, and pushes. Pushing the `v*` tag builds each platform natively
+(`.deb`/`.rpm`/tarball/`.dmg`/`.exe`/`.msi`) and publishes a draft GitHub Release
+whose body is `RELEASE.md`. Pushing a `v*` tag directly also builds, but with
+whatever versions are already in the tree. `deploy.yml` ships the web PWA to
+GitHub Pages. The Linux install one-liner in the README pulls
 `scripts/install-linux.sh` from `main`.
 
 Notes for contributors:

@@ -49,6 +49,8 @@
     "desktop:build": "BASE_URL=/ expo export -p web && NO_STRIP=1 tauri build",
     "check:sync": "bun scripts/check-version-sync.ts",
     "check:guard": "bun scripts/check-webview-guard.ts",
+    "check:changelog": "bun scripts/check-changelog-sync.ts",
+    "build:changelog": "bun scripts/build-changelog.ts",
     "check:release": "bun scripts/check-release.ts"
   }
 }

@@ -88,6 +88,18 @@ export const GLYPHS: Record<string, [string, Record<string, string>][]> = {
     ["path", { d: "M7 11l5 5l5 -5" }],
     ["path", { d: "M12 4l0 12" }],
   ],
+  FileText: [
+    ["path", { d: "M14 3v4a1 1 0 0 0 1 1h4" }],
+    [
+      "path",
+      {
+        d: "M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2",
+      },
+    ],
+    ["path", { d: "M9 9l1 0" }],
+    ["path", { d: "M9 13l6 0" }],
+    ["path", { d: "M9 17l6 0" }],
+  ],
   Help: [
     ["path", { d: "M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" }],
     ["path", { d: "M12 17l0 .01" }],
@@ -141,6 +153,14 @@ export const GLYPHS: Record<string, [string, Record<string, string>][]> = {
       },
     ],
     ["path", { d: "M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" }],
+  ],
+  Sparkles: [
+    [
+      "path",
+      {
+        d: "M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6",
+      },
+    ],
   ],
   Star: [
     [

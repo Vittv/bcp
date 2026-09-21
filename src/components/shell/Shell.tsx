@@ -6,6 +6,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import { ChangelogScreen } from "../../components/changelog/ChangelogScreen";
 import { SaintPopoverProvider } from "../../components/office/SaintPopover";
 import {
   AppModal,
@@ -48,6 +49,13 @@ import {
   upcomingSanctoraleEntry,
 } from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
+import { CHANGELOG_MARKDOWN } from "../../lib/changelog";
+import {
+  type ChangelogSource,
+  readChangelogPrefs,
+  registerOpenChangelog,
+  writeChangelogPrefs,
+} from "../../lib/changelogPrefs";
 import { getKjvBookMeta } from "../../lib/content/kjv";
 import {
   IS_LINUX_CHROMIUM,
@@ -69,6 +77,7 @@ import {
   registerOpenSettingsSection,
   type SettingsSectionId,
 } from "../../lib/settings";
+import { useAppVersion } from "../../lib/version";
 import { BibleBar, BibleReaderScreen } from "../../screens/BibleReaderScreen";
 import { CalendarScreen } from "../../screens/CalendarScreen";
 import {
@@ -261,6 +270,15 @@ export function Shell() {
   // on Typography); null means the modal opens on its entry-point section
   const [settingsSection, setSettingsSection] =
     useState<SettingsSectionId | null>(null);
+  // desktop reports the binary version (web the bundled one); it drives both
+  // the notes shown and the after-update trigger below
+  const appVersion = useAppVersion();
+  // the changelog's source: null shows the vendored RELEASE.md notes, and an
+  // object carries the desktop updater's pending-release body until it lands
+  const [changelogSource, setChangelogSource] =
+    useState<ChangelogSource | null>(null);
+  // the changelog footer's don't-show-again flag, loaded with the marker
+  const [changelogSuppress, setChangelogSuppress] = useState(false);
   const [reading, setReading] = useState<string | null>(null);
   const [scrollPct, setScrollPct] = useState(0);
 
@@ -443,6 +461,54 @@ export function Shell() {
   modalRef.current = modal;
   const mobileOpenRef = useRef(mobileOpen);
   mobileOpenRef.current = mobileOpen;
+  const changelogSuppressRef = useRef(changelogSuppress);
+  changelogSuppressRef.current = changelogSuppress;
+  const changelogSourceRef = useRef<ChangelogSource | null>(changelogSource);
+  changelogSourceRef.current = changelogSource;
+
+  // opening the notes counts them as seen for the shown version (the write
+  // happens here, at open, so Esc/back/system paths cannot skip the notes):
+  // once the running bundle carries that version the auto-open below stays
+  // quiet, which is exactly what a web deploy or the desktop updater lands
+  const openChangelog = useCallback(
+    (source: ChangelogSource | null) => {
+      changelogSourceRef.current = source;
+      setChangelogSource(source);
+      setModal("changelog");
+      void writeChangelogPrefs({
+        seen: source?.version ?? appVersion,
+        suppress: changelogSuppressRef.current,
+      });
+    },
+    [appVersion],
+  );
+
+  // the changelog footer wrangles don't-show-again and persists it against
+  // the version whose notes are on screen
+  const setChangelogSuppressPref = useCallback(
+    (suppress: boolean) => {
+      changelogSuppressRef.current = suppress;
+      setChangelogSuppress(suppress);
+      void writeChangelogPrefs({
+        seen: changelogSourceRef.current?.version ?? appVersion,
+        suppress,
+      });
+    },
+    [appVersion],
+  );
+
+  // the sidebar's changelog button opens the vendored notes through the same
+  // path as the auto-popup (source reset, seen recorded), never the raw modal
+  const handleOpenModal = useCallback(
+    (type: ModalType) => {
+      if (type === "changelog") {
+        openChangelog(null);
+        return;
+      }
+      setModal(type);
+    },
+    [openChangelog],
+  );
 
   // web only: the JSON of the current top-of-history entry when it is the
   // drawer's own record (see the record effect below). kept so re-opening
@@ -492,6 +558,45 @@ export function Shell() {
     });
     return () => registerOpenSettingsSection(null);
   }, []);
+
+  // the update banner and sidebar sit below the modal, so opening the notes
+  // goes through a module bridge exactly like the settings section; the shell
+  // chose the source and owns the after-update popup
+  useEffect(() => {
+    registerOpenChangelog((source) => {
+      openChangelog(source);
+    });
+    return () => registerOpenChangelog(null);
+  }, [openChangelog]);
+
+  // open the changelog by itself after an update: a marker naming an older
+  // version than the one now running means the running release's notes are
+  // new to the user. a missing marker is a first launch, which records the
+  // version silently instead, so a fresh install never pops up. web builds
+  // read the deployed bundle's version, desktop the binary's; both keep the
+  // marker where the platform does not wipe it per release (localStorage on
+  // web, a data-dir file on desktop).
+  useEffect(() => {
+    let cancelled = false;
+    void readChangelogPrefs().then((prefs) => {
+      if (cancelled) return;
+      changelogSuppressRef.current = prefs.suppress;
+      setChangelogSuppress(prefs.suppress);
+      if (prefs.seen === null) {
+        void writeChangelogPrefs({
+          seen: appVersion,
+          suppress: prefs.suppress,
+        });
+        return;
+      }
+      if (prefs.seen !== appVersion && !prefs.suppress) {
+        openChangelog(null);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [appVersion, openChangelog]);
 
   // whenever the drawer closes while its recorded step is still the top of
   // history, consume that step via history.back() so Back behaves exactly as
@@ -1159,6 +1264,7 @@ export function Shell() {
   const closeModal = () => {
     setModal(null);
     setSettingsSection(null);
+    setChangelogSource(null);
   };
 
   const modalContent = (() => {
@@ -1185,6 +1291,23 @@ export function Shell() {
               showWindowControls={IS_TAURI && !IS_MACOS_TAURI}
               windowControls={windowControls}
               onWindowControlsChange={setWindowControls}
+            />
+          </AppModal>
+        );
+      case "changelog":
+        return (
+          <AppModal
+            title={`bcp ${changelogSource?.version ?? appVersion}`}
+            onClose={closeModal}
+            width={640}
+            height={640}
+            stretchBody
+          >
+            <ChangelogScreen
+              markdown={changelogSource?.markdown ?? CHANGELOG_MARKDOWN}
+              suppress={changelogSuppress}
+              onToggleSuppress={setChangelogSuppressPref}
+              onDone={closeModal}
             />
           </AppModal>
         );
@@ -1259,7 +1382,7 @@ export function Shell() {
                             active={page}
                             onSelect={handlePageSelect}
                             onHide={hideSidebar}
-                            onOpenModal={setModal}
+                            onOpenModal={handleOpenModal}
                             detail={sidebarDetail}
                             dragging={draggingDrawer}
                             showLabels={toolbarLabels}
@@ -1279,7 +1402,7 @@ export function Shell() {
                             active={page}
                             onSelect={handlePageSelect}
                             onHide={hideSidebar}
-                            onOpenModal={setModal}
+                            onOpenModal={handleOpenModal}
                             detail={sidebarDetail}
                             dragging={draggingDrawer}
                             showLabels={toolbarLabels}
@@ -1411,7 +1534,7 @@ export function Shell() {
                           active={page}
                           onSelect={handlePageSelect}
                           onHide={hideSidebar}
-                          onOpenModal={setModal}
+                          onOpenModal={handleOpenModal}
                           detail={sidebarDetail}
                           dragging={draggingDrawer}
                           showLabels={toolbarLabels}
