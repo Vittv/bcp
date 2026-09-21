@@ -136,8 +136,12 @@ async function main() {
     await sharp(master).resize(1024, 1024).ensureAlpha().png().toBuffer(),
     "assets/icon.png",
   );
+  // 192, not 64: the crib favicon (and the pwa installed-app fallback in
+  // firefox, which installs from the favicon rather than the manifest) must
+  // survive the trinity detail inside each cross arm. at 64px the knot blurs
+  // to a flat smearable and reads as a solid #7A3040 blob.
   write(
-    await sharp(master).resize(64, 64).ensureAlpha().png().toBuffer(),
+    await sharp(master).resize(192, 192).ensureAlpha().png().toBuffer(),
     "assets/favicon.png",
   );
 

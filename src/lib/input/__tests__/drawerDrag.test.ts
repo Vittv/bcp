@@ -2,6 +2,9 @@ import { describe, expect, it } from "bun:test";
 import {
   createDragSession,
   DRAWER_DEAD_ZONE,
+  DRAWER_FLING_VX,
+  DRAWER_INTENT,
+  DRAWER_SLOPE,
   dragPosition,
   progressDrag,
   resolveDrag,
@@ -33,17 +36,24 @@ describe("progressDrag", () => {
     expect(s.live).toBe(false);
   });
 
-  it("abandons at the exact vertical tie", () => {
+  it("abandons at the exact axis tie", () => {
     const s = createDragSession(false, 360);
     const step = progressDrag(s, 30, 30);
     expect(step.live).toBe(false);
   });
 
-  it("abandons a horizontal start that later goes vertical", () => {
+  it("locks to horizontal at the slop exit and rides out a later arc", () => {
     const s = createDragSession(false, 360);
-    progressDrag(s, 40, 4);
-    const step = progressDrag(s, 40, 90);
-    expect(step).toEqual({ live: false, progress: 0 });
+    expect(progressDrag(s, 40, 4)).toEqual({
+      live: true,
+      progress: 40 / 360,
+    });
+    // the thumb arc now tips vertical, but the axis is already locked
+    expect(progressDrag(s, 60, 140)).toEqual({
+      live: true,
+      progress: 60 / 360,
+    });
+    expect(s.horizontal).toBe(true);
   });
 
   it("maps the delta to a drawer position while tracking", () => {
@@ -67,8 +77,11 @@ describe("progressDrag", () => {
     expect(step).toEqual({ live: false, progress: 0 });
   });
 
-  it("exposes the dead zone used by the platform glue", () => {
+  it("exposes the constants used by the platform glue", () => {
     expect(DRAWER_DEAD_ZONE).toBeGreaterThan(0);
+    expect(DRAWER_INTENT).toBeGreaterThan(0);
+    expect(DRAWER_SLOPE).toBeGreaterThan(0);
+    expect(DRAWER_FLING_VX).toBeGreaterThan(0);
   });
 });
 
@@ -104,55 +117,77 @@ describe("resolveDrag", () => {
     expect(resolveDrag(abandoned, 40, 90)).toBe("none");
   });
 
-  it("opens past the half-way mark from closed", () => {
+  it("opens from a short, gentle pull", () => {
     const s = createDragSession(false, 360);
-    progressDrag(s, 210, 4);
-    expect(resolveDrag(s, 210, 4)).toBe("open");
+    progressDrag(s, 60, 6);
+    s.startT = Date.now() - 800;
+    expect(resolveDrag(s, 60, 6)).toBe("open");
   });
 
-  it("stays closed short of the half-way mark", () => {
-    const s = createDragSession(false, 360);
-    progressDrag(s, 150, 4);
-    expect(resolveDrag(s, 150, 4)).toBe("none");
-  });
-
-  it("closes an open drawer dragged past half way", () => {
-    const s = createDragSession(true, 360);
-    progressDrag(s, -220, 4);
-    expect(resolveDrag(s, -220, 4)).toBe("close");
-  });
-
-  it("keeps an open drawer when dragged back short of half way", () => {
-    const s = createDragSession(true, 360);
-    progressDrag(s, -140, 4);
-    expect(resolveDrag(s, -140, 4)).toBe("none");
-  });
-
-  it("lets a fast release fling by direction, not position", () => {
-    const closed = createDragSession(false, 360);
-    closed.horizontal = true;
-    closed.lastX = 0;
-    closed.lastT = Date.now() - 16;
-    expect(resolveDrag(closed, 12, 2)).toBe("open");
-    const open = createDragSession(true, 360);
-    open.horizontal = true;
-    open.lastX = 0;
-    open.lastT = Date.now() - 16;
-    expect(resolveDrag(open, -12, 2)).toBe("close");
-  });
-
-  it("does not fling on a slow release short of the mark", () => {
-    const closed = createDragSession(false, 360);
-    closed.horizontal = true;
-    closed.lastX = 0;
-    closed.lastT = Date.now() - 600;
-    expect(resolveDrag(closed, 12, 2)).toBe("none");
-  });
-
-  it("ignores a vertical release even after a horizontal start", () => {
+  it("stays closed for a tap-sized drag", () => {
     const s = createDragSession(false, 360);
     s.horizontal = true;
     s.live = true;
-    expect(resolveDrag(s, 20, 80)).toBe("none");
+    s.startT = Date.now() - 800;
+    expect(resolveDrag(s, 15, 4)).toBe("none");
+  });
+
+  it("stays closed when pulled further closed", () => {
+    const s = createDragSession(false, 360);
+    progressDrag(s, -60, 6);
+    s.startT = Date.now() - 800;
+    expect(resolveDrag(s, -60, 6)).toBe("none");
+  });
+
+  it("closes an open drawer with a short pull to the left", () => {
+    const s = createDragSession(true, 360);
+    progressDrag(s, -60, 6);
+    s.startT = Date.now() - 800;
+    expect(resolveDrag(s, -60, 6)).toBe("close");
+  });
+
+  it("keeps open when pulled further open", () => {
+    const s = createDragSession(true, 360);
+    progressDrag(s, 60, 6);
+    s.startT = Date.now() - 800;
+    expect(resolveDrag(s, 60, 6)).toBe("none");
+  });
+
+  it("flings open on a barely-there flick", () => {
+    const s = createDragSession(false, 360);
+    progressDrag(s, 30, 4);
+    s.startT = Date.now() - 50;
+    expect(resolveDrag(s, 30, 4)).toBe("open");
+  });
+
+  it("flings closed from an open drawer", () => {
+    const s = createDragSession(true, 360);
+    progressDrag(s, -30, 4);
+    s.startT = Date.now() - 50;
+    expect(resolveDrag(s, -30, 4)).toBe("close");
+  });
+
+  it("does not fling on an extremely slow, short release", () => {
+    const s = createDragSession(false, 360);
+    s.horizontal = true;
+    s.live = true;
+    s.startT = Date.now() - 3000;
+    expect(resolveDrag(s, 12, 2)).toBe("none");
+  });
+
+  it("drops a release that drifted back to vertical", () => {
+    const s = createDragSession(false, 360);
+    s.horizontal = true;
+    s.live = true;
+    s.startT = Date.now() - 600;
+    expect(resolveDrag(s, 60, 400)).toBe("none");
+  });
+
+  it("commits a sloped release by its horizontal travel", () => {
+    const s = createDragSession(false, 360);
+    s.horizontal = true;
+    s.live = true;
+    s.startT = Date.now() - 2000;
+    expect(resolveDrag(s, 150, 120)).toBe("open");
   });
 });

@@ -18,18 +18,16 @@ type DrawerSwipeOptions = {
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
-  // live drawer position while a drag tracks the finger (0 closed to 1
-  // open), null once the gesture ends and the spring takes over. the web
-  // build consumes it; native keeps the gesture but has no drag render yet.
+  // live position while the drag tracks the finger (0..1), null once the
+  // gesture ends and the spring takes over; the web build consumes it
   onProgress?: (progress: number | null) => void;
 };
 
-// drawer-drag gestures for the mobile drawer. the web build attaches
-// window-level pointer events so a swipe can start anywhere on screen and
-// reports the live drawer position while it drags; native drives a
-// PanResponder on the shell root, which captures horizontal drags before
-// the inner scrollers do. both paths feed the same shared progressDrag
-// state machine, so the gesture rules live in one testable place.
+// drawer-drag gestures for the mobile drawer: window pointer events on web, a
+// PanResponder on the shell root natively, both feeding the shared
+// progressDrag state machine. any horizontal-leading swipe anywhere on the
+// screen carries the drawer's intent; the axis lock keeps vertical scrolls
+// untouched.
 export function useDrawerSwipe({
   enabled,
   open,
@@ -40,20 +38,17 @@ export function useDrawerSwipe({
   const state = useRef({ enabled, open, onOpen, onClose, onProgress });
   state.current = { enabled, open, onOpen, onClose, onProgress };
 
-  // all hooks run unconditionally: on web the created PanResponder is never
-  // mounted (no panHandlers are spread), and the pointer listeners are
-  // web-only behind the effect guard below
+  // all hooks run unconditionally, even though web never mounts the responder
   const session = useRef<DragSession | null>(null);
   const [responder] = useState(() =>
     PanResponder.create({
       onMoveShouldSetPanResponderCapture: (_evt, g) => {
         const s = state.current;
         if (!s.enabled) return false;
-        // only claim a drag that has committed to horizontal motion, so
-        // vertical touches always fall through to the scrollers
-        if (Math.abs(g.dx) < DRAWER_DEAD_ZONE) return false;
-        if (Math.abs(g.dx) <= Math.abs(g.dy)) return false;
-        return true;
+        // claim the draw when horizontal motion leads at the dead-zone exit
+        return (
+          Math.abs(g.dx) >= DRAWER_DEAD_ZONE && Math.abs(g.dx) > Math.abs(g.dy)
+        );
       },
       onPanResponderGrant: () => {
         const s = state.current;
@@ -64,13 +59,17 @@ export function useDrawerSwipe({
       },
       onPanResponderMove: (_evt, g) => {
         const s = state.current;
-        if (!s.enabled || !session.current) return;
-        const step = progressDrag(session.current, g.dx, g.dy);
+        const drag = session.current;
+        if (!s.enabled || !drag) return;
+        const step = progressDrag(drag, g.dx, g.dy);
         if (!step.live) {
           session.current = null;
           s.onProgress?.(null);
           return;
         }
+        // taps stay anchored until the axis locks; reporting the rest value
+        // would flag the drawer as dragging and eat the row's press
+        if (!drag.horizontal) return;
         s.onProgress?.(step.progress);
       },
       onPanResponderRelease: (_evt, g) => {
@@ -98,8 +97,7 @@ export function useDrawerSwipe({
     let startY = 0;
     let tracking = false;
 
-    // the drawer is the whole viewport on mobile; falling back to innerWidth
-    // keeps the transform working even before the overlay has laid out
+    // the drawer spans the viewport; innerWidth covers the pre-layout frame
     const drawerWidth = () => {
       const el = document.querySelector<HTMLElement>("[data-bcp-drawer]");
       return el ? el.getBoundingClientRect().width : window.innerWidth;
@@ -111,9 +109,8 @@ export function useDrawerSwipe({
       const dragSession = drag;
       drag = null;
       const action = resolveDrag(dragSession, dx, dy);
-      // clear the drag flag on the next tick: web Pressables press from the
-      // click that fires right after pointerup, and releasing a drag over a
-      // row must read as a gesture, not a tap
+      // clear on the next tick so the click after pointerup still reads as
+      // a gesture rather than a tap on the row
       setTimeout(() => state.current.onProgress?.(null), 0);
       if (action === "open") state.current.onOpen();
       else if (action === "close") state.current.onClose();
@@ -135,6 +132,9 @@ export function useDrawerSwipe({
         state.current.onProgress?.(null);
         return;
       }
+      // taps stay anchored until the axis locks; reporting the rest value
+      // would flag the drawer as dragging and eat the row's press
+      if (!drag.horizontal) return;
       state.current.onProgress?.(step.progress);
     };
 

@@ -1348,17 +1348,6 @@ export function Shell() {
                           >
                             {content}
                           </div>
-                          {isMobile ? (
-                            <div
-                              aria-hidden="true"
-                              style={{
-                                ...styles.backdrop,
-                                opacity: 0.35 * drawerProgressValue,
-                                pointerEvents:
-                                  drawerProgressValue < 0.01 ? "none" : "auto",
-                              }}
-                            />
-                          ) : null}
                         </div>
 
                         <StatusBar
@@ -1516,7 +1505,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 20,
-    backgroundColor: "rgba(20, 15, 15, 0.35)",
     cursor: "pointer",
   },
   autoscrollIndicator: {

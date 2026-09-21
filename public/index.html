@@ -27,8 +27,36 @@
          the manifest at parse time and treat the site as installable. Relative
          hrefs keep the same bundle working under any base URL. -->
     <meta name="theme-color" id="theme-color" content="#e0dbd0" />
+    <script>
+      // paint the os chrome (status + nav bars) for the saved theme before the
+      // bundle hydrates: on android chrome the runtime theme-color update in
+      // ThemeContext already tints both bars, this just avoids the light-flash
+      // first paint when the app is set to dark. colors mirror the palettes.
+      (() => {
+        var meta;
+        var mode;
+        try {
+          meta = document.querySelector(
+            'meta[name="theme-color"][id="theme-color"]',
+          );
+          if (!meta) return;
+          mode = localStorage.getItem("bcp-theme-mode");
+          if (mode !== "light" && mode !== "dark") {
+            mode = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+          }
+          meta.content = mode === "dark" ? "#1b191a" : "#e0dbd0";
+        } catch {}
+      })();
+    </script>
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- high-res png keeps the trinity inside each cross arm from the very
+         first paint and in firefox's installed-app fallback (which installs
+         from this link rather than the manifest). the ico below is only a
+         legacy favicon for old servers/crawlers. -->
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
     <link rel="icon" href="favicon.ico" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
