@@ -248,9 +248,10 @@ export const sharedStyles = StyleSheet.create({
     color: "var(--text-secondary, #7a6e64)",
     fontVariant: ["tabular-nums"],
   },
-  // the book list's chapter counter in the bible navigator reads in the
-  // same red as the saints' date counter, marking the row's span
-  bibleChapterCount: {
+  // the reader's own state in a row's trailing slot, where the bare counts
+  // beside it are facts about the item. accent, because it is about the
+  // reader; the wording carries it too, so colour is never the only cue
+  rowMetaReading: {
     color: "var(--accent, #7a3040)",
   },
   rowChevron: {

@@ -1,12 +1,6 @@
 const STORAGE_KEY = "bcp:bible-progress:v1";
-const POSITION_KEY = "bcp:bible-position:v1";
 
 export type BibleProgress = Record<string, number>;
-
-export type BiblePosition = {
-  ot: { book: string; chapter: number; scrollY?: number };
-  nt: { book: string; chapter: number; scrollY?: number };
-};
 
 function getStorage(): Storage | null {
   if (typeof window !== "undefined" && window.localStorage) {
@@ -40,38 +34,6 @@ function saveProgress(progress: BibleProgress): void {
   storage.setItem(STORAGE_KEY, JSON.stringify(progress));
 }
 
-function loadPosition(): BiblePosition {
-  const storage = getStorage();
-  if (!storage) {
-    return {
-      ot: { book: "Gen", chapter: 1 },
-      nt: { book: "Matt", chapter: 1 },
-    };
-  }
-  try {
-    const raw = storage.getItem(POSITION_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        ot: parsed.ot ?? { book: "Gen", chapter: 1 },
-        nt: parsed.nt ?? { book: "Matt", chapter: 1 },
-      };
-    }
-  } catch {
-    // ignore
-  }
-  return {
-    ot: { book: "Gen", chapter: 1 },
-    nt: { book: "Matt", chapter: 1 },
-  };
-}
-
-function savePosition(position: BiblePosition): void {
-  const storage = getStorage();
-  if (!storage) return;
-  storage.setItem(POSITION_KEY, JSON.stringify(position));
-}
-
 export function markReached(bookAbbrev: string, chapter: number): void {
   const progress = loadProgress();
   const current = progress[bookAbbrev] ?? 0;
@@ -96,30 +58,6 @@ export function getAllProgress(): BibleProgress {
   return loadProgress();
 }
 
-export function getPosition(testament: "OT" | "NT"): {
-  book: string;
-  chapter: number;
-  scrollY?: number;
-} {
-  const pos = loadPosition();
-  return testament === "OT" ? pos.ot : pos.nt;
-}
-
-export function setPosition(
-  testament: "OT" | "NT",
-  book: string,
-  chapter: number,
-  scrollY?: number,
-): void {
-  const pos = loadPosition();
-  if (testament === "OT") {
-    pos.ot = { book, chapter, scrollY };
-  } else {
-    pos.nt = { book, chapter, scrollY };
-  }
-  savePosition(pos);
-}
-
 export function isChapterRead(bookAbbrev: string, chapter: number): boolean {
   return getMark(bookAbbrev) >= chapter;
 }
@@ -130,4 +68,9 @@ export function resetBooks(bookAbbrevs: string[]): void {
     delete progress[abbrev];
   }
   saveProgress(progress);
+}
+
+/** drop every book's mark, leaving the saved positions alone */
+export function clearProgress(): void {
+  saveProgress({});
 }

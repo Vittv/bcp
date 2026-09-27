@@ -2,6 +2,7 @@ import { SearchPalette } from "../../components/shell/SearchPalette";
 import { bibleBookName, useBible } from "../../context/BibleContext";
 import { useNavigation } from "../../context/NavigationContext";
 import { usePalette } from "../../context/PaletteContext";
+import { getMark } from "../../lib/content/bibleProgress";
 import { getKjvBookMeta } from "../../lib/content/kjv";
 import type { CollectSection } from "../../lib/content/types";
 import type { PaletteEntry } from "../../lib/reference/search";
@@ -195,6 +196,8 @@ export function PaletteHost() {
               chapters={Array.from({ length: book.chapters }, (_, i) => i + 1)}
               query={query}
               selected={chapter}
+              // clamped: a mark from an older content build can exceed a shorter book
+              continueAt={Math.min(getMark(book.abbrev), book.chapters)}
               onSelect={(n) => {
                 selectChapter(n);
                 close();

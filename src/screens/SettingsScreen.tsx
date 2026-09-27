@@ -25,6 +25,11 @@ import {
   TypographyIcon,
 } from "../components/shell/Icon";
 import type { ModalType } from "../components/shell/Sidebar";
+import {
+  ALL_BOOKS,
+  clearSavedPositions,
+  savedPositions,
+} from "../context/BibleContext";
 import { useOfficeSettings } from "../context/OfficeSettingsContext";
 import {
   type FontMode,
@@ -32,6 +37,7 @@ import {
   useTheme,
 } from "../context/ThemeContext";
 import { useTranslation } from "../context/TranslationContext";
+import { clearProgress, getAllProgress } from "../lib/content/bibleProgress";
 import { IS_TAURI } from "../lib/desktop";
 import { CHROME_FONT, HEADING_FONT } from "../lib/fonts";
 import { filterSearch } from "../lib/search";
@@ -655,19 +661,62 @@ type BibleSettingsProps = {
 };
 
 function BibleSettings({ translation, setTranslation }: BibleSettingsProps) {
+  // storage is the source of truth; the counter is only ever bumped, so the
+  // reset forces a fresh read below rather than caching a stale answer
+  const [, reread] = useState(0);
+  const marks = getAllProgress();
+  const books = [...ALL_BOOKS.OT, ...ALL_BOOKS.NT];
+  const total = books.reduce((n, b) => n + b.chapters, 0);
+  // clamped, so a stale mark can never push the total past a full bible
+  const reached = books.reduce(
+    (n, b) => n + Math.min(marks[b.abbrev] ?? 0, b.chapters),
+    0,
+  );
+  // a position with no mark is an upgrading reader, so the reset stays live
+  const saved = savedPositions();
+  const hasProgress = reached > 0 || saved.OT !== null || saved.NT !== null;
+  const reset = () => {
+    clearProgress();
+    clearSavedPositions();
+    reread((v) => v + 1);
+  };
+
   return (
-    <View style={styles.section}>
-      <Text style={styles.label}>Bible Translation</Text>
-      <OptionChips
-        options={TRANSLATION_OPTIONS}
-        value={translation}
-        onSelect={setTranslation}
-        mono
-      />
-      <Text style={styles.settingDescription}>
-        {TRANSLATION_OPTIONS.find((o) => o.id === translation)?.description}
-      </Text>
-    </View>
+    <>
+      <View style={styles.section}>
+        <Text style={styles.label}>Bible Translation</Text>
+        <OptionChips
+          options={TRANSLATION_OPTIONS}
+          value={translation}
+          onSelect={setTranslation}
+          mono
+        />
+        <Text style={styles.settingDescription}>
+          {TRANSLATION_OPTIONS.find((o) => o.id === translation)?.description}
+        </Text>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.label}>Reading Progress</Text>
+        <Text style={styles.value}>
+          {`${Math.round((reached / total) * 100)}% · ${reached} of ${total} chapters reached`}
+        </Text>
+        <Text
+          style={[
+            styles.option,
+            styles.resetBtn,
+            !hasProgress && styles.optionDisabled,
+          ]}
+          onPress={reset}
+          aria-disabled={!hasProgress}
+        >
+          Reset
+        </Text>
+        <Text style={styles.settingDescription}>
+          Forgets which chapters you have reached and where you left off, so
+          both start over.
+        </Text>
+      </View>
+    </>
   );
 }
 
@@ -1106,6 +1155,16 @@ const styles = StyleSheet.create({
     color: "var(--accent, #7a3040)",
     borderColor: "var(--accent, #7a3040)",
     fontWeight: "600",
+  },
+  // a standalone option-plate button; neutral, as forgetting is not a primary action
+  resetBtn: {
+    alignSelf: "flex-start",
+    fontWeight: "500",
+    backgroundColor: "transparent",
+  },
+  // a control with nothing left to do
+  optionDisabled: {
+    opacity: 0.4,
   },
   // translation abbreviations read as technical tokens, so they use the
   // app's mono face like keycaps and status text

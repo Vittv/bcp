@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { PageId } from "../components/shell/Sidebar";
 import { useHistory, useHistoryField } from "../context/HistoryContext";
+import { markReached } from "../lib/content/bibleProgress";
 import type { KjvBookMeta } from "../lib/content/kjv";
 import { getBooksByTestament, getKjvBookMeta } from "../lib/content/kjv";
 import { registerPageStepper } from "../lib/input/sequenceNav";
@@ -24,7 +25,7 @@ export const ALL_BOOKS: Record<Testament, KjvBookMeta[]> = {
 // localStorage helpers
 // ---------------------------------------------------------------------------
 
-type SavedPos = { abbrev: string; chapter: number };
+export type SavedPos = { abbrev: string; chapter: number; savedAt: number };
 
 const STORAGE_PREFIX = "bcp-bible-";
 
@@ -42,7 +43,12 @@ function loadPos(t: Testament): SavedPos | null {
       typeof parsed.abbrev === "string" &&
       typeof parsed.chapter === "number"
     ) {
-      return parsed;
+      return {
+        abbrev: parsed.abbrev,
+        chapter: parsed.chapter,
+        // legacy positions have no stamp, and 0 sorts below every real one
+        savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : 0,
+      };
     }
   } catch {
     // ignore
@@ -56,6 +62,43 @@ function savePos(t: Testament, pos: SavedPos): void {
   } catch {
     // ignore
   }
+}
+
+/** drop both testament positions, so the next open starts at a book's first chapter */
+export function clearSavedPositions(): void {
+  try {
+    localStorage.removeItem(storageKey("OT"));
+    localStorage.removeItem(storageKey("NT"));
+  } catch {
+    // ignore
+  }
+}
+
+// only a position the reader would actually restore: a book a content drop
+// removed, or a chapter past the end, would label the row with a tap that
+// disagrees. clamping mirrors resolvePos
+function usablePos(t: Testament, pos: SavedPos | null): SavedPos | null {
+  if (!pos) return null;
+  const found = ALL_BOOKS[t].find((b) => b.abbrev === pos.abbrev);
+  if (!found) return null;
+  return {
+    ...pos,
+    chapter: Math.min(Math.max(1, pos.chapter), found.chapters),
+  };
+}
+
+// both testaments' saved positions, validated the way the reader restores
+// them. the sidebar's two scripture rows each carry their own "where you
+// left off" label, so the two never compete: a legacy or stale position in
+// one testament cannot keep the other row from showing its own
+export function savedPositions(): {
+  OT: SavedPos | null;
+  NT: SavedPos | null;
+} {
+  return {
+    OT: usablePos("OT", loadPos("OT")),
+    NT: usablePos("NT", loadPos("NT")),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -202,7 +245,13 @@ export function BibleProvider({
   // persist position + report to status bar (only while on a bible page)
   useEffect(() => {
     if (book && isBiblePage(page)) {
-      savePos(testament, { abbrev: book.abbrev, chapter });
+      savePos(testament, {
+        abbrev: book.abbrev,
+        chapter,
+        savedAt: Date.now(),
+      });
+      // every route into a chapter lands here, so a cross-link counts as read
+      markReached(book.abbrev, chapter);
       onReadingChange?.(`${bibleBookName(book.abbrev)} ${chapter}`);
     }
   }, [page, testament, book, chapter, onReadingChange]);

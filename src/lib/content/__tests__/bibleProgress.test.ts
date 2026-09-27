@@ -1,12 +1,11 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import {
+  clearProgress,
   getAllProgress,
   getMark,
-  getPosition,
   isChapterRead,
   markReached,
   resetBook,
-  setPosition,
 } from "../bibleProgress";
 
 beforeEach(() => {
@@ -67,25 +66,16 @@ describe("bibleProgress", () => {
     expect(isChapterRead("Gen", 6)).toBe(false);
   });
 
-  it("position persists per testament", () => {
-    setPosition("OT", "Gen", 3, 100);
-    setPosition("NT", "John", 1, 50);
-    const otPos = getPosition("OT");
-    const ntPos = getPosition("NT");
-    expect(otPos.book).toBe("Gen");
-    expect(otPos.chapter).toBe(3);
-    expect(otPos.scrollY).toBe(100);
-    expect(ntPos.book).toBe("John");
-    expect(ntPos.chapter).toBe(1);
-    expect(ntPos.scrollY).toBe(50);
+  it("clearProgress drops every book's mark", () => {
+    markReached("Gen", 5);
+    markReached("Exod", 3);
+    clearProgress();
+    expect(getAllProgress()).toEqual({});
+    expect(getMark("Gen")).toBe(0);
   });
 
-  it("position defaults to Gen 1 / Matt 1", () => {
-    const otPos = getPosition("OT");
-    const ntPos = getPosition("NT");
-    expect(otPos.book).toBe("Gen");
-    expect(otPos.chapter).toBe(1);
-    expect(ntPos.book).toBe("Matt");
-    expect(ntPos.chapter).toBe(1);
+  it("clearProgress is a no-op on an empty store", () => {
+    clearProgress();
+    expect(getAllProgress()).toEqual({});
   });
 });

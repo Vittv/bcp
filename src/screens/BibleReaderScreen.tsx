@@ -15,6 +15,7 @@ import { bibleBookName, useBible } from "../context/BibleContext";
 import { usePalette } from "../context/PaletteContext";
 import { useTranslation } from "../context/TranslationContext";
 import { loadScriptureBook } from "../lib/content/bible";
+import { getAllProgress } from "../lib/content/bibleProgress";
 import type { KjvBook, KjvBookMeta } from "../lib/content/kjv";
 import { sliceKjvPassage } from "../lib/content/kjv";
 import { TRANSLATION_OPTIONS } from "../lib/translations";
@@ -158,10 +159,12 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
 const BookRow = memo(function BookRow({
   meta,
   active,
+  mark,
   onSelect,
 }: {
   meta: KjvBookMeta;
   active: boolean;
+  mark: number;
   onSelect: (abbrev: string) => void;
 }) {
   return (
@@ -177,11 +180,11 @@ const BookRow = memo(function BookRow({
           <Text
             style={[
               styles.rowMeta,
-              styles.bibleChapterCount,
+              mark > 0 && styles.rowMetaReading,
               a && styles.rowTextActive,
             ]}
           >
-            {meta.chapters} ch.
+            {mark > 0 ? `${mark}/${meta.chapters}` : `${meta.chapters} ch.`}
           </Text>
         </View>
       )}
@@ -198,6 +201,9 @@ export function BibleBookList({
 }) {
   const { books } = useBible();
   const deferredQuery = useDeferredValue(query ?? "");
+  // read once per open: the palette is modal over the reader, so no mark can
+  // change while these rows are mounted
+  const marks = useMemo(() => getAllProgress(), []);
   const filtered = useMemo(
     () =>
       deferredQuery.trim() === ""
@@ -213,11 +219,11 @@ export function BibleBookList({
           ),
     [books, deferredQuery],
   );
-  const onEnter = useCallback(
+  const pick = useCallback(
     (_i: number, b: KjvBookMeta) => onSelect(b.abbrev),
     [onSelect],
   );
-  const { cursor } = useIndexKeyboard(filtered, onEnter);
+  const { cursor } = useIndexKeyboard(filtered, pick);
   if (filtered.length === 0) {
     return (
       <EmptyMessage message={`No bible book matches “${deferredQuery}”.`} />
@@ -230,6 +236,8 @@ export function BibleBookList({
           key={b.abbrev}
           meta={b}
           active={i === cursor}
+          // clamped: a mark from an older content build can exceed a shorter book
+          mark={Math.min(marks[b.abbrev] ?? 0, b.chapters)}
           onSelect={onSelect}
         />
       ))}
@@ -242,18 +250,27 @@ export function BibleBookList({
 // ---------------------------------------------------------------------------
 
 // memoized chapter row: a cursor flip re-renders only the two rows whose
-// active state changed; the open chapter carries a "Current" marker
+// active state changed. the slot carries both markers of where the reader is,
+// so "Current" is tested first and wins the slot when the two coincide
 const BibleChapterRow = memo(function BibleChapterRow({
   chapter,
   active,
   selected,
+  continueAt,
   onSelect,
 }: {
   chapter: number;
   active: boolean;
   selected: number;
+  continueAt: number;
   onSelect: (n: number) => void;
 }) {
+  const label =
+    selected === chapter
+      ? "Current"
+      : continueAt === chapter
+        ? "Continue"
+        : null;
   return (
     <IndexRow cursor={active} onPress={() => onSelect(chapter)}>
       {(a) => (
@@ -264,9 +281,15 @@ const BibleChapterRow = memo(function BibleChapterRow({
           >
             Chapter {chapter}
           </Text>
-          {selected === chapter ? (
-            <Text style={[styles.rowMeta, a && styles.rowTextActive]}>
-              Current
+          {label ? (
+            <Text
+              style={[
+                styles.rowMeta,
+                styles.rowMetaReading,
+                a && styles.rowTextActive,
+              ]}
+            >
+              {label}
             </Text>
           ) : null}
         </View>
@@ -276,16 +299,19 @@ const BibleChapterRow = memo(function BibleChapterRow({
 });
 
 // chapter index for one bible book, searchable by number like the proverbs
-// chapter index; picking lands on the chapter and closes the palette
+// chapter index; picking lands on the chapter and closes the palette.
+// `continueAt` is the book's high-water mark, 0 when never opened
 export function BibleChapterList({
   chapters,
   query,
   selected,
+  continueAt,
   onSelect,
 }: {
   chapters: number[];
   query: string;
   selected: number;
+  continueAt: number;
   onSelect: (n: number) => void;
 }) {
   const q = query.trim();
@@ -311,6 +337,7 @@ export function BibleChapterList({
           chapter={c}
           active={i === cursor}
           selected={selected}
+          continueAt={continueAt}
           onSelect={onSelect}
         />
       ))}

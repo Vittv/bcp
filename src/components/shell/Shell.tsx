@@ -22,7 +22,12 @@ import {
   useAutoscroll,
 } from "../../components/shell/useAutoscroll";
 import { useDrawerSwipe } from "../../components/shell/useDrawerSwipe";
-import { BibleProvider, setBiblePendingRef } from "../../context/BibleContext";
+import {
+  BibleProvider,
+  savedPositions,
+  setBiblePendingRef,
+  type Testament,
+} from "../../context/BibleContext";
 import {
   HistoryProvider,
   type HistorySnapshot,
@@ -1077,13 +1082,25 @@ export function Shell() {
     today(),
   );
 
-  // the sidebar's per-row trailing info, kept to the two rows where the
-  // context is truly live: the office of the hour for Today, and the
-  // countdown to the next fixed feast on Holy Days
+  // the sidebar's per-row trailing info: the office of the hour for Today, the
+  // countdown to the next fixed feast on Holy Days, and each testament's own
+  // "where reading stopped" on its row. both are read from storage because the
+  // bible context is cleared on every navigation, and they are un-memoized so
+  // a progress reset cannot leave a stale label behind
   const nextFeast = upcomingSanctoraleEntry(today());
+  const saved = savedPositions();
+  // abbreviated, not the full name: the row shares one narrow column with
+  // "Old Testament", and "1 Thessalonians 12" is wide enough to push the label
+  // into the ellipsis it yields to the detail
+  const readingLabel = (t: Testament) => {
+    const pos = saved[t];
+    return pos ? `${pos.abbrev} ${pos.chapter}` : undefined;
+  };
   const sidebarDetail: Partial<Record<PageId, string>> = {
     today: OFFICE_LABEL[officeForHour(new Date().getHours())],
     saints: nextFeast ? holyDayCountdown(nextFeast, today()) : undefined,
+    "old-testament": readingLabel("OT"),
+    "new-testament": readingLabel("NT"),
   };
 
   const scrollRafRef = useRef<number | null>(null);
