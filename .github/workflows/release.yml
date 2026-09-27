@@ -83,10 +83,16 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: bcp-linux-${{ matrix.arch }}.tar.gz
+          # this action's draft input defaults to false, so without this the
+          # linux upload publishes the draft tauri-action made. linux is the
+          # fastest of the three, so it wins the race and the release goes
+          # public before validate has run. publishing is the author's step,
+          # after validate passes.
+          draft: true
 
-  # Gate after the matrix publishes: every artifact the desktop updater will
-  # consume (latest.json, per-platform installers, signatures) must exist and
-  # agree with the tag.
+  # gate that must pass before the author publishes the draft: every artifact
+  # the desktop updater consumes (latest.json, installers, signatures) must
+  # exist and agree with the tag.
   validate:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
