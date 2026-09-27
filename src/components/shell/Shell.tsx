@@ -4,6 +4,7 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import { ChangelogScreen } from "../../components/changelog/ChangelogScreen";
@@ -1295,15 +1296,21 @@ export function Shell() {
             />
           </AppModal>
         );
-      case "changelog":
+      case "changelog": {
+        const changelogVersion = changelogSource?.version ?? appVersion;
         return (
           <AppModal
-            title={`BCP ${changelogSource?.version ?? appVersion}`}
+            title={
+              <>
+                BCP
+                <Text style={styles.changelogVersion}> {changelogVersion}</Text>
+              </>
+            }
+            titleLabel={`BCP ${changelogVersion}`}
             onClose={closeModal}
             width={640}
             height={640}
             stretchBody
-            titleStyle={{ fontFamily: CHROME_FONT }}
           >
             <ChangelogScreen
               markdown={changelogSource?.markdown ?? CHANGELOG_MARKDOWN}
@@ -1313,6 +1320,7 @@ export function Shell() {
             />
           </AppModal>
         );
+      }
       default:
         return null;
     }
@@ -1650,5 +1658,12 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
     alignSelf: "stretch",
     padding: 0,
+  },
+  // sized down so it reads as a tag beside the display-face wordmark
+  changelogVersion: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "600",
+    fontSize: 15,
+    color: "var(--text-secondary, #7a6e64)",
   },
 });

@@ -22,11 +22,14 @@ import { CloseIcon } from "./Icon";
 // Esc, the X, or clicking the dim area.
 
 type AppModalProps = {
-  title?: string;
+  /** the title bar's text; a node so one line can mix faces */
+  title?: ReactNode;
+  /** plain-text title for the close button's accessible name, for node titles */
+  titleLabel?: string;
   onClose: () => void;
   children: ReactNode;
   width?: number;
-  /** overrides the title bar's typography (e.g. a serif display face) */
+  /** overrides the title bar's typography (the default is the display face) */
   titleStyle?: StyleProp<TextStyle>;
   /** a non-scrolling bar pinned under the body (button stays reachable) */
   footer?: ReactNode;
@@ -68,6 +71,7 @@ export function registerEsc(run: () => void): () => void {
 
 export function AppModal({
   title,
+  titleLabel,
   onClose,
   children,
   footer,
@@ -104,6 +108,10 @@ export function AppModal({
   // SAFETY: close button and its hover state are both ViewStyle at runtime.
   const closeBtnStyle = (hovered: boolean): StyleProp<ViewStyle> =>
     [styles.closeBtn, hovered && styles.closeBtnHover] as StyleProp<ViewStyle>;
+  // the close button needs a plain-text name, which a node title cannot give
+  const closeLabel = `Close ${
+    titleLabel ?? (typeof title === "string" ? title : "dialog")
+  }`;
 
   // Esc (web, via the shell's global handler) and the hardware back
   // button (Android) close any modal about the same way the X does
@@ -140,7 +148,7 @@ export function AppModal({
               onPress={onClose}
               style={({ hovered }) => closeBtnStyle(hovered)}
               accessibilityRole="button"
-              accessibilityLabel={`Close ${title}`}
+              accessibilityLabel={closeLabel}
             >
               {({ hovered }) => (
                 <CloseIcon
