@@ -86,7 +86,7 @@ export function OfficeTabs({
   const shortLabels = width < 640;
   const compact = width < 500;
   return (
-    <View style={[styles.bar, noSelect, compact && styles.barCompact]}>
+    <View style={[styles.bar, noSelect]}>
       <View style={[styles.tabsLeft, compact && styles.groupCompact]}>
         {leading}
         <Pressable
@@ -162,7 +162,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
+    // matches the sidebar toolbar and the reference bars
+    paddingHorizontal: 6,
     backgroundColor: "var(--bg, #e0dbd0)",
     flexShrink: 0,
   },
@@ -239,9 +240,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     textAlign: "center",
-  },
-  barCompact: {
-    paddingHorizontal: 6,
   },
   groupCompact: {
     gap: 2,
