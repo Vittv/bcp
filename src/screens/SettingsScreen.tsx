@@ -78,11 +78,13 @@ const SECTION_ICONS: Record<SectionId, ReactNode> = {
   help: <HelpIcon size={15} />,
 };
 
-const GROUPS: { title: string; categoryIds: SectionId[] }[] = [
-  { title: "Look & feel", categoryIds: ["appearance", "typography"] },
-  { title: "Reading", categoryIds: ["office", "bible"] },
-  { title: "System", categoryIds: ["desktop"] },
-  { title: "App", categoryIds: ["install", "help", "about"] },
+// section order, split into blocks that a hairline separates. the blocks
+// carry no titles, matching the nav sidebar's dividers
+const SECTION_BLOCKS: SectionId[][] = [
+  ["appearance", "typography"],
+  ["office", "bible"],
+  ["desktop"],
+  ["install", "help", "about"],
 ];
 
 // every sidebar entry point and palette run lands directly as its section;
@@ -143,12 +145,9 @@ export function SettingsScreen({
   const [query, setQuery] = useState("");
 
   const categories = filterSearch(query, visibleCategories());
-  const groups = GROUPS.map((group) => ({
-    ...group,
-    categoryIds: group.categoryIds.filter((id) =>
-      categories.some((c) => c.id === id),
-    ),
-  })).filter((group) => group.categoryIds.length > 0);
+  const blocks = SECTION_BLOCKS.map((ids) =>
+    ids.filter((id) => categories.some((c) => c.id === id)),
+  ).filter((ids) => ids.length > 0);
 
   const active =
     categories.find((c) => c.id === activeCategory) ?? categories[0];
@@ -239,15 +238,17 @@ export function SettingsScreen({
                   )}
                 </Pressable>
               </View>
-              {groups.length > 0 ? (
+              {blocks.length > 0 ? (
                 <ScrollView
                   style={styles.mobileList}
                   showsVerticalScrollIndicator={false}
                 >
-                  {groups.map((group) => (
-                    <View key={group.title}>
-                      <Text style={styles.mobileGroupTitle}>{group.title}</Text>
-                      {group.categoryIds.map((id) => {
+                  {blocks.map((ids, blockIdx) => (
+                    <View key={ids.join("-")}>
+                      {blockIdx > 0 ? (
+                        <View style={styles.mobileDivider} />
+                      ) : null}
+                      {ids.map((id) => {
                         const cat =
                           categories.find((c) => c.id === id) ?? categories[0];
                         return (
@@ -353,10 +354,10 @@ export function SettingsScreen({
                 <SettingsSearch query={query} onChange={setQuery} />
               </View>
               <ScrollView style={styles.railScroll}>
-                {groups.map((group) => (
-                  <View key={group.title}>
-                    <Text style={styles.groupTitle}>{group.title}</Text>
-                    {group.categoryIds.map((id) => {
+                {blocks.map((ids, blockIdx) => (
+                  <View key={ids.join("-")}>
+                    {blockIdx > 0 ? <View style={styles.railDivider} /> : null}
+                    {ids.map((id) => {
                       const cat =
                         categories.find((c) => c.id === id) ?? categories[0];
                       const activeRow = active?.id === id;
@@ -366,8 +367,7 @@ export function SettingsScreen({
                           onPress={() => setActiveCategory(id)}
                           style={({ hovered }) => [
                             styles.railRow,
-                            activeRow && styles.railRowActive,
-                            hovered && !activeRow && styles.railRowHover,
+                            hovered && styles.railRowHover,
                           ]}
                         >
                           <View style={railIconStyle(activeRow)}>
@@ -848,17 +848,14 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 12,
   },
-  groupTitle: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "600",
-    fontSize: 10,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    color: "var(--text-secondary, #7a6e64)",
-    opacity: 0.6,
-    paddingHorizontal: 8,
-    paddingTop: 14,
-    paddingBottom: 4,
+  // hairline between the rail's blocks, inset to the row edges; the first
+  // block has none, so the list does not open on a rule
+  railDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
+    marginHorizontal: 8,
+    marginTop: 8,
+    marginBottom: 4,
   },
   railRow: {
     flexDirection: "row",
@@ -867,9 +864,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 4,
-  },
-  railRowActive: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   railRowHover: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
@@ -962,17 +956,13 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 0,
   },
-  mobileGroupTitle: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "600",
-    fontSize: 10,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    color: "var(--text-secondary, #7a6e64)",
-    opacity: 0.6,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 4,
+  // the phone list's block rule, inset to the rows' text column
+  mobileDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
+    marginHorizontal: 16,
+    marginTop: 6,
+    marginBottom: 4,
   },
   // a tappable system-settings row: icon, label, and the trailing chevron
   // that marks the drill-down

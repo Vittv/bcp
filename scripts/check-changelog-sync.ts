@@ -28,7 +28,7 @@ async function main() {
     failures.push("src/lib/changelog.ts differs from RELEASE.md");
   }
 
-  if (/^# /.test(notes)) {
+  if (notes.startsWith("# ")) {
     failures.push(
       "RELEASE.md must not start with a `# ` title line: the release page " +
         "and the modal header already show the version, so a title line " +

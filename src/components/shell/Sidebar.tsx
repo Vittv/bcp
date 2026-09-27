@@ -48,8 +48,8 @@ export type PageId =
 
 export type ModalType = "install" | "settings" | "about" | "help" | "changelog";
 
-// nav rows: dimmed icons beside short labels, grouped under the small-caps
-// section titles; the trailing detail (season, countdown...) stays right
+// nav rows: dimmed icons beside short labels, in three blocks separated by a
+// hairline; the trailing detail (season, countdown...) stays right
 const NAV: { id: PageId; label: string; section?: string; icon: ReactNode }[] =
   [
     { id: "today", label: "Daily Office", icon: <BookIcon size={15} /> },
@@ -100,12 +100,8 @@ const NAV: { id: PageId; label: string; section?: string; icon: ReactNode }[] =
     },
   ];
 
-// small-caps section headers, flush with the icon column
-const SECTIONS = [
-  { id: "", title: "Prayer" },
-  { id: "reference", title: "Reference" },
-  { id: "scripture", title: "Scripture" },
-] as const;
+// group order; the blocks are separated by a hairline, not titled
+const SECTIONS = ["", "reference", "scripture"] as const;
 
 const noSelect = {
   userSelect: "none" as const,
@@ -189,9 +185,8 @@ export function Sidebar({
   showLabels = true,
 }: SidebarProps) {
   const version = useAppVersion();
-  const sections = SECTIONS.map(({ id, title }) => ({
+  const sections = SECTIONS.map((id) => ({
     id,
-    title,
     items: NAV.filter((item) => (item.section ?? "") === id),
   }));
 
@@ -239,11 +234,9 @@ export function Sidebar({
       </View>
       <View style={styles.scroll}>
         <View style={styles.nav}>
-          {sections.map(({ id, title, items }) => (
+          {sections.map(({ id, items }, idx) => (
             <View key={id || "main"} style={styles.section}>
-              <Text style={styles.sectionTitle} numberOfLines={1}>
-                {title}
-              </Text>
+              {id && idx > 0 ? <View style={styles.sectionDivider} /> : null}
               {items.map((item) => {
                 const isActive = active === item.id;
                 return (
@@ -257,7 +250,6 @@ export function Sidebar({
                     }}
                     style={({ hovered }) => [
                       styles.navItem,
-                      isActive && styles.navItemActive,
                       hovered && styles.navItemHover,
                     ]}
                   >
@@ -402,21 +394,16 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   section: {
-    paddingVertical: 4,
+    paddingBottom: 4,
   },
-  // small-caps group header, flush with the rows' label column
-  sectionTitle: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "600",
-    fontSize: 10,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    color: "var(--text-secondary, #7a6e64)",
-    opacity: 0.6,
-    marginHorizontal: 8,
-    paddingHorizontal: 10,
-    marginTop: 6,
-    marginBottom: 2,
+  // hairline between the nav blocks, tucked under the block above it: the
+  // divider-owning block has no top padding, so the rule lands one step below
+  // the last row and one step above the first
+  sectionDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
+    marginHorizontal: 10,
+    marginBottom: 4,
   },
   navItem: {
     paddingVertical: 9,
@@ -447,9 +434,6 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   navItemHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
-  },
-  navItemActive: {
     backgroundColor: "var(--control-hover, #d2cbbf)",
   },
   navText: {
