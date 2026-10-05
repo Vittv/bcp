@@ -46,7 +46,21 @@ export function slicePassage(
   endChapter?: number,
 ): KjvPassage | null {
   const chapterKey = String(chapter);
-  const chapterVerses = book.verses[chapterKey];
+  let chapterVerses = book.verses[chapterKey];
+  // Psalm 151 is a single chapter keyed by its published number ("151")
+  // rather than "1", per the vendored deuterocanonical numbering. a
+  // one-chapter book asking for chapter 1 falls back to whichever chapter
+  // it does have, so a reader's 1..n list still resolves. the book must
+  // hold exactly one chapter, so a bad request against a longer book still
+  // reads as unavailable instead of quietly showing a different chapter
+  if (
+    !chapterVerses &&
+    chapter === 1 &&
+    Object.keys(book.verses).length === 1
+  ) {
+    const only = Object.keys(book.verses)[0];
+    chapterVerses = book.verses[only];
+  }
   if (!chapterVerses) return null;
 
   const verseNums = Object.keys(chapterVerses)

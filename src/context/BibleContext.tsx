@@ -9,17 +9,40 @@ import {
 } from "react";
 import type { PageId } from "../components/shell/Sidebar";
 import { useHistory, useHistoryField } from "../context/HistoryContext";
+import {
+  getScriptureBookMeta,
+  getScriptureBooksByTestament,
+} from "../lib/content/bible";
 import { markReached } from "../lib/content/bibleProgress";
-import type { KjvBookMeta } from "../lib/content/kjv";
-import { getBooksByTestament, getKjvBookMeta } from "../lib/content/kjv";
+import type { ScriptureBookMeta } from "../lib/content/scripture";
+import type { Testament } from "../lib/content/types";
 import { registerPageStepper } from "../lib/input/sequenceNav";
 
-export type Testament = "OT" | "NT";
+export type { Testament };
 
-export const ALL_BOOKS: Record<Testament, KjvBookMeta[]> = {
-  OT: getBooksByTestament("OT"),
-  NT: getBooksByTestament("NT"),
+// the app's three readable corpora: the canonical 66 in either translation,
+// plus the 15 deuterocanonical books, which exist only in WEB. DC is a
+// corpus here, not an appendix of the page: it gets its own list, resume
+// slot and reading progress like OT and NT
+export const ALL_BOOKS: Record<Testament, ScriptureBookMeta[]> = {
+  OT: getScriptureBooksByTestament("OT"),
+  NT: getScriptureBooksByTestament("NT"),
+  DC: getScriptureBooksByTestament("DC"),
 };
+
+// the readable corpora, in the order they appear in the sidebar's scripture
+// block. anything that iterates all three (a reset, an aggregate) uses this
+// rather than re-listing the keys, so a corpus cannot be added to one and
+// missed by the other
+export const TESTAMENTS: Testament[] = ["OT", "NT", "DC"];
+
+function bookByAbbrev(abbrev: string): ScriptureBookMeta | undefined {
+  for (const t of TESTAMENTS) {
+    const found = ALL_BOOKS[t].find((b) => b.abbrev === abbrev);
+    if (found) return found;
+  }
+  return undefined;
+}
 
 // ---------------------------------------------------------------------------
 // localStorage helpers
@@ -64,11 +87,12 @@ function savePos(t: Testament, pos: SavedPos): void {
   }
 }
 
-/** drop both testament positions, so the next open starts at a book's first chapter */
+/** drop every saved position, so the next open starts at a book's first chapter */
 export function clearSavedPositions(): void {
   try {
-    localStorage.removeItem(storageKey("OT"));
-    localStorage.removeItem(storageKey("NT"));
+    for (const t of TESTAMENTS) {
+      localStorage.removeItem(storageKey(t));
+    }
   } catch {
     // ignore
   }
@@ -87,17 +111,15 @@ function usablePos(t: Testament, pos: SavedPos | null): SavedPos | null {
   };
 }
 
-// both testaments' saved positions, validated the way the reader restores
-// them. the sidebar's two scripture rows each carry their own "where you
-// left off" label, so the two never compete: a legacy or stale position in
-// one testament cannot keep the other row from showing its own
-export function savedPositions(): {
-  OT: SavedPos | null;
-  NT: SavedPos | null;
-} {
+// every corpus's saved position, validated the way the reader restores
+// them. the sidebar's scripture rows each carry their own "where you left
+// off" label, so they never compete: a legacy or stale position in one
+// corpus cannot keep another row from showing its own
+export function savedPositions(): Record<Testament, SavedPos | null> {
   return {
     OT: usablePos("OT", loadPos("OT")),
     NT: usablePos("NT", loadPos("NT")),
+    DC: usablePos("DC", loadPos("DC")),
   };
 }
 
@@ -121,9 +143,9 @@ type PendingRef = { abbrev: string; chapter: number } | null;
 
 type BibleState = {
   testament: Testament;
-  book: KjvBookMeta | null;
+  book: ScriptureBookMeta | null;
   chapter: number;
-  books: KjvBookMeta[];
+  books: ScriptureBookMeta[];
   selectTestament: (t: Testament) => void;
   selectBook: (abbrev: string) => void;
   clearBook: () => void;
@@ -143,15 +165,42 @@ export function useBible(): BibleState {
 }
 
 export function bibleBookName(abbrev: string): string {
-  return getKjvBookMeta(abbrev)?.book ?? abbrev;
+  // the combined canon, so a deuterocanonical book spells out (Sirach) rather
+  // than falling back to its own abbrev (Sir)
+  return getScriptureBookMeta(abbrev)?.book ?? abbrev;
 }
 
+// which reader page owns which corpus. both directions live here so a
+// cross-link into the bible never has to re-derive the mapping
+const TESTAMENT_FOR_PAGE: Partial<Record<PageId, Testament>> = {
+  "old-testament": "OT",
+  "new-testament": "NT",
+  apocrypha: "DC",
+};
+
+const PAGE_FOR_TESTAMENT: Record<Testament, PageId> = {
+  OT: "old-testament",
+  NT: "new-testament",
+  DC: "apocrypha",
+};
+
 function isBiblePage(p: PageId): boolean {
-  return p === "old-testament" || p === "new-testament";
+  return p in TESTAMENT_FOR_PAGE;
 }
 
 function pageTestament(p: PageId): Testament {
-  return p === "new-testament" ? "NT" : "OT";
+  return TESTAMENT_FOR_PAGE[p] ?? "OT";
+}
+
+/**
+ * the reader page that owns a book, for a cross-link into the bible.
+ * resolves by abbrev and by any citation alias, so a link built from a
+ * lesson's ref ("Sirach") lands in the same page as one built from the
+ * picker's abbrev ("Sir"). null for a book no corpus holds
+ */
+export function pageForBook(abbrevOrName: string): PageId | null {
+  const meta = getScriptureBookMeta(abbrevOrName);
+  return meta ? PAGE_FOR_TESTAMENT[meta.testament] : null;
 }
 
 /** Resolve a saved position to a real book + chapter, falling back to first book. */
@@ -159,7 +208,7 @@ function resolvePos(
   t: Testament,
   saved: SavedPos | null,
 ): {
-  book: KjvBookMeta | null;
+  book: ScriptureBookMeta | null;
   chapter: number;
 } {
   const books = ALL_BOOKS[t];
@@ -189,7 +238,7 @@ export function BibleProvider({
   const initial = resolvePos(initialTestament, loadPos(initialTestament));
 
   const [testament, setTestament] = useState<Testament>(initialTestament);
-  const [book, setBook] = useState<KjvBookMeta | null>(initial.book);
+  const [book, setBook] = useState<ScriptureBookMeta | null>(initial.book);
   const [chapter, setChapter] = useState(initial.chapter);
 
   // browser history: pushes record each chapter/book step, restores replay
@@ -283,18 +332,16 @@ export function BibleProvider({
     [history],
   );
 
+  // the selection carries its own corpus, so picking a deuterocanonical book
+  // switches the reader to DC rather than opening it inside OT
   const selectBook = useCallback(
     (abbrev: string) => {
-      const found =
-        ALL_BOOKS.OT.find((b) => b.abbrev === abbrev) ??
-        ALL_BOOKS.NT.find((b) => b.abbrev === abbrev);
-      // the browser only navigates OT/NT, so a DC-authored book never matches
-      if (found && found.testament !== "DC") {
-        setTestament(found.testament);
-        setBook(found);
-        setChapter(1);
-        history?.push({ bible: { abbrev: found.abbrev, chapter: 1 } });
-      }
+      const found = bookByAbbrev(abbrev);
+      if (!found) return;
+      setTestament(found.testament);
+      setBook(found);
+      setChapter(1);
+      history?.push({ bible: { abbrev: found.abbrev, chapter: 1 } });
     },
     [history],
   );
@@ -397,10 +444,8 @@ export function BibleProvider({
         setChapter(1);
         return;
       }
-      const found = [...ALL_BOOKS.OT, ...ALL_BOOKS.NT].find(
-        (b) => b.abbrev === ref.abbrev,
-      );
-      if (!found || found.testament === "DC") return;
+      const found = bookByAbbrev(ref.abbrev);
+      if (!found) return;
       restoredRef.current = true;
       setTestament(found.testament);
       setBook(found);

@@ -1,9 +1,12 @@
 import { SearchPalette } from "../../components/shell/SearchPalette";
-import { bibleBookName, useBible } from "../../context/BibleContext";
+import {
+  bibleBookName,
+  pageForBook,
+  useBible,
+} from "../../context/BibleContext";
 import { useNavigation } from "../../context/NavigationContext";
 import { usePalette } from "../../context/PaletteContext";
 import { getMark } from "../../lib/content/bibleProgress";
-import { getKjvBookMeta } from "../../lib/content/kjv";
 import type { CollectSection } from "../../lib/content/types";
 import type { PaletteEntry } from "../../lib/reference/search";
 import { requestOpenSettingsSection } from "../../lib/settings";
@@ -59,10 +62,12 @@ export function PaletteHost() {
         navigateTo("saints");
         break;
       case "bible": {
-        const meta = getKjvBookMeta(run.book);
-        if (meta) {
+        // the book names its own page, so a deuterocanonical result opens
+        // the Apocrypha reader rather than the Old Testament one
+        const page = pageForBook(run.book);
+        if (page) {
           navigateTo({
-            page: meta.testament === "NT" ? "new-testament" : "old-testament",
+            page,
             bookAbbrev: run.book,
             chapter: run.chapter,
           });

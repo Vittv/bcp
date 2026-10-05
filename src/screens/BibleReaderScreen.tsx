@@ -16,8 +16,9 @@ import { usePalette } from "../context/PaletteContext";
 import { useTranslation } from "../context/TranslationContext";
 import { loadScriptureBook } from "../lib/content/bible";
 import { getAllProgress } from "../lib/content/bibleProgress";
-import type { KjvBook, KjvBookMeta } from "../lib/content/kjv";
 import { sliceKjvPassage } from "../lib/content/kjv";
+import type { ScriptureBookMeta } from "../lib/content/scripture";
+import type { KjvBook } from "../lib/content/types";
 import { TRANSLATION_OPTIONS } from "../lib/translations";
 import {
   DetailPage,
@@ -71,12 +72,17 @@ export function BibleReaderScreen({
 // ---------------------------------------------------------------------------
 
 export function BibleBar({ leading }: { leading?: ReactNode }) {
-  const { book, chapter, nextChapter, prevChapter } = useBible();
+  const { book, chapter, nextChapter, prevChapter, testament } = useBible();
   const { translation, setTranslation } = useTranslation();
   const palette = usePalette();
   const total = book?.chapters ?? 0;
   const atStart = chapter <= 1;
   const atEnd = total > 0 && chapter >= total;
+  // the deuterocanonical books exist only in WEB, so there is nothing to
+  // switch between and no choice worth offering. the picker is left out
+  // rather than pinned: a control the reader cannot move is a label, and
+  // the bar does not need one
+  const webOnly = testament === "DC";
 
   return (
     <View style={[styles.bar, noSelect]}>
@@ -85,15 +91,17 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
         {/* translation picker: reads the active translation and opens the
             full list. the code reads in accent red, the app's selected-state
             color, in both bar and menu */}
-        <BarDropdown
-          value={translation}
-          options={TRANSLATION_OPTIONS}
-          onChange={setTranslation}
-          mono
-          accent
-          align="start"
-          accessibilityLabel="Bible translation"
-        />
+        {webOnly ? null : (
+          <BarDropdown
+            value={translation}
+            options={TRANSLATION_OPTIONS}
+            onChange={setTranslation}
+            mono
+            accent
+            align="start"
+            accessibilityLabel="Bible translation"
+          />
+        )}
         <PickerButton
           label={book ? bibleBookName(book.abbrev) : "Book"}
           onPress={() => palette.open("bible")}
@@ -162,7 +170,7 @@ const BookRow = memo(function BookRow({
   mark,
   onSelect,
 }: {
-  meta: KjvBookMeta;
+  meta: ScriptureBookMeta;
   active: boolean;
   mark: number;
   onSelect: (abbrev: string) => void;
@@ -220,7 +228,7 @@ export function BibleBookList({
     [books, deferredQuery],
   );
   const pick = useCallback(
-    (_i: number, b: KjvBookMeta) => onSelect(b.abbrev),
+    (_i: number, b: ScriptureBookMeta) => onSelect(b.abbrev),
     [onSelect],
   );
   const { cursor } = useIndexKeyboard(filtered, pick);

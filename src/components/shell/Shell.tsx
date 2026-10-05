@@ -24,6 +24,7 @@ import {
 import { useDrawerSwipe } from "../../components/shell/useDrawerSwipe";
 import {
   BibleProvider,
+  pageForBook,
   savedPositions,
   setBiblePendingRef,
   type Testament,
@@ -62,7 +63,6 @@ import {
   registerOpenChangelog,
   writeChangelogPrefs,
 } from "../../lib/changelogPrefs";
-import { getKjvBookMeta } from "../../lib/content/kjv";
 import {
   IS_LINUX_CHROMIUM,
   IS_MACOS_TAURI,
@@ -170,7 +170,8 @@ function isReferencePage(p: PageId): boolean {
     p === "proverbs" ||
     p === "canticles" ||
     p === "old-testament" ||
-    p === "new-testament"
+    p === "new-testament" ||
+    p === "apocrypha"
   );
 }
 
@@ -761,9 +762,8 @@ export function Shell() {
         return;
       }
       if (target.bookAbbrev && target.chapter) {
-        const meta = getKjvBookMeta(target.bookAbbrev);
-        const page: PageId =
-          meta?.testament === "NT" ? "new-testament" : "old-testament";
+        const page = pageForBook(target.bookAbbrev);
+        if (!page) return;
         setBiblePendingRef({
           abbrev: target.bookAbbrev,
           chapter: target.chapter,
@@ -787,25 +787,13 @@ export function Shell() {
     scrollRef.current?.focus({ preventScroll: true });
   }, []);
 
-  // global keyboard shortcuts (GitHub-style). attached in the capture phase
+  // global keyboard shortcuts (vim-style). attached in the capture phase
   // so handled keys are stopped before browser extensions like Vimium can
   // grab them; unhandled keys pass through untouched.
   useEffect(() => {
     if (!IS_WEB) return;
-    let goPending: string | null = null;
+    let goPending = false;
     let goTimer: ReturnType<typeof setTimeout> | null = null;
-    const GO_MAP: Record<string, PageId> = {
-      t: "today",
-      c: "calendar",
-      l: "lectionary",
-      p: "psalms",
-      o: "offices",
-      b: "old-testament",
-      n: "new-testament",
-      s: "saints",
-      w: "proverbs",
-      a: "canticles",
-    };
     // the page-to-picker map for Ctrl+/: opens the same scope the visible
     // bar would, so the hotkey lands on whichever section the user is on
     const SCOPE_FOR_PAGE: Partial<Record<PageId, PaletteScope>> = {
@@ -816,6 +804,7 @@ export function Shell() {
       proverbs: "proverbs",
       "old-testament": "bible",
       "new-testament": "bible",
+      apocrypha: "bible",
     };
     const isEditable = (el: EventTarget | null): boolean => {
       // SAFETY: DOM keydown targets are Elements or text nodes; a missing
@@ -860,7 +849,7 @@ export function Shell() {
     };
     const clearGo = () => {
       if (goTimer) clearTimeout(goTimer);
-      goPending = null;
+      goPending = false;
       goTimer = null;
     };
     const onKeyDown = (e: KeyboardEvent) => {
@@ -927,7 +916,7 @@ export function Shell() {
         hint.handleKey(e);
         return;
       }
-      if (goPending !== null) {
+      if (goPending) {
         const k = e.key.toLowerCase();
         if (k === "g") {
           e.preventDefault();
@@ -936,13 +925,7 @@ export function Shell() {
           scrollActiveTop();
           return;
         }
-        const page = GO_MAP[k];
         clearGo();
-        if (page) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          handleNavigateTo(page);
-        }
         return;
       }
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -996,7 +979,10 @@ export function Shell() {
           e.preventDefault();
           e.stopImmediatePropagation();
           clearGo();
-          goPending = "";
+          // the only latched chord left is "gg" for the top of the page; the
+          // page-jump letters that shared this latch are gone, so any other
+          // second key just cancels it
+          goPending = true;
           goTimer = setTimeout(clearGo, 900);
           return;
         case "n":
@@ -1061,7 +1047,7 @@ export function Shell() {
       window.removeEventListener("keydown", onKeyDown, true);
       if (goTimer) clearTimeout(goTimer);
     };
-  }, [modal, handleNavigateTo, page, date, goToPage, isMobile]);
+  }, [modal, page, date, goToPage, isMobile]);
 
   const document = composeOffice(
     date,
@@ -1083,15 +1069,16 @@ export function Shell() {
   );
 
   // the sidebar's per-row trailing info: the office of the hour for Today, the
-  // countdown to the next fixed feast on Holy Days, and each testament's own
-  // "where reading stopped" on its row. both are read from storage because the
-  // bible context is cleared on every navigation, and they are un-memoized so
-  // a progress reset cannot leave a stale label behind
+  // countdown to the next fixed feast on Holy Days, and each scripture
+  // corpus's own "where reading stopped" on its row. all are read from
+  // storage because the bible context is cleared on every navigation, and
+  // they are un-memoized so a progress reset cannot leave a stale label behind
   const nextFeast = upcomingSanctoraleEntry(today());
   const saved = savedPositions();
   // abbreviated, not the full name: the row shares one narrow column with
   // "Old Testament", and "1 Thessalonians 12" is wide enough to push the label
-  // into the ellipsis it yields to the detail
+  // into the ellipsis it yields to the detail. the Apocrypha row's own books
+  // abbreviate shorter still ("Sir", "Pr Man")
   const readingLabel = (t: Testament) => {
     const pos = saved[t];
     return pos ? `${pos.abbrev} ${pos.chapter}` : undefined;
@@ -1101,6 +1088,7 @@ export function Shell() {
     saints: nextFeast ? holyDayCountdown(nextFeast, today()) : undefined,
     "old-testament": readingLabel("OT"),
     "new-testament": readingLabel("NT"),
+    apocrypha: readingLabel("DC"),
   };
 
   const scrollRafRef = useRef<number | null>(null);
@@ -1164,6 +1152,7 @@ export function Shell() {
         return <ProverbsBar leading={sidebarShowButton} />;
       case "old-testament":
       case "new-testament":
+      case "apocrypha":
         return <BibleBar leading={sidebarShowButton} />;
       case "today":
         return (
@@ -1265,6 +1254,7 @@ export function Shell() {
         );
       case "old-testament":
       case "new-testament":
+      case "apocrypha":
         return (
           <BibleReaderScreen
             isMobile={isMobile}

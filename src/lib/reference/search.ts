@@ -4,6 +4,7 @@ import {
   sanctoraleDateLabel,
   sanctoraleNameVariants,
 } from "../calendar/sanctorale";
+import { getScriptureBooksByTestament } from "../content/bible";
 import {
   canticleExists,
   canticlePassage,
@@ -164,6 +165,7 @@ export type PaletteSection =
   | "collects"
   | "saints"
   | "bible"
+  | "apocrypha"
   | "settings";
 
 export type PaletteRun =
@@ -183,7 +185,9 @@ export type PaletteEntry = {
   run: PaletteRun;
 };
 
-// the canonical section order of the global palette's headings
+// the canonical section order of the global palette's headings. apocrypha
+// follows bible: same reader, but a separate corpus with its own WEB-only
+// text, so a result's provenance stays obvious in the heading alone
 export const PALETTE_SECTION_ORDER: PaletteSection[] = [
   "psalms",
   "proverbs",
@@ -191,6 +195,7 @@ export const PALETTE_SECTION_ORDER: PaletteSection[] = [
   "collects",
   "saints",
   "bible",
+  "apocrypha",
   "settings",
 ];
 
@@ -321,14 +326,22 @@ function settingsEntries(query: string, cap = Infinity): PaletteEntry[] {
 }
 
 // a query that is exactly a category name lists that whole section, so
-// "psalm" returns all 150, "bible" every chapter, and "old/new testament"
-// that half; anything more specific keeps the normal capped matches
+// "psalm" returns all 150, "bible" every chapter, "old/new testament"
+// that half, and "apocrypha" the deuterocanonical set. anything more
+// specific keeps the normal capped matches
 type BibleExpansion = { testament?: "OT" | "NT" };
 
 function bibleKeyword(lower: string): BibleExpansion | null {
   if (lower === "bible") return {};
   const t = lower.match(/^(old|new) testament$/)?.[1];
   return t ? { testament: t === "old" ? "OT" : "NT" } : null;
+}
+
+// the deuterocanonical books answer to their own vocabulary rather than
+// folding into the canonical "bible" search, so 15 books never cited by the
+// lectionary cannot crowd out the 66 that are
+function apocryphaKeyword(lower: string): boolean {
+  return ["apocrypha", "apocryphal", "deuterocanonical"].includes(lower);
 }
 
 function sectionKeyword(lower: string): PaletteSection | null {
@@ -383,6 +396,21 @@ function expandBible(expansion: BibleExpansion): PaletteEntry[] {
   return out;
 }
 
+function expandApocrypha(): PaletteEntry[] {
+  const out: PaletteEntry[] = [];
+  for (const b of getScriptureBooksByTestament("DC")) {
+    for (let chapter = 1; chapter <= b.chapters; chapter++) {
+      out.push({
+        id: `apocrypha:${b.abbrev}:${chapter}`,
+        section: "apocrypha",
+        label: `${b.book} ${chapter}`,
+        run: { kind: "bible", book: b.abbrev, chapter },
+      });
+    }
+  }
+  return out;
+}
+
 // one merged result list across every picker section, in printed order.
 // an empty query stays blank; an exact section name expands to its full
 // listing, otherwise each section returns capped content matches.
@@ -394,6 +422,7 @@ export function searchPalette(query: string): PaletteEntry[] {
 
   const bibleExpansion = bibleKeyword(lower);
   if (bibleExpansion) return expandBible(bibleExpansion);
+  if (apocryphaKeyword(lower)) return expandApocrypha();
   const section = sectionKeyword(lower);
   if (section) return expandSection(section);
 
@@ -419,6 +448,26 @@ export function searchPalette(query: string): PaletteEntry[] {
       section: "bible",
       label: b.book,
       detail: `${b.testament === "OT" ? "Old Testament" : "New Testament"} · ${b.chapters} chapters`,
+      run: { kind: "bible", book: b.abbrev, chapter: 1 },
+    })),
+  );
+
+  // apocrypha: its own section, so "sirach" or "wis" lands here rather than
+  // competing with the canonical hits for the same eight-row budget
+  const apocryphaHits = getScriptureBooksByTestament("DC")
+    .filter(
+      (b) =>
+        b.book.toLowerCase().includes(lower) ||
+        b.abbrev.toLowerCase().includes(lower),
+    )
+    .slice(0, PER_SECTION_CAP);
+  pushEntries(
+    out,
+    apocryphaHits.map((b) => ({
+      id: `apocrypha:${b.abbrev}`,
+      section: "apocrypha",
+      label: b.book,
+      detail: `Apocrypha · ${b.chapters} chapters`,
       run: { kind: "bible", book: b.abbrev, chapter: 1 },
     })),
   );

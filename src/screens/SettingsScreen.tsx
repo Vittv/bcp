@@ -29,6 +29,7 @@ import {
   ALL_BOOKS,
   clearSavedPositions,
   savedPositions,
+  TESTAMENTS,
 } from "../context/BibleContext";
 import { useOfficeSettings } from "../context/OfficeSettingsContext";
 import {
@@ -665,7 +666,9 @@ function BibleSettings({ translation, setTranslation }: BibleSettingsProps) {
   // reset forces a fresh read below rather than caching a stale answer
   const [, reread] = useState(0);
   const marks = getAllProgress();
-  const books = [...ALL_BOOKS.OT, ...ALL_BOOKS.NT];
+  // every chapter the reader can open, deuterocanonical included: reaching
+  // Sirach 40 is reading progress, so it counts toward the same aggregate
+  const books = [...ALL_BOOKS.OT, ...ALL_BOOKS.NT, ...ALL_BOOKS.DC];
   const total = books.reduce((n, b) => n + b.chapters, 0);
   // clamped, so a stale mark can never push the total past a full bible
   const reached = books.reduce(
@@ -674,7 +677,7 @@ function BibleSettings({ translation, setTranslation }: BibleSettingsProps) {
   );
   // a position with no mark is an upgrading reader, so the reset stays live
   const saved = savedPositions();
-  const hasProgress = reached > 0 || saved.OT !== null || saved.NT !== null;
+  const hasProgress = reached > 0 || TESTAMENTS.some((t) => saved[t] !== null);
   const reset = () => {
     clearProgress();
     clearSavedPositions();

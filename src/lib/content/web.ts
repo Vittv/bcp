@@ -14,9 +14,11 @@ export type { KjvBook, KjvPassage };
 
 export type WebBookMeta = ScriptureBookMeta;
 
-// the deuterocanonical books that appear in offices and the sanctorale,
-// with the DOL names used to cite them. their vendor files live under
-// vendor/web named by lowercase abbrev without spaces.
+// the deuterocanonical books, with the DOL names used to cite them. their
+// vendor files live under vendor/web named by lowercase abbrev without
+// spaces. the order is the WEB's own published book list, which is what the
+// reader's prev/next walk follows, so keep the two in step rather than
+// alphabetising or grouping by genre
 const DEUTEROCANON: {
   abbrev: string;
   chapters: number;
@@ -25,6 +27,11 @@ const DEUTEROCANON: {
   { abbrev: "Tob", chapters: 14, dolRefNames: ["Tobit", "Tob"] },
   { abbrev: "Jdt", chapters: 16, dolRefNames: ["Judith", "Jdt"] },
   { abbrev: "Add Esth", chapters: 10, dolRefNames: ["Add Esth"] },
+  {
+    abbrev: "Dan Grk",
+    chapters: 14,
+    dolRefNames: ["Dan Grk", "Daniel (Greek)"],
+  },
   { abbrev: "Wis", chapters: 19, dolRefNames: ["Wisdom", "Wis"] },
   { abbrev: "Sir", chapters: 51, dolRefNames: ["Sirach", "Sir"] },
   { abbrev: "Bar", chapters: 6, dolRefNames: ["Baruch", "Bar"] },
@@ -40,11 +47,6 @@ const DEUTEROCANON: {
   { abbrev: "3 Macc", chapters: 7, dolRefNames: ["3 Maccabees", "3 Macc"] },
   { abbrev: "2 Esd", chapters: 16, dolRefNames: ["2 Esdras", "2 Esd"] },
   { abbrev: "4 Macc", chapters: 18, dolRefNames: ["4 Maccabees", "4 Macc"] },
-  {
-    abbrev: "Dan Grk",
-    chapters: 14,
-    dolRefNames: ["Dan Grk", "Daniel (Greek)"],
-  },
 ];
 
 const DEUTEROCANON_BOOKS: ScriptureBookMeta[] = DEUTEROCANON.map((d) => ({

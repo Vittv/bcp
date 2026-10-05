@@ -276,6 +276,42 @@ describe("searchPalette", () => {
     expect(ot.length).toBe(929);
   });
 
+  test("apocrypha expands to every deuterocanonical chapter, in its own section", () => {
+    const ap = searchPalette("apocrypha");
+    // 213 chapters across the 15 vendored books
+    expect(ap.length).toBe(213);
+    expect(ap.every((e) => e.section === "apocrypha")).toBe(true);
+    expect(ap[0]).toMatchObject({
+      section: "apocrypha",
+      label: "Tobit 1",
+      run: { kind: "bible", book: "Tob", chapter: 1 },
+    });
+
+    // its own vocabulary, so "deuterocanonical" reaches the same list
+    expect(searchPalette("deuterocanonical").length).toBe(213);
+  });
+
+  test("the canonical bible expansion stays the 66 canonical books", () => {
+    // apocrypha is a separate section, so "bible" must not absorb it
+    const bible = searchPalette("bible");
+    expect(bible.length).toBe(1189);
+    expect(bible.every((e) => e.section === "bible")).toBe(true);
+    expect(bible.some((e) => e.label.startsWith("Tobit"))).toBe(false);
+  });
+
+  test("deuterocanonical books match by name and land in the apocrypha section", () => {
+    const sirach = searchPalette("sirach").filter(
+      (e) => e.section === "apocrypha",
+    );
+    expect(sirach.some((e) => e.label === "Sirach")).toBe(true);
+
+    // by abbreviation too, since the DOL cites these by their short forms
+    const byAbbrev = searchPalette("jdt").filter(
+      (e) => e.section === "apocrypha",
+    );
+    expect(byAbbrev.some((e) => e.label === "Judith")).toBe(true);
+  });
+
   test("expansion keywords do not swallow specific queries", () => {
     // "psalm 20" stays an exact psalms match, not a 150-row dump
     const psalm20 = searchPalette("psalm 20");

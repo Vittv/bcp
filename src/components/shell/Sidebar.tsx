@@ -44,7 +44,8 @@ export type PageId =
   | "proverbs"
   | "canticles"
   | "old-testament"
-  | "new-testament";
+  | "new-testament"
+  | "apocrypha";
 
 export type ModalType = "install" | "settings" | "about" | "help" | "changelog";
 
@@ -95,6 +96,15 @@ const NAV: { id: PageId; label: string; section?: string; icon: ReactNode }[] =
     {
       id: "new-testament",
       label: "New Testament",
+      section: "scripture",
+      icon: <BibleIcon size={15} />,
+    },
+    // last of the scripture block, the way an appendix goes last in a table
+    // of contents. the label carries the distinction, so the row needs no
+    // dimming or divider of its own: the row also carries active state
+    {
+      id: "apocrypha",
+      label: "Apocrypha",
       section: "scripture",
       icon: <BibleIcon size={15} />,
     },
