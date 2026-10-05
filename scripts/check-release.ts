@@ -35,6 +35,15 @@ async function fetchJson<T>(url: string): Promise<T> {
   return response.json();
 }
 
+/** like fetchJson, but yields null instead of exiting on a non-ok response */
+async function fetchOptional<T>(url: string): Promise<T | null> {
+  const response = await fetch(url, {
+    headers: { Accept: "application/vnd.github+json", ...authHeaders() },
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
+
 type PlatformEntry =
   | { url?: string; signature?: string }
   | { url?: string; signature?: string }[];
@@ -42,7 +51,7 @@ type PlatformEntry =
 type Release = {
   tag_name: string;
   draft: boolean;
-  assets: { name: string; browser_download_url: string }[];
+  assets: { id: number; name: string; browser_download_url: string }[];
 };
 
 type LatestJson = {
@@ -50,24 +59,59 @@ type LatestJson = {
   platforms?: Record<string, PlatformEntry>;
 };
 
+async function fetchRelease(tag: string): Promise<Release> {
+  const byTag = `https://api.github.com/repos/${RELEASE_REPO}/releases/tags/${tag}`;
+  // SAFETY: the by-tag endpoint returns a release for any tag that has one
+  const direct = await fetchOptional<Release>(byTag);
+  if (direct) return direct;
+  // a draft is invisible to the by-tag endpoint, which 404s, yet validate only
+  // ever runs before the author publishes. so fall back to paging the list,
+  // which does include drafts when authenticated with write access. tag_name
+  // is the join key, and page in order so an old tag is still reachable.
+  for (let page = 1; page <= 10; page++) {
+    const list = await fetchJson<Release[]>(
+      `https://api.github.com/repos/${RELEASE_REPO}/releases?per_page=100&page=${page}`,
+    );
+    const found = list.find((r) => r.tag_name === tag);
+    if (found) return found;
+    if (list.length < 100) break;
+  }
+  return fail(
+    `no release found for tag ${tag}: missing, or a draft and GITHUB_TOKEN cannot see drafts`,
+  );
+}
+
 async function main() {
   const tag = process.argv[2];
   if (!tag?.startsWith("v")) fail("usage: bun scripts/check-release.ts v0.2.2");
 
   const expectedVersion = tag.replace(/^v/, "");
-  const releasesUrl = `https://api.github.com/repos/${RELEASE_REPO}/releases/tags/${tag}`;
-  // SAFETY: github releases API returns { tag_name, draft, assets } for valid tags
-  const release = await fetchJson<Release>(releasesUrl);
+  // SAFETY: fetchRelease returns a github release object or exits
+  const release = await fetchRelease(tag);
 
   const assetNames = new Set(release.assets.map((a) => a.name));
 
   const latestAsset = release.assets.find((a) => a.name === "latest.json");
   if (!latestAsset) fail("no latest.json asset found on the release");
 
-  // SAFETY: tauri updater's latest.json always contains { version, platforms }
-  const latestJson = await fetchJson<LatestJson>(
-    latestAsset.browser_download_url,
+  // check by asset id rather than browser_download_url: on a draft that url
+  // points at an `untagged-<hash>` placeholder and 404s, which would make this
+  // check unrunnable in exactly the state it exists for. the asset endpoint
+  // serves drafts, and needs octet-stream to return the body not metadata.
+  const latestResponse = await fetch(
+    `https://api.github.com/repos/${RELEASE_REPO}/releases/assets/${latestAsset.id}`,
+    {
+      headers: { Accept: "application/octet-stream", ...authHeaders() },
+    },
   );
+  if (!latestResponse.ok) {
+    fail(
+      `GET release asset ${latestAsset.id} returned ${latestResponse.status}\n${await latestResponse.text()}`,
+    );
+  }
+  // SAFETY: the asset endpoint with octet-stream returns the raw uploaded file,
+  // which for this release is the tauri updater's { version, platforms } json
+  const latestJson = (await latestResponse.json()) as LatestJson;
   if (latestJson.version !== expectedVersion) {
     fail(
       `latest.json version is ${latestJson.version ?? "missing"}, expected ${expectedVersion}`,
