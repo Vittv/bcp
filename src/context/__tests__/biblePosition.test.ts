@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import {
+  ALL_BOOKS,
   clearSavedPositions,
+  openingRef,
   savedPositions,
   type Testament,
 } from "../BibleContext";
@@ -141,6 +143,37 @@ describe("savedPositions", () => {
     store("NT", { abbrev: "John", chapter: 3, savedAt: 200 });
     store("DC", { abbrev: "Sir", chapter: 40, savedAt: 300 });
     clearSavedPositions();
+    expect(savedPositions()).toEqual({ OT: null, NT: null, DC: null });
+  });
+});
+
+// the sidebar row pairs a saved position with this fallback, so a reader who
+// has never opened a corpus still sees where the row would take them
+describe("openingRef", () => {
+  it("names the first chapter of the first book of each corpus", () => {
+    expect(openingRef("OT")).toEqual({ abbrev: "Gen", chapter: 1 });
+    expect(openingRef("NT")).toEqual({ abbrev: "Matt", chapter: 1 });
+    expect(openingRef("DC")).toEqual({ abbrev: "Tob", chapter: 1 });
+  });
+
+  it("agrees with the first book the corpus actually lists", () => {
+    for (const t of ["OT", "NT", "DC"] as const) {
+      expect(openingRef(t)?.abbrev).toBe(ALL_BOOKS[t][0]?.abbrev);
+    }
+  });
+
+  it("stays the fallback and never reports a stored position", () => {
+    // it reads no storage, so a saved position cannot leak through it: that
+    // is what lets the sidebar prefer the saved one and use this only when
+    // there is none
+    store("DC", { abbrev: "Sir", chapter: 40, savedAt: 100 });
+    expect(openingRef("DC")).toEqual({ abbrev: "Tob", chapter: 1 });
+    expect(savedPositions().DC?.abbrev).toBe("Sir");
+  });
+
+  it("does not make an untouched reader look like they have progress", () => {
+    // Settings gates its reset button on savedPositions still reading null,
+    // so the fallback must not leak into that shape
     expect(savedPositions()).toEqual({ OT: null, NT: null, DC: null });
   });
 });

@@ -24,6 +24,7 @@ import {
 import { useDrawerSwipe } from "../../components/shell/useDrawerSwipe";
 import {
   BibleProvider,
+  openingRef,
   pageForBook,
   savedPositions,
   setBiblePendingRef,
@@ -1078,9 +1079,14 @@ export function Shell() {
   // abbreviated, not the full name: the row shares one narrow column with
   // "Old Testament", and "1 Thessalonians 12" is wide enough to push the label
   // into the ellipsis it yields to the detail. the Apocrypha row's own books
-  // abbreviate shorter still ("Sir", "Pr Man")
+  // abbreviate shorter still ("Sir", "Pr Man").
+  //
+  // with nothing saved it names where the corpus would open, so an untouched
+  // row still answers "where would this take me" instead of sitting blank.
+  // that is the reader's position either way, since nothing saved means the
+  // first chapter is what they would land on
   const readingLabel = (t: Testament) => {
-    const pos = saved[t];
+    const pos = saved[t] ?? openingRef(t);
     return pos ? `${pos.abbrev} ${pos.chapter}` : undefined;
   };
   const sidebarDetail: Partial<Record<PageId, string>> = {

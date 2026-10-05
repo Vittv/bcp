@@ -114,13 +114,29 @@ function usablePos(t: Testament, pos: SavedPos | null): SavedPos | null {
 // every corpus's saved position, validated the way the reader restores
 // them. the sidebar's scripture rows each carry their own "where you left
 // off" label, so they never compete: a legacy or stale position in one
-// corpus cannot keep another row from showing its own
+// corpus cannot keep another row from showing its own.
+//
+// a corpus with nothing stored reads null here, which is how Settings tells
+// an untouched reader apart from one with progress to clear. the sidebar
+// pairs this with openingRef rather than a default baked in here, so a null
+// keeps meaning "nothing saved" for that gate
 export function savedPositions(): Record<Testament, SavedPos | null> {
   return {
     OT: usablePos("OT", loadPos("OT")),
     NT: usablePos("NT", loadPos("NT")),
     DC: usablePos("DC", loadPos("DC")),
   };
+}
+
+// where a corpus opens when nothing is saved: the first chapter of its first
+// book, which is where resolvePos sends a reader who has never been there.
+// the sidebar names this so a fresh row still answers "where would this
+// take me" instead of sitting blank until the first read
+export function openingRef(
+  t: Testament,
+): { abbrev: string; chapter: number } | null {
+  const first = ALL_BOOKS[t][0];
+  return first ? { abbrev: first.abbrev, chapter: 1 } : null;
 }
 
 // ---------------------------------------------------------------------------
