@@ -2,13 +2,17 @@ import type { ReactNode } from "react";
 import {
   Pressable,
   type StyleProp,
-  StyleSheet,
   Text,
   View,
   type ViewStyle,
 } from "react-native";
 import { IS_STANDALONE, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+  useThemeVar,
+} from "../../lib/theme/themedStyles";
 import { useAppVersion } from "../../lib/version";
 import {
   BibleIcon,
@@ -118,9 +122,6 @@ const noSelect = {
   WebkitUserSelect: "none" as const,
 };
 
-const HOVER_COLOR = "var(--text, #2c2020)";
-const IDLE_COLOR = "var(--text-secondary, #7a6e64)";
-
 // a toolbar pill: bordered, icon plus optional label, hover fill, no pressed
 // state; `subtle` drops border and plate while keeping the pill anatomy
 function ToolButton({
@@ -138,6 +139,8 @@ function ToolButton({
   footer?: boolean;
   children: (color: string) => ReactNode;
 }) {
+  const styles = useThemedStyles(sidebarStyles);
+  const v = useThemeVar();
   return (
     <Pressable
       dataSet={{ bcpBtn: "" }}
@@ -154,7 +157,7 @@ function ToolButton({
     >
       {({ hovered }) => (
         <>
-          {children(hovered ? HOVER_COLOR : IDLE_COLOR)}
+          {children(hovered ? v("var(--text)") : v("var(--text-secondary)"))}
           {label ? (
             <Text
               style={[styles.toolBtnText, hovered && styles.toolBtnTextHover]}
@@ -194,6 +197,8 @@ export function Sidebar({
   dragging,
   showLabels = true,
 }: SidebarProps) {
+  const styles = useThemedStyles(sidebarStyles);
+  const v = useThemeVar();
   const version = useAppVersion();
   const sections = SECTIONS.map((id) => ({
     id,
@@ -214,7 +219,10 @@ export function Sidebar({
           accessibilityRole="button"
         >
           {({ hovered }) => (
-            <SidebarIcon size={14} color={hovered ? HOVER_COLOR : IDLE_COLOR} />
+            <SidebarIcon
+              size={14}
+              color={hovered ? v("var(--text)") : v("var(--text-secondary)")}
+            />
           )}
         </Pressable>
         <View style={styles.toolbarSpacer} />
@@ -264,7 +272,20 @@ export function Sidebar({
                     ]}
                   >
                     <View style={styles.navLabel}>
-                      <View style={navIconStyle(isActive)}>{item.icon}</View>
+                      <View
+                        // SAFETY: the icon wrapper carries `color` (so the svg
+                        // strokes inherit it via currentColor), which RN's
+                        // ViewStyle type rejects; it is a plain ViewStyle at
+                        // runtime, same as the settings rail's icon column.
+                        style={
+                          [
+                            styles.navIcon,
+                            isActive && styles.navIconActive,
+                          ] as StyleProp<ViewStyle>
+                        }
+                      >
+                        {item.icon}
+                      </View>
                       <Text
                         style={[
                           styles.navText,
@@ -327,26 +348,20 @@ export function Sidebar({
   );
 }
 
-// SAFETY: the icon wrapper carries `color` (so the svg strokes inherit it via
-// currentColor), which RN's ViewStyle type rejects; it is a plain ViewStyle at
-// runtime, same as the settings rail's icon column.
-const navIconStyle = (active: boolean): StyleProp<ViewStyle> =>
-  [styles.navIcon, active && styles.navIconActive] as StyleProp<ViewStyle>;
-
-const styles = StyleSheet.create({
+const sidebarStyles = defineThemedStyles({
   sidebar: {
     width: "100%",
     height: "100%",
     display: "flex",
     flexDirection: "column",
     borderRightWidth: 1,
-    borderRightColor: "var(--border, #d2cbbf)",
-    backgroundColor: "var(--bg, #e0dbd0)",
+    borderRightColor: "var(--border)",
+    backgroundColor: "var(--bg)",
   },
   toolbar: {
     height: 30,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
+    borderBottomColor: "var(--border)",
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -365,8 +380,8 @@ const styles = StyleSheet.create({
     gap: 5,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "var(--border, #cbc5bb)",
-    backgroundColor: "var(--surface, #d5cfc4)",
+    borderColor: "var(--border)",
+    backgroundColor: "var(--surface)",
   },
   toolBtnSubtle: {
     borderWidth: 0,
@@ -384,16 +399,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   toolBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   toolBtnText: {
     fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "500",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   toolBtnTextHover: {
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   scroll: {
     flex: 1,
@@ -411,7 +426,7 @@ const styles = StyleSheet.create({
   // the last row and one step above the first
   sectionDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
+    borderBottomColor: "var(--border-faint)",
     marginHorizontal: 10,
     marginBottom: 4,
   },
@@ -435,35 +450,35 @@ const styles = StyleSheet.create({
   navIcon: {
     width: 18,
     alignItems: "center",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     // idle icons recede; the active row pops at full accent
     opacity: 0.6,
   },
   navIconActive: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     opacity: 1,
   },
   navItemHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   navText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 14,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     // long labels ellipsize within the icon+label group rather than fight
     // the trailing detail
     flexShrink: 1,
   },
   navTextActive: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     fontWeight: "600",
   },
   navDetail: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     opacity: 0.7,
     // long details (feast names) ellipsize within the trailing space rather
     // than squeeze the row label
@@ -473,7 +488,7 @@ const styles = StyleSheet.create({
     height: 24,
     flexShrink: 0,
     borderTopWidth: 1,
-    borderTopColor: "var(--border, #d2cbbf)",
+    borderTopColor: "var(--border)",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 10,
@@ -483,6 +498,6 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
 });

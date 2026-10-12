@@ -1,13 +1,18 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { requestOpenChangelog } from "../../lib/changelogPrefs";
 import { IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
 import { useUpdateStatus } from "../../lib/updater";
 
 // launch-time notice that a newer desktop build exists, drawn as a thin
 // band at the bottom of the sidebar, just above the footer. runs the
 // shared updater flow on press and relaunches on success.
 export function UpdateBanner() {
+  const styles = useThemedStyles(updateBannerStyles);
   const { status, version, body, install } = useUpdateStatus(true);
 
   if (!IS_TAURI) return null;
@@ -59,7 +64,7 @@ export function UpdateBanner() {
   );
 }
 
-const styles = StyleSheet.create({
+const updateBannerStyles = defineThemedStyles({
   banner: {
     height: 30,
     flexDirection: "row",
@@ -67,15 +72,15 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 14,
     flexShrink: 0,
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
     borderTopWidth: 1,
-    borderTopColor: "var(--border, #d2cbbf)",
+    borderTopColor: "var(--border)",
   },
   text: {
     fontFamily: CHROME_FONT,
     fontWeight: "600",
     fontSize: 12,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     flexShrink: 1,
   },
   updateBtn: {
@@ -83,19 +88,19 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    borderColor: "var(--border-content)",
     overflow: "hidden",
     marginLeft: "auto",
   },
   updateBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
-    borderColor: "var(--accent, #7a3040)",
+    backgroundColor: "var(--control-hover)",
+    borderColor: "var(--accent)",
   },
   updateText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 12,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   changelogBtn: {
     paddingHorizontal: 10,
@@ -105,13 +110,13 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   changelogBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   changelogText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 12,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     textDecorationLine: "underline",
   },
 });

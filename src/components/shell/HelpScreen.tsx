@@ -1,5 +1,9 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { CHROME_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
 
 export const SHORTCUTS: {
   group: string;
@@ -33,10 +37,12 @@ export const SHORTCUTS: {
 ];
 
 function Key({ label }: { label: string }) {
+  const styles = useThemedStyles(helpStyles);
   return <Text style={styles.key}>{label}</Text>;
 }
 
 export function HelpScreen() {
+  const styles = useThemedStyles(helpStyles);
   return (
     <View>
       <Text style={styles.lead}>
@@ -63,13 +69,13 @@ export function HelpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const helpStyles = defineThemedStyles({
   lead: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 14,
     lineHeight: 21,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 20,
   },
   section: {
@@ -81,7 +87,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 1.2,
     textTransform: "uppercase",
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     marginBottom: 10,
   },
   row: {
@@ -99,19 +105,19 @@ const styles = StyleSheet.create({
     fontFamily: '"JetBrains Mono", monospace',
     fontWeight: "500",
     fontSize: 13,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     paddingHorizontal: 9,
     paddingVertical: 3,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
-    backgroundColor: "var(--bg-raised, #ece7dd)",
+    borderColor: "var(--border-content)",
+    backgroundColor: "var(--bg-raised)",
     fontVariant: ["tabular-nums"],
   },
   label: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 14,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
 });

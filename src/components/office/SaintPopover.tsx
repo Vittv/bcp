@@ -5,10 +5,14 @@ import {
   useContext,
   useState,
 } from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, Text } from "react-native";
 import { useNavigation } from "../../context/NavigationContext";
 import { sanctoraleBySlug } from "../../lib/calendar/sanctorale";
 import { CHROME_FONT, HEADING_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
 import { useReference } from "../../screens/reference/shared";
 import { AppModal } from "../shell/AppModal";
 import { SanctoraleCard } from "./SanctoraleCard";
@@ -34,6 +38,7 @@ export function useSaintPopover(): SaintPopoverValue {
 }
 
 export function SaintPopoverProvider({ children }: { children: ReactNode }) {
+  const styles = useThemedStyles(saintPopoverStyles);
   const [slug, setSlug] = useState<string | null>(null);
   const { navigateTo } = useNavigation();
   const { setOpenSaint } = useReference();
@@ -83,21 +88,21 @@ export function SaintPopoverProvider({ children }: { children: ReactNode }) {
   );
 }
 
-const styles = StyleSheet.create({
+const saintPopoverStyles = defineThemedStyles({
   saintsBtn: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "var(--border, #c9c1b2)",
+    borderColor: "var(--border)",
   },
   saintsBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   saintsBtnText: {
     fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "600",
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
 });

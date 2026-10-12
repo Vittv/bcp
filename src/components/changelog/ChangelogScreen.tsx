@@ -1,5 +1,9 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { CHROME_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
 import { MarkdownView } from "./MarkdownView";
 
 // the changelog's own modal body, shown after an update and from the
@@ -22,6 +26,7 @@ export function ChangelogScreen({
   onToggleSuppress,
   onDone,
 }: ChangelogScreenProps) {
+  const styles = useThemedStyles(changelogStyles);
   return (
     <View style={styles.frame}>
       <ScrollView
@@ -65,7 +70,7 @@ export function ChangelogScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const changelogStyles = defineThemedStyles({
   frame: {
     flex: 1,
     minHeight: 0,
@@ -90,8 +95,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: "var(--border, #c9c1b2)",
-    backgroundColor: "var(--bg, #e0dbd0)",
+    borderTopColor: "var(--border)",
+    backgroundColor: "var(--bg)",
   },
   toggle: {
     flexDirection: "row",
@@ -102,7 +107,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   toggleHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   checkbox: {
     width: 14,
@@ -110,44 +115,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    borderColor: "var(--border-content)",
     borderRadius: 3,
   },
   checkboxOn: {
-    backgroundColor: "var(--input-bg, #ece7dd)",
+    backgroundColor: "var(--input-bg)",
   },
   checkMark: {
     fontFamily: CHROME_FONT,
     fontWeight: "700",
     fontSize: 10,
     lineHeight: 12,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   toggleLabel: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   toggleLabelOn: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   doneBtn: {
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    borderColor: "var(--border-content)",
     backgroundColor: "transparent",
     overflow: "hidden",
   },
   doneBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   doneText: {
     fontFamily: CHROME_FONT,
     fontWeight: "600",
     fontSize: 14,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
 });

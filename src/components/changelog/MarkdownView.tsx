@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import {
   type ChangelogBlock,
   type InlineNode,
@@ -7,6 +7,11 @@ import {
   parseInline,
 } from "../../lib/changelogMd";
 import { CHROME_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+  useThemeVar,
+} from "../../lib/theme/themedStyles";
 import { ExternalLink } from "../ExternalLink";
 
 // renders the release-notes grammar (sections, paragraphs, bullets and the
@@ -19,6 +24,9 @@ const MONO = '"JetBrains Mono", monospace';
 // inline spans render as nested <Text>, with links as real anchors so the
 // desktop shell hands them to the system browser
 function InlineText({ nodes }: { nodes: InlineNode[] }): ReactNode {
+  const styles = useThemedStyles(markdownStyles);
+  const v = useThemeVar();
+  const linkStyle = { ...web.link, color: v("var(--accent)") };
   return nodes.map((node, index) => {
     switch (node.t) {
       case "text":
@@ -41,7 +49,7 @@ function InlineText({ nodes }: { nodes: InlineNode[] }): ReactNode {
       case "link":
         return (
           // biome-ignore lint/suspicious/noArrayIndexKey: static spans, never reorder
-          <ExternalLink key={index} href={node.href} style={web.link}>
+          <ExternalLink key={index} href={node.href} style={linkStyle}>
             <InlineText nodes={node.children} />
           </ExternalLink>
         );
@@ -52,6 +60,7 @@ function InlineText({ nodes }: { nodes: InlineNode[] }): ReactNode {
 }
 
 function Paragraph({ text }: { text: string }) {
+  const styles = useThemedStyles(markdownStyles);
   return (
     <Text style={styles.paragraph}>
       <InlineText nodes={parseInline(text)} />
@@ -60,6 +69,7 @@ function Paragraph({ text }: { text: string }) {
 }
 
 function Bullet({ text }: { text: string }) {
+  const styles = useThemedStyles(markdownStyles);
   return (
     <View style={styles.bulletRow}>
       <Text style={styles.bulletMark}>•</Text>
@@ -71,6 +81,7 @@ function Bullet({ text }: { text: string }) {
 }
 
 function Block({ block }: { block: ChangelogBlock }) {
+  const styles = useThemedStyles(markdownStyles);
   switch (block.t) {
     case "heading":
       return (
@@ -122,13 +133,13 @@ export function MarkdownView({ markdown }: { markdown: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const markdownStyles = defineThemedStyles({
   heading2: {
     fontFamily: CHROME_FONT,
     fontWeight: "600",
     fontSize: 18,
     lineHeight: 25,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginTop: 12,
     marginBottom: 4,
   },
@@ -137,7 +148,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 15,
     lineHeight: 21,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginTop: 10,
     marginBottom: 3,
   },
@@ -146,7 +157,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     fontSize: 15,
     lineHeight: 23,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 10,
   },
   bullets: {
@@ -162,25 +173,25 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 15,
     lineHeight: 23,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   // inline spans inside a paragraph keep the surrounding face unless asked
   // to differ, so bold only bumps the weight and code only swaps the face
   bold: {
     fontWeight: "700",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   code: {
     fontFamily: MONO,
     fontWeight: "500",
     fontSize: 13,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   footer: {
     marginTop: 22,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "var(--border, #c9c1b2)",
+    borderTopColor: "var(--border)",
   },
   footerLinkPad: {
     alignSelf: "flex-start",
@@ -190,13 +201,13 @@ const styles = StyleSheet.create({
     marginHorizontal: -4,
   },
   footerLinkHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   footerLinkText: {
     fontFamily: CHROME_FONT,
     fontWeight: "600",
     fontSize: 13,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     textDecorationLine: "underline",
   },
 });
@@ -210,7 +221,6 @@ const web: Record<string, CSSProperties> = {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 13,
-    color: "var(--accent, #7a3040)",
     textDecorationLine: "underline",
     wordBreak: "break-all",
   },

@@ -14,6 +14,7 @@ import { useTranslation } from "../../context/TranslationContext";
 import { loadScriptureBook } from "../../lib/content/bible";
 import { sliceKjvPassage } from "../../lib/content/kjv";
 import type { KjvBook, KjvPassage } from "../../lib/content/types";
+import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   DetailPage,
   EmptyMessage,
@@ -23,7 +24,7 @@ import {
   SplitPane,
   useReference,
 } from "./shared";
-import { sharedStyles as styles } from "./styles";
+import { sharedStyles as styleDef } from "./styles";
 import { useIndexKeyboard } from "./useIndexKeyboard";
 
 const PROVERS_CHAPTERS = 31;
@@ -71,6 +72,7 @@ export function ProverbsScreen({
   onScrollProgress?: (pct: number) => void;
 }) {
   const { openProvChapter } = useReference();
+  const styles = useThemedStyles(styleDef);
 
   if (isMobile) {
     return (
@@ -103,6 +105,7 @@ export function ProverbsBar({ leading }: { leading?: ReactNode }) {
   const { openProvChapter, setOpenProvChapter } = useReference();
   const palette = usePalette();
   const chapters = useProvChapterMeta();
+  const styles = useThemedStyles(styleDef);
   const n = openProvChapter ?? 1;
   const verses = chapters.find((c) => c.chapter === n)?.verses ?? 0;
   const atStart = n <= 1;
@@ -164,6 +167,7 @@ const ChapterRow = memo(function ChapterRow({
   selected: number | null;
   onSelect: (n: number | null) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
   return (
     <IndexRow
       cursor={active}
@@ -211,6 +215,7 @@ export function ChapterIndex({
     [selected, onSelect],
   );
   const { cursor } = useIndexKeyboard(filtered, onEnter);
+  const styles = useThemedStyles(styleDef);
   if (filtered.length === 0) {
     return <EmptyMessage message={`No proverbs chapter matches “${q}”.`} />;
   }
@@ -237,6 +242,7 @@ function ProvChapterBody({ chapter }: { chapter: number }) {
     if (!book) return null;
     return sliceKjvPassage(book, chapter);
   }, [book, chapter]);
+  const styles = useThemedStyles(styleDef);
 
   if (!passage) return null;
 

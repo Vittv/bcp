@@ -18,11 +18,12 @@ import { OfficeHeader } from "../../components/office/OfficeHeader";
 import { OfficeView } from "../../components/office/OfficeView";
 import { Chevron } from "../../components/shell/Chevron";
 import { useSeasonColorMap } from "../../components/shell/SeasonDot";
-import { SHEET_BG, useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../context/ThemeContext";
 import { addDays, colorFor, daysInMonth, weekday } from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
+import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   BASE_OFFICES,
   noSelect,
@@ -32,7 +33,7 @@ import {
   today,
   useReference,
 } from "./shared";
-import { sharedStyles as styles } from "./styles";
+import { sharedStyles as styleDef } from "./styles";
 
 // SAFETY: the literals are exactly the OfficeRite union members
 const RITES: OfficeRite[] = ["One", "Two"];
@@ -69,6 +70,8 @@ export function OfficesScreen({
   useEffect(() => {
     progressRef.current?.(0);
   }, [current, officeRite]);
+
+  const styles = useThemedStyles(styleDef);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
@@ -112,12 +115,13 @@ export function OfficesBar({
     officeDate,
     setOfficeDate,
   } = useReference();
-  const { resolved } = useTheme();
+  const { tokens } = useTheme();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const styles = useThemedStyles(styleDef);
   const current = openOffice ?? "morning";
   // inline so the sheet is always painted, whatever the class engine does
-  const sheetStyle = { backgroundColor: SHEET_BG[resolved] };
+  const sheetStyle = { backgroundColor: tokens.bg };
   const onToday = sameDate(officeDate, today());
 
   const step = (n: number) => setOfficeDate(addDays(officeDate, n));
@@ -390,6 +394,7 @@ function MonthPicker({
     year: date.year,
     month: date.month,
   }));
+  const styles = useThemedStyles(styleDef);
 
   const shiftMonth = (n: number) => {
     const m = ((view.month - 1 + n + 12) % 12) + 1;

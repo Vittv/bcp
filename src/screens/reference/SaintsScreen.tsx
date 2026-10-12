@@ -14,6 +14,7 @@ import {
   sanctoraleBySlug,
 } from "../../lib/calendar/sanctorale";
 import { type SaintHit, searchSaints } from "../../lib/reference/search";
+import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   DetailPage,
   EmptyMessage,
@@ -24,7 +25,7 @@ import {
   SplitPane,
   useReference,
 } from "./shared";
-import { sharedStyles as styles } from "./styles";
+import { sharedStyles as styleDef } from "./styles";
 import { useIndexKeyboard } from "./useIndexKeyboard";
 
 export function SaintsScreen({
@@ -37,6 +38,7 @@ export function SaintsScreen({
   onScrollProgress?: (pct: number) => void;
 }) {
   const { openSaint, saintBio, saintLiturgy } = useReference();
+  const styles = useThemedStyles(styleDef);
   if (isMobile) {
     return (
       <View style={styles.container}>
@@ -75,28 +77,24 @@ export function SaintsBar({ leading }: { leading?: ReactNode }) {
   const { openSaint, saintBio, setSaintBio, saintLiturgy, setSaintLiturgy } =
     useReference();
   const palette = usePalette();
+  const styles = useThemedStyles(styleDef);
+  const barStyles = useThemedStyles(officeBarStyles);
 
   const toggles = (
     <View style={styles.saintToggles}>
       <Pressable
-        style={({ hovered }) => [
-          officeBarStyles.toggle,
-          hovered && styles.rowHover,
-        ]}
+        style={({ hovered }) => [barStyles.toggle, hovered && styles.rowHover]}
         onPress={() => setSaintBio(!saintBio)}
         accessibilityRole="button"
         accessibilityState={{ selected: saintBio }}
         accessibilityLabel={saintBio ? "Hide biography" : "Show biography"}
       >
-        <Text style={[officeBarStyles.toggleText, saintBio && styles.toggleOn]}>
+        <Text style={[barStyles.toggleText, saintBio && styles.toggleOn]}>
           Bio
         </Text>
       </Pressable>
       <Pressable
-        style={({ hovered }) => [
-          officeBarStyles.toggle,
-          hovered && styles.rowHover,
-        ]}
+        style={({ hovered }) => [barStyles.toggle, hovered && styles.rowHover]}
         onPress={() => setSaintLiturgy(!saintLiturgy)}
         accessibilityRole="button"
         accessibilityState={{ selected: saintLiturgy }}
@@ -104,9 +102,7 @@ export function SaintsBar({ leading }: { leading?: ReactNode }) {
           saintLiturgy ? "Hide liturgical content" : "Show liturgical content"
         }
       >
-        <Text
-          style={[officeBarStyles.toggleText, saintLiturgy && styles.toggleOn]}
-        >
+        <Text style={[barStyles.toggleText, saintLiturgy && styles.toggleOn]}>
           Liturgy
         </Text>
       </Pressable>
@@ -143,6 +139,7 @@ const SaintRow = memo(function SaintRow({
   selected: string | null;
   onSelect: (slug: string | null) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
   const isSelected = hit.slug === selected;
   return (
     <IndexRow
@@ -186,6 +183,7 @@ export const SaintIndex = memo(function SaintIndex({
     [selected, onSelect],
   );
   const { cursor } = useIndexKeyboard(hits, onEnter);
+  const styles = useThemedStyles(styleDef);
   if (hits.length === 0) {
     return <EmptyMessage message={`No holy days match “${deferredQuery}”.`} />;
   }

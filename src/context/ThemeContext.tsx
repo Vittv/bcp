@@ -9,22 +9,45 @@ import {
 } from "react";
 import { Platform } from "react-native";
 import { INTER_TIGHT, SYSTEM_UI } from "../lib/fonts";
+import type { ThemeId } from "../lib/theme/themes";
+import { DEFAULT_THEME, THEMES, themeTokens } from "../lib/theme/themes";
+import type {
+  ResolvedTheme,
+  ThemeMode,
+  ThemeTokens,
+} from "../lib/theme/tokens";
+import { tokenVars } from "../lib/theme/tokens";
 
-export type ThemeMode = "light" | "dark" | "system";
-export type ResolvedTheme = "light" | "dark";
+export type { ResolvedTheme, ThemeMode };
 export type FontMode = "inter" | "system";
 
 type ThemeContextValue = {
   mode: ThemeMode;
   resolved: ResolvedTheme;
+  tokens: ThemeTokens;
+  /**
+   * the selected theme family. its light/dark pair supplies `tokens` for the
+   * resolved mode, so picking a family re-skins the whole app without touching
+   * the mode axis.
+   */
+  theme: ThemeId;
+  /**
+   * the font custom properties a style may reference (today just
+   * `--chrome-font`). the resolver swaps var() for these values so the chrome
+   * face follows the font-mode choice on web and native alike, matching the
+   * css custom property applyFontMode paints on the root.
+   */
+  fontVars: Record<string, string>;
   fontScale: number;
   fontMode: FontMode;
   setMode: (mode: ThemeMode) => void;
+  setTheme: (theme: ThemeId) => void;
   setFontScale: (scale: number) => void;
   setFontMode: (mode: FontMode) => void;
 };
 
 const STORAGE_KEY_THEME = "bcp-theme-mode";
+const STORAGE_KEY_THEME_FAMILY = "bcp-theme-family";
 const STORAGE_KEY_FONT = "bcp-font-scale";
 const STORAGE_KEY_FONT_MODE = "bcp-font-mode";
 
@@ -70,6 +93,27 @@ function persistThemeMode(mode: ThemeMode) {
   } catch {}
 }
 
+function loadThemeFamily(): ThemeId {
+  try {
+    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+      const v = localStorage.getItem(STORAGE_KEY_THEME_FAMILY);
+      if (v && v in THEMES) {
+        // SAFETY: the `in` guard proves the stored string names a family.
+        return v as ThemeId;
+      }
+    }
+  } catch {}
+  return DEFAULT_THEME;
+}
+
+function persistThemeFamily(theme: ThemeId) {
+  try {
+    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEY_THEME_FAMILY, theme);
+    }
+  } catch {}
+}
+
 function persistFontScale(scale: number) {
   try {
     if (Platform.OS === "web" && typeof localStorage !== "undefined") {
@@ -96,92 +140,21 @@ function persistFontMode(mode: FontMode) {
   } catch {}
 }
 
-const LightPalette = {
-  bg: "#e0dbd0",
-  bgRaised: "#ece7dd",
-  inputBg: "#ece7dd",
-  border: "#cbc5bb",
-  borderContent: "#a59d92",
-  borderFaint: "rgba(44, 32, 32, 0.09)",
-  rowHover: "rgba(44, 32, 32, 0.06)",
-  text: "#2c2020",
-  textSecondary: "#6b6159",
-  accent: "#7a3040",
-  // link-hint badge: wine chip with light text reads best on the light page
-  hintBg: "#7a3040",
-  hintText: "#f2ece4",
-  scrollbar: "#a09589",
-  todayBg: "rgba(122, 48, 64, 0.16)",
-  controlHover: "#d2cbbf",
-  selectedBg: "#ece7dd",
-  // button plate: resting controls read as touchable without leaning on
-  // their borders
-  surface: "#d5cfc4",
-  // keycap fill: recessed, darker than the surface
-  keyBg: "rgba(44, 32, 32, 0.09)",
-};
-
-const DarkPalette = {
-  bg: "#1b191a",
-  bgRaised: "#262425",
-  inputBg: "#1f1d1f",
-  border: "#333034",
-  borderContent: "#545053",
-  borderFaint: "rgba(255, 255, 255, 0.07)",
-  rowHover: "rgba(255, 255, 255, 0.06)",
-  text: "#d4d0d3",
-  textSecondary: "#8d8985",
-  accent: "#c85f8b",
-  // link-hint badge: dark chip with pink text on the dark page
-  hintBg: "#1b191a",
-  hintText: "#c85f8b",
-  scrollbar: "#5a5759",
-  todayBg: "rgba(200, 95, 139, 0.30)",
-  controlHover: "#282628",
-  selectedBg: "#262425",
-  // button plate: resting controls read as touchable without leaning on
-  // their borders
-  surface: "#232122",
-  // keycap fill: recessed, darker than the surface
-  keyBg: "rgba(0, 0, 0, 0.32)",
-};
-
-// literal popover surface colors, keyed by resolved theme. applied as an
-// inline style (not a stylesheet class) so the sheet can never end up
-// unpainted, class-based backgrounds were reported showing content
-// through the dropdowns
-export const SHEET_BG: Record<ResolvedTheme, string> = {
-  light: LightPalette.bg,
-  dark: DarkPalette.bg,
-};
-
-function applyPalette(theme: ResolvedTheme) {
+// paint the current theme into the document. every token becomes a css
+// custom property on the root (--bg, --text-secondary, ...), so component
+// styles that write var(--token) and the chrome-only rules below all resolve
+// against the same vocabulary, and the tokens object stays the single source
+// of truth for a theme.
+function applyTokens(tokens: ThemeTokens, resolved: ResolvedTheme) {
   if (Platform.OS !== "web" || typeof document === "undefined") return;
-  const p = theme === "dark" ? DarkPalette : LightPalette;
   const r = document.documentElement.style;
-  r.setProperty("--bg", p.bg);
-  r.setProperty("--bg-raised", p.bgRaised);
-  r.setProperty("--input-bg", p.inputBg);
-  r.setProperty("--border", p.border);
-  r.setProperty("--border-content", p.borderContent);
-  r.setProperty("--border-faint", p.borderFaint);
-  r.setProperty("--row-hover", p.rowHover);
-  r.setProperty("--text", p.text);
-  r.setProperty("--text-secondary", p.textSecondary);
-  r.setProperty("--accent", p.accent);
-  r.setProperty("--hint-bg", p.hintBg);
-  r.setProperty("--hint-text", p.hintText);
-  r.setProperty("--bg-page", p.bg);
-  r.setProperty("--scrollbar", p.scrollbar);
-  r.setProperty("--today-bg", p.todayBg);
-  r.setProperty("--control-hover", p.controlHover);
-  r.setProperty("--selected-bg", p.selectedBg);
-  r.setProperty("--surface", p.surface);
-  r.setProperty("--key-bg", p.keyBg);
+  for (const [name, value] of Object.entries(tokenVars(tokens))) {
+    r.setProperty(name, value);
+  }
   // trust the color-scheme for native chrome we do not paint: the wco
   // window-controls overlay glyphs, scrollbars, and form controls. without
   // it chromium keeps the overlay light even while the app runs dark
-  r.setProperty("color-scheme", theme === "dark" ? "dark" : "light");
+  r.setProperty("color-scheme", resolved === "dark" ? "dark" : "light");
 
   // drive the installed pwa's window chrome from the app palette instead of
   // the static light value in public/index.html. chromium re-reads this meta
@@ -189,18 +162,20 @@ function applyPalette(theme: ResolvedTheme) {
   const themeMeta = document.querySelector<HTMLMetaElement>(
     'meta[name="theme-color"][id="theme-color"]',
   );
-  if (themeMeta) themeMeta.content = p.bg;
+  if (themeMeta) themeMeta.content = tokens.bg;
 
   const id = "scrollbar-style";
-  // SAFETY: we only create <style> elements with this id in applyPalette.
+  // SAFETY: we only create <style> elements with this id in applyTokens.
   let el = document.getElementById(id) as HTMLStyleElement | null;
   if (!el) {
     el = document.createElement("style");
     el.id = id;
     document.head.appendChild(el);
   }
+  // the chrome rules read --vars off the root rather than interpolating a
+  // color, so the injected stylesheet and the theme can never drift
   el.textContent = `
-    * { scrollbar-width: thin; scrollbar-color: ${p.scrollbar} transparent; }
+    * { scrollbar-width: thin; scrollbar-color: var(--scrollbar) transparent; }
     /* webkitgtk smooths subpixel fonts poorly; force grayscale antialiasing */
     html, body {
       -webkit-font-smoothing: antialiased;
@@ -209,16 +184,16 @@ function applyPalette(theme: ResolvedTheme) {
     }
     *::-webkit-scrollbar { width: 4px; height: 4px; }
     *::-webkit-scrollbar-track { background: transparent; }
-    *::-webkit-scrollbar-thumb { background: ${p.scrollbar}; border-radius: 4px; }
-    *::-webkit-scrollbar-thumb:hover { background: ${p.textSecondary}; }
-    ::selection { background: var(--control-hover, #d2cbbf); color: var(--text, #2c2020); }
-    :focus-visible { outline: 2px solid ${p.accent}; outline-offset: 2px; }
+    *::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
+    *::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+    ::selection { background: var(--control-hover); color: var(--text); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     [data-picker-search]:focus-visible { outline: none; }
     /* the settings search lights up as one block: the focusing input pulls
        the accent ring around the whole pill (mag glass, field, clear), like
        the desktop chat's search, instead of ringing the input in isolation */
     [data-settings-search]:focus-within {
-      outline: 2px solid ${p.accent};
+      outline: 2px solid var(--accent);
       outline-offset: 1px;
     }
     [data-settings-search] :focus-visible { outline: none; }
@@ -275,37 +250,51 @@ function assetUri(face: FontSource): string {
   return Asset.fromModule(face).uri;
 }
 
+// the chrome face for a font mode: Inter Tight over the system stack, or the
+// system stack alone. one source for both the css custom property (applyFontMode)
+// and the js resolver's fontVars lookup, so the two can never drift.
+function chromeFontStack(mode: FontMode): string {
+  return mode === "inter" ? `"${INTER_TIGHT}", ${SYSTEM_UI}` : SYSTEM_UI;
+}
+
 function applyFontMode(mode: FontMode) {
   if (Platform.OS !== "web" || typeof document === "undefined") return;
   ensureInterFont();
   const r = document.documentElement.style;
-  r.setProperty(
-    "--chrome-font",
-    mode === "inter" ? `"${INTER_TIGHT}", ${SYSTEM_UI}` : SYSTEM_UI,
-  );
+  r.setProperty("--chrome-font", chromeFontStack(mode));
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   mode: "system",
   resolved: "light",
+  tokens: THEMES[DEFAULT_THEME].light,
+  theme: DEFAULT_THEME,
+  fontVars: { "--chrome-font": chromeFontStack("inter") },
   fontScale: 1,
   fontMode: "inter",
   setMode: () => {},
+  setTheme: () => {},
   setFontScale: () => {},
   setFontMode: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(loadThemeMode);
+  const [theme, setThemeState] = useState<ThemeId>(loadThemeFamily);
   const [fontScale, setFontScaleState] = useState<number>(loadFontScale);
   const [fontMode, setFontModeState] = useState<FontMode>(loadFontMode);
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
 
   const resolved: ResolvedTheme = mode === "system" ? systemTheme : mode;
+  const tokens = themeTokens(theme, resolved);
+  const fontVars = useMemo(
+    () => ({ "--chrome-font": chromeFontStack(fontMode) }),
+    [fontMode],
+  );
 
   useEffect(() => {
-    applyPalette(resolved);
-  }, [resolved]);
+    applyTokens(tokens, resolved);
+  }, [tokens, resolved]);
 
   useEffect(() => {
     applyFontMode(fontMode);
@@ -325,6 +314,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     persistThemeMode(m);
   }, []);
 
+  const setTheme = useCallback((t: ThemeId) => {
+    setThemeState(t);
+    persistThemeFamily(t);
+  }, []);
+
   const setFontScale = useCallback((s: number) => {
     const clamped = Math.min(MAX_FONT, Math.max(MIN_FONT, s));
     setFontScaleState(clamped);
@@ -340,13 +334,29 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     () => ({
       mode,
       resolved,
+      tokens,
+      theme,
+      fontVars,
       fontScale,
       fontMode,
       setMode,
+      setTheme,
       setFontScale,
       setFontMode,
     }),
-    [mode, resolved, fontScale, fontMode, setMode, setFontScale, setFontMode],
+    [
+      mode,
+      resolved,
+      tokens,
+      theme,
+      fontVars,
+      fontScale,
+      fontMode,
+      setMode,
+      setTheme,
+      setFontScale,
+      setFontMode,
+    ],
   );
 
   return (

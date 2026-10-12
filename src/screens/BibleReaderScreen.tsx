@@ -19,6 +19,7 @@ import { getAllProgress } from "../lib/content/bibleProgress";
 import { sliceKjvPassage } from "../lib/content/kjv";
 import type { ScriptureBookMeta } from "../lib/content/scripture";
 import type { KjvBook } from "../lib/content/types";
+import { useThemedStyles } from "../lib/theme/themedStyles";
 import { TRANSLATION_OPTIONS } from "../lib/translations";
 import {
   DetailPage,
@@ -28,7 +29,7 @@ import {
   PickerButton,
   SplitPane,
 } from "./reference/shared";
-import { sharedStyles as styles } from "./reference/styles";
+import { sharedStyles as styleDef } from "./reference/styles";
 import { useIndexKeyboard } from "./reference/useIndexKeyboard";
 
 // ---------------------------------------------------------------------------
@@ -45,6 +46,7 @@ export function BibleReaderScreen({
   onScrollProgress?: (pct: number) => void;
 }) {
   const { book } = useBible();
+  const styles = useThemedStyles(styleDef);
   const hint = (
     <EmptyMessage message="Open the book picker to start reading." />
   );
@@ -75,6 +77,7 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
   const { book, chapter, nextChapter, prevChapter, testament } = useBible();
   const { translation, setTranslation } = useTranslation();
   const palette = usePalette();
+  const styles = useThemedStyles(styleDef);
   const total = book?.chapters ?? 0;
   const atStart = chapter <= 1;
   const atEnd = total > 0 && chapter >= total;
@@ -175,6 +178,7 @@ const BookRow = memo(function BookRow({
   mark: number;
   onSelect: (abbrev: string) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
   return (
     <IndexRow cursor={active} onPress={() => onSelect(meta.abbrev)}>
       {(a) => (
@@ -232,6 +236,7 @@ export function BibleBookList({
     [onSelect],
   );
   const { cursor } = useIndexKeyboard(filtered, pick);
+  const styles = useThemedStyles(styleDef);
   if (filtered.length === 0) {
     return (
       <EmptyMessage message={`No bible book matches “${deferredQuery}”.`} />
@@ -273,6 +278,7 @@ const BibleChapterRow = memo(function BibleChapterRow({
   continueAt: number;
   onSelect: (n: number) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
   const label =
     selected === chapter
       ? "Current"
@@ -334,6 +340,7 @@ export function BibleChapterList({
     [onSelect],
   );
   const { cursor } = useIndexKeyboard(filtered, onEnter);
+  const styles = useThemedStyles(styleDef);
   if (filtered.length === 0) {
     return <EmptyMessage message={`No bible chapter matches “${q}”.`} />;
   }
@@ -376,6 +383,8 @@ const BibleChapterBody = memo(function BibleChapterBody() {
       active = false;
     };
   }, [book, translation]);
+
+  const styles = useThemedStyles(styleDef);
 
   const passage = bookData && book ? sliceKjvPassage(bookData, chapter) : null;
 

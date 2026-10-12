@@ -15,8 +15,9 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useThemedStyles, useThemeVar } from "../../lib/theme/themedStyles";
 import { COARSE_POINTER } from "../../screens/reference/shared";
-import { sharedStyles as styles } from "../../screens/reference/styles";
+import { sharedStyles as styleDef } from "../../screens/reference/styles";
 import { registerEsc } from "./AppModal";
 
 // coarse-pointer (phone/tablet): the tray is shorter and sits at the same
@@ -82,6 +83,9 @@ export function SearchPalette({
     return Math.round(window.innerHeight * 0.15);
   }, []);
 
+  const styles = useThemedStyles(styleDef);
+  const v = useThemeVar();
+
   const navHints = (
     <>
       <View style={styles.paletteHint}>
@@ -130,7 +134,7 @@ export function SearchPalette({
             onChangeText={setQuery}
             dataSet={{ pickerSearch: "" }}
             placeholder={placeholder}
-            placeholderTextColor="var(--text-secondary, #7a6e64)"
+            placeholderTextColor={v("var(--text-secondary)")}
             style={styles.paletteSearch}
             accessibilityLabel={searchLabel}
           />

@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { SHEET_BG, useTheme } from "../../context/ThemeContext";
+import { Pressable, Text, View } from "react-native";
 import { CHROME_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
 import { Chevron } from "./Chevron";
 import { officeBarStyles } from "./OfficeTabs";
 
@@ -38,7 +41,8 @@ export function BarDropdown<T extends string>({
   // paint the trigger label in the accent color
   accent?: boolean;
 }) {
-  const { resolved } = useTheme();
+  const styles = useThemedStyles(barDropdownStyles);
+  const barStyles = useThemedStyles(officeBarStyles);
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.id === value);
   const labelStyle = mono ? styles.mono : undefined;
@@ -52,10 +56,10 @@ export function BarDropdown<T extends string>({
     <View style={styles.wrap}>
       <Pressable
         style={({ hovered }) => [
-          officeBarStyles.toggle,
-          officeBarStyles.modeToggle,
+          barStyles.toggle,
+          barStyles.modeToggle,
           styles.trigger,
-          hovered && officeBarStyles.tabHover,
+          hovered && barStyles.tabHover,
         ]}
         onPress={() => setOpen((v) => !v)}
         accessibilityRole="button"
@@ -65,7 +69,7 @@ export function BarDropdown<T extends string>({
         <Chevron direction={open ? "up" : "down"} size={5} />
         <Text
           style={[
-            officeBarStyles.toggleText,
+            barStyles.toggleText,
             labelStyle,
             accent && styles.accentText,
           ]}
@@ -84,7 +88,7 @@ export function BarDropdown<T extends string>({
           <View
             style={[
               styles.menu,
-              { width: menuWidth, backgroundColor: SHEET_BG[resolved] },
+              { width: menuWidth },
               align === "start" ? { left: 0 } : { right: 0 },
             ]}
           >
@@ -95,7 +99,7 @@ export function BarDropdown<T extends string>({
                   key={o.id}
                   style={({ hovered }) => [
                     styles.item,
-                    (hovered || selected) && officeBarStyles.tabHover,
+                    (hovered || selected) && barStyles.tabHover,
                   ]}
                   onPress={() => pick(o.id)}
                   accessibilityRole="button"
@@ -105,7 +109,7 @@ export function BarDropdown<T extends string>({
                     style={[
                       styles.itemText,
                       labelStyle,
-                      selected && officeBarStyles.toggleTextOn,
+                      selected && barStyles.toggleTextOn,
                     ]}
                   >
                     {o.label}
@@ -120,7 +124,9 @@ export function BarDropdown<T extends string>({
   );
 }
 
-const styles = StyleSheet.create({
+// themed definition: the popover reads its surface from var(--bg) so it is
+// always painted from the theme, whatever the class engine does
+const barDropdownStyles = defineThemedStyles({
   wrap: {
     // anchor for the menu; keeps the popover pinned to the chip
     position: "relative",
@@ -138,7 +144,7 @@ const styles = StyleSheet.create({
     fontFamily: MONO,
   },
   accentText: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   // full-viewport dismiss layer; the huge offsets escape the bar's box
   backdrop: {
@@ -156,8 +162,9 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
-    shadowColor: "#000",
+    borderColor: "var(--border-content)",
+    backgroundColor: "var(--bg)",
+    shadowColor: "var(--shadow-color)",
     shadowOpacity: 0.24,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 4 },
@@ -171,6 +178,6 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 12,
     fontWeight: "500",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
 });

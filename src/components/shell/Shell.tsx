@@ -1,12 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  BackHandler,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { BackHandler, Platform, Pressable, Text, View } from "react-native";
 import { ChangelogScreen } from "../../components/changelog/ChangelogScreen";
 import { SaintPopoverProvider } from "../../components/office/SaintPopover";
 import {
@@ -85,6 +78,11 @@ import {
   registerOpenSettingsSection,
   type SettingsSectionId,
 } from "../../lib/settings";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+  useThemeVar,
+} from "../../lib/theme/themedStyles";
 import { useAppVersion } from "../../lib/version";
 import { BibleBar, BibleReaderScreen } from "../../screens/BibleReaderScreen";
 import { CalendarScreen } from "../../screens/CalendarScreen";
@@ -195,7 +193,7 @@ function ensureSidebarAnimStyle() {
   transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .bcp-nav:focus-visible, .bcp-btn:focus-visible {
-  outline: 2px solid var(--accent, #7a3040);
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
   border-radius: 6px;
 }
@@ -211,6 +209,7 @@ function ensureSidebarAnimStyle() {
 // white circle with a black border, two chevrons (up and down), and a dot
 // in the center. parked where the middle-click landed.
 function AutoscrollGlyph({ indicator }: { indicator: AutoscrollIndicator }) {
+  const styles = useThemedStyles(shellStyles);
   return (
     <View
       pointerEvents="none"
@@ -257,7 +256,9 @@ function AutoscrollGlyph({ indicator }: { indicator: AutoscrollIndicator }) {
 }
 
 export function Shell() {
-  const { resolved, fontScale } = useTheme();
+  const { fontScale, tokens } = useTheme();
+  const styles = useThemedStyles(shellStyles);
+  const v = useThemeVar();
 
   useEffect(() => {
     if (Platform.OS === "web") ensureSidebarAnimStyle();
@@ -1132,9 +1133,7 @@ export function Shell() {
       {({ hovered }) => (
         <SidebarIcon
           size={14}
-          color={
-            hovered ? "var(--text, #2c2020)" : "var(--text-secondary, #7a6e64)"
-          }
+          color={hovered ? v("var(--text)") : v("var(--text-secondary)")}
         />
       )}
     </Pressable>
@@ -1366,8 +1365,7 @@ export function Shell() {
                       boxSizing: "border-box",
                       overflow: "hidden",
                       touchAction: "pan-y",
-                      backgroundColor:
-                        resolved === "dark" ? "#1b191a" : "#e0dbd0",
+                      backgroundColor: tokens.bg,
                     }}
                   >
                     <TopBar
@@ -1600,7 +1598,7 @@ export function Shell() {
   );
 }
 
-const styles = StyleSheet.create({
+const shellStyles = defineThemedStyles({
   shell: {
     flex: 1,
   },
@@ -1620,21 +1618,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
-    backgroundColor: "var(--bg, #e0dbd0)",
+    borderBottomColor: "var(--border)",
+    backgroundColor: "var(--bg)",
   },
   auxShowBtn: {
     width: 24,
     height: 24,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "var(--surface, #d5cfc4)",
+    backgroundColor: "var(--surface)",
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "var(--border, #cbc5bb)",
+    borderColor: "var(--border)",
   },
   auxShowBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   sidebarOverlay: {
     position: "absolute",
@@ -1677,6 +1675,6 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "600",
     fontSize: 15,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
 });

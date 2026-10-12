@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { AppModal } from "../components/shell/AppModal";
 import { Chevron } from "../components/shell/Chevron";
 import { useSeasonColorMap } from "../components/shell/SeasonDot";
@@ -13,6 +13,7 @@ import {
 } from "../lib/calendar/observances";
 import type { CalendarDate } from "../lib/calendar/types";
 import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../lib/fonts";
+import { defineThemedStyles, useThemedStyles } from "../lib/theme/themedStyles";
 import { useReference } from "./reference/shared";
 
 const noSelect = {
@@ -77,6 +78,7 @@ type CalendarScreenProps = {
 };
 
 export function CalendarScreen({ leading }: CalendarScreenProps) {
+  const styles = useThemedStyles(styleDef);
   const colorMap = useSeasonColorMap();
   const { setOpenSaint } = useReference();
   const { navigateTo } = useNavigation();
@@ -307,6 +309,7 @@ function SelectedDayStrip({
   date: CalendarDate;
   onOpenDay: (d: CalendarDate) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
   const colorMap = useSeasonColorMap();
   const info = dayInfo(date);
   const seasonColor = colorMap[colorFor(date)];
@@ -350,6 +353,7 @@ function DayModal({
   onClose: () => void;
   onGo: (obs: DayObservance) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
   const colorMap = useSeasonColorMap();
   const seasonColor = colorMap[colorFor(date)];
   return (
@@ -394,7 +398,7 @@ function DayModal({
   );
 }
 
-const styles = StyleSheet.create({
+const styleDef = defineThemedStyles({
   container: {
     height: "100%",
     display: "flex",
@@ -408,7 +412,7 @@ const styles = StyleSheet.create({
   monthNav: {
     height: 30,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
+    borderBottomColor: "var(--border)",
     position: "relative",
     flexDirection: "row",
     alignItems: "center",
@@ -430,7 +434,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   arrowBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   todayBtn: {
     position: "absolute",
@@ -442,37 +446,37 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   todayBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   todayText: {
     fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "500",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   todayTextOn: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     fontWeight: "600",
   },
   monthTitle: {
     fontFamily: CHROME_FONT,
     fontSize: 14,
     fontWeight: "600",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     minWidth: 150,
     textAlign: "center",
   },
   grid: {
     flex: 1,
     borderRightWidth: 1,
-    borderColor: "var(--border, #d2cbbf)",
+    borderColor: "var(--border)",
     display: "flex",
     flexDirection: "column",
   },
   headerRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
+    borderBottomColor: "var(--border)",
     flexShrink: 0,
   },
   headerCell: {
@@ -482,7 +486,7 @@ const styles = StyleSheet.create({
   },
   headerCellRight: {
     borderRightWidth: 1,
-    borderRightColor: "var(--border, #d2cbbf)",
+    borderRightColor: "var(--border)",
   },
   headerText: {
     fontFamily: CHROME_FONT,
@@ -490,7 +494,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.8,
     textTransform: "uppercase",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   body: {
     flex: 1,
@@ -509,20 +513,20 @@ const styles = StyleSheet.create({
   },
   cellRight: {
     borderRightWidth: 1,
-    borderRightColor: "var(--border, #d2cbbf)",
+    borderRightColor: "var(--border)",
   },
   cellBottom: {
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
+    borderBottomColor: "var(--border)",
   },
   cellToday: {
-    backgroundColor: "var(--today-bg, rgba(122, 48, 64, 0.16))",
+    backgroundColor: "var(--today-bg)",
   },
   cellSelected: {
-    backgroundColor: "var(--selected-bg, #ece7dd)",
+    backgroundColor: "var(--selected-bg)",
   },
   cellHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   cellInner: {
     alignItems: "flex-start",
@@ -531,7 +535,7 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "500",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     fontVariant: ["tabular-nums"],
   },
   cellLabel: {
@@ -539,22 +543,22 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     lineHeight: 11,
     fontWeight: "600",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   cellLabels: {
     marginTop: 2,
     gap: 1,
   },
   cellLabelSeason: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   strip: {
     flexShrink: 0,
     borderTopWidth: 1,
-    borderTopColor: "var(--border, #d2cbbf)",
+    borderTopColor: "var(--border)",
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: "var(--bg-raised, #ece7dd)",
+    backgroundColor: "var(--bg-raised)",
   },
   stripBtn: {
     gap: 2,
@@ -564,7 +568,7 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "700",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   stripSeason: {
     fontFamily: CHROME_FONT,
@@ -577,7 +581,7 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 12,
     lineHeight: 17,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   modalSeason: {
     fontFamily: CHROME_FONT,
@@ -593,7 +597,7 @@ const styles = StyleSheet.create({
   modalEmpty: {
     fontFamily: CHROME_FONT,
     fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     paddingVertical: 8,
   },
   modalRow: {
@@ -606,19 +610,19 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   modalRowHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   modalRowName: {
     fontFamily: SERIF_FONT,
     fontSize: 16,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     flex: 1,
   },
   modalRowGo: {
     fontFamily: CHROME_FONT,
     fontSize: 12,
     fontWeight: "600",
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     flexShrink: 0,
   },
 });

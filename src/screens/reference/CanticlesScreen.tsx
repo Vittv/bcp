@@ -8,6 +8,7 @@ import {
   canticleTitle,
 } from "../../lib/content/canticles";
 import type { CanticlePassage } from "../../lib/content/types";
+import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   DetailPage,
   EmptyMessage,
@@ -17,7 +18,7 @@ import {
   SplitPane,
   useReference,
 } from "./shared";
-import { sharedStyles as styles } from "./styles";
+import { sharedStyles as styleDef } from "./styles";
 import { useIndexKeyboard } from "./useIndexKeyboard";
 
 export function CanticlesScreen({
@@ -30,6 +31,7 @@ export function CanticlesScreen({
   onScrollProgress?: (pct: number) => void;
 }) {
   const { openCanticle } = useReference();
+  const styles = useThemedStyles(styleDef);
   if (isMobile) {
     return (
       <View style={styles.container}>
@@ -59,6 +61,7 @@ export function CanticlesScreen({
 export function CanticlesBar({ leading }: { leading?: ReactNode }) {
   const { openCanticle } = useReference();
   const palette = usePalette();
+  const styles = useThemedStyles(styleDef);
   const n = openCanticle ?? 1;
   const verses =
     canticlePassage(n)?.sections.reduce((sum, s) => sum + s.verses.length, 0) ??
@@ -130,6 +133,7 @@ const CanticleRow = memo(function CanticleRow({
   selected: number | null;
   onSelect: (n: number | null) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
   return (
     <IndexRow
       cursor={active}
@@ -177,6 +181,7 @@ export function CanticleIndex({
     [selected, onSelect],
   );
   const { cursor } = useIndexKeyboard(filtered, onEnter);
+  const styles = useThemedStyles(styleDef);
   const cursorItem = filtered[cursor];
   if (filtered.length === 0) {
     return <EmptyMessage message={`No canticle matches “${query}”.`} />;
@@ -224,6 +229,7 @@ const CanticleDetailBody = memo(function CanticleDetailBody({
   number: number;
 }) {
   const passage = useMemo(() => canticlePassage(number), [number]);
+  const styles = useThemedStyles(styleDef);
   if (!passage) return null;
   const verses = passage.sections.reduce((s, x) => s + x.verses.length, 0);
   return (
@@ -249,6 +255,7 @@ const CanticleDetailBody = memo(function CanticleDetailBody({
 // renders one canticle's sections and plain verses; unlike psalms the
 // verses are unnumbered, so each section is a serif block of its own
 function CanticleText({ passage }: { passage: CanticlePassage }) {
+  const styles = useThemedStyles(styleDef);
   return (
     <View>
       {passage.sections.map((section, i) => (

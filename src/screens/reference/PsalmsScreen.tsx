@@ -11,6 +11,7 @@ import { Chevron } from "../../components/shell/Chevron";
 import { usePalette } from "../../context/PaletteContext";
 import { psalmPassage } from "../../lib/content/psalter";
 import { type PsalmHit, searchPsalms } from "../../lib/reference/search";
+import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   DetailPage,
   EmptyMessage,
@@ -20,7 +21,7 @@ import {
   SplitPane,
   useReference,
 } from "./shared";
-import { sharedStyles as styles } from "./styles";
+import { sharedStyles as styleDef } from "./styles";
 import { useIndexKeyboard } from "./useIndexKeyboard";
 
 export function PsalmsScreen({
@@ -33,6 +34,7 @@ export function PsalmsScreen({
   onScrollProgress?: (pct: number) => void;
 }) {
   const { openPsalm } = useReference();
+  const styles = useThemedStyles(styleDef);
   if (isMobile) {
     return (
       <View style={styles.container}>
@@ -62,6 +64,7 @@ const PSALM_COUNT = 150;
 export function PsalmsBar({ leading }: { leading?: ReactNode }) {
   const { openPsalm, setOpenPsalm } = useReference();
   const palette = usePalette();
+  const styles = useThemedStyles(styleDef);
   const n = openPsalm ?? 1;
   const verses = psalmPassage({ psalm: n })?.verses.length ?? 0;
   const atStart = n <= 1;
@@ -121,6 +124,7 @@ const PsalmRow = memo(function PsalmRow({
   active: boolean;
   onSelect: (psalm: number) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
   return (
     <IndexRow cursor={active} onPress={() => onSelect(hit.psalm)}>
       {(a) => (
@@ -160,6 +164,7 @@ export function PsalmIndex({
     [onSelect],
   );
   const { cursor } = useIndexKeyboard(hits, onEnter);
+  const styles = useThemedStyles(styleDef);
   if (hits.length === 0) {
     return <EmptyMessage message={`No psalms match “${deferredQuery}”.`} />;
   }
@@ -185,6 +190,7 @@ const PsalmDetailBody = memo(function PsalmDetailBody({
   psalm: number;
 }) {
   const passage = useMemo(() => psalmPassage({ psalm }), [psalm]);
+  const styles = useThemedStyles(styleDef);
   const verses = passage?.verses.length ?? 0;
   return (
     <>

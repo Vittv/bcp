@@ -1,6 +1,11 @@
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { CHROME_FONT } from "../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+  useThemeVar,
+} from "../lib/theme/themedStyles";
 import { CheckIcon, CopyIcon } from "./shell/Icon";
 
 // Code blocks theme themselves through the app palette: the raised surface
@@ -39,6 +44,8 @@ async function copyText(value: string): Promise<boolean> {
 }
 
 export function CodeBlock({ value, label }: CodeBlockProps) {
+  const styles = useThemedStyles(codeBlockStyles);
+  const v = useThemeVar();
   const [copied, setCopied] = useState(false);
 
   const onCopy = async () => {
@@ -74,9 +81,9 @@ export function CodeBlock({ value, label }: CodeBlockProps) {
           ]}
         >
           {copied ? (
-            <CheckIcon size={16} color="var(--text, #2c2020)" />
+            <CheckIcon size={16} color={v("var(--text)")} />
           ) : (
-            <CopyIcon size={16} color="var(--text-secondary, #7a6e64)" />
+            <CopyIcon size={16} color={v("var(--text-secondary)")} />
           )}
         </Pressable>
       </View>
@@ -84,7 +91,7 @@ export function CodeBlock({ value, label }: CodeBlockProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const codeBlockStyles = defineThemedStyles({
   block: {
     marginBottom: 8,
   },
@@ -92,7 +99,7 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 13,
-    color: "var(--text-secondary, #6b6159)",
+    color: "var(--text-secondary)",
     marginBottom: 4,
     textTransform: "uppercase",
     letterSpacing: 0.4,
@@ -100,9 +107,9 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "var(--bg-raised, #ece7dd)",
+    backgroundColor: "var(--bg-raised)",
     borderWidth: 1,
-    borderColor: "var(--border, #cbc5bb)",
+    borderColor: "var(--border)",
     borderRadius: 4,
     paddingLeft: 10,
   },
@@ -119,7 +126,7 @@ const styles = StyleSheet.create({
     fontFamily: MONO,
     fontWeight: "500",
     fontSize: 14,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     lineHeight: 24,
     paddingVertical: 8,
     userSelect: "text",
@@ -130,14 +137,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 10,
     borderLeftWidth: 1,
-    borderLeftColor: "var(--border, #cbc5bb)",
+    borderLeftColor: "var(--border)",
     backgroundColor: "transparent",
     marginLeft: 6,
   },
   copyBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   copyBtnDone: {
-    backgroundColor: "var(--today-bg, rgba(122, 48, 64, 0.16))",
+    backgroundColor: "var(--today-bg)",
   },
 });

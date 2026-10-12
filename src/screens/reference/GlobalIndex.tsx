@@ -6,8 +6,9 @@ import {
   type PaletteSection,
   searchPalette,
 } from "../../lib/reference/search";
+import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { EmptyMessage, IndexRow } from "./shared";
-import { sharedStyles as styles } from "./styles";
+import { sharedStyles as styleDef } from "./styles";
 import { useIndexKeyboard } from "./useIndexKeyboard";
 
 const SECTION_HEADINGS: Record<PaletteSection, string> = {
@@ -32,6 +33,7 @@ const GlobalRow = memo(function GlobalRow({
   active: boolean;
   onSelect: (entry: PaletteEntry) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
   return (
     <IndexRow cursor={active} onPress={() => onSelect(entry)}>
       {(a) => (
@@ -73,6 +75,7 @@ export function GlobalIndex({
     [onSelect],
   );
   const { cursor } = useIndexKeyboard(hits, onEnter);
+  const styles = useThemedStyles(styleDef);
   const cursorItem = hits[cursor];
 
   // the global search starts blank: nothing between the search field and

@@ -1,20 +1,27 @@
 import type { Window } from "@tauri-apps/api/window";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { IS_WINDOWS_TAURI } from "../../lib/desktop";
-
-const GLYPH_COLOR = "var(--text-secondary, #7a6e64)";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+  useThemeVar,
+} from "../../lib/theme/themedStyles";
 
 function MinimizeGlyph({ color }: { color: string }) {
+  const styles = useThemedStyles(windowControlStyles);
   return <View style={[styles.bar, { backgroundColor: color }]} />;
 }
 
 function MaximizeGlyph({ color }: { color: string }) {
+  const styles = useThemedStyles(windowControlStyles);
   return <View style={[styles.box, { borderColor: color }]} />;
 }
 
 function RestoreGlyph({ color }: { color: string }) {
+  const styles = useThemedStyles(windowControlStyles);
+  const v = useThemeVar();
   return (
     <View style={styles.restoreWrap}>
       <View style={[styles.box, styles.restoreBack, { borderColor: color }]} />
@@ -22,7 +29,7 @@ function RestoreGlyph({ color }: { color: string }) {
         style={[
           styles.box,
           styles.restoreFront,
-          { borderColor: color, backgroundColor: "var(--bg, #e0dbd0)" },
+          { borderColor: color, backgroundColor: v("var(--bg)") },
         ]}
       />
     </View>
@@ -30,6 +37,7 @@ function RestoreGlyph({ color }: { color: string }) {
 }
 
 function CloseGlyph({ color }: { color: string }) {
+  const styles = useThemedStyles(windowControlStyles);
   return (
     <View style={styles.closeWrap}>
       <View
@@ -55,8 +63,11 @@ function ControlButton({
   onPress: () => void;
   children: (color: string) => ReactNode;
 }) {
+  const styles = useThemedStyles(windowControlStyles);
+  const v = useThemeVar();
   const [hovered, setHovered] = useState(false);
-  const color = danger && hovered ? "#ffffff" : GLYPH_COLOR;
+  const color =
+    danger && hovered ? v("var(--danger-text)") : v("var(--text-secondary)");
   return (
     <Pressable
       accessibilityRole="button"
@@ -78,6 +89,7 @@ function ControlButton({
 // min/max/close buttons for the custom titlebar (Linux/Windows builds,
 // where decorations are disabled); macOS keeps its native traffic lights
 export function WindowControls() {
+  const styles = useThemedStyles(windowControlStyles);
   const [win, setWin] = useState<Window | null>(null);
   const [maximized, setMaximized] = useState(false);
 
@@ -179,7 +191,7 @@ export function WindowControls() {
   );
 }
 
-const styles = StyleSheet.create({
+const windowControlStyles = defineThemedStyles({
   row: {
     flexDirection: "row",
     flexShrink: 0,
@@ -193,10 +205,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   hoverBg: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   dangerBg: {
-    backgroundColor: "#e81123",
+    backgroundColor: "var(--danger)",
   },
   bar: {
     width: 9,

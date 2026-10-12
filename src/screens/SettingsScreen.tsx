@@ -3,7 +3,6 @@ import {
   Pressable,
   ScrollView,
   type StyleProp,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -43,6 +42,13 @@ import { IS_TAURI } from "../lib/desktop";
 import { CHROME_FONT, HEADING_FONT } from "../lib/fonts";
 import { filterSearch } from "../lib/search";
 import { type SettingsSectionId, visibleSettings } from "../lib/settings";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+  useThemeVar,
+} from "../lib/theme/themedStyles";
+import { THEME_LIST, type ThemeId, themeTokens } from "../lib/theme/themes";
+import type { ResolvedTheme, ThemeTokens } from "../lib/theme/tokens";
 import { TRANSLATION_OPTIONS } from "../lib/translations";
 import { useUpdateStatus } from "../lib/updater";
 import { AboutScreen } from "./AboutScreen";
@@ -50,10 +56,7 @@ import { InstallScreen } from "./InstallScreen";
 
 const MONO = '"JetBrains Mono", monospace';
 
-const HOVER_COLOR = "var(--text, #2c2020)";
-const IDLE_COLOR = "var(--text-secondary, #7a6e64)";
-
-const THEME_OPTIONS = [
+const MODE_OPTIONS = [
   { id: "light" as const, label: "Light" },
   { id: "dark" as const, label: "Dark" },
   { id: "system" as const, label: "System" },
@@ -135,6 +138,8 @@ export function SettingsScreen({
   windowControls = true,
   onWindowControlsChange,
 }: SettingsScreenProps) {
+  const styles = useThemedStyles(styleDef);
+  const v = useThemeVar();
   const visible = visibleCategories();
   const [activeCategory, setActiveCategory] = useState<SectionId | null>(() => {
     const requestedSection = initialSection(requested);
@@ -162,7 +167,15 @@ export function SettingsScreen({
   const contentFor = (id: SectionId | undefined): ReactNode => {
     switch (id) {
       case "appearance":
-        return <AppearanceSettings mode={theme.mode} setMode={theme.setMode} />;
+        return (
+          <AppearanceSettings
+            mode={theme.mode}
+            setMode={theme.setMode}
+            theme={theme.theme}
+            setTheme={theme.setTheme}
+            resolved={theme.resolved}
+          />
+        );
       case "typography":
         return (
           <TypographySettings
@@ -218,6 +231,12 @@ export function SettingsScreen({
   const mobileActive =
     visible.find((c) => c.id === activeCategory) ?? visible[0];
 
+  // SAFETY: the rail icon wrapper carries `color` (so the svg strokes inherit
+  // it via currentColor), which RN's ViewStyle type rejects; it is a plain
+  // ViewStyle at runtime.
+  const railIconStyle = (active: boolean): StyleProp<ViewStyle> =>
+    [styles.railIcon, active && styles.railIconActive] as StyleProp<ViewStyle>;
+
   return (
     <View style={styles.frame}>
       <View style={mobile ? styles.chromeMobile : styles.chrome}>
@@ -240,7 +259,9 @@ export function SettingsScreen({
                   {({ hovered }) => (
                     <CloseIcon
                       size={16}
-                      color={hovered ? HOVER_COLOR : IDLE_COLOR}
+                      color={
+                        hovered ? v("var(--text)") : v("var(--text-secondary)")
+                      }
                     />
                   )}
                 </Pressable>
@@ -276,7 +297,7 @@ export function SettingsScreen({
                             </Text>
                             <ChevronRightIcon
                               size={14}
-                              color="var(--text-secondary, #7a6e64)"
+                              color={v("var(--text-secondary)")}
                             />
                           </Pressable>
                         );
@@ -306,7 +327,11 @@ export function SettingsScreen({
                     <>
                       <ChevronLeftIcon
                         size={14}
-                        color={hovered ? HOVER_COLOR : IDLE_COLOR}
+                        color={
+                          hovered
+                            ? v("var(--text)")
+                            : v("var(--text-secondary)")
+                        }
                       />
                       <Text
                         style={[
@@ -334,7 +359,9 @@ export function SettingsScreen({
                   {({ hovered }) => (
                     <CloseIcon
                       size={16}
-                      color={hovered ? HOVER_COLOR : IDLE_COLOR}
+                      color={
+                        hovered ? v("var(--text)") : v("var(--text-secondary)")
+                      }
                     />
                   )}
                 </Pressable>
@@ -419,7 +446,9 @@ export function SettingsScreen({
                   {({ hovered }) => (
                     <CloseIcon
                       size={16}
-                      color={hovered ? HOVER_COLOR : IDLE_COLOR}
+                      color={
+                        hovered ? v("var(--text)") : v("var(--text-secondary)")
+                      }
                     />
                   )}
                 </Pressable>
@@ -463,14 +492,16 @@ function SettingsSearch({
   query: string;
   onChange: (q: string) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
+  const v = useThemeVar();
   return (
     <View style={styles.searchField} dataSet={{ settingsSearch: "" }}>
-      <MagnifierIcon size={16} color="var(--text-secondary, #7a6e64)" />
+      <MagnifierIcon size={16} color={v("var(--text-secondary)")} />
       <TextInput
         value={query}
         onChangeText={onChange}
         placeholder="Search"
-        placeholderTextColor="var(--text-secondary, #7a6e64)"
+        placeholderTextColor={v("var(--text-secondary)")}
         accessibilityLabel="Search settings"
         style={styles.searchInput}
         autoCapitalize="none"
@@ -486,7 +517,7 @@ function SettingsSearch({
             hovered && styles.searchClearHover,
           ]}
         >
-          <CloseIcon size={12} color="var(--text-secondary, #7a6e64)" />
+          <CloseIcon size={12} color={v("var(--text-secondary)")} />
         </Pressable>
       ) : null}
     </View>
@@ -506,6 +537,7 @@ function OptionChips<T extends string | boolean = string>({
   onSelect: (id: T) => void;
   mono?: boolean;
 }) {
+  const styles = useThemedStyles(styleDef);
   return (
     <View style={styles.row}>
       {options.map(({ id, label }) => (
@@ -537,6 +569,7 @@ function ToggleRow({
   onChange: (value: boolean) => void;
   description: string;
 }) {
+  const styles = useThemedStyles(styleDef);
   return (
     <View style={styles.section}>
       <Text style={styles.label}>{label}</Text>
@@ -549,17 +582,100 @@ function ToggleRow({
 type AppearanceSettingsProps = {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
+  theme: ThemeId;
+  setTheme: (theme: ThemeId) => void;
+  resolved: ResolvedTheme;
 };
 
-function AppearanceSettings({ mode, setMode }: AppearanceSettingsProps) {
+function AppearanceSettings({
+  mode,
+  setMode,
+  theme,
+  setTheme,
+  resolved,
+}: AppearanceSettingsProps) {
+  const styles = useThemedStyles(styleDef);
   return (
-    <View style={styles.section}>
-      <Text style={styles.label}>Theme</Text>
-      <OptionChips options={THEME_OPTIONS} value={mode} onSelect={setMode} />
-      <Text style={styles.settingDescription}>
-        Light and dark modes, plus a system-following option.
+    <>
+      <View style={styles.section}>
+        <Text style={styles.label}>Mode</Text>
+        <OptionChips options={MODE_OPTIONS} value={mode} onSelect={setMode} />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Theme</Text>
+        <View style={styles.themeGrid}>
+          {THEME_LIST.map((t) => (
+            <ThemePreview
+              key={t.id}
+              label={t.label}
+              tokens={themeTokens(t.id, resolved)}
+              selected={t.id === theme}
+              onSelect={() => setTheme(t.id)}
+            />
+          ))}
+        </View>
+      </View>
+    </>
+  );
+}
+
+// a miniature of the app painted with a family's own tokens, so the picker
+// shows the palette instead of describing it. it takes the resolved tokens,
+// not the family, so switching Mode re-tints every preview to the variant the
+// user would actually get.
+function ThemePreview({
+  label,
+  tokens,
+  selected,
+  onSelect,
+}: {
+  label: string;
+  tokens: ThemeTokens;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const styles = useThemedStyles(styleDef);
+  return (
+    <Pressable
+      onPress={onSelect}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      accessibilityLabel={`${label} theme`}
+      style={styles.themeOption}
+    >
+      <View
+        style={[
+          styles.themeCard,
+          { backgroundColor: tokens.bg, borderColor: tokens.border },
+          selected && styles.themeCardActive,
+        ]}
+      >
+        <View style={[styles.themePanel, { backgroundColor: tokens.bgRaised }]}>
+          <View style={[styles.themeLine, { backgroundColor: tokens.text }]} />
+          <View
+            style={[
+              styles.themeLineShort,
+              { backgroundColor: tokens.textSecondary },
+            ]}
+          />
+          <View style={styles.themeRow}>
+            <View
+              style={[styles.themeDot, { backgroundColor: tokens.accent }]}
+            />
+            <View
+              style={[
+                styles.themeChip,
+                { backgroundColor: tokens.controlHover },
+              ]}
+            />
+          </View>
+        </View>
+      </View>
+      <Text style={[styles.themeLabel, selected && styles.themeLabelActive]}>
+        {label}
       </Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -576,6 +692,7 @@ function TypographySettings({
   fontMode,
   setFontMode,
 }: TypographySettingsProps) {
+  const styles = useThemedStyles(styleDef);
   return (
     <>
       <View style={styles.section}>
@@ -662,6 +779,7 @@ type BibleSettingsProps = {
 };
 
 function BibleSettings({ translation, setTranslation }: BibleSettingsProps) {
+  const styles = useThemedStyles(styleDef);
   // storage is the source of truth; the counter is only ever bumped, so the
   // reset forces a fresh read below rather than caching a stale answer
   const [, reread] = useState(0);
@@ -744,6 +862,7 @@ function DesktopSettings({
   check,
   install,
 }: DesktopSettingsProps) {
+  const styles = useThemedStyles(styleDef);
   return (
     <>
       {showWindowControls ? (
@@ -808,13 +927,7 @@ function DesktopSettings({
   );
 }
 
-// SAFETY: the rail icon wrapper carries `color` (so the svg strokes inherit
-// it via currentColor), which RN's ViewStyle type rejects; it is a plain
-// ViewStyle at runtime.
-const railIconStyle = (active: boolean): StyleProp<ViewStyle> =>
-  [styles.railIcon, active && styles.railIconActive] as StyleProp<ViewStyle>;
-
-const styles = StyleSheet.create({
+const styleDef = defineThemedStyles({
   // the modal's head is two seating bars split at the rail's right border:
   // the rail bar always says settings, and the pane bar carries the
   // section's small-caps title with the close X at its end
@@ -840,8 +953,8 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "column",
     borderRightWidth: 1,
-    borderRightColor: "var(--border, #c9c1b2)",
-    backgroundColor: "var(--bg, #e0dbd0)",
+    borderRightColor: "var(--border)",
+    backgroundColor: "var(--bg)",
   },
   railHead: {
     flexShrink: 0,
@@ -849,7 +962,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     justifyContent: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #c9c1b2)",
+    borderBottomColor: "var(--border)",
   },
   // the mag-glass field uses the global search trigger's surface fill so
   // both search controls read as the same kind of control
@@ -861,8 +974,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "var(--border, #cbc5bb)",
-    backgroundColor: "var(--surface, #d5cfc4)",
+    borderColor: "var(--border)",
+    backgroundColor: "var(--surface)",
   },
   searchInput: {
     flex: 1,
@@ -870,7 +983,7 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 13,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     padding: 0,
     // the field is real text, so the caret can land and text can be selected
     userSelect: "text",
@@ -883,7 +996,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   searchClearHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   eyebrow: {
     fontFamily: CHROME_FONT,
@@ -891,7 +1004,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 2.2,
     textTransform: "uppercase",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   railScroll: {
     flex: 1,
@@ -904,7 +1017,7 @@ const styles = StyleSheet.create({
   // block has none, so the list does not open on a rule
   railDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
+    borderBottomColor: "var(--border-faint)",
     marginHorizontal: 8,
     marginTop: 8,
     marginBottom: 4,
@@ -918,27 +1031,27 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   railRowHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   railIcon: {
     width: 18,
     alignItems: "center",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     // idle rail icons recede exactly like the nav sidebar's
     opacity: 0.6,
   },
   railIconActive: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     opacity: 1,
   },
   railRowLabel: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 14,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   railRowLabelActive: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     fontWeight: "600",
   },
   railFoot: {
@@ -946,14 +1059,14 @@ const styles = StyleSheet.create({
     height: 40,
     paddingHorizontal: 14,
     borderTopWidth: 1,
-    borderTopColor: "var(--border, #c9c1b2)",
+    borderTopColor: "var(--border)",
     justifyContent: "center",
   },
   railFootText: {
     fontFamily: CHROME_FONT,
     fontSize: 11,
     lineHeight: 16,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   // the phone layout's 44px head: search (or back + section title) with the
   // close X, exactly the height of the desktop seats
@@ -965,7 +1078,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #c9c1b2)",
+    borderBottomColor: "var(--border)",
   },
   mobileHeadSearch: {
     flex: 1,
@@ -979,7 +1092,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 2.2,
     textTransform: "uppercase",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     textAlign: "center",
   },
   // the detail page's back control: chevron plus the previous screen's name,
@@ -993,16 +1106,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   backButtonHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   backText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   backTextHover: {
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   mobileList: {
     flex: 1,
@@ -1011,7 +1124,7 @@ const styles = StyleSheet.create({
   // the phone list's block rule, inset to the rows' text column
   mobileDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
+    borderBottomColor: "var(--border-faint)",
     marginHorizontal: 16,
     marginTop: 6,
     marginBottom: 4,
@@ -1028,7 +1141,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   mobileRowHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   mobileRowLabel: {
     flex: 1,
@@ -1036,12 +1149,12 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 14,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   mobileEmpty: {
     fontFamily: CHROME_FONT,
     fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     paddingHorizontal: 16,
     paddingTop: 10,
   },
@@ -1066,7 +1179,7 @@ const styles = StyleSheet.create({
     paddingLeft: 28,
     paddingRight: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #c9c1b2)",
+    borderBottomColor: "var(--border)",
   },
   paneCloseBtn: {
     width: 34,
@@ -1076,21 +1189,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   paneCloseBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   paneTitle: {
     fontFamily: HEADING_FONT,
     fontWeight: "600",
     fontSize: 30,
     lineHeight: 38,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginTop: 4,
   },
   paneDescription: {
     fontFamily: CHROME_FONT,
     fontSize: 13,
     lineHeight: 19,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginTop: 6,
     maxWidth: 560,
   },
@@ -1106,7 +1219,7 @@ const styles = StyleSheet.create({
   noMatches: {
     fontFamily: CHROME_FONT,
     fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginTop: 4,
   },
   // the page's fancy heading stays at the top of the pane scroll, under the
@@ -1115,26 +1228,26 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
     marginBottom: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #c9c1b2)",
+    borderBottomColor: "var(--border)",
   },
   section: {
     marginBottom: 24,
     paddingBottom: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border-content, #b5aa9e)",
+    borderBottomColor: "var(--border-content)",
   },
   label: {
     fontFamily: CHROME_FONT,
     fontSize: 16,
     fontWeight: "600",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginBottom: 8,
   },
   value: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 14,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 8,
   },
   row: {
@@ -1145,18 +1258,18 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 15,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     paddingHorizontal: 16,
     paddingVertical: 9,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "var(--border, #d2cbbf)",
-    backgroundColor: "var(--surface, #d5cfc4)",
+    borderColor: "var(--border)",
+    backgroundColor: "var(--surface)",
     overflow: "hidden",
   },
   optionActive: {
-    color: "var(--accent, #7a3040)",
-    borderColor: "var(--accent, #7a3040)",
+    color: "var(--accent)",
+    borderColor: "var(--accent)",
     fontWeight: "600",
   },
   // a standalone option-plate button; neutral, as forgetting is not a primary action
@@ -1178,11 +1291,11 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 15,
     fontWeight: "600",
-    color: "#f6f1e8",
+    color: "var(--on-accent)",
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 4,
-    backgroundColor: "var(--accent, #7a3040)",
+    backgroundColor: "var(--accent)",
     overflow: "hidden",
   },
   // the one-line description under any option control; same recipe as the
@@ -1192,8 +1305,77 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     fontSize: 13,
     lineHeight: 19,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginTop: 8,
     maxWidth: 560,
+  },
+  // the theme picker: a wrapping row of miniature palette cards
+  themeGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 16,
+  },
+  themeOption: {
+    alignItems: "center",
+    gap: 8,
+  },
+  // the frame carries the family's page background; the inner panel stands in
+  // for a raised surface so the two tones read apart at a glance
+  themeCard: {
+    width: 136,
+    height: 92,
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 10,
+    overflow: "hidden",
+  },
+  // selection wears the live accent, so it reads even before the card's own
+  // palette has been applied
+  themeCardActive: {
+    borderWidth: 1,
+    borderColor: "var(--accent)",
+  },
+  themePanel: {
+    flex: 1,
+    borderRadius: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 8,
+    justifyContent: "center",
+    gap: 6,
+  },
+  themeLine: {
+    height: 5,
+    borderRadius: 3,
+    width: "72%",
+  },
+  themeLineShort: {
+    height: 4,
+    borderRadius: 2,
+    width: "46%",
+  },
+  themeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 2,
+  },
+  themeDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  themeChip: {
+    height: 8,
+    borderRadius: 4,
+    flex: 1,
+  },
+  themeLabel: {
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
+    color: "var(--text-secondary)",
+  },
+  themeLabelActive: {
+    color: "var(--text)",
+    fontWeight: "600",
   },
 });

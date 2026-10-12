@@ -1,10 +1,15 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { PsalmPassage } from "../../lib/content/types";
 import { SERIF_FONT, SERIF_ITALIC_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
 
 const MEDIANT = "\u2009";
 
 function Verse({ verse }: { verse: PsalmPassage["verses"][number] }) {
+  const styles = useThemedStyles(psalmStyles);
   return (
     <Text style={styles.verse}>
       <Text style={styles.verseNumber}>{verse.number}</Text>
@@ -15,6 +20,7 @@ function Verse({ verse }: { verse: PsalmPassage["verses"][number] }) {
 }
 
 export function PsalmText({ passage }: { passage: PsalmPassage }) {
+  const styles = useThemedStyles(psalmStyles);
   return (
     <View style={styles.block}>
       {passage.verses.map((v) => (
@@ -24,19 +30,19 @@ export function PsalmText({ passage }: { passage: PsalmPassage }) {
   );
 }
 
-const styles = StyleSheet.create({
+const psalmStyles = defineThemedStyles({
   block: {},
   verse: {
     fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 29,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   verseNumber: {
     fontFamily: SERIF_FONT,
     fontSize: 12,
     lineHeight: 16,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginRight: 3,
     fontWeight: "400",
   },
@@ -45,6 +51,6 @@ const styles = StyleSheet.create({
   },
   stanza: {
     fontFamily: SERIF_ITALIC_FONT,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
 });

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { CodeBlock } from "../components/CodeBlock";
 import { ExternalLink } from "../components/ExternalLink";
 import { Note } from "../components/Note";
@@ -10,11 +10,13 @@ import {
   PWA_URL,
   RELEASE_PAGE,
 } from "../lib/release";
+import { defineThemedStyles, useThemedStyles } from "../lib/theme/themedStyles";
 import { VERSION } from "../lib/version";
 
 const FIREFOXPWA_URL = "https://github.com/filips123/PWAsForFirefox";
 
 export function InstallScreen() {
+  const styles = useThemedStyles(styleDef);
   return (
     <View>
       <View style={styles.section}>
@@ -171,13 +173,13 @@ export function InstallScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styleDef = defineThemedStyles({
   section: {
     marginBottom: 30,
   },
   sectionDivider: {
     borderTopWidth: 1,
-    borderTopColor: "var(--border-content, #b5aa9e)",
+    borderTopColor: "var(--border-content)",
     paddingTop: 20,
     marginBottom: 30,
   },
@@ -185,14 +187,14 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 20,
     fontWeight: "700",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginBottom: 16,
   },
   label: {
     fontFamily: CHROME_FONT,
     fontSize: 15,
     fontWeight: "600",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginBottom: 8,
   },
   labelSpaced: {
@@ -202,14 +204,14 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "500",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginBottom: 8,
   },
   body: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 15,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     lineHeight: 23,
     marginBottom: 8,
   },
@@ -217,7 +219,7 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 15,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     textDecorationLine: "underline",
     marginBottom: 8,
   },
@@ -225,14 +227,14 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 15,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     textDecorationLine: "underline",
   },
   noteText: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 14,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     lineHeight: 21,
   },
 });

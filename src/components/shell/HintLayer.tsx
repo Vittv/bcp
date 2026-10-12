@@ -275,12 +275,12 @@ export const HintLayer = forwardRef<HintHandle>(
               fontSize: 13,
               fontWeight: "700",
               letterSpacing: 1,
-              color: "var(--hint-text, #c85f8b)",
-              background: "var(--hint-bg, #262425)",
-              border: "1px solid var(--border-content, #a59d92)",
+              color: "var(--hint-text)",
+              background: "var(--hint-bg)",
+              border: "1px solid var(--border-content)",
               borderRadius: 6,
               padding: "4px 10px",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.35)",
+              boxShadow: "0 4px 14px var(--shadow-soft)",
             }}
           >
             {filter.toUpperCase()}
@@ -302,14 +302,10 @@ export const HintLayer = forwardRef<HintHandle>(
               lineHeight: "18px",
               padding: "0 6px",
               borderRadius: 4,
-              color: b.active
-                ? "var(--hint-text, #c85f8b)"
-                : "var(--text-secondary, #6b6159)",
-              background: b.active
-                ? "var(--hint-bg, #262425)"
-                : "var(--bg-raised, #ece7dd)",
-              border: "1px solid var(--border-content, #a59d92)",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.45)",
+              color: b.active ? "var(--hint-text)" : "var(--text-secondary)",
+              background: b.active ? "var(--hint-bg)" : "var(--bg-raised)",
+              border: "1px solid var(--border-content)",
+              boxShadow: "0 2px 6px var(--shadow-strong)",
               opacity: b.active ? 1 : 0.45,
             }}
           >

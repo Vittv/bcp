@@ -56,8 +56,11 @@ bun icons
 
 The derivation is deterministic (sharp keying + `icon-gen` icns + `tauri
 icon`), so re-running on an unchanged master leaves the working tree clean.
-The two TopBar marks `assets/app_icons/cross_light_192.png` and
-`cross_dark_192.png` are UI icons and are edited by hand, not from the master.
+The TopBar mark `assets/app_icons/cross_light_192.png` is a UI icon and is
+edited by hand, not from the master. Keep it a solid single-colour glyph on a
+transparent background: it is rendered as an alpha mask and tinted at runtime
+with the active theme's secondary-text token, so it follows the picked theme
+family and mode.
 
 ## Releases
 

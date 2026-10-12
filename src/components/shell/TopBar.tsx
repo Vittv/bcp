@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { usePalette } from "../../context/PaletteContext";
 import { useTheme } from "../../context/ThemeContext";
 import { sanctoraleTitle } from "../../lib/calendar/sanctorale";
 import type { Season } from "../../lib/calendar/types";
 import { IS_MACOS_TAURI, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+  useThemeVar,
+} from "../../lib/theme/themedStyles";
 import {
   COARSE_POINTER,
   HOTKEY_MOD,
@@ -16,10 +21,10 @@ import { useSaintPopover } from "../office/SaintPopover";
 import { MagnifierIcon, MoonIcon, SunIcon, SystemIcon } from "./Icon";
 import { WindowControls } from "./WindowControls";
 
-// transparent-background cross glyphs, one per theme, so the in-app mark
-// follows the resolved theme instead of being tinted by CSS filters
-const ICON_LIGHT = require("../../../assets/app_icons/cross_light_192.png");
-const ICON_DARK = require("../../../assets/app_icons/cross_dark_192.png");
+// transparent-background cross glyph, rendered as an alpha mask and tinted
+// with the active theme's secondary text token so the in-app mark follows the
+// selected family and mode instead of a baked-in per-mode color
+const CROSS_ICON = require("../../../assets/app_icons/cross_light_192.png");
 
 // bundled via expo-font; system monospace is the fallback on native
 const MONO = '"JetBrains Mono", monospace';
@@ -108,7 +113,9 @@ export function TopBar({
   windowControls = false,
   compact = false,
 }: TopBarProps) {
-  const { mode, setMode, fontScale, setFontScale, resolved } = useTheme();
+  const { mode, setMode, fontScale, setFontScale, tokens } = useTheme();
+  const styles = useThemedStyles(topBarStyles);
+  const v = useThemeVar();
   const { openSaint } = useSaintPopover();
   const palette = usePalette();
   const wco = useWindowControlsOverlay();
@@ -138,7 +145,8 @@ export function TopBar({
         dataSet={IS_TAURI ? DRAG_DATA : undefined}
       >
         <Image
-          source={resolved === "dark" ? ICON_DARK : ICON_LIGHT}
+          source={CROSS_ICON}
+          tintColor={tokens.textSecondary}
           style={styles.appIcon}
           resizeMode="contain"
           accessibilityLabel="BCP"
@@ -199,7 +207,7 @@ export function TopBar({
           accessibilityRole="button"
           accessibilityLabel="Search the whole prayer book"
         >
-          <MagnifierIcon size={13} color="var(--text-secondary, #7a6e64)" />
+          <MagnifierIcon size={13} color={v("var(--text-secondary)")} />
           {COARSE_POINTER ? null : (
             <Text style={styles.searchText}>Search</Text>
           )}
@@ -251,29 +259,17 @@ export function TopBar({
             mode === "light" ? (
               <SunIcon
                 size={16}
-                color={
-                  hovered
-                    ? "var(--text, #2c2020)"
-                    : "var(--text-secondary, #7a6e64)"
-                }
+                color={hovered ? v("var(--text)") : v("var(--text-secondary)")}
               />
             ) : mode === "dark" ? (
               <MoonIcon
                 size={16}
-                color={
-                  hovered
-                    ? "var(--text, #2c2020)"
-                    : "var(--text-secondary, #7a6e64)"
-                }
+                color={hovered ? v("var(--text)") : v("var(--text-secondary)")}
               />
             ) : (
               <SystemIcon
                 size={16}
-                color={
-                  hovered
-                    ? "var(--text, #2c2020)"
-                    : "var(--text-secondary, #7a6e64)"
-                }
+                color={hovered ? v("var(--text)") : v("var(--text-secondary)")}
               />
             )
           }
@@ -285,18 +281,18 @@ export function TopBar({
   );
 }
 
-const styles = StyleSheet.create({
+const topBarStyles = defineThemedStyles({
   bar: {
     height: 40,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
+    borderBottomColor: "var(--border)",
     flexDirection: "row",
     alignItems: "center",
     // left-only: the window-control cluster must sit flush against
     // the right edge
     paddingLeft: 12,
     flexShrink: 0,
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--bg)",
     overflow: "hidden",
   },
   controls: {
@@ -321,20 +317,20 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 12,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   countdown: {
     borderRadius: 4,
   },
   countdownHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   // the bullet separating the season title from the countdown/saint-day
   // label; a fixed, always-spaced item that is never part of the label's
   // hoverable area
   countdownSep: {
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     opacity: 0.7,
     marginHorizontal: 6,
   },
@@ -342,7 +338,7 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     opacity: 0.7,
   },
   fontControl: {
@@ -355,7 +351,7 @@ const styles = StyleSheet.create({
     fontFamily: MONO,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     minWidth: 28,
     textAlign: "right",
     marginRight: 2,
@@ -368,10 +364,10 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   hover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   pressed: {
-    backgroundColor: "var(--selected-bg, #ece7dd)",
+    backgroundColor: "var(--selected-bg)",
   },
   // the global-search trigger: a fuller descendant of aetheryte's cmd
   // trigger, stretching the top bar's full 40px so search reads as a
@@ -384,20 +380,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "var(--border, #cbc5bb)",
-    backgroundColor: "var(--surface, #d5cfc4)",
+    borderColor: "var(--border)",
+    backgroundColor: "var(--surface)",
   },
   searchTriggerHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   searchTriggerPressed: {
-    backgroundColor: "var(--selected-bg, #ece7dd)",
+    backgroundColor: "var(--selected-bg)",
   },
   searchText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 12,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   themeBtn: {
     width: 28,
@@ -408,7 +404,7 @@ const styles = StyleSheet.create({
   },
   controlText: {
     fontSize: 12,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   // keeps the brand clear of macOS's overlaid traffic lights
   macGap: {

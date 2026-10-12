@@ -1,4 +1,8 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
 
 // translate compensates for stroke mass biased toward the apex after rotation
 export function Chevron({
@@ -10,6 +14,7 @@ export function Chevron({
   size?: number;
   stroke?: number;
 }) {
+  const styles = useThemedStyles(chevronStyles);
   const bias = 0.354 * (size - stroke);
   const tx = direction === "left" ? bias : direction === "right" ? -bias : 0;
   const ty = direction === "up" ? bias : direction === "down" ? -bias : 0;
@@ -42,8 +47,8 @@ export function Chevron({
   );
 }
 
-const styles = StyleSheet.create({
+const chevronStyles = defineThemedStyles({
   chevron: {
-    borderColor: "var(--text-secondary, #7a6e64)",
+    borderColor: "var(--text-secondary)",
   },
 });

@@ -1,13 +1,11 @@
 import type { ReactNode } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import type { OfficeId } from "../../lib/content/types";
 import { CHROME_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
 
 const noSelect = {
   userSelect: "none" as const,
@@ -42,6 +40,7 @@ const TABS: { id: TabId; label: string; short: string }[] = [
 // invisible bold twin reserves the widest metrics while the visible text
 // floats above it, so nothing beside the chip moves when it flips
 function SteadyToggleText({ text, on }: { text: string; on: boolean }) {
+  const styles = useThemedStyles(officeBarStyles);
   return (
     <View style={styles.steadyText}>
       <Text style={[styles.toggleText, styles.steadyTextGhost]}>{text}</Text>
@@ -81,6 +80,7 @@ export function OfficeTabs({
   devotions,
   onToggleDevotions,
 }: OfficeTabsProps) {
+  const styles = useThemedStyles(officeBarStyles);
   const { width } = useWindowDimensions();
   // abbreviated names kick in before phone widths; tighter chrome later
   const shortLabels = width < 640;
@@ -154,17 +154,21 @@ export function OfficeTabs({
 
 export type { TabId };
 
-const styles = StyleSheet.create({
+// exported so the reference offices bar derives its chrome from these
+// exact tokens instead of retyping them and drifting apart. the object stays
+// a themed definition (var(--token) strings); every consumer resolves it
+// with useThemedStyles so it paints correctly on web and native alike.
+export const officeBarStyles = defineThemedStyles({
   bar: {
     height: 30,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
+    borderBottomColor: "var(--border)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     // matches the sidebar toolbar and the reference bars
     paddingHorizontal: 6,
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--bg)",
     flexShrink: 0,
   },
   tabsLeft: {
@@ -183,16 +187,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   tabHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   tabText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   tabTextActive: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     fontWeight: "700",
   },
   toggle: {
@@ -207,21 +211,21 @@ const styles = StyleSheet.create({
   // chip in the left group, accent border while active
   modeToggle: {
     borderWidth: 1,
-    borderColor: "var(--border, #cbc5bb)",
+    borderColor: "var(--border)",
     borderRadius: 4,
-    backgroundColor: "var(--surface, #d5cfc4)",
+    backgroundColor: "var(--surface)",
   },
   modeToggleOn: {
-    borderColor: "var(--accent, #7a3040)",
+    borderColor: "var(--accent)",
   },
   toggleText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   toggleTextOn: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     fontWeight: "700",
   },
   // invisible bold twin reserves the widest metrics so the visible label
@@ -248,7 +252,3 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
 });
-
-// exported so the reference offices bar derives its chrome from these
-// exact tokens instead of retyping them and drifting apart
-export const officeBarStyles = styles;

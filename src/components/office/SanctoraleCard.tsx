@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useTranslation } from "../../context/TranslationContext";
 import {
   sanctoraleBySlug,
@@ -17,7 +17,11 @@ import {
   SERIF_ITALIC_FONT,
 } from "../../lib/fonts";
 import { holyDayCollectTitle } from "../../lib/office/compose";
-import { sectionHeading } from "./contentHeadings";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
+import { useSectionHeading } from "./contentHeadings";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 
@@ -31,6 +35,7 @@ const RITE_LABELS: Record<string, string> = {
 // combined canon (KJV for the OT/NT, WEB for the Apocrypha) render their
 // text, others stay citation-only.
 function LessonRow({ ref }: { ref: string }) {
+  const styles = useThemedStyles(sanctoraleCardStyles);
   const { translation } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[]>([]);
 
@@ -77,6 +82,8 @@ export function SanctoraleCard({
   /** render the liturgical content: psalms, readings, collect. */
   showLiturgy?: boolean;
 }) {
+  const styles = useThemedStyles(sanctoraleCardStyles);
+  const heading = useSectionHeading();
   const entry = sanctoraleBySlug(slug);
   if (!entry) return null;
   const feast = entry.eveOf ? sanctoraleBySlug(entry.eveOf) : undefined;
@@ -133,7 +140,7 @@ export function SanctoraleCard({
         <View>
           {psalmGroups.length > 0 ? (
             <View style={styles.group}>
-              <Text style={sectionHeading}>Psalms</Text>
+              <Text style={heading}>Psalms</Text>
               {psalmGroups.map((group) => (
                 <View key={group.label} style={styles.timeBlock}>
                   <Text style={styles.groupSubheading}>{group.label}</Text>
@@ -154,7 +161,7 @@ export function SanctoraleCard({
 
           {lessonGroups.length > 0 ? (
             <View style={styles.group}>
-              <Text style={sectionHeading}>Readings</Text>
+              <Text style={heading}>Readings</Text>
               {lessonGroups.map((group) => (
                 <View key={group.label} style={styles.timeBlock}>
                   <Text style={styles.groupSubheading}>{group.label}</Text>
@@ -168,7 +175,7 @@ export function SanctoraleCard({
 
           {traditional && contemporary ? (
             <View style={styles.group}>
-              <Text style={sectionHeading}>Collect of the Day</Text>
+              <Text style={heading}>Collect of the Day</Text>
               {collectTitle ? (
                 <Text style={styles.collectTitle}>{collectTitle}</Text>
               ) : null}
@@ -188,7 +195,7 @@ export function SanctoraleCard({
   );
 }
 
-const styles = StyleSheet.create({
+const sanctoraleCardStyles = defineThemedStyles({
   group: {
     marginBottom: 22,
   },
@@ -200,7 +207,7 @@ const styles = StyleSheet.create({
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 16,
     lineHeight: 24,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginBottom: 8,
   },
   timeBlock: {
@@ -213,7 +220,7 @@ const styles = StyleSheet.create({
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
     lineHeight: 22,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 6,
   },
   lessonRow: {
@@ -223,7 +230,7 @@ const styles = StyleSheet.create({
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 16,
     lineHeight: 24,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   // deuterocanonical readings (Sirach, Wisdom, 2 Esdras) have no KJV
   // text vendored yet; the citation stays, with a quiet notice instead
@@ -232,7 +239,7 @@ const styles = StyleSheet.create({
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 13,
     lineHeight: 20,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginTop: 2,
   },
   collect: {
@@ -244,7 +251,7 @@ const styles = StyleSheet.create({
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 16,
     lineHeight: 24,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginTop: 8,
     marginBottom: 12,
   },
@@ -256,28 +263,28 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 1.2,
     textTransform: "uppercase",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 4,
   },
   collectText: {
     fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 28,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   detailTitle: {
     fontFamily: HEADING_FONT,
     fontWeight: "700",
     fontSize: 30,
     lineHeight: 38,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginBottom: 4,
   },
   detailSubtitle: {
     fontFamily: "var(--ui-font, system-ui)",
     fontWeight: "500",
     fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 22,
   },
   // the biographical note leads the card, set in the same serif voice as
@@ -286,6 +293,6 @@ const styles = StyleSheet.create({
     fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 28,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
 });

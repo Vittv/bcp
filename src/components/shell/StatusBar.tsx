@@ -1,6 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { Color, DolSlot, Season } from "../../lib/calendar/types";
 import { CHROME_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
 import { SeasonDot } from "./SeasonDot";
 
 // bundled via expo-font; system monospace is the fallback on native
@@ -73,6 +77,7 @@ export function StatusBar({
   reading,
   compact = false,
 }: StatusBarProps) {
+  const styles = useThemedStyles(statusBarStyles);
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.left}>
@@ -103,17 +108,17 @@ export function StatusBar({
   );
 }
 
-const styles = StyleSheet.create({
+const statusBarStyles = defineThemedStyles({
   bar: {
     height: 24,
     overflow: "hidden",
     borderTopWidth: 1,
-    borderTopColor: "var(--border, #d2cbbf)",
+    borderTopColor: "var(--border)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 12,
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--bg)",
     flexShrink: 0,
   },
   left: {
@@ -138,7 +143,7 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   // lets a long reading/office name truncate instead of pushing the
   // percentage out of the bar
@@ -150,7 +155,7 @@ const styles = StyleSheet.create({
     fontFamily: MONO,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     // reserve room for the widest value ("100%") and right-align so the
     // number never shifts the layout as it grows. 26px barely clips "100%"
     // at 11px JetBrains Mono, which then pushes the reading/left content;
@@ -160,6 +165,6 @@ const styles = StyleSheet.create({
   },
   sep: {
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
 });

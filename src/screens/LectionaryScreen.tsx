@@ -1,13 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react";
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { sectionHeading } from "../components/office/contentHeadings";
+import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { useSectionHeading } from "../components/office/contentHeadings";
 import { PsalmText } from "../components/office/PsalmText";
 import { ScriptureView } from "../components/office/ScriptureView";
 import { Chevron } from "../components/shell/Chevron";
@@ -24,6 +17,7 @@ import { psalmPassage } from "../lib/content/psalter";
 import type { KjvPassage } from "../lib/content/types";
 import { CHROME_FONT, HEADING_FONT, SERIF_ITALIC_FONT } from "../lib/fonts";
 import { dayLabel } from "../lib/office";
+import { defineThemedStyles, useThemedStyles } from "../lib/theme/themedStyles";
 import { noSelect } from "./reference/shared";
 import { sharedStyles } from "./reference/styles";
 
@@ -42,14 +36,16 @@ export function LectionaryBar({
   onNextDate: () => void;
   onToday: () => void;
 }) {
+  const barStyles = useThemedStyles(sharedStyles);
+  const styles = useThemedStyles(lectionaryStyles);
   return (
-    <View style={[sharedStyles.bar, noSelect]}>
-      <View style={sharedStyles.barLeft}>{leading}</View>
-      <View style={sharedStyles.barRight}>
+    <View style={[barStyles.bar, noSelect]}>
+      <View style={barStyles.barLeft}>{leading}</View>
+      <View style={barStyles.barRight}>
         <Pressable
           style={({ hovered }) => [
             styles.dayBtn,
-            hovered && sharedStyles.rowHover,
+            hovered && barStyles.rowHover,
           ]}
           onPress={onToday}
           disabled={isToday}
@@ -63,8 +59,8 @@ export function LectionaryBar({
         {/* day arrows reusing the scripture sections' square arrow buttons */}
         <Pressable
           style={({ hovered }) => [
-            sharedStyles.arrowBtn,
-            hovered && sharedStyles.arrowBtnHover,
+            barStyles.arrowBtn,
+            hovered && barStyles.arrowBtnHover,
           ]}
           onPress={onPrevDate}
           accessibilityLabel="Previous day"
@@ -74,8 +70,8 @@ export function LectionaryBar({
         </Pressable>
         <Pressable
           style={({ hovered }) => [
-            sharedStyles.arrowBtn,
-            hovered && sharedStyles.arrowBtnHover,
+            barStyles.arrowBtn,
+            hovered && barStyles.arrowBtnHover,
           ]}
           onPress={onNextDate}
           accessibilityLabel="Next day"
@@ -89,6 +85,7 @@ export function LectionaryBar({
 }
 
 function LessonRow({ lesson }: { lesson: LectionaryLesson }) {
+  const styles = useThemedStyles(lectionaryStyles);
   const { translation } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[] | null>(null);
 
@@ -123,6 +120,7 @@ function LessonRow({ lesson }: { lesson: LectionaryLesson }) {
 }
 
 function PsalmsBlock({ citations }: { citations: string[] }) {
+  const styles = useThemedStyles(lectionaryStyles);
   if (citations.length === 0) return null;
   return (
     <View style={styles.psalmBlock}>
@@ -144,9 +142,11 @@ function PsalmsBlock({ citations }: { citations: string[] }) {
 }
 
 function OfficeBlock({ office }: { office: LectionaryOffice }) {
+  const styles = useThemedStyles(lectionaryStyles);
+  const heading = useSectionHeading();
   return (
     <View style={styles.group}>
-      <Text style={sectionHeading}>{office.label}</Text>
+      <Text style={heading}>{office.label}</Text>
       <PsalmsBlock citations={office.psalms} />
       {office.lessons.map((lesson) => (
         <LessonRow key={lesson.ref} lesson={lesson} />
@@ -156,6 +156,8 @@ function OfficeBlock({ office }: { office: LectionaryOffice }) {
 }
 
 export function LectionaryScreen({ date }: { date: CalendarDate }) {
+  const styles = useThemedStyles(lectionaryStyles);
+  const heading = useSectionHeading();
   const day = lectionaryForDate(date);
   const inner = (
     <>
@@ -174,17 +176,17 @@ export function LectionaryScreen({ date }: { date: CalendarDate }) {
       ) : day?.kind === "shared" ? (
         <>
           <View style={styles.group}>
-            <Text style={sectionHeading}>Morning Psalms</Text>
+            <Text style={heading}>Morning Psalms</Text>
             <PsalmsBlock citations={day.psalms.morning} />
           </View>
           <View style={styles.group}>
-            <Text style={sectionHeading}>Readings</Text>
+            <Text style={heading}>Readings</Text>
             {day.lessons.map((lesson) => (
               <LessonRow key={lesson.ref} lesson={lesson} />
             ))}
           </View>
           <View style={styles.group}>
-            <Text style={sectionHeading}>Evening Psalms</Text>
+            <Text style={heading}>Evening Psalms</Text>
             <PsalmsBlock citations={day.psalms.evening} />
           </View>
         </>
@@ -196,26 +198,26 @@ export function LectionaryScreen({ date }: { date: CalendarDate }) {
   return <ScrollView>{inner}</ScrollView>;
 }
 
-const styles = StyleSheet.create({
+const lectionaryStyles = defineThemedStyles({
   header: {
     marginBottom: 24,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border-content, #b5aa9e)",
+    borderBottomColor: "var(--border-content)",
   },
   title: {
     fontFamily: HEADING_FONT,
     fontWeight: "700",
     fontSize: 28,
     lineHeight: 36,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     letterSpacing: -0.3,
   },
   dateLabel: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginTop: 4,
   },
   entryTitle: {
@@ -224,7 +226,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 1,
     textTransform: "uppercase",
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     marginTop: 8,
   },
   group: {
@@ -239,7 +241,7 @@ const styles = StyleSheet.create({
   psalmRef: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 6,
   },
   lesson: {
@@ -248,16 +250,16 @@ const styles = StyleSheet.create({
   lessonRef: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   lessonLabel: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   lessonMissing: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 13,
     lineHeight: 20,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginTop: 4,
   },
   dayBtn: {
@@ -272,12 +274,12 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 12,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   // when the viewed day is today, the button reads as the active day like
   // the calendar's Today control instead of a disabled dim
   dayBtnTextActive: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     fontWeight: "600",
   },
 });

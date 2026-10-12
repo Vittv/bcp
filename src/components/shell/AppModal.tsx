@@ -12,6 +12,11 @@ import {
   type ViewStyle,
 } from "react-native";
 import { HEADING_FONT } from "../../lib/fonts";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+  useThemeVar,
+} from "../../lib/theme/themedStyles";
 import { CloseIcon } from "./Icon";
 
 // a reusable floating-window modal: a centered card with a title bar and
@@ -43,9 +48,6 @@ type AppModalProps = {
    *  clamped to the viewport so short windows still fit */
   height?: number;
 };
-
-const HOVER_COLOR = "var(--text, #2c2020)";
-const IDLE_COLOR = "var(--text-secondary, #7a6e64)";
 
 type EscEntry = { run: () => void };
 const escRegistry: EscEntry[] = [];
@@ -82,6 +84,8 @@ export function AppModal({
   height,
 }: AppModalProps) {
   const { height: viewportHeight } = useWindowDimensions();
+  const styles = useThemedStyles(appModalStyles);
+  const v = useThemeVar();
   // clamp a fixed target against the viewport so short windows still fit
   const fixedHeight =
     height == null ? undefined : Math.min(height, viewportHeight * 0.92);
@@ -153,7 +157,9 @@ export function AppModal({
               {({ hovered }) => (
                 <CloseIcon
                   size={16}
-                  color={hovered ? HOVER_COLOR : IDLE_COLOR}
+                  color={
+                    hovered ? v("var(--text)") : v("var(--text-secondary)")
+                  }
                 />
               )}
             </Pressable>
@@ -166,7 +172,7 @@ export function AppModal({
   );
 }
 
-const styles = StyleSheet.create({
+const appModalStyles = defineThemedStyles({
   backdrop: {
     // fixed rather than absolute: the modal is often opened from a nested
     // pane (the calendar, the saint popover), whose position context would
@@ -177,7 +183,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 100,
-    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    backgroundColor: "var(--scrim)",
     // a slight blur keeps the page readable behind the dim instead of
     // flattening it into noise; subtle enough to stay an accent
     backdropFilter: "blur(3px)",
@@ -189,9 +195,9 @@ const styles = StyleSheet.create({
     width: 760,
     maxWidth: "100%",
     minHeight: 260,
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--bg)",
     borderWidth: 1,
-    borderColor: "var(--border, #c9c1b2)",
+    borderColor: "var(--border)",
     borderRadius: 10,
     display: "flex",
     flexDirection: "column",
@@ -205,7 +211,7 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingRight: 10,
     flexShrink: 0,
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--bg)",
     userSelect: "none",
   },
   title: {
@@ -213,7 +219,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 28,
     letterSpacing: 0.2,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     flex: 1,
     minWidth: 0,
     marginRight: 12,
@@ -226,7 +232,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   closeBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   body: {
     flexShrink: 1,
@@ -234,7 +240,7 @@ const styles = StyleSheet.create({
     overflowY: "auto",
     paddingHorizontal: 20,
     paddingVertical: 20,
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--bg)",
   },
   // two-pane bodies (settings rail + content) scroll inside their own panes;
   // the frame itself just stretches to the card and clips
@@ -246,7 +252,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     overflow: "hidden",
     padding: 0,
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--bg)",
   },
   footer: {
     flexShrink: 0,
@@ -254,7 +260,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 14,
     borderTopWidth: 1,
-    borderTopColor: "var(--border, #c9c1b2)",
-    backgroundColor: "var(--bg, #e0dbd0)",
+    borderTopColor: "var(--border)",
+    backgroundColor: "var(--bg)",
   },
 });

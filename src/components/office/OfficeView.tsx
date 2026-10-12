@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useTranslation } from "../../context/TranslationContext";
 import { getScripturePassagesFromDolRef } from "../../lib/content/bible";
 import type { KjvPassage, OfficeSpeaker } from "../../lib/content/types";
@@ -15,7 +15,11 @@ import type {
   ComposedSection,
   OfficeDocument,
 } from "../../lib/office/types";
-import { sectionHeading } from "./contentHeadings";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
+import { useSectionHeading } from "./contentHeadings";
 import { MentionedText } from "./MentionedText";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
@@ -34,10 +38,12 @@ type NodeViewProps = {
 };
 
 function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
+  const styles = useThemedStyles(officeViewStyles);
   return <Text style={styles.speaker}>{SPEAKER_LABEL[speaker]} </Text>;
 }
 
 function LessonRow({ lesson }: { lesson: ComposedLesson }) {
+  const styles = useThemedStyles(officeViewStyles);
   const { translation } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[]>([]);
 
@@ -74,6 +80,7 @@ function NodeView({
   showSpeakers,
   todaySlug,
 }: NodeViewProps) {
+  const styles = useThemedStyles(officeViewStyles);
   switch (node.kind) {
     case "heading":
       return <Text style={styles.heading}>{node.text}</Text>;
@@ -163,13 +170,13 @@ function SectionView({
   showSpeakers: boolean;
   todaySlug?: string;
 }) {
+  const styles = useThemedStyles(officeViewStyles);
+  const heading = useSectionHeading();
   if (section.nodes.length === 0) return null;
   const keys = sectionKeys(section.nodes);
   return (
     <View style={styles.section}>
-      {section.heading ? (
-        <Text style={sectionHeading}>{section.heading}</Text>
-      ) : null}
+      {section.heading ? <Text style={heading}>{section.heading}</Text> : null}
       {section.nodes.map((node, i) => (
         <NodeView
           key={keys[i]}
@@ -226,7 +233,7 @@ function nodeKey(node: ComposedNode): string {
   }
 }
 
-const styles = StyleSheet.create({
+const officeViewStyles = defineThemedStyles({
   section: {
     marginBottom: 20,
   },
@@ -237,13 +244,13 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     marginTop: 22,
     marginBottom: 8,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   rubric: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
     lineHeight: 25,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginTop: 4,
     marginBottom: 4,
   },
@@ -251,7 +258,7 @@ const styles = StyleSheet.create({
     fontFamily: SERIF_FONT,
     fontSize: 18,
     lineHeight: 30,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginTop: 8,
   },
   speaker: {
@@ -259,7 +266,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 11,
     letterSpacing: 0.4,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   psalmBlock: {
     marginTop: 22,
@@ -268,7 +275,7 @@ const styles = StyleSheet.create({
   psalmTitle: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 6,
   },
   lessonBlock: {
@@ -281,16 +288,16 @@ const styles = StyleSheet.create({
   lessonRef: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 15,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   lessonLabel: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   lessonMissing: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 13,
     lineHeight: 20,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginTop: 4,
   },
   collectBlock: {
@@ -301,7 +308,7 @@ const styles = StyleSheet.create({
   collectCross: {
     fontFamily: 'Georgia, "Times New Roman", serif',
     fontSize: 16,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     marginRight: 4,
   },
   collectBody: {
@@ -310,14 +317,14 @@ const styles = StyleSheet.create({
   collectTitle: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 14,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     marginBottom: 4,
   },
   collectText: {
     fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 28,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   fixedCollectBlock: {
     marginTop: 10,
@@ -327,13 +334,13 @@ const styles = StyleSheet.create({
   fixedCollectTitle: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 14,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     marginBottom: 4,
   },
   fixedCollectText: {
     fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 28,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
 });

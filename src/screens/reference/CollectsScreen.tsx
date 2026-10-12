@@ -10,6 +10,7 @@ import { usePalette } from "../../context/PaletteContext";
 import { collectPassage } from "../../lib/content/collects";
 import type { CollectRite, CollectSection } from "../../lib/content/types";
 import { type CollectHit, searchCollects } from "../../lib/reference/search";
+import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   type CollectSel,
   DetailPage,
@@ -21,7 +22,7 @@ import {
   SplitPane,
   useReference,
 } from "./shared";
-import { sharedStyles as styles } from "./styles";
+import { sharedStyles as styleDef } from "./styles";
 import { useIndexKeyboard } from "./useIndexKeyboard";
 
 const RITE_LABELS: Record<CollectRite, string> = {
@@ -50,6 +51,7 @@ export function CollectsScreen({
   onScrollProgress?: (pct: number) => void;
 }) {
   const { selectedCollect } = useReference();
+  const styles = useThemedStyles(styleDef);
   if (isMobile) {
     return (
       <View style={styles.container}>
@@ -79,6 +81,7 @@ export function CollectsScreen({
 export function CollectsBar({ leading }: { leading?: ReactNode }) {
   const { selectedCollect } = useReference();
   const palette = usePalette();
+  const styles = useThemedStyles(styleDef);
   const sel = selectedCollect ?? FIRST_COLLECT;
   return (
     <View style={[styles.bar, noSelect]}>
@@ -107,6 +110,7 @@ const CollectRow = memo(function CollectRow({
   selected: CollectSel | null;
   onSelect: (c: CollectSel | null) => void;
 }) {
+  const styles = useThemedStyles(styleDef);
   const isSelected =
     selected?.section === hit.section && selected?.title === hit.title;
   return (
@@ -164,6 +168,7 @@ export function CollectIndex({
     [selected, onSelect],
   );
   const { cursor } = useIndexKeyboard(hits, onEnter);
+  const styles = useThemedStyles(styleDef);
   const cursorHit = hits[cursor];
   if (hits.length === 0) {
     return <EmptyMessage message={`No collects match “${deferredQuery}”.`} />;
@@ -200,6 +205,7 @@ const CollectCompare = memo(function CollectCompare({
 }: {
   sel: CollectSel;
 }) {
+  const styles = useThemedStyles(styleDef);
   const traditional = collectPassage("traditional", sel.section, sel.title);
   const contemporary = collectPassage("contemporary", sel.section, sel.title);
   const columns = [traditional, contemporary].filter((c) => c !== undefined);

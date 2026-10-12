@@ -1,9 +1,11 @@
-import { StyleSheet } from "react-native";
 import { officeBarStyles } from "../../components/shell/OfficeTabs";
 import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../../lib/fonts";
+import { defineThemedStyles } from "../../lib/theme/themedStyles";
 
-// styles shared across the Psalms, Collects, and Offices reference pages
-export const sharedStyles = StyleSheet.create({
+// styles shared across the Psalms, Collects, and Offices reference pages.
+// a themed definition (var(--token) strings); consumers resolve it with
+// useThemedStyles so it paints from the theme on web and native alike
+export const sharedStyles = defineThemedStyles({
   container: {
     flex: 1,
     minHeight: 300,
@@ -11,14 +13,14 @@ export const sharedStyles = StyleSheet.create({
   bar: {
     height: 30,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #d2cbbf)",
+    borderBottomColor: "var(--border)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     // same paddingHorizontal as the sidebar toolbar so the leading button
     // and trailing controls sit at the same inset from their edges
     paddingHorizontal: 6,
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--bg)",
     flexShrink: 0,
     // anchor for the bar's popovers (office menu, month grid). the
     // explicit z-index also lifts this whole bar above the content
@@ -60,7 +62,7 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 14,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   // chapter-arrow controls on the testament bars: compact squares matching
   // the bar's other bordered buttons, muted fill that darkens on hover
@@ -71,11 +73,11 @@ export const sharedStyles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "var(--border, #cbc5bb)",
-    backgroundColor: "var(--surface, #d5cfc4)",
+    borderColor: "var(--border)",
+    backgroundColor: "var(--surface)",
   },
   arrowBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   // the floating picker frame (aetheryte-style search tray): a dimmed
   // backdrop, a centered card whose search field is pinned to the top and
@@ -88,7 +90,7 @@ export const sharedStyles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 100,
-    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    backgroundColor: "var(--scrim)",
     // slight blur behind the tray keeps the page readable under the dim
     backdropFilter: "blur(3px)",
     alignItems: "center",
@@ -119,12 +121,12 @@ export const sharedStyles = StyleSheet.create({
     maxHeight: "85%",
     display: "flex",
     flexDirection: "column",
-    backgroundColor: "var(--bg, #e0dbd0)",
+    backgroundColor: "var(--bg)",
     borderWidth: 1,
-    borderColor: "var(--border, #c3bcb2)",
+    borderColor: "var(--border)",
     borderRadius: 10,
     overflow: "hidden",
-    boxShadow: "0 8px 24px rgba(20, 15, 15, 0.18)",
+    boxShadow: "0 8px 24px var(--panel-shadow)",
   },
   // the global search palette sizes to its results instead of claiming
   // the scoped picker's fixed 70%: an empty query renders as a slim
@@ -138,13 +140,13 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 15,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     backgroundColor: "transparent",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderWidth: 0,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border, #c3bcb2)",
+    borderBottomColor: "var(--border)",
     flexShrink: 0,
   },
   paletteBody: {
@@ -166,7 +168,7 @@ export const sharedStyles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderTopColor: "var(--border, #c3bcb2)",
+    borderTopColor: "var(--border)",
     opacity: 0.85,
     flexShrink: 0,
   },
@@ -179,15 +181,15 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 12,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   paletteKbd: {
     fontFamily: '"JetBrains Mono", monospace',
     fontWeight: "400",
     fontSize: 11,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     borderWidth: 1,
-    borderColor: "var(--border, #b9b0a2)",
+    borderColor: "var(--border)",
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 1,
@@ -210,16 +212,16 @@ export const sharedStyles = StyleSheet.create({
     marginTop: -8,
     fontSize: 14,
     lineHeight: 16,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   rowHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   // picked rows turn every text node accent red instead of painting a
   // background fill; hover paints the rowHover fill on top of that state.
   // the keyboard cursor lights the same text nodes, so arrows are visible
   rowTextActive: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   rowInner: {
     flexDirection: "row",
@@ -245,14 +247,14 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     fontVariant: ["tabular-nums"],
   },
   // the reader's own state in a row's trailing slot, where the bare counts
   // beside it are facts about the item. accent, because it is about the
   // reader; the wording carries it too, so colour is never the only cue
   rowMetaReading: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
   },
   rowChevron: {
     opacity: 0,
@@ -277,7 +279,7 @@ export const sharedStyles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
     lineHeight: 18,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     flex: 1,
   },
   collectRowInner: {
@@ -306,7 +308,7 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     fontVariant: ["tabular-nums"],
   },
   saintTitle: {
@@ -314,7 +316,7 @@ export const sharedStyles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
     lineHeight: 18,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     flex: 1,
   },
   // canticle titles are proper names (The Song of Mary, Nunc Dimittis)
@@ -326,7 +328,7 @@ export const sharedStyles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
     lineHeight: 18,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     flex: 1,
   },
   // the canticle picker lists titles only, no number gutter: every row
@@ -345,7 +347,7 @@ export const sharedStyles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 1.2,
     textTransform: "uppercase",
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     marginBottom: 10,
   },
   // fixed-width gutter keeps every incipit on the same edge while the
@@ -357,7 +359,7 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "500",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     fontVariant: ["tabular-nums"],
   },
   incipit: {
@@ -365,14 +367,14 @@ export const sharedStyles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "500",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     flex: 1,
   },
   empty: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 14,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     paddingVertical: 24,
     paddingHorizontal: 20,
   },
@@ -400,14 +402,14 @@ export const sharedStyles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 30,
     lineHeight: 38,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginBottom: 4,
   },
   detailSubtitle: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 22,
   },
   collectGroup: {
@@ -419,7 +421,7 @@ export const sharedStyles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 1.2,
     textTransform: "uppercase",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     paddingVertical: 8,
   },
   // (groupRule removed: categories no longer carry a top border or margin,
@@ -428,7 +430,7 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 27,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   // canticles read like psalms but carry unnumbered verses grouped into
   // titled sections, so each section is its own serif block
@@ -440,21 +442,21 @@ export const sharedStyles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 24,
     fontWeight: "600",
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     marginBottom: 6,
   },
   canticleVerse: {
     fontFamily: SERIF_FONT,
     fontSize: 17,
     lineHeight: 29,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   canticleNote: {
     fontFamily: SERIF_FONT,
     fontSize: 15,
     fontStyle: "italic",
     lineHeight: 24,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 18,
   },
   // date trigger: a chip like every other control in these bars, no
@@ -469,13 +471,13 @@ export const sharedStyles = StyleSheet.create({
     borderRadius: 4,
   },
   dateBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   dateText: {
     fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "600",
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     fontVariant: ["tabular-nums"],
   },
   // current-pick chip for the floating pickers: a full-bar strip that takes
@@ -495,17 +497,17 @@ export const sharedStyles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "var(--border, #cbc5bb)",
-    backgroundColor: "var(--surface, #d5cfc4)",
+    borderColor: "var(--border)",
+    backgroundColor: "var(--surface)",
   },
   pickerBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   pickerText: {
     fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "500",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     fontVariant: ["tabular-nums"],
     // shrink instead of pushing the chip open; min-width: 0 lets a flex text
     // node shrink below its content width so the label ellipsizes on
@@ -520,7 +522,7 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "500",
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     fontVariant: ["tabular-nums"],
     flexShrink: 0,
   },
@@ -532,9 +534,9 @@ export const sharedStyles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     fontVariant: ["tabular-nums"],
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     // a soft filled keycap, recessed and darker than the surface
-    backgroundColor: "var(--key-bg, rgba(44, 32, 32, 0.09))",
+    backgroundColor: "var(--key-bg)",
     borderRadius: 4,
     paddingHorizontal: 7,
     paddingVertical: 1,
@@ -556,7 +558,7 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 11,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   todayTextOn: {
     ...officeBarStyles.tabTextActive,
@@ -578,11 +580,11 @@ export const sharedStyles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "var(--border-content, #b5aa9e)",
+    borderColor: "var(--border-content)",
     // raised surface: one step lighter than --bg so panels float over
     // the page instead of reading as a hole in it
-    backgroundColor: "var(--bg-raised, #ece7dd)",
-    shadowColor: "#000",
+    backgroundColor: "var(--bg-raised)",
+    shadowColor: "var(--shadow-color)",
     shadowOpacity: 0.24,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 4 },
@@ -597,7 +599,7 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "600",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   popGrid: {
     flexDirection: "row",
@@ -612,18 +614,18 @@ export const sharedStyles = StyleSheet.create({
   },
   popCellToday: {
     borderWidth: 1,
-    borderColor: "var(--accent, #7a3040)",
+    borderColor: "var(--accent)",
   },
   popCellSelected: {},
   popCellText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 12,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     fontVariant: ["tabular-nums"],
   },
   popCellTextSelected: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     fontWeight: "700",
   },
   // office picker tabs in the desktop bar, spread directly from the
@@ -671,7 +673,7 @@ export const sharedStyles = StyleSheet.create({
     gap: 2,
   },
   toggleOn: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     fontWeight: "700",
   },
   // mobile office dropdown: a chip-styled trigger matching the tab
@@ -686,13 +688,13 @@ export const sharedStyles = StyleSheet.create({
     marginLeft: 6,
   },
   officeBtnHover: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   officeBtnText: {
     fontFamily: CHROME_FONT,
     fontSize: 11,
     fontWeight: "600",
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     flexShrink: 1,
   },
   popMenuWide: {
@@ -714,13 +716,13 @@ export const sharedStyles = StyleSheet.create({
     borderRadius: 4,
   },
   popMenuItemSelected: {
-    backgroundColor: "var(--control-hover, #d2cbbf)",
+    backgroundColor: "var(--control-hover)",
   },
   popMenuItemText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 13,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   // Bible reader
   bibleContainer: {
@@ -739,20 +741,20 @@ export const sharedStyles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 24,
     lineHeight: 32,
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginBottom: 4,
   },
   bibleReaderSubtitle: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 14,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   bibleLoading: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 16,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     textAlign: "center",
     marginTop: 40,
   },
@@ -763,7 +765,7 @@ export const sharedStyles = StyleSheet.create({
     marginTop: 24,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "var(--border-faint, rgba(44, 32, 32, 0.09))",
+    borderTopColor: "var(--border-faint)",
   },
   bibleNavBtn: {
     flexDirection: "row",
@@ -773,11 +775,11 @@ export const sharedStyles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "var(--border, #cbc5bb)",
-    backgroundColor: "var(--surface, #d5cfc4)",
+    borderColor: "var(--border)",
+    backgroundColor: "var(--surface)",
   },
   bibleNavBtnHover: {
-    backgroundColor: "var(--control-hover, rgba(44, 32, 32, 0.06))",
+    backgroundColor: "var(--control-hover)",
   },
   bibleNavBtnDisabled: {
     opacity: 0.4,
@@ -786,13 +788,13 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "600",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
   bibleChapterIndicator: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
     fontSize: 13,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
   },
   // bottom chapter navigation
   bibleBottomNav: {
@@ -807,6 +809,6 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 13,
     fontWeight: "400",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
   },
 });

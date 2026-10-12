@@ -1,6 +1,10 @@
 import { useMemo } from "react";
-import { StyleSheet, Text } from "react-native";
+import { Text } from "react-native";
 import { tokenizeSanctoraleMentions } from "../../lib/calendar/sanctorale";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
 import { useSaintPopover } from "./SaintPopover";
 
 // a text run with saint names rendered as tappable mentions. saints are
@@ -15,6 +19,7 @@ export function MentionedText({
   todaySlug?: string;
 }) {
   const { openSaint } = useSaintPopover();
+  const styles = useThemedStyles(mentionStyles);
   const runs = useMemo(() => tokenizeSanctoraleMentions(text), [text]);
   // keyed by text start-offset (not the array index): unique and stable
   // even when the same surface repeats, and purely positional
@@ -44,11 +49,11 @@ export function MentionedText({
   );
 }
 
-const styles = StyleSheet.create({
+const mentionStyles = defineThemedStyles({
   mention: {
-    color: "var(--accent, #7a3040)",
+    color: "var(--accent)",
     textDecorationLine: "underline" as const,
-    textDecorationColor: "var(--accent, #7a3040)",
+    textDecorationColor: "var(--accent)",
     textDecorationStyle: "solid" as const,
     cursor: "pointer",
   },

@@ -1,15 +1,49 @@
 import type { CSSProperties } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { ExternalLink } from "../components/ExternalLink";
 import { REPO_URL } from "../components/shell/Sidebar";
 import { CHROME_FONT } from "../lib/fonts";
 import { KO_FI_URL, RELEASE_PAGE } from "../lib/release";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+  useThemeVar,
+} from "../lib/theme/themedStyles";
 import { useAppVersion } from "../lib/version";
 
 const KO_FI_ICON = require("../../assets/app_icons/ko-fi.png");
 
 export function AboutScreen() {
   const version = useAppVersion();
+  const styles = useThemedStyles(styleDef);
+  const v = useThemeVar();
+  // the links and the donate row render as plain web anchors and an image
+  // (ExternalLink creates <a> directly), so their style objects are real CSS
+  // properties rather than react-native sheet entries; the accent resolves
+  // through the theme like every other color
+  const web: Record<string, CSSProperties> = {
+    link: {
+      fontFamily: CHROME_FONT,
+      fontWeight: "400",
+      fontSize: 15,
+      color: v("var(--accent)"),
+      textDecorationLine: "underline",
+      marginBottom: 8,
+    },
+    donateLink: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6,
+      textDecorationLine: "none",
+      marginBottom: 8,
+    },
+    donateIcon: {
+      width: 20,
+      height: 16,
+      flexShrink: 0,
+      verticalAlign: "middle",
+    },
+  };
   return (
     <View>
       <View style={styles.section}>
@@ -64,7 +98,7 @@ export function AboutScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styleDef = defineThemedStyles({
   section: {
     marginBottom: 24,
   },
@@ -75,14 +109,14 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontSize: 16,
     fontWeight: "600",
-    color: "var(--text, #2c2020)",
+    color: "var(--text)",
     marginBottom: 8,
   },
   value: {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 14,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     marginBottom: 8,
     marginTop: 12,
   },
@@ -90,35 +124,8 @@ const styles = StyleSheet.create({
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 15,
-    color: "var(--text-secondary, #7a6e64)",
+    color: "var(--text-secondary)",
     lineHeight: 23,
     marginBottom: 8,
   },
 });
-
-// the links and the donate row render as plain web anchors and an image
-// (ExternalLink creates <a> directly), so their style objects are real CSS
-// properties rather than react-native sheet entries
-const web: Record<string, CSSProperties> = {
-  link: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "400",
-    fontSize: 15,
-    color: "var(--accent, #7a3040)",
-    textDecorationLine: "underline",
-    marginBottom: 8,
-  },
-  donateLink: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 6,
-    textDecorationLine: "none",
-    marginBottom: 8,
-  },
-  donateIcon: {
-    width: 20,
-    height: 16,
-    flexShrink: 0,
-    verticalAlign: "middle",
-  },
-};

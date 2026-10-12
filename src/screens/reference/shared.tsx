@@ -32,6 +32,7 @@ import type { CollectSection, OfficeId } from "../../lib/content/types";
 import type { PageStepper } from "../../lib/input/sequenceNav";
 import { registerPageStepper, stepLinear } from "../../lib/input/sequenceNav";
 import { searchCollects } from "../../lib/reference/search";
+import { useThemedStyles, useThemeVar } from "../../lib/theme/themedStyles";
 import { sharedStyles } from "./styles";
 
 // the collect the desktop pane shows before anything is picked: the
@@ -64,11 +65,11 @@ const LIST_PANE_STYLE: React.CSSProperties = {
   flexShrink: 0,
   display: "flex",
   flexDirection: "column",
-  borderLeft: "1px solid var(--border-faint, rgba(44, 32, 32, 0.09))",
+  borderLeft: "1px solid var(--border-faint)",
 };
 const SPLIT_HEADER_STYLE: React.CSSProperties = {
   flexShrink: 0,
-  borderBottom: "1px solid var(--border, #c3bcb2)",
+  borderBottom: "1px solid var(--border)",
   flexDirection: "row",
   alignItems: "center",
   paddingTop: 8,
@@ -533,6 +534,8 @@ export function SplitPane({
     onScrollProgress(max > 0 ? Math.round((el.scrollTop / max) * 100) : 0);
   }, [onScrollProgress]);
 
+  const styles = useThemedStyles(sharedStyles);
+
   // biome-ignore-start lint/a11y/noNoninteractiveTabindex: each pane is a
   // scrollable region and must be focusable for native arrow scrolling
   return (
@@ -547,7 +550,7 @@ export function SplitPane({
         data-split-detail
         onScroll={handleDetailScroll}
       >
-        <View style={sharedStyles.detailPage}>{detail}</View>
+        <View style={styles.detailPage}>{detail}</View>
       </div>
       {list ? (
         <div ref={listRef} tabIndex={0} style={LIST_PANE_STYLE} data-split-list>
@@ -572,17 +575,13 @@ export function DetailPage({
   children: ReactNode;
   compact?: boolean;
 }) {
+  const styles = useThemedStyles(sharedStyles);
   return (
     <ScrollView
-      style={sharedStyles.list}
+      style={styles.list}
       contentContainerStyle={{ alignItems: "center" }}
     >
-      <View
-        style={[
-          sharedStyles.detailPage,
-          compact && sharedStyles.detailPageMobile,
-        ]}
-      >
+      <View style={[styles.detailPage, compact && styles.detailPageMobile]}>
         {children}
       </View>
     </ScrollView>
@@ -590,7 +589,8 @@ export function DetailPage({
 }
 
 export function EmptyMessage({ message }: { message: string }) {
-  return <Text style={sharedStyles.empty}>{message}</Text>;
+  const styles = useThemedStyles(sharedStyles);
+  return <Text style={styles.empty}>{message}</Text>;
 }
 
 // the one highlight state of every picker row, shared by keyboard and mouse
@@ -609,13 +609,10 @@ export function IndexRow({
   children: (active: boolean) => ReactNode;
   cursor?: boolean;
 }) {
+  const styles = useThemedStyles(sharedStyles);
   return (
-    <Pressable
-      style={sharedStyles.row}
-      onPress={onPress}
-      accessibilityRole="button"
-    >
-      {cursor && <Text style={sharedStyles.pickerCursor}>▸</Text>}
+    <Pressable style={styles.row} onPress={onPress} accessibilityRole="button">
+      {cursor && <Text style={styles.pickerCursor}>▸</Text>}
       {children(cursor)}
     </Pressable>
   );
@@ -630,7 +627,8 @@ export function KeyCap({
   label: string;
   style?: StyleProp<TextStyle>;
 }) {
-  return <Text style={[sharedStyles.pickerKbd, style]}>{label}</Text>;
+  const styles = useThemedStyles(sharedStyles);
+  return <Text style={[styles.pickerKbd, style]}>{label}</Text>;
 }
 
 // the bar's current-pick chip: shows what the page is displaying and
@@ -649,30 +647,24 @@ export function PickerButton({
   meta?: string;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(sharedStyles);
+  const v = useThemeVar();
   return (
     <Pressable
       style={({ hovered }) => [
-        sharedStyles.pickerBtn,
-        hovered && sharedStyles.pickerBtnHover,
+        styles.pickerBtn,
+        hovered && styles.pickerBtnHover,
       ]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Change ${label}`}
     >
-      <ListIcon size={13} color="var(--text-secondary, #7a6e64)" />
-      <Text
-        numberOfLines={1}
-        ellipsizeMode="tail"
-        style={sharedStyles.pickerText}
-      >
+      <ListIcon size={13} color={v("var(--text-secondary)")} />
+      <Text numberOfLines={1} ellipsizeMode="tail" style={styles.pickerText}>
         {label}
       </Text>
       {meta ? (
-        <Text
-          numberOfLines={1}
-          ellipsizeMode="head"
-          style={sharedStyles.pickerMeta}
-        >
+        <Text numberOfLines={1} ellipsizeMode="head" style={styles.pickerMeta}>
           {meta}
         </Text>
       ) : null}
