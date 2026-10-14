@@ -53,7 +53,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "typography",
     title: "Typography",
-    description: "Fonts and text size for the whole app.",
+    description: "Fonts and text size for reading content.",
     keywords: ["font", "size", "inter", "text"],
   },
   {

@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -8,6 +8,8 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import { FontPicker } from "../components/settings/FontPicker";
+import { Slider } from "../components/settings/Slider";
 import { HelpScreen } from "../components/shell/HelpScreen";
 import {
   BibleIcon,
@@ -31,15 +33,16 @@ import {
   TESTAMENTS,
 } from "../context/BibleContext";
 import { useOfficeSettings } from "../context/OfficeSettingsContext";
-import {
-  type FontMode,
-  type ThemeMode,
-  useTheme,
-} from "../context/ThemeContext";
+import { type ThemeMode, useTheme } from "../context/ThemeContext";
 import { useTranslation } from "../context/TranslationContext";
 import { clearProgress, getAllProgress } from "../lib/content/bibleProgress";
 import { IS_TAURI } from "../lib/desktop";
-import { CHROME_FONT, HEADING_FONT } from "../lib/fonts";
+import {
+  CHROME_FONT,
+  HEADING_FONT,
+  SERIF_FONT,
+  SERIF_ITALIC_FONT,
+} from "../lib/fonts";
 import { filterSearch } from "../lib/search";
 import { type SettingsSectionId, visibleSettings } from "../lib/settings";
 import {
@@ -50,6 +53,15 @@ import {
 import { THEME_LIST, type ThemeId, themeTokens } from "../lib/theme/themes";
 import type { ResolvedTheme, ThemeTokens } from "../lib/theme/tokens";
 import { TRANSLATION_OPTIONS } from "../lib/translations";
+import type { FaceDef } from "../lib/typography/faces";
+import {
+  BASE_FONT_PX,
+  DEFAULT_FONT_PX,
+  FONT_SIZES,
+  MAX_FONT_PX,
+  MIN_FONT_PX,
+} from "../lib/typography/sizes";
+import type { SystemFontsState } from "../lib/typography/systemFonts";
 import { useUpdateStatus } from "../lib/updater";
 import { AboutScreen } from "./AboutScreen";
 import { InstallScreen } from "./InstallScreen";
@@ -110,6 +122,27 @@ function initialSection(
   return modal;
 }
 
+// the section the user last opened, so a bare reopen lands there instead of
+// the first category. session-only: it lives and dies with the tab, no device
+// preference to keep
+const LAST_SECTION_KEY = "bcp-settings-section";
+
+function loadLastSection(): string | null {
+  if (typeof sessionStorage === "undefined") return null;
+  try {
+    return sessionStorage.getItem(LAST_SECTION_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function persistLastSection(id: SectionId) {
+  if (typeof sessionStorage === "undefined") return;
+  try {
+    sessionStorage.setItem(LAST_SECTION_KEY, id);
+  } catch {}
+}
+
 // the desktop category only holds tauri-shell settings (window controls,
 // the updater), which don't exist in a browser tab; install only matters
 // when the web app is not installed yet, mirroring the sidebar's button
@@ -143,13 +176,20 @@ export function SettingsScreen({
   const visible = visibleCategories();
   const [activeCategory, setActiveCategory] = useState<SectionId | null>(() => {
     const requestedSection = initialSection(requested);
-    // phones land on the section list; a sidebar or palette entry point
-    // passes a real section and lands on its page instead
-    if (requestedSection === null) return mobile ? null : "appearance";
-    return visible.some((c) => c.id === requestedSection)
-      ? requestedSection
-      : "appearance";
+    if (requestedSection !== null) {
+      return visible.some((c) => c.id === requestedSection)
+        ? requestedSection
+        : "appearance";
+    }
+    // no explicit target: reopen where the user last was this session. a
+    // stored id that no longer names a visible section is ignored
+    const last = loadLastSection();
+    const recalled = last ? visible.find((c) => c.id === last) : undefined;
+    if (recalled) return recalled.id;
+    // otherwise phones land on the section list; desktop on the first category
+    return mobile ? null : "appearance";
   });
+
   const theme = useTheme();
   const { translation, setTranslation } = useTranslation();
   const office = useOfficeSettings();
@@ -163,6 +203,12 @@ export function SettingsScreen({
 
   const active =
     categories.find((c) => c.id === activeCategory) ?? categories[0];
+
+  // remember the open section for the rest of the session, so a bare reopen
+  // lands where the user left; backing out to the phone list keeps the last one
+  useEffect(() => {
+    if (activeCategory) persistLastSection(activeCategory);
+  }, [activeCategory]);
 
   const contentFor = (id: SectionId | undefined): ReactNode => {
     switch (id) {
@@ -179,10 +225,19 @@ export function SettingsScreen({
       case "typography":
         return (
           <TypographySettings
-            fontScale={theme.fontScale}
-            setFontScale={theme.setFontScale}
-            fontMode={theme.fontMode}
-            setFontMode={theme.setFontMode}
+            fontPx={theme.fontPx}
+            setFontPx={theme.setFontPx}
+            interfaceFont={theme.interfaceFont}
+            setInterfaceFont={theme.setInterfaceFont}
+            headingFont={theme.headingFont}
+            setHeadingFont={theme.setHeadingFont}
+            readingFont={theme.readingFont}
+            setReadingFont={theme.setReadingFont}
+            interfaceFaces={theme.interfaceFaces}
+            headingFaces={theme.headingFaces}
+            readingFaces={theme.readingFaces}
+            systemFontsState={theme.systemFontsState}
+            ensureSystemFonts={theme.ensureSystemFonts}
           />
         );
       case "office":
@@ -679,53 +734,129 @@ function ThemePreview({
   );
 }
 
+// the in-situ page mock's copy: a chrome line, a heading, a verse, and a rubric,
+// so the three roles stand together as they do in the reader
+const MOCK_CHROME = "The Order for Morning Prayer";
+const MOCK_HEADING = "Psalm 63";
+const MOCK_VERSE =
+  "O God, thou art my God; early will I seek thee: my soul thirsteth for thee, my flesh longeth for thee in a dry and thirsty land, where no water is.";
+const MOCK_RUBRIC = "Here the people stand.";
+
 type TypographySettingsProps = {
-  fontScale: number;
-  setFontScale: (scale: number) => void;
-  fontMode: FontMode;
-  setFontMode: (mode: FontMode) => void;
+  fontPx: number;
+  setFontPx: (px: number) => void;
+  interfaceFont: string;
+  setInterfaceFont: (id: string) => void;
+  headingFont: string;
+  setHeadingFont: (id: string) => void;
+  readingFont: string;
+  setReadingFont: (id: string) => void;
+  interfaceFaces: FaceDef[];
+  headingFaces: FaceDef[];
+  readingFaces: FaceDef[];
+  systemFontsState: SystemFontsState;
+  ensureSystemFonts: () => void;
 };
 
 function TypographySettings({
-  fontScale,
-  setFontScale,
-  fontMode,
-  setFontMode,
+  fontPx,
+  setFontPx,
+  interfaceFont,
+  setInterfaceFont,
+  headingFont,
+  setHeadingFont,
+  readingFont,
+  setReadingFont,
+  interfaceFaces,
+  headingFaces,
+  readingFaces,
+  systemFontsState,
+  ensureSystemFonts,
 }: TypographySettingsProps) {
   const styles = useThemedStyles(styleDef);
+  // the specimen rides the reader's scale, so a size change is legible here
+  const fontScale = fontPx / BASE_FONT_PX;
+  const scaled = (size: number, lineHeight: number) => ({
+    fontSize: size * fontScale,
+    lineHeight: lineHeight * fontScale,
+  });
+
+  // the same line under either picker: the machine's fonts load on first open,
+  // and this names what a platform without the capability is missing
+  const systemNote =
+    systemFontsState === "loading"
+      ? "Loading the fonts on this device…"
+      : systemFontsState === "unavailable"
+        ? "The fonts on this device can't be listed here."
+        : undefined;
+
   return (
     <>
-      <View style={styles.section}>
-        <Text style={styles.label}>Font</Text>
-        <OptionChips
-          options={[
-            { id: "inter" as const, label: "Inter" },
-            { id: "system" as const, label: "System default" },
-          ]}
-          value={fontMode}
-          onSelect={setFontMode}
+      <View style={[styles.section, styles.sectionRaised, styles.sectionFlush]}>
+        <Text style={styles.label}>Font Family</Text>
+        <FontPicker
+          label="UI Font"
+          value={interfaceFont}
+          options={interfaceFaces}
+          onChange={setInterfaceFont}
+          onOpen={ensureSystemFonts}
+          note={systemNote}
+        />
+        <FontPicker
+          label="Heading Font"
+          value={headingFont}
+          options={headingFaces}
+          onChange={setHeadingFont}
+          onOpen={ensureSystemFonts}
+          note={systemNote}
+        />
+        <FontPicker
+          label="Body Font"
+          value={readingFont}
+          options={readingFaces}
+          onChange={setReadingFont}
+          onOpen={ensureSystemFonts}
+          note={systemNote}
         />
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>Font Size</Text>
-        <Text style={styles.value}>{Math.round(fontScale * 100)}%</Text>
-        <View style={styles.row}>
-          <Text
-            style={styles.option}
-            onPress={() => setFontScale(fontScale - 0.05)}
+        {/* a rule between the family pickers and the size control, so each
+            group reads on its own */}
+        <View style={styles.sizeDivider} />
+        <View style={styles.sizeRow}>
+          <Text style={styles.sizeLabel}>Font Size</Text>
+          <Pressable
+            onPress={() => setFontPx(DEFAULT_FONT_PX)}
+            style={({ hovered }) => [
+              styles.reset,
+              hovered && styles.resetHover,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Reset font size"
           >
-            A−
+            <Text style={styles.resetText}>Reset</Text>
+          </Pressable>
+        </View>
+        <View style={styles.sliderWrap}>
+          <Slider
+            value={fontPx}
+            onChange={setFontPx}
+            steps={FONT_SIZES}
+            min={MIN_FONT_PX}
+            max={MAX_FONT_PX}
+          />
+        </View>
+        {/* the specimen under the size control: a page as the reader sets it,
+            chrome, heading, verse and rubric all at the chosen scale, on the
+            faint paper the preview paints */}
+        <View style={styles.preview} dataSet={{ fontPreview: "" }}>
+          <Text style={[styles.mockChrome, scaled(12, 18)]}>{MOCK_CHROME}</Text>
+          <Text style={[styles.mockHeading, scaled(24, 32)]}>
+            {MOCK_HEADING}
           </Text>
-          <Text style={styles.option} onPress={() => setFontScale(1)}>
-            Reset
-          </Text>
-          <Text
-            style={styles.option}
-            onPress={() => setFontScale(fontScale + 0.05)}
-          >
-            A+
-          </Text>
+          <Text style={[styles.mockBody, scaled(16, 26)]}>{MOCK_VERSE}</Text>
+          <Text style={[styles.mockRubric, scaled(14, 22)]}>{MOCK_RUBRIC}</Text>
         </View>
       </View>
     </>
@@ -936,6 +1067,9 @@ const styleDef = defineThemedStyles({
     minHeight: 0,
     display: "flex",
     flexDirection: "column",
+    // drags in the modal should move the eye, not highlight chrome; the
+    // search field overrides this with userSelect: text
+    userSelect: "none",
   },
   chrome: {
     flex: 1,
@@ -1236,6 +1370,66 @@ const styleDef = defineThemedStyles({
     borderBottomWidth: 1,
     borderBottomColor: "var(--border-content)",
   },
+  // the font pickers float a menu past their own box, and every View is its own
+  // stacking context (RNW gives them z-index:0), so the section holding them
+  // must out-rank the sections that follow it; otherwise the later content
+  // paints over the open menu and makes it look transparent
+  sectionRaised: {
+    zIndex: 1,
+  },
+  // the font family pickers and the size group below read as one block, so this
+  // section draws no rule between the two and keeps only a light gap after it
+  sectionFlush: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
+    marginBottom: 8,
+  },
+  preview: {
+    overflow: "hidden",
+    backgroundColor: "var(--bg-raised)",
+    borderWidth: 1,
+    borderColor: "var(--border)",
+    borderRadius: 6,
+    padding: 16,
+    marginBottom: 20,
+  },
+  // the specimen under the size control: a page as the reader sets it, a chrome
+  // line, a heading, a verse, and a rubric, the three roles together
+  mockChrome: {
+    fontFamily: CHROME_FONT,
+    fontSize: 12,
+    lineHeight: 18,
+    letterSpacing: 0.4,
+    color: "var(--text-secondary)",
+  },
+  mockHeading: {
+    fontFamily: HEADING_FONT,
+    fontSize: 24,
+    lineHeight: 32,
+    color: "var(--text)",
+    marginTop: 6,
+  },
+  mockBody: {
+    fontFamily: SERIF_FONT,
+    fontSize: 16,
+    lineHeight: 26,
+    color: "var(--text)",
+    marginTop: 8,
+  },
+  mockRubric: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 14,
+    lineHeight: 22,
+    color: "var(--text-secondary)",
+    marginTop: 8,
+  },
+  // the rule between the family pickers and the size control, so the two read
+  // as separate groups
+  sizeDivider: {
+    height: 1,
+    backgroundColor: "var(--border)",
+    marginBottom: 16,
+  },
   label: {
     fontFamily: CHROME_FONT,
     fontSize: 16,
@@ -1248,7 +1442,37 @@ const styleDef = defineThemedStyles({
     fontWeight: "400",
     fontSize: 14,
     color: "var(--text-secondary)",
-    marginBottom: 8,
+  },
+  sizeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  sizeLabel: {
+    fontFamily: CHROME_FONT,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "var(--text)",
+  },
+  reset: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "var(--border)",
+  },
+  resetHover: {
+    backgroundColor: "var(--control-hover)",
+  },
+  resetText: {
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
+    color: "var(--text-secondary)",
+  },
+  sliderWrap: {
+    marginTop: 30,
+    marginBottom: 30,
   },
   row: {
     flexDirection: "row",

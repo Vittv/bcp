@@ -18,7 +18,7 @@ export function useThemedStyles<T extends NamedStyles<T>>(styles: T): T {
   const { tokens, fontVars } = useTheme();
   return useMemo(() => {
     // fonts first, then the color vocabulary: the two never collide, and the
-    // font stack is resolved in js so the chrome face follows fontMode on
+    // font stack is resolved in js so the chrome face follows interfaceFont on
     // native too, not just through the web css custom property
     const vars = { ...fontVars, ...tokenVars(tokens) };
     // SAFETY: shape preserved by resolveTokens

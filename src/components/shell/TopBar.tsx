@@ -12,6 +12,11 @@ import {
   useThemeVar,
 } from "../../lib/theme/themedStyles";
 import {
+  MAX_FONT_PX,
+  MIN_FONT_PX,
+  stepFontSize,
+} from "../../lib/typography/sizes";
+import {
   COARSE_POINTER,
   HOTKEY_MOD,
   KeyCap,
@@ -113,14 +118,17 @@ export function TopBar({
   windowControls = false,
   compact = false,
 }: TopBarProps) {
-  const { mode, setMode, fontScale, setFontScale, tokens } = useTheme();
+  const { mode, setMode, fontPx, setFontPx, tokens } = useTheme();
   const styles = useThemedStyles(topBarStyles);
   const v = useThemeVar();
   const { openSaint } = useSaintPopover();
   const palette = usePalette();
   const wco = useWindowControlsOverlay();
 
-  const pct = `${Math.round(fontScale * 100)}%`;
+  // the same ladder the Settings slider steps through, shown in px
+  const sizeLabel = `${fontPx}px`;
+  const atMinSize = fontPx <= MIN_FONT_PX;
+  const atMaxSize = fontPx >= MAX_FONT_PX;
 
   const showingControls = IS_TAURI && !IS_MACOS_TAURI && windowControls;
 
@@ -215,15 +223,20 @@ export function TopBar({
         </Pressable>
 
         <View style={styles.fontControl}>
-          <Text style={styles.fontPct}>{pct}</Text>
+          <Text style={styles.fontSizeLabel}>{sizeLabel}</Text>
           <Pressable
             dataSet={{ bcpBtn: "" }}
             style={({ hovered, pressed }) => [
               styles.fontBtn,
               hovered && !pressed && styles.hover,
               pressed && styles.pressed,
+              atMinSize && styles.fontBtnDisabled,
             ]}
-            onPress={() => setFontScale(fontScale - 0.05)}
+            onPress={() => setFontPx(stepFontSize(fontPx, -1))}
+            disabled={atMinSize}
+            accessibilityRole="button"
+            accessibilityLabel="Decrease text size"
+            accessibilityState={{ disabled: atMinSize }}
           >
             <Text style={styles.controlText}>A−</Text>
           </Pressable>
@@ -233,8 +246,13 @@ export function TopBar({
               styles.fontBtn,
               hovered && !pressed && styles.hover,
               pressed && styles.pressed,
+              atMaxSize && styles.fontBtnDisabled,
             ]}
-            onPress={() => setFontScale(fontScale + 0.05)}
+            onPress={() => setFontPx(stepFontSize(fontPx, 1))}
+            disabled={atMaxSize}
+            accessibilityRole="button"
+            accessibilityLabel="Increase text size"
+            accessibilityState={{ disabled: atMaxSize }}
           >
             <Text style={styles.controlText}>A+</Text>
           </Pressable>
@@ -347,12 +365,12 @@ const topBarStyles = defineThemedStyles({
     gap: 1,
     marginRight: -4,
   },
-  fontPct: {
+  fontSizeLabel: {
     fontFamily: MONO,
     fontWeight: "500",
     fontSize: 11,
     color: "var(--text-secondary)",
-    minWidth: 28,
+    minWidth: 32,
     textAlign: "right",
     marginRight: 2,
   },
@@ -362,6 +380,9 @@ const topBarStyles = defineThemedStyles({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 4,
+  },
+  fontBtnDisabled: {
+    opacity: 0.4,
   },
   hover: {
     backgroundColor: "var(--control-hover)",

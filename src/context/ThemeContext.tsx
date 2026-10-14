@@ -1,14 +1,13 @@
-import { Asset } from "expo-asset";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Platform } from "react-native";
-import { INTER_TIGHT, SYSTEM_UI } from "../lib/fonts";
 import type { ThemeId } from "../lib/theme/themes";
 import { DEFAULT_THEME, THEMES, themeTokens } from "../lib/theme/themes";
 import type {
@@ -17,9 +16,36 @@ import type {
   ThemeTokens,
 } from "../lib/theme/tokens";
 import { tokenVars } from "../lib/theme/tokens";
+import {
+  DEFAULT_HEADING_FONT,
+  DEFAULT_INTERFACE_FONT,
+  DEFAULT_READING_FONT,
+  FACES,
+  type FaceDef,
+  type FaceRole,
+  faceById,
+  faceHasRole,
+  faceStack,
+  HEADING_FACES,
+  INTERFACE_FACES,
+  READING_FACES,
+} from "../lib/typography/faces";
+import { ensureFace } from "../lib/typography/loader";
+import {
+  BASE_FONT_PX,
+  DEFAULT_FONT_PX,
+  fontPxToScale,
+  scaleToFontPx,
+} from "../lib/typography/sizes";
+import {
+  listSystemFonts,
+  type SystemFontsState,
+  systemFaceDef,
+  systemFamilyFromId,
+  systemFontsSupported,
+} from "../lib/typography/systemFonts";
 
 export type { ResolvedTheme, ThemeMode };
-export type FontMode = "inter" | "system";
 
 type ThemeContextValue = {
   mode: ThemeMode;
@@ -32,27 +58,59 @@ type ThemeContextValue = {
    */
   theme: ThemeId;
   /**
-   * the font custom properties a style may reference (today just
-   * `--chrome-font`). the resolver swaps var() for these values so the chrome
-   * face follows the font-mode choice on web and native alike, matching the
-   * css custom property applyFontMode paints on the root.
+   * the font custom properties a style may reference: `--chrome-font` for the
+   * interface face, `--heading-font` for the heading face, and the reading
+   * face's three registers. the resolver swaps var() for these values so a face
+   * follows the choice on web and native alike, matching the css custom
+   * properties applyFonts paints on the root.
    */
   fontVars: Record<string, string>;
   fontScale: number;
-  fontMode: FontMode;
+  /**
+   * the reader body's current pixel size, always one of the ladder values in
+   * `src/lib/typography/sizes.ts`. `fontScale` is its `px / BASE_FONT_PX`
+   * projection, which the zoomed panes consume. `setFontPx` snaps onto the
+   * ladder, so the slider and the A−/A+ buttons share one source of truth.
+   */
+  fontPx: number;
+  /**
+   * the interface, heading, and reading face ids, separate axes so the chrome
+   * face, the display face, and the reader face are chosen independently. plain
+   * strings so a system face can join the list; the resolver falls back to the
+   * role's default.
+   */
+  interfaceFont: string;
+  headingFont: string;
+  readingFont: string;
+  /** the faces each role picker offers: bundled faces then the machine's. */
+  interfaceFaces: FaceDef[];
+  headingFaces: FaceDef[];
+  readingFaces: FaceDef[];
+  /**
+   * whether the machine's own fonts are offered yet. `idle` until a picker
+   * first opens, because enumerating them is a request the shell or the
+   * browser only answers on demand.
+   */
+  systemFontsState: SystemFontsState;
   setMode: (mode: ThemeMode) => void;
   setTheme: (theme: ThemeId) => void;
-  setFontScale: (scale: number) => void;
-  setFontMode: (mode: FontMode) => void;
+  setFontPx: (px: number) => void;
+  setInterfaceFont: (id: string) => void;
+  setHeadingFont: (id: string) => void;
+  setReadingFont: (id: string) => void;
+  /** ask for the machine's fonts; safe to call on every picker open. */
+  ensureSystemFonts: () => void;
 };
 
 const STORAGE_KEY_THEME = "bcp-theme-mode";
 const STORAGE_KEY_THEME_FAMILY = "bcp-theme-family";
 const STORAGE_KEY_FONT = "bcp-font-scale";
-const STORAGE_KEY_FONT_MODE = "bcp-font-mode";
-
-const MIN_FONT = 0.85;
-const MAX_FONT = 1.3;
+const STORAGE_KEY_INTERFACE_FONT = "bcp-font-interface";
+const STORAGE_KEY_HEADING_FONT = "bcp-font-heading";
+const STORAGE_KEY_READING_FONT = "bcp-font-reading";
+// the retired single font-mode key, read once so an existing chrome-face
+// choice carries over to the interface-font key
+const LEGACY_STORAGE_KEY_FONT_MODE = "bcp-font-mode";
 
 function getSystemTheme(): ResolvedTheme {
   if (Platform.OS !== "web") return "light";
@@ -62,82 +120,108 @@ function getSystemTheme(): ResolvedTheme {
     : "light";
 }
 
+function webStorage(): Storage | null {
+  if (Platform.OS !== "web") return null;
+  if (typeof localStorage === "undefined") return null;
+  return localStorage;
+}
+
 function loadThemeMode(): ThemeMode {
-  try {
-    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-      const v = localStorage.getItem(STORAGE_KEY_THEME);
-      if (v === "light" || v === "dark" || v === "system") return v;
-    }
-  } catch {}
+  const storage = webStorage();
+  if (storage) {
+    const v = storage.getItem(STORAGE_KEY_THEME);
+    if (v === "light" || v === "dark" || v === "system") return v;
+  }
   return "system";
 }
 
 function loadFontScale(): number {
-  try {
-    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-      const v = localStorage.getItem(STORAGE_KEY_FONT);
-      if (v) {
-        const n = Number.parseFloat(v);
-        if (!Number.isNaN(n)) return Math.min(MAX_FONT, Math.max(MIN_FONT, n));
-      }
+  const storage = webStorage();
+  if (storage) {
+    const v = storage.getItem(STORAGE_KEY_FONT);
+    if (v) {
+      const n = Number.parseFloat(v);
+      // snap a stored value onto the ladder, so an arbitrary scale from an
+      // older build still lands on a real size
+      if (!Number.isNaN(n)) return fontPxToScale(n * BASE_FONT_PX);
     }
-  } catch {}
-  return 1;
+  }
+  return fontPxToScale(DEFAULT_FONT_PX);
 }
 
 function persistThemeMode(mode: ThemeMode) {
   try {
-    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-      localStorage.setItem(STORAGE_KEY_THEME, mode);
-    }
+    webStorage()?.setItem(STORAGE_KEY_THEME, mode);
   } catch {}
 }
 
 function loadThemeFamily(): ThemeId {
-  try {
-    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-      const v = localStorage.getItem(STORAGE_KEY_THEME_FAMILY);
-      if (v && v in THEMES) {
-        // SAFETY: the `in` guard proves the stored string names a family.
-        return v as ThemeId;
-      }
+  const storage = webStorage();
+  if (storage) {
+    const v = storage.getItem(STORAGE_KEY_THEME_FAMILY);
+    if (v && v in THEMES) {
+      // SAFETY: the `in` guard proves the stored string names a family.
+      return v as ThemeId;
     }
-  } catch {}
+  }
   return DEFAULT_THEME;
 }
 
 function persistThemeFamily(theme: ThemeId) {
   try {
-    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-      localStorage.setItem(STORAGE_KEY_THEME_FAMILY, theme);
-    }
+    webStorage()?.setItem(STORAGE_KEY_THEME_FAMILY, theme);
   } catch {}
 }
 
 function persistFontScale(scale: number) {
   try {
-    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-      localStorage.setItem(STORAGE_KEY_FONT, String(scale));
-    }
+    webStorage()?.setItem(STORAGE_KEY_FONT, String(scale));
   } catch {}
 }
 
-function loadFontMode(): FontMode {
-  try {
-    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-      const v = localStorage.getItem(STORAGE_KEY_FONT_MODE);
-      if (v === "inter" || v === "system") return v;
+// a selection is stored as-is, so a system id keeps working across reloads.
+// the resolver falls back to the role's default when the id no longer names a
+// face, so a stale or hand-edited value cannot break rendering.
+function loadInterfaceFont(): string {
+  const storage = webStorage();
+  if (storage) {
+    const stored = storage.getItem(STORAGE_KEY_INTERFACE_FONT);
+    if (stored) return stored;
+    // seed the interface-font key from the retired font-mode value, once
+    const legacy = storage.getItem(LEGACY_STORAGE_KEY_FONT_MODE);
+    if (legacy === "inter" || legacy === "system") {
+      persistFont(STORAGE_KEY_INTERFACE_FONT, legacy);
+      return legacy;
     }
-  } catch {}
-  return "inter";
+  }
+  return DEFAULT_INTERFACE_FONT;
 }
 
-function persistFontMode(mode: FontMode) {
+function loadReadingFont(): string {
+  const stored = webStorage()?.getItem(STORAGE_KEY_READING_FONT);
+  return stored && stored.length > 0 ? stored : DEFAULT_READING_FONT;
+}
+
+function loadHeadingFont(): string {
+  const stored = webStorage()?.getItem(STORAGE_KEY_HEADING_FONT);
+  return stored && stored.length > 0 ? stored : DEFAULT_HEADING_FONT;
+}
+
+function persistFont(key: string, id: string) {
   try {
-    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-      localStorage.setItem(STORAGE_KEY_FONT_MODE, mode);
-    }
+    webStorage()?.setItem(key, id);
   } catch {}
+}
+
+// the faint border at a fraction of its opacity, for textures that should read
+// as paper rather than structure. every theme's faint border is rgba(...)
+function fade(color: string, factor: number): string {
+  const match = color.match(/rgba?\(([^)]+)\)/);
+  if (!match) return color;
+  const [r, g, b, a] = match[1].split(",").map((part) => Number(part.trim()));
+  if (![r, g, b].every(Number.isFinite)) return color;
+  const alpha = Number.isFinite(a) ? a : 1;
+  return `rgba(${r}, ${g}, ${b}, ${Number((alpha * factor).toFixed(3))})`;
 }
 
 // paint the current theme into the document. every token becomes a css
@@ -151,6 +235,9 @@ function applyTokens(tokens: ThemeTokens, resolved: ResolvedTheme) {
   for (const [name, value] of Object.entries(tokenVars(tokens))) {
     r.setProperty(name, value);
   }
+  // the specimen's paper is a texture, not a structure: half the faint border,
+  // so the grid sits behind the type instead of competing with it
+  r.setProperty("--grid-line", fade(tokens.borderFaint, 0.5));
   // trust the color-scheme for native chrome we do not paint: the wco
   // window-controls overlay glyphs, scrollbars, and form controls. without
   // it chromium keeps the overlay light even while the app runs dark
@@ -213,55 +300,76 @@ function applyTokens(tokens: ThemeTokens, resolved: ResolvedTheme) {
       -webkit-app-region: no-drag;
       app-region: no-drag;
     }
+    /* the font preview sits on faint graph paper: a token grid the theme
+       repaints, at half the faint border's strength so it reads as paper
+       rather than structure. only the web build paints a background-image */
+    [data-font-preview] {
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    /* the slider drags horizontally: the nib overhangs the thin track, so the
+       hit layer owns the horizontal-resize cursor for the whole control */
+    [data-bcp-slider] { cursor: ew-resize; }
   `;
 }
 
-// Inter Tight is a variable font: one woff2 carries every weight, so a single
-// @font-face with a weight range serves the whole chrome.
-function ensureInterFont() {
-  if (Platform.OS !== "web" || typeof document === "undefined") return;
-  const id = "chrome-font-tight-face";
-  // SAFETY: we only create <style> elements with this id here.
-  if (document.getElementById(id)) return;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const tightUri = assetUri(
-    require("../../assets/fonts/inter-tight-latin-var.woff2"),
+// resolve a face id against the bundled registry and the machine's faces,
+// keeping the role honest: a reading face selected as the interface falls back
+// rather than silently changing what the chrome face means. a `sys:` id names a
+// family the machine already has, so it is synthesized directly and needs no
+// enumeration to survive a reload.
+function resolveFace(id: string, role: FaceRole, fallback: FaceDef): FaceDef {
+  const family = systemFamilyFromId(id);
+  if (family !== null) return systemFaceDef(family);
+  const base = faceById(id);
+  if (base && faceHasRole(base, role)) return base;
+  return fallback;
+}
+
+// the font vars a style may reference: the interface face, the heading face, and
+// the reading face's three registers, each a full font-family stack. one source
+// for both the css custom properties (applyFonts) and the js resolver, so the two
+// cannot drift.
+function fontVarsFor(
+  interfaceFont: string,
+  headingFont: string,
+  readingFont: string,
+): Record<string, string> {
+  const iface = resolveFace(interfaceFont, "interface", FACES.inter);
+  const heading = resolveFace(
+    headingFont,
+    "heading",
+    FACES["playfair-display"],
   );
-  if (!tightUri) return;
-  const te = document.createElement("style");
-  te.id = id;
-  te.textContent = `@font-face{font-family:${JSON.stringify(
-    INTER_TIGHT,
-  )};font-style:normal;font-weight:100 900;font-display:swap;src:url(${JSON.stringify(
-    tightUri,
-  )}) format("woff2")}`;
-  document.head.appendChild(te);
+  const reading = resolveFace(readingFont, "reading", FACES["crimson-pro"]);
+  return {
+    "--chrome-font": faceStack(iface, "body"),
+    "--heading-font": faceStack(heading, "body"),
+    "--reading-font": faceStack(reading, "body"),
+    "--reading-font-semibold": faceStack(reading, "semibold"),
+    "--reading-font-italic": faceStack(reading, "italic"),
+  };
 }
 
-type FontSource = string | number | { uri?: string; localUri?: string };
-
-function assetUri(face: FontSource): string {
-  if (typeof face === "string") return face;
-  if (typeof face === "object" && face !== null) {
-    return face.uri ?? face.localUri ?? "";
-  }
-  // SAFETY: the only remaining branch is the metro module id number, which
-  // expo-asset resolves to a usable asset URI.
-  return Asset.fromModule(face).uri;
-}
-
-// the chrome face for a font mode: Inter Tight over the system stack, or the
-// system stack alone. one source for both the css custom property (applyFontMode)
-// and the js resolver's fontVars lookup, so the two can never drift.
-function chromeFontStack(mode: FontMode): string {
-  return mode === "inter" ? `"${INTER_TIGHT}", ${SYSTEM_UI}` : SYSTEM_UI;
-}
-
-function applyFontMode(mode: FontMode) {
+// paint the font vars on the root and register the interface face. the heading
+// and reading faces load through useFonts in App.tsx at startup, so only a
+// bundled interface face is injected here.
+function applyFonts(
+  interfaceFont: string,
+  headingFont: string,
+  readingFont: string,
+) {
   if (Platform.OS !== "web" || typeof document === "undefined") return;
-  ensureInterFont();
+  const iface = resolveFace(interfaceFont, "interface", FACES.inter);
+  if (!iface.system) ensureFace(iface);
   const r = document.documentElement.style;
-  r.setProperty("--chrome-font", chromeFontStack(mode));
+  for (const [name, value] of Object.entries(
+    fontVarsFor(interfaceFont, headingFont, readingFont),
+  )) {
+    r.setProperty(name, value);
+  }
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
@@ -269,27 +377,79 @@ const ThemeContext = createContext<ThemeContextValue>({
   resolved: "light",
   tokens: THEMES[DEFAULT_THEME].light,
   theme: DEFAULT_THEME,
-  fontVars: { "--chrome-font": chromeFontStack("inter") },
+  fontVars: fontVarsFor(
+    DEFAULT_INTERFACE_FONT,
+    DEFAULT_HEADING_FONT,
+    DEFAULT_READING_FONT,
+  ),
   fontScale: 1,
-  fontMode: "inter",
+  fontPx: DEFAULT_FONT_PX,
+  interfaceFont: DEFAULT_INTERFACE_FONT,
+  headingFont: DEFAULT_HEADING_FONT,
+  readingFont: DEFAULT_READING_FONT,
+  interfaceFaces: INTERFACE_FACES,
+  headingFaces: HEADING_FACES,
+  readingFaces: READING_FACES,
+  systemFontsState: "unavailable",
   setMode: () => {},
   setTheme: () => {},
-  setFontScale: () => {},
-  setFontMode: () => {},
+  setFontPx: () => {},
+  setInterfaceFont: () => {},
+  setHeadingFont: () => {},
+  setReadingFont: () => {},
+  ensureSystemFonts: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(loadThemeMode);
   const [theme, setThemeState] = useState<ThemeId>(loadThemeFamily);
   const [fontScale, setFontScaleState] = useState<number>(loadFontScale);
-  const [fontMode, setFontModeState] = useState<FontMode>(loadFontMode);
+  const [interfaceFont, setInterfaceFontState] =
+    useState<string>(loadInterfaceFont);
+  const [headingFont, setHeadingFontState] = useState<string>(loadHeadingFont);
+  const [readingFont, setReadingFontState] = useState<string>(loadReadingFont);
+  const [systemFonts, setSystemFonts] = useState<string[]>([]);
+  const [systemFontsState, setSystemFontsState] = useState<SystemFontsState>(
+    systemFontsSupported() ? "idle" : "unavailable",
+  );
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
+  // a picker may open many times; the request runs once and the cache in the
+  // provider module backs the repeat calls.
+  const systemRequested = useRef(false);
+
+  // the machine's fonts join the bundled pool: a face with no bytes, resolved by
+  // the renderer, offered to both role pickers.
+  const systemFaces = useMemo(
+    () => systemFonts.map(systemFaceDef),
+    [systemFonts],
+  );
+  const interfaceFaces = useMemo(
+    () => [
+      ...INTERFACE_FACES,
+      ...systemFaces.filter((face) => faceHasRole(face, "interface")),
+    ],
+    [systemFaces],
+  );
+  const headingFaces = useMemo(
+    () => [
+      ...HEADING_FACES,
+      ...systemFaces.filter((face) => faceHasRole(face, "heading")),
+    ],
+    [systemFaces],
+  );
+  const readingFaces = useMemo(
+    () => [
+      ...READING_FACES,
+      ...systemFaces.filter((face) => faceHasRole(face, "reading")),
+    ],
+    [systemFaces],
+  );
 
   const resolved: ResolvedTheme = mode === "system" ? systemTheme : mode;
   const tokens = themeTokens(theme, resolved);
   const fontVars = useMemo(
-    () => ({ "--chrome-font": chromeFontStack(fontMode) }),
-    [fontMode],
+    () => fontVarsFor(interfaceFont, headingFont, readingFont),
+    [interfaceFont, headingFont, readingFont],
   );
 
   useEffect(() => {
@@ -297,8 +457,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [tokens, resolved]);
 
   useEffect(() => {
-    applyFontMode(fontMode);
-  }, [fontMode]);
+    applyFonts(interfaceFont, headingFont, readingFont);
+  }, [interfaceFont, headingFont, readingFont]);
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;
@@ -319,15 +479,51 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     persistThemeFamily(t);
   }, []);
 
+  // the size is always a ladder entry: the setter snaps onto the ladder, so
+  // the slider, the A−/A+ buttons, and the reader can never disagree
   const setFontScale = useCallback((s: number) => {
-    const clamped = Math.min(MAX_FONT, Math.max(MIN_FONT, s));
-    setFontScaleState(clamped);
-    persistFontScale(clamped);
+    const snapped = fontPxToScale(s * BASE_FONT_PX);
+    setFontScaleState(snapped);
+    persistFontScale(snapped);
   }, []);
 
-  const setFontMode = useCallback((m: FontMode) => {
-    setFontModeState(m);
-    persistFontMode(m);
+  const setFontPx = useCallback(
+    (px: number) => setFontScale(px / BASE_FONT_PX),
+    [setFontScale],
+  );
+
+  const fontPx = scaleToFontPx(fontScale);
+
+  const setInterfaceFont = useCallback((id: string) => {
+    setInterfaceFontState(id);
+    persistFont(STORAGE_KEY_INTERFACE_FONT, id);
+  }, []);
+
+  const setHeadingFont = useCallback((id: string) => {
+    setHeadingFontState(id);
+    persistFont(STORAGE_KEY_HEADING_FONT, id);
+  }, []);
+
+  const setReadingFont = useCallback((id: string) => {
+    setReadingFontState(id);
+    persistFont(STORAGE_KEY_READING_FONT, id);
+  }, []);
+
+  // enumerate the machine's fonts on first use. nothing loads at startup: the
+  // list is only wanted when a picker is open, and on web the browser prompts
+  // for the local-font permission from a user gesture such as that open.
+  const ensureSystemFonts = useCallback(() => {
+    if (systemRequested.current) return;
+    systemRequested.current = true;
+    if (!systemFontsSupported()) {
+      setSystemFontsState("unavailable");
+      return;
+    }
+    setSystemFontsState("loading");
+    void listSystemFonts().then((names) => {
+      setSystemFonts(names);
+      setSystemFontsState(names.length > 0 ? "ready" : "unavailable");
+    });
   }, []);
 
   const value = useMemo(
@@ -338,11 +534,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       theme,
       fontVars,
       fontScale,
-      fontMode,
+      fontPx,
+      interfaceFont,
+      headingFont,
+      readingFont,
+      interfaceFaces,
+      headingFaces,
+      readingFaces,
+      systemFontsState,
       setMode,
       setTheme,
-      setFontScale,
-      setFontMode,
+      setFontPx,
+      setInterfaceFont,
+      setHeadingFont,
+      setReadingFont,
+      ensureSystemFonts,
     }),
     [
       mode,
@@ -351,11 +557,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       theme,
       fontVars,
       fontScale,
-      fontMode,
+      fontPx,
+      interfaceFont,
+      headingFont,
+      readingFont,
+      interfaceFaces,
+      headingFaces,
+      readingFaces,
+      systemFontsState,
       setMode,
       setTheme,
-      setFontScale,
-      setFontMode,
+      setFontPx,
+      setInterfaceFont,
+      setHeadingFont,
+      setReadingFont,
+      ensureSystemFonts,
     ],
   );
 

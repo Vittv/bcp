@@ -52,11 +52,11 @@ describe("resolveString", () => {
     );
   });
 
-  // CHROME_FONT is a var(--chrome-font, Inter Tight) reference. the font-mode
-  // plumbing passes --chrome-font through the same lookup as the colors, so a
-  // migrated style resolves the chrome face here instead of freezing on the
-  // fallback and ignoring the user's system-font choice.
-  it("resolves the chrome-font var from the lookup (font mode reaches styles)", () => {
+  // CHROME_FONT is a var(--chrome-font, Inter Tight) reference. the
+  // interface-font plumbing passes --chrome-font through the same lookup as the
+  // colors, so a migrated style resolves the chrome face here instead of freezing
+  // on the fallback and ignoring the user's system-font choice.
+  it("resolves the chrome-font var from the lookup (interface face reaches styles)", () => {
     const vars = { ...TOKENS, "--chrome-font": '"Inter Tight", system-ui' };
     expect(resolveString(CHROME_FONT, vars)).toBe('"Inter Tight", system-ui');
   });
