@@ -33,7 +33,7 @@ import type { PageStepper } from "../../lib/input/sequenceNav";
 import { registerPageStepper, stepLinear } from "../../lib/input/sequenceNav";
 import { searchCollects } from "../../lib/reference/search";
 import { useThemedStyles, useThemeVar } from "../../lib/theme/themedStyles";
-import { sharedStyles } from "./styles";
+import { detailPageScale, sharedStyles } from "./styles";
 
 // the collect the desktop pane shows before anything is picked: the
 // first hit of the full list, i.e. traditional · church-year
@@ -550,7 +550,9 @@ export function SplitPane({
         data-split-detail
         onScroll={handleDetailScroll}
       >
-        <View style={styles.detailPage}>{detail}</View>
+        <View style={[styles.detailPage, detailPageScale(fontScale)]}>
+          {detail}
+        </View>
       </div>
       {list ? (
         <div ref={listRef} tabIndex={0} style={LIST_PANE_STYLE} data-split-list>

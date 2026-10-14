@@ -1,6 +1,27 @@
+import type { ViewStyle } from "react-native";
 import { officeBarStyles } from "../../components/shell/OfficeTabs";
 import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../../lib/fonts";
 import { defineThemedStyles } from "../../lib/theme/themedStyles";
+
+// the detail column's fixed measures. font scaling zooms the pane, which
+// widens the layout viewport, so a fixed max-width would paint narrower and
+// pad the side margins.
+const DETAIL_COLUMN_WIDTH = 736;
+const DETAIL_COLUMN_PAD_X = 40;
+const DETAIL_COLUMN_PAD_TOP = 28;
+const DETAIL_COLUMN_PAD_BOTTOM = 64;
+
+// inverse-zoom overrides applied beside sharedStyles.detailPage when a pane is
+// zoomed, so a font-size change reflows the text without shrinking the column
+export function detailPageScale(fontScale: number): ViewStyle | undefined {
+  if (fontScale === 1) return undefined;
+  return {
+    maxWidth: DETAIL_COLUMN_WIDTH / fontScale,
+    paddingHorizontal: DETAIL_COLUMN_PAD_X / fontScale,
+    paddingTop: DETAIL_COLUMN_PAD_TOP / fontScale,
+    paddingBottom: DETAIL_COLUMN_PAD_BOTTOM / fontScale,
+  };
+}
 
 // styles shared across the Psalms, Collects, and Offices reference pages.
 // a themed definition (var(--token) strings); consumers resolve it with
@@ -385,11 +406,11 @@ export const sharedStyles = defineThemedStyles({
   // split pane and mobile wrapper
   detailPage: {
     width: "100%",
-    maxWidth: 736,
+    maxWidth: DETAIL_COLUMN_WIDTH,
     marginHorizontal: "auto",
-    paddingHorizontal: 40,
-    paddingTop: 28,
-    paddingBottom: 64,
+    paddingHorizontal: DETAIL_COLUMN_PAD_X,
+    paddingTop: DETAIL_COLUMN_PAD_TOP,
+    paddingBottom: DETAIL_COLUMN_PAD_BOTTOM,
   },
   // phone-width inset for the same wrapper: mirrors Today's shell
   // padding (~19px at phone widths) and the list rows' 18px language

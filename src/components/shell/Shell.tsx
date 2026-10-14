@@ -1469,9 +1469,11 @@ export function Shell() {
                             style={{
                               boxSizing: "border-box",
                               width: "100%",
+                              // divide by the zoom with the padding below, so
+                              // the column keeps its width as the type scales
                               maxWidth:
                                 page === "today" || page === "lectionary"
-                                  ? "46rem"
+                                  ? `${u(46 / fontScale)}rem`
                                   : "100%",
                               padding:
                                 page === "today" || page === "lectionary"
