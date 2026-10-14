@@ -15,6 +15,11 @@ serde_json = "1"
 tauri = { version = "2", features = [] }
 tauri-plugin-process = "2"
 tauri-plugin-updater = "2"
+# reads the platform font database for the typography picker's system group.
+# the webview cannot list installed fonts on webkitgtk or wkwebview, so the
+# shell does it. fontconfig and memmap stay off: the standard font directories
+# are scanned directly, so no extra native build dependency is needed.
+fontdb = { version = "0.24", default-features = false, features = ["std", "fs"] }
 
 [profile.release]
 strip = true
