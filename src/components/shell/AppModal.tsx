@@ -52,10 +52,12 @@ type AppModalProps = {
 type EscEntry = { run: () => void };
 const escRegistry: EscEntry[] = [];
 
-// the shell calls this from its global Escape handling: every mounted
-// modal closes about the same way the X does
+// the shell calls this from its global Escape handling. Escape dismisses one
+// layer at a time: only the most recently registered consumer runs, so a picker
+// opened inside a modal collapses on the first Escape and the modal survives
+// until the next (a picker registers after the modal it sits in).
 export function dismissEscapeConsumers(): void {
-  for (const e of escRegistry) e.run();
+  escRegistry[escRegistry.length - 1]?.run();
 }
 
 // exported for chrome that shares the modal's Escape and Android-back
