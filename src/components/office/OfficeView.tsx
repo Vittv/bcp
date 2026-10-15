@@ -239,7 +239,7 @@ const officeViewStyles = defineThemedStyles({
   },
   heading: {
     fontFamily: HEADING_FONT,
-    fontWeight: "700",
+    fontWeight: "500",
     fontSize: 22,
     lineHeight: 30,
     marginTop: 22,

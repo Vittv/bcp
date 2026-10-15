@@ -6,10 +6,15 @@ import {
   FACE_LIST,
   FACES,
   faceById,
+  faceHasRole,
   faceStack,
   HEADING_FACES,
   INTERFACE_FACES,
   READING_FACES,
+  READING_X_HEIGHT,
+  readingSizeAdjust,
+  readingStack,
+  SERIF_GENERIC,
   SYSTEM_UI,
 } from "../faces";
 
@@ -32,19 +37,38 @@ describe("face registry", () => {
     }
   });
 
-  it("resolves the defaults to faces in their own roles", () => {
-    expect(faceById(DEFAULT_INTERFACE_FONT)?.role).toBe("interface");
-    expect(faceById(DEFAULT_HEADING_FONT)?.role).toBe("heading");
-    expect(faceById(DEFAULT_READING_FONT)?.role).toBe("reading");
+  it("records an x-height for every bundled reading face", () => {
+    for (const face of READING_FACES) {
+      if (face.system) continue;
+      expect(face.xHeight ?? 0).toBeGreaterThan(0);
+    }
+  });
+
+  it("resolves the defaults to faces that serve their own roles", () => {
+    const iface = faceById(DEFAULT_INTERFACE_FONT);
+    const heading = faceById(DEFAULT_HEADING_FONT);
+    const reading = faceById(DEFAULT_READING_FONT);
+    expect(iface && faceHasRole(iface, "interface")).toBe(true);
+    expect(heading && faceHasRole(heading, "heading")).toBe(true);
+    expect(reading && faceHasRole(reading, "reading")).toBe(true);
   });
 
   it("offers the interface, heading, and reading roles in the pickers", () => {
-    expect(INTERFACE_FACES.map((face) => face.id)).toEqual(["inter", "system"]);
+    expect(INTERFACE_FACES.map((face) => face.id)).toEqual([
+      "inter",
+      "libron",
+      "system",
+    ]);
     expect(HEADING_FACES.map((face) => face.id)).toEqual([
       "crimson-pro",
       "playfair-display",
+      "eb-garamond",
     ]);
-    expect(READING_FACES.map((face) => face.id)).toEqual(["crimson-pro"]);
+    expect(READING_FACES.map((face) => face.id)).toEqual([
+      "crimson-pro",
+      "libron",
+      "eb-garamond",
+    ]);
   });
 });
 
@@ -82,5 +106,36 @@ describe("faceStack", () => {
     expect(faceStack(FACES["playfair-display"])).toBe(
       '"Playfair Display", "Crimson Pro", Georgia, "Times New Roman", serif',
     );
+  });
+});
+
+// the reading role renders every face at one reference x-height, so a face
+// swap changes the glyphs without changing the apparent body size.
+describe("reading normalization", () => {
+  it("leaves the reference face at its own size", () => {
+    expect(readingSizeAdjust(FACES["crimson-pro"])).toBe(1);
+  });
+
+  it("scales every other reading face to the target x-height", () => {
+    for (const id of ["libron", "eb-garamond"] as const) {
+      const def = FACES[id];
+      expect((def.xHeight ?? 0) * readingSizeAdjust(def)).toBeCloseTo(
+        READING_X_HEIGHT,
+        5,
+      );
+    }
+  });
+
+  it("aliases the reading families so the scale reaches the body alone", () => {
+    expect(readingStack(FACES.libron)).toBe(
+      `"Libron Reading", ${SERIF_GENERIC}`,
+    );
+    expect(readingStack(FACES["crimson-pro"], "italic")).toBe(
+      `"Crimson Pro Italic Reading", "Crimson Pro Reading", ${SERIF_GENERIC}`,
+    );
+  });
+
+  it("leaves a system face on its generic stack", () => {
+    expect(readingStack(FACES.system)).toBe(SYSTEM_UI);
   });
 });

@@ -31,7 +31,7 @@ const officeHeaderStyles = defineThemedStyles({
   },
   officeName: {
     fontFamily: HEADING_FONT,
-    fontWeight: "700",
+    fontWeight: "500",
     fontSize: 28,
     lineHeight: 36,
     color: "var(--text)",

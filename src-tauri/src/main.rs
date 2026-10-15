@@ -1,7 +1,6 @@
 // Desktop shell for the static web export. The whole app is the
 // embedded `dist/` bundle served over tauri's custom protocol; the
-// commands are the rootless linux updater, the changelog marker, and
-// the system-font list below.
+// commands are the rootless linux updater and the changelog marker.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -145,30 +144,6 @@ fn set_changelog_prefs(app: tauri::AppHandle, prefs: String) -> Result<(), Strin
     std::fs::write(marker, prefs).map_err(|err| err.to_string())
 }
 
-// Every font family installed on this machine, for the typography picker's
-// "On this device" group. The webview cannot enumerate them itself: Chromium's
-// local-font-access API is not implemented by WebKitGTK or WKWebView, so
-// reading the platform font database here (fontconfig directories on linux,
-// CoreText on macos, DirectWrite on windows via fontdb) is the only way Linux
-// and macOS desktop builds get the list at all. The scan touches disk, so it
-// runs off the ui thread and only when a picker asks.
-#[tauri::command]
-async fn list_system_fonts() -> Result<Vec<String>, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        let mut db = fontdb::Database::new();
-        db.load_system_fonts();
-        let mut names: Vec<String> = db
-            .faces()
-            .filter_map(|face| face.families.first().map(|(name, _)| name.clone()))
-            .collect();
-        names.sort_by_key(|name| name.to_lowercase());
-        names.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
-        names
-    })
-    .await
-    .map_err(|err| err.to_string())
-}
-
 fn main() {
     // Buffer transport for the WebKitGTK compositor. The DMA-BUF path
     // crashes on some NVIDIA proprietary driver combos ("Error 71"
@@ -236,8 +211,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             run_rootless_update,
             get_changelog_prefs,
-            set_changelog_prefs,
-            list_system_fonts
+            set_changelog_prefs
         ])
         .on_page_load(|webview, payload| {
             if payload.event() == tauri::webview::PageLoadEvent::Finished {

@@ -1,5 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { CHROME_FONT } from "../../lib/fonts";
 import {
   defineThemedStyles,
@@ -7,79 +14,71 @@ import {
   useThemeVar,
 } from "../../lib/theme/themedStyles";
 import { type FaceDef, faceStack } from "../../lib/typography/faces";
-import { type FaceSource, faceSource } from "../../lib/typography/systemFonts";
 import { registerEsc } from "../shell/AppModal";
 import { Chevron } from "../shell/Chevron";
+import { CheckIcon, CloseIcon, MagnifierIcon } from "../shell/Icon";
 
-const SOURCE_ORDER: FaceSource[] = ["built-in", "system"];
-const SOURCE_LABEL: Record<FaceSource, string> = {
-  "built-in": "App",
-  system: "System",
-};
+const IS_WEB = Platform.OS === "web";
 
 // a dropdown that floats: the trigger names the current face, and the open
-// panel is a searchable list of every face the role offers, grouped by where
-// it came from. it uses the bar dropdown's machinery (a relative wrapper, an
-// absolutely positioned menu pinned under the trigger, and a full-plane
-// backdrop that dismisses on an outside click), so opening it overlays the
-// pane instead of reflowing it. the specimen lives in the pane below the
-// pickers, not here, so this stays a picker.
+// panel is a searchable list of every face the role offers. it uses the bar
+// dropdown's machinery (a relative wrapper and an absolutely positioned menu
+// pinned under the trigger), so opening it overlays the pane instead of
+// reflowing it. an outside click dismisses it: on web a document listener, on
+// native a full-plane backdrop, because an oversized absolute backdrop inside
+// the settings pane's scroller would stretch that scroller's content into a
+// large empty scroll range. the specimen lives in the pane below the pickers,
+// not here, so this stays a picker.
 export function FontPicker({
   label,
   value,
   options,
   onChange,
-  onOpen,
-  note,
 }: {
   label: string;
   value: string;
   options: FaceDef[];
   onChange: (id: string) => void;
-  // fired the first time the panel opens, for sources that load on demand
-  onOpen?: () => void;
-  // a muted line under the list, e.g. why no system faces are listed
-  note?: string;
 }) {
   const styles = useThemedStyles(fontPickerStyles);
   const v = useThemeVar();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [highlight, setHighlight] = useState<string | null>(null);
-  const openedOnce = useRef(false);
 
   const current = options.find((option) => option.id === value);
 
-  const groups = useMemo(() => {
+  // rendering and navigation share this order, matching what the eye reads
+  const flat = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    const matched = needle
+    return needle
       ? options.filter((option) => option.label.toLowerCase().includes(needle))
       : options;
-    return SOURCE_ORDER.map((source) => ({
-      source,
-      faces: matched.filter((face) => faceSource(face) === source),
-    })).filter((group) => group.faces.length > 0);
   }, [options, query]);
-
-  // navigation runs over the flat visible order, matching what the eye reads
-  const flat = useMemo(() => groups.flatMap((group) => group.faces), [groups]);
 
   useEffect(() => {
     if (!open) return;
     return registerEsc(() => setOpen(false));
   }, [open]);
 
-  const toggle = () => {
-    if (open) {
+  // web dismissal is a document listener so no oversized element sits in the
+  // pane's scroller (see the header note); the listener is capture-phase so a
+  // handler below cannot swallow the click before it closes the panel
+  useEffect(() => {
+    if (!IS_WEB || !open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      // SAFETY: pointerdown targets are DOM nodes; anything without closest()
+      // (the document, a text node) reads as outside and closes the panel
+      const target = e.target as Element | null;
+      if (target?.closest("[data-picker]")) return;
       setOpen(false);
-      return;
-    }
-    if (!openedOnce.current) {
-      openedOnce.current = true;
-      onOpen?.();
-    }
-    setOpen(true);
-  };
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () =>
+      document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [open]);
+
+  const toggle = () => setOpen((was) => !was);
 
   const pick = (id: string) => {
     onChange(id);
@@ -97,7 +96,10 @@ export function FontPicker({
   };
 
   return (
-    <View style={[styles.wrap, open && styles.wrapOpen]}>
+    <View
+      dataSet={{ picker: "" }}
+      style={[styles.wrap, open && styles.wrapOpen]}
+    >
       <Pressable
         onPress={toggle}
         style={({ hovered }) => [
@@ -110,7 +112,7 @@ export function FontPicker({
         accessibilityLabel={`${label}: ${current?.label ?? "default"}`}
       >
         <View style={styles.triggerValue}>
-          <Chevron direction={open ? "up" : "down"} size={7} />
+          <Chevron direction={open ? "up" : "down"} size={6} />
           <Text
             style={[
               styles.triggerValueText,
@@ -127,77 +129,85 @@ export function FontPicker({
 
       {open ? (
         <>
-          {/* full-plane dismiss layer, dropped behind the menu so a click
-              anywhere else closes the picker without reaching the pane */}
-          <Pressable
-            style={styles.backdrop}
-            onPress={() => setOpen(false)}
-            accessibilityRole="button"
-            accessibilityLabel="Close font menu"
-          />
-          <View style={styles.panel}>
-            <TextInput
-              autoFocus
-              value={query}
-              onChangeText={setQuery}
-              onKeyPress={(event) => {
-                const key = event.nativeEvent.key;
-                if (key === "ArrowDown") move(1);
-                else if (key === "ArrowUp") move(-1);
-                else if (key === "Enter") {
-                  // with nothing highlighted yet, Enter takes the first match
-                  const id = highlight ?? flat[0]?.id;
-                  if (id) pick(id);
-                }
-              }}
-              placeholder="Search fonts"
-              placeholderTextColor={v("var(--text-secondary)")}
-              style={styles.search}
-              accessibilityLabel={`Search ${label} fonts`}
+          {/* native dismiss layer; web uses the document listener above, since
+              this oversized absolute box would otherwise stretch the pane's
+              scroller and hand it a large empty scroll range */}
+          {IS_WEB ? null : (
+            <Pressable
+              style={styles.backdrop}
+              onPress={() => setOpen(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Close font menu"
             />
+          )}
+          <View style={styles.panel}>
+            <View style={styles.searchField}>
+              <MagnifierIcon size={15} color={v("var(--text-secondary)")} />
+              <TextInput
+                autoFocus
+                value={query}
+                onChangeText={setQuery}
+                dataSet={{ pickerSearch: "" }}
+                onKeyPress={(event) => {
+                  const key = event.nativeEvent.key;
+                  if (key === "ArrowDown") move(1);
+                  else if (key === "ArrowUp") move(-1);
+                  else if (key === "Enter") {
+                    // with nothing highlighted yet, Enter takes the first match
+                    const id = highlight ?? flat[0]?.id;
+                    if (id) pick(id);
+                  }
+                }}
+                placeholder="Search fonts"
+                placeholderTextColor={v("var(--text-secondary)")}
+                style={styles.searchInput}
+                accessibilityLabel={`Search ${label} fonts`}
+              />
+              {query ? (
+                <Pressable
+                  onPress={() => setQuery("")}
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear font search"
+                  style={({ hovered }) => [
+                    styles.searchClear,
+                    hovered && styles.searchClearHover,
+                  ]}
+                >
+                  <CloseIcon size={12} color={v("var(--text-secondary)")} />
+                </Pressable>
+              ) : null}
+            </View>
             <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
-              {groups.map((group) => (
-                <View key={group.source}>
-                  <Text style={styles.groupLabel}>
-                    {SOURCE_LABEL[group.source]}
-                  </Text>
-                  <View style={styles.groupRule} />
-                  {group.faces.map((face) => {
-                    const selected = face.id === value;
-                    return (
-                      <Pressable
-                        key={face.id}
-                        onHoverIn={() => setHighlight(face.id)}
-                        onPress={() => pick(face.id)}
-                        style={({ hovered }) => [
-                          styles.row,
-                          (hovered || face.id === highlight) && styles.rowHover,
-                          selected && styles.rowSelected,
-                        ]}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected }}
-                      >
-                        <Text
-                          style={[
-                            styles.rowText,
-                            { fontFamily: faceStack(face) },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {face.label}
-                        </Text>
-                        {selected ? (
-                          <Text style={styles.rowCheck}>✓</Text>
-                        ) : null}
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              ))}
+              {flat.map((face) => {
+                const selected = face.id === value;
+                return (
+                  <Pressable
+                    key={face.id}
+                    onHoverIn={() => setHighlight(face.id)}
+                    onPress={() => pick(face.id)}
+                    style={({ hovered }) => [
+                      styles.row,
+                      (hovered || face.id === highlight) && styles.rowHover,
+                      selected && styles.rowSelected,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                  >
+                    <Text
+                      style={[styles.rowText, { fontFamily: faceStack(face) }]}
+                      numberOfLines={1}
+                    >
+                      {face.label}
+                    </Text>
+                    {selected ? (
+                      <CheckIcon size={14} color={v("var(--accent)")} />
+                    ) : null}
+                  </Pressable>
+                );
+              })}
               {flat.length === 0 ? (
                 <Text style={styles.note}>No matching fonts.</Text>
               ) : null}
-              {note ? <Text style={styles.note}>{note}</Text> : null}
             </ScrollView>
           </View>
         </>
@@ -288,41 +298,47 @@ const fontPickerStyles = defineThemedStyles({
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 4 },
   },
-  search: {
-    fontFamily: CHROME_FONT,
-    fontSize: 14,
-    color: "var(--text)",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+  // the field mirrors the rail's search: a magnifier, the input, and a clear
+  // button when there is a query. inside the panel it goes borderless, seated
+  // by a rule under it rather than a pill around it
+  searchField: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
     borderBottomWidth: 1,
     borderBottomColor: "var(--border)",
   },
+  searchInput: {
+    flex: 1,
+    minWidth: 0,
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
+    fontSize: 13,
+    color: "var(--text)",
+    padding: 0,
+    userSelect: "text",
+  },
+  searchClear: {
+    width: 18,
+    height: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 4,
+  },
+  searchClearHover: {
+    backgroundColor: "var(--control-hover)",
+  },
   list: {
     maxHeight: 300,
-  },
-  groupLabel: {
-    fontFamily: CHROME_FONT,
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 0.2,
-    color: "var(--text-secondary)",
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 6,
-  },
-  // a hairline under each group name, so a heading reads as a heading and not as
-  // the first row of its own list
-  groupRule: {
-    height: 1,
-    backgroundColor: "var(--border)",
-    marginBottom: 4,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: 8,
     paddingVertical: 8,
     marginHorizontal: 4,
     borderRadius: 4,
@@ -330,24 +346,21 @@ const fontPickerStyles = defineThemedStyles({
   rowHover: {
     backgroundColor: "var(--control-hover)",
   },
+  // the chosen face keeps a fill of its own, so hover and selection differ
   rowSelected: {
-    backgroundColor: "var(--control-hover)",
+    backgroundColor: "var(--selected-bg)",
   },
   rowText: {
     fontSize: 15,
     color: "var(--text)",
     flexShrink: 1,
   },
-  rowCheck: {
-    fontFamily: CHROME_FONT,
-    fontSize: 13,
-    color: "var(--accent)",
-  },
   note: {
     fontFamily: CHROME_FONT,
     fontSize: 13,
+    lineHeight: 18,
     color: "var(--text-secondary)",
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 12,
   },
 });

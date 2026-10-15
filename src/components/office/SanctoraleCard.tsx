@@ -274,7 +274,7 @@ const sanctoraleCardStyles = defineThemedStyles({
   },
   detailTitle: {
     fontFamily: HEADING_FONT,
-    fontWeight: "700",
+    fontWeight: "500",
     fontSize: 30,
     lineHeight: 38,
     color: "var(--text)",

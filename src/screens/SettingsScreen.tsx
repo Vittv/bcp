@@ -61,7 +61,6 @@ import {
   MAX_FONT_PX,
   MIN_FONT_PX,
 } from "../lib/typography/sizes";
-import type { SystemFontsState } from "../lib/typography/systemFonts";
 import { useUpdateStatus } from "../lib/updater";
 import { AboutScreen } from "./AboutScreen";
 import { InstallScreen } from "./InstallScreen";
@@ -236,8 +235,11 @@ export function SettingsScreen({
             interfaceFaces={theme.interfaceFaces}
             headingFaces={theme.headingFaces}
             readingFaces={theme.readingFaces}
-            systemFontsState={theme.systemFontsState}
-            ensureSystemFonts={theme.ensureSystemFonts}
+            onResetFonts={() => {
+              theme.resetInterfaceFont();
+              theme.resetHeadingFont();
+              theme.resetReadingFont();
+            }}
           />
         );
       case "office":
@@ -754,8 +756,8 @@ type TypographySettingsProps = {
   interfaceFaces: FaceDef[];
   headingFaces: FaceDef[];
   readingFaces: FaceDef[];
-  systemFontsState: SystemFontsState;
-  ensureSystemFonts: () => void;
+  // return every role to its default face
+  onResetFonts: () => void;
 };
 
 function TypographySettings({
@@ -770,8 +772,7 @@ function TypographySettings({
   interfaceFaces,
   headingFaces,
   readingFaces,
-  systemFontsState,
-  ensureSystemFonts,
+  onResetFonts,
 }: TypographySettingsProps) {
   const styles = useThemedStyles(styleDef);
   // the specimen rides the reader's scale, so a size change is legible here
@@ -781,42 +782,40 @@ function TypographySettings({
     lineHeight: lineHeight * fontScale,
   });
 
-  // the same line under either picker: the machine's fonts load on first open,
-  // and this names what a platform without the capability is missing
-  const systemNote =
-    systemFontsState === "loading"
-      ? "Loading the fonts on this device…"
-      : systemFontsState === "unavailable"
-        ? "The fonts on this device can't be listed here."
-        : undefined;
-
   return (
     <>
       <View style={[styles.section, styles.sectionRaised, styles.sectionFlush]}>
-        <Text style={styles.label}>Font Family</Text>
+        <View style={styles.groupRow}>
+          <Text style={styles.groupLabel}>Font Family</Text>
+          <Pressable
+            onPress={onResetFonts}
+            style={({ hovered }) => [
+              styles.reset,
+              hovered && styles.resetHover,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Reset font family"
+          >
+            <Text style={styles.resetText}>Default</Text>
+          </Pressable>
+        </View>
         <FontPicker
           label="UI Font"
           value={interfaceFont}
           options={interfaceFaces}
           onChange={setInterfaceFont}
-          onOpen={ensureSystemFonts}
-          note={systemNote}
         />
         <FontPicker
           label="Heading Font"
           value={headingFont}
           options={headingFaces}
           onChange={setHeadingFont}
-          onOpen={ensureSystemFonts}
-          note={systemNote}
         />
         <FontPicker
           label="Body Font"
           value={readingFont}
           options={readingFaces}
           onChange={setReadingFont}
-          onOpen={ensureSystemFonts}
-          note={systemNote}
         />
       </View>
 
@@ -824,8 +823,8 @@ function TypographySettings({
         {/* a rule between the family pickers and the size control, so each
             group reads on its own */}
         <View style={styles.sizeDivider} />
-        <View style={styles.sizeRow}>
-          <Text style={styles.sizeLabel}>Font Size</Text>
+        <View style={styles.groupRow}>
+          <Text style={styles.groupLabel}>Font Size</Text>
           <Pressable
             onPress={() => setFontPx(DEFAULT_FONT_PX)}
             style={({ hovered }) => [
@@ -1327,7 +1326,7 @@ const styleDef = defineThemedStyles({
   },
   paneTitle: {
     fontFamily: HEADING_FONT,
-    fontWeight: "600",
+    fontWeight: "500",
     fontSize: 30,
     lineHeight: 38,
     color: "var(--text)",
@@ -1404,6 +1403,7 @@ const styleDef = defineThemedStyles({
   },
   mockHeading: {
     fontFamily: HEADING_FONT,
+    fontWeight: "500",
     fontSize: 24,
     lineHeight: 32,
     color: "var(--text)",
@@ -1443,13 +1443,13 @@ const styleDef = defineThemedStyles({
     fontSize: 14,
     color: "var(--text-secondary)",
   },
-  sizeRow: {
+  groupRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 12,
   },
-  sizeLabel: {
+  groupLabel: {
     fontFamily: CHROME_FONT,
     fontSize: 16,
     fontWeight: "600",

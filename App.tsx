@@ -18,6 +18,12 @@ export default function App() {
     "Crimson Pro Italic": require("./assets/fonts/crimson-pro-latin-400-italic.woff2"),
     "Playfair Display": require("./assets/fonts/playfair-display-latin-var.woff2"),
     "JetBrains Mono": require("./assets/fonts/jetbrains-mono-500.woff2"),
+    Libron: require("./assets/fonts/libron-400-normal.woff2"),
+    "Libron Italic": require("./assets/fonts/libron-400-italic.woff2"),
+    "Libron Bold": require("./assets/fonts/libron-700-normal.woff2"),
+    "EB Garamond": require("./assets/fonts/eb-garamond-latin-400-normal.woff2"),
+    "EB Garamond SemiBold": require("./assets/fonts/eb-garamond-latin-600-normal.woff2"),
+    "EB Garamond Italic": require("./assets/fonts/eb-garamond-latin-400-italic.woff2"),
   });
 
   if (!fontsLoaded) return null;

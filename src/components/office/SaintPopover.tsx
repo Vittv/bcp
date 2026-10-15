@@ -66,7 +66,7 @@ export function SaintPopoverProvider({ children }: { children: ReactNode }) {
           onClose={close}
           titleStyle={{
             fontFamily: HEADING_FONT,
-            fontWeight: "700",
+            fontWeight: "500",
           }}
           footer={
             <Pressable

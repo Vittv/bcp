@@ -1,7 +1,12 @@
 import { Asset } from "expo-asset";
 import { Platform } from "react-native";
 import { FACE_ASSETS } from "./assets";
-import type { FaceDef, FaceVariant } from "./faces";
+import {
+  type FaceDef,
+  type FaceVariant,
+  readingFamilyName,
+  readingSizeAdjust,
+} from "./faces";
 
 type FontSource = string | number | { uri?: string; localUri?: string };
 
@@ -20,6 +25,7 @@ function fontFaceRule(
   variant: FaceVariant,
   uri: string,
   format?: string,
+  sizeAdjust?: number,
 ): string {
   const weight = variant.weightRange
     ? `${variant.weightRange[0]} ${variant.weightRange[1]}`
@@ -27,9 +33,13 @@ function fontFaceRule(
   const source = format
     ? `url(${JSON.stringify(uri)}) format(${JSON.stringify(format)})`
     : `url(${JSON.stringify(uri)})`;
+  const adjust =
+    sizeAdjust && sizeAdjust !== 1
+      ? `;size-adjust:${Number((sizeAdjust * 100).toFixed(2))}%`
+      : "";
   return `@font-face{font-family:${JSON.stringify(
     variant.family,
-  )};font-style:${variant.style};font-weight:${weight};font-display:swap;src:${source}}`;
+  )};font-style:${variant.style};font-weight:${weight};font-display:swap;src:${source}${adjust}}`;
 }
 
 function styleElement(id: string): HTMLStyleElement {
@@ -52,9 +62,23 @@ export function injectFontFace(
   uri: string,
   id: string,
   format?: string,
+  sizeAdjust?: number,
 ): void {
   if (Platform.OS !== "web" || typeof document === "undefined") return;
-  styleElement(id).textContent = fontFaceRule(variant, uri, format);
+  styleElement(id).textContent = fontFaceRule(variant, uri, format, sizeAdjust);
+}
+
+// register the reading face under aliased families, scaled to the role's target
+// x-height. the plain families stay unscaled for the other roles they serve.
+export function ensureReadingFace(def: FaceDef): void {
+  const sizeAdjust = readingSizeAdjust(def);
+  for (const variant of def.variants) {
+    const family = readingFamilyName(variant.family);
+    const uri = assetUri(FACE_ASSETS[variant.family]);
+    if (uri.length === 0) continue;
+    const id = `face-${family.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+    injectFontFace({ ...variant, family }, uri, id, "woff2", sizeAdjust);
+  }
 }
 
 // inject one @font-face per bundled variant of a face. expo-font's web build

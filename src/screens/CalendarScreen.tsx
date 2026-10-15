@@ -363,7 +363,7 @@ function DayModal({
       width={400}
       titleStyle={{
         fontFamily: HEADING_FONT,
-        fontWeight: "600",
+        fontWeight: "500",
         fontSize: 26,
         letterSpacing: 0.2,
       }}

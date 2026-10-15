@@ -218,7 +218,7 @@ const appModalStyles = defineThemedStyles({
   },
   title: {
     fontFamily: HEADING_FONT,
-    fontWeight: "600",
+    fontWeight: "500",
     fontSize: 28,
     letterSpacing: 0.2,
     color: "var(--text)",

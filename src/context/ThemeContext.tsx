@@ -4,7 +4,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { Platform } from "react-native";
@@ -29,21 +28,15 @@ import {
   HEADING_FACES,
   INTERFACE_FACES,
   READING_FACES,
+  readingStack,
 } from "../lib/typography/faces";
-import { ensureFace } from "../lib/typography/loader";
+import { ensureFace, ensureReadingFace } from "../lib/typography/loader";
 import {
   BASE_FONT_PX,
   DEFAULT_FONT_PX,
   fontPxToScale,
   scaleToFontPx,
 } from "../lib/typography/sizes";
-import {
-  listSystemFonts,
-  type SystemFontsState,
-  systemFaceDef,
-  systemFamilyFromId,
-  systemFontsSupported,
-} from "../lib/typography/systemFonts";
 
 export type { ResolvedTheme, ThemeMode };
 
@@ -76,30 +69,26 @@ type ThemeContextValue = {
   /**
    * the interface, heading, and reading face ids, separate axes so the chrome
    * face, the display face, and the reader face are chosen independently. plain
-   * strings so a system face can join the list; the resolver falls back to the
+   * strings so a stored id survives a reload; the resolver falls back to the
    * role's default.
    */
   interfaceFont: string;
   headingFont: string;
   readingFont: string;
-  /** the faces each role picker offers: bundled faces then the machine's. */
+  /** the faces each role picker offers. */
   interfaceFaces: FaceDef[];
   headingFaces: FaceDef[];
   readingFaces: FaceDef[];
-  /**
-   * whether the machine's own fonts are offered yet. `idle` until a picker
-   * first opens, because enumerating them is a request the shell or the
-   * browser only answers on demand.
-   */
-  systemFontsState: SystemFontsState;
   setMode: (mode: ThemeMode) => void;
   setTheme: (theme: ThemeId) => void;
   setFontPx: (px: number) => void;
   setInterfaceFont: (id: string) => void;
   setHeadingFont: (id: string) => void;
   setReadingFont: (id: string) => void;
-  /** ask for the machine's fonts; safe to call on every picker open. */
-  ensureSystemFonts: () => void;
+  /** return one role to its default face. */
+  resetInterfaceFont: () => void;
+  resetHeadingFont: () => void;
+  resetReadingFont: () => void;
 };
 
 const STORAGE_KEY_THEME = "bcp-theme-mode";
@@ -315,14 +304,10 @@ function applyTokens(tokens: ThemeTokens, resolved: ResolvedTheme) {
   `;
 }
 
-// resolve a face id against the bundled registry and the machine's faces,
-// keeping the role honest: a reading face selected as the interface falls back
-// rather than silently changing what the chrome face means. a `sys:` id names a
-// family the machine already has, so it is synthesized directly and needs no
-// enumeration to survive a reload.
+// resolve a face id against the bundled registry, keeping the role honest: a
+// reading face selected as the interface falls back rather than silently
+// changing what the chrome face means
 function resolveFace(id: string, role: FaceRole, fallback: FaceDef): FaceDef {
-  const family = systemFamilyFromId(id);
-  if (family !== null) return systemFaceDef(family);
   const base = faceById(id);
   if (base && faceHasRole(base, role)) return base;
   return fallback;
@@ -337,33 +322,58 @@ function fontVarsFor(
   headingFont: string,
   readingFont: string,
 ): Record<string, string> {
-  const iface = resolveFace(interfaceFont, "interface", FACES.inter);
+  const iface = resolveFace(
+    interfaceFont,
+    "interface",
+    FACES[DEFAULT_INTERFACE_FONT],
+  );
   const heading = resolveFace(
     headingFont,
     "heading",
-    FACES["playfair-display"],
+    FACES[DEFAULT_HEADING_FONT],
   );
-  const reading = resolveFace(readingFont, "reading", FACES["crimson-pro"]);
+  const reading = resolveFace(
+    readingFont,
+    "reading",
+    FACES[DEFAULT_READING_FONT],
+  );
   return {
     "--chrome-font": faceStack(iface, "body"),
     "--heading-font": faceStack(heading, "body"),
-    "--reading-font": faceStack(reading, "body"),
-    "--reading-font-semibold": faceStack(reading, "semibold"),
-    "--reading-font-italic": faceStack(reading, "italic"),
+    "--reading-font": readingStack(reading, "body"),
+    "--reading-font-semibold": readingStack(reading, "semibold"),
+    "--reading-font-italic": readingStack(reading, "italic"),
   };
 }
 
-// paint the font vars on the root and register the interface face. the heading
-// and reading faces load through useFonts in App.tsx at startup, so only a
-// bundled interface face is injected here.
+// paint the font vars on the root and register the injected faces: the bundled
+// interface face, the heading face, and the reading face under its scaled
+// alias. useFonts registers the same files at startup but declares no weight,
+// so a variable heading face is registered here too to expose its weight axis.
 function applyFonts(
   interfaceFont: string,
   headingFont: string,
   readingFont: string,
 ) {
   if (Platform.OS !== "web" || typeof document === "undefined") return;
-  const iface = resolveFace(interfaceFont, "interface", FACES.inter);
+  const iface = resolveFace(
+    interfaceFont,
+    "interface",
+    FACES[DEFAULT_INTERFACE_FONT],
+  );
   if (!iface.system) ensureFace(iface);
+  const heading = resolveFace(
+    headingFont,
+    "heading",
+    FACES[DEFAULT_HEADING_FONT],
+  );
+  if (!heading.system) ensureFace(heading);
+  const reading = resolveFace(
+    readingFont,
+    "reading",
+    FACES[DEFAULT_READING_FONT],
+  );
+  if (!reading.system) ensureReadingFace(reading);
   const r = document.documentElement.style;
   for (const [name, value] of Object.entries(
     fontVarsFor(interfaceFont, headingFont, readingFont),
@@ -390,14 +400,15 @@ const ThemeContext = createContext<ThemeContextValue>({
   interfaceFaces: INTERFACE_FACES,
   headingFaces: HEADING_FACES,
   readingFaces: READING_FACES,
-  systemFontsState: "unavailable",
   setMode: () => {},
   setTheme: () => {},
   setFontPx: () => {},
   setInterfaceFont: () => {},
   setHeadingFont: () => {},
   setReadingFont: () => {},
-  ensureSystemFonts: () => {},
+  resetInterfaceFont: () => {},
+  resetHeadingFont: () => {},
+  resetReadingFont: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -408,42 +419,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useState<string>(loadInterfaceFont);
   const [headingFont, setHeadingFontState] = useState<string>(loadHeadingFont);
   const [readingFont, setReadingFontState] = useState<string>(loadReadingFont);
-  const [systemFonts, setSystemFonts] = useState<string[]>([]);
-  const [systemFontsState, setSystemFontsState] = useState<SystemFontsState>(
-    systemFontsSupported() ? "idle" : "unavailable",
-  );
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
-  // a picker may open many times; the request runs once and the cache in the
-  // provider module backs the repeat calls.
-  const systemRequested = useRef(false);
-
-  // the machine's fonts join the bundled pool: a face with no bytes, resolved by
-  // the renderer, offered to both role pickers.
-  const systemFaces = useMemo(
-    () => systemFonts.map(systemFaceDef),
-    [systemFonts],
-  );
-  const interfaceFaces = useMemo(
-    () => [
-      ...INTERFACE_FACES,
-      ...systemFaces.filter((face) => faceHasRole(face, "interface")),
-    ],
-    [systemFaces],
-  );
-  const headingFaces = useMemo(
-    () => [
-      ...HEADING_FACES,
-      ...systemFaces.filter((face) => faceHasRole(face, "heading")),
-    ],
-    [systemFaces],
-  );
-  const readingFaces = useMemo(
-    () => [
-      ...READING_FACES,
-      ...systemFaces.filter((face) => faceHasRole(face, "reading")),
-    ],
-    [systemFaces],
-  );
 
   const resolved: ResolvedTheme = mode === "system" ? systemTheme : mode;
   const tokens = themeTokens(theme, resolved);
@@ -509,21 +485,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     persistFont(STORAGE_KEY_READING_FONT, id);
   }, []);
 
-  // enumerate the machine's fonts on first use. nothing loads at startup: the
-  // list is only wanted when a picker is open, and on web the browser prompts
-  // for the local-font permission from a user gesture such as that open.
-  const ensureSystemFonts = useCallback(() => {
-    if (systemRequested.current) return;
-    systemRequested.current = true;
-    if (!systemFontsSupported()) {
-      setSystemFontsState("unavailable");
-      return;
-    }
-    setSystemFontsState("loading");
-    void listSystemFonts().then((names) => {
-      setSystemFonts(names);
-      setSystemFontsState(names.length > 0 ? "ready" : "unavailable");
-    });
+  const resetInterfaceFont = useCallback(() => {
+    setInterfaceFontState(DEFAULT_INTERFACE_FONT);
+    persistFont(STORAGE_KEY_INTERFACE_FONT, DEFAULT_INTERFACE_FONT);
+  }, []);
+
+  const resetHeadingFont = useCallback(() => {
+    setHeadingFontState(DEFAULT_HEADING_FONT);
+    persistFont(STORAGE_KEY_HEADING_FONT, DEFAULT_HEADING_FONT);
+  }, []);
+
+  const resetReadingFont = useCallback(() => {
+    setReadingFontState(DEFAULT_READING_FONT);
+    persistFont(STORAGE_KEY_READING_FONT, DEFAULT_READING_FONT);
   }, []);
 
   const value = useMemo(
@@ -538,17 +512,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       interfaceFont,
       headingFont,
       readingFont,
-      interfaceFaces,
-      headingFaces,
-      readingFaces,
-      systemFontsState,
+      interfaceFaces: INTERFACE_FACES,
+      headingFaces: HEADING_FACES,
+      readingFaces: READING_FACES,
       setMode,
       setTheme,
       setFontPx,
       setInterfaceFont,
       setHeadingFont,
       setReadingFont,
-      ensureSystemFonts,
+      resetInterfaceFont,
+      resetHeadingFont,
+      resetReadingFont,
     }),
     [
       mode,
@@ -561,17 +536,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       interfaceFont,
       headingFont,
       readingFont,
-      interfaceFaces,
-      headingFaces,
-      readingFaces,
-      systemFontsState,
       setMode,
       setTheme,
       setFontPx,
       setInterfaceFont,
       setHeadingFont,
       setReadingFont,
-      ensureSystemFonts,
+      resetInterfaceFont,
+      resetHeadingFont,
+      resetReadingFont,
     ],
   );
 
