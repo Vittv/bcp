@@ -179,7 +179,7 @@ const styleDef = defineThemedStyles({
   },
   sectionDivider: {
     borderTopWidth: 1,
-    borderTopColor: "var(--border-content)",
+    borderTopColor: "var(--border)",
     paddingTop: 20,
     marginBottom: 30,
   },

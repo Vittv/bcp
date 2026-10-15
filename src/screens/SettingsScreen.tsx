@@ -1367,7 +1367,7 @@ const styleDef = defineThemedStyles({
     marginBottom: 24,
     paddingBottom: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "var(--border-content)",
+    borderBottomColor: "var(--border)",
   },
   // the font pickers float a menu past their own box, and every View is its own
   // stacking context (RNW gives them z-index:0), so the section holding them
