@@ -422,7 +422,7 @@ const BibleChapterBody = memo(function BibleChapterBody() {
       <Text style={styles.detailTitle}>{bibleBookName(book.abbrev)}</Text>
       <Text style={styles.detailSubtitle}>Chapter {chapter}</Text>
       {passage ? (
-        <ScriptureView passage={passage} />
+        <ScriptureView passage={passage} size="body" />
       ) : bookData === undefined ? (
         <Text style={styles.bibleLoading}>Loading…</Text>
       ) : (

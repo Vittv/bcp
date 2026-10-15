@@ -8,7 +8,7 @@ import { defineThemedStyles } from "../../lib/theme/themedStyles";
 // pad the side margins.
 const DETAIL_COLUMN_WIDTH = 736;
 const DETAIL_COLUMN_PAD_X = 40;
-const DETAIL_COLUMN_PAD_TOP = 28;
+const DETAIL_COLUMN_PAD_TOP = 32;
 const DETAIL_COLUMN_PAD_BOTTOM = 64;
 
 // inverse-zoom overrides applied beside sharedStyles.detailPage when a pane is
@@ -420,7 +420,7 @@ export const sharedStyles = defineThemedStyles({
   },
   detailTitle: {
     fontFamily: HEADING_FONT,
-    fontWeight: "700",
+    fontWeight: "500",
     fontSize: 30,
     lineHeight: 38,
     color: "var(--text)",
@@ -449,8 +449,8 @@ export const sharedStyles = defineThemedStyles({
   // every element shares the same padded vertical rhythm as the rows)
   collectBody: {
     fontFamily: SERIF_FONT,
-    fontSize: 17,
-    lineHeight: 27,
+    fontSize: 18,
+    lineHeight: 29,
     color: "var(--text)",
   },
   // canticles read like psalms but carry unnumbered verses grouped into
@@ -460,16 +460,16 @@ export const sharedStyles = defineThemedStyles({
   },
   canticleSectionTitle: {
     fontFamily: HEADING_FONT,
-    fontSize: 17,
-    lineHeight: 24,
-    fontWeight: "600",
+    fontSize: 18,
+    lineHeight: 25,
+    fontWeight: "500",
     color: "var(--accent)",
     marginBottom: 6,
   },
   canticleVerse: {
     fontFamily: SERIF_FONT,
-    fontSize: 17,
-    lineHeight: 29,
+    fontSize: 18,
+    lineHeight: 30,
     color: "var(--text)",
   },
   canticleNote: {
@@ -759,7 +759,7 @@ export const sharedStyles = defineThemedStyles({
   },
   bibleReaderTitle: {
     fontFamily: HEADING_FONT,
-    fontWeight: "700",
+    fontWeight: "500",
     fontSize: 24,
     lineHeight: 32,
     color: "var(--text)",

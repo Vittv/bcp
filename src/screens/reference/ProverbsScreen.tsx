@@ -253,7 +253,7 @@ function ProvChapterBody({ chapter }: { chapter: number }) {
         {passage.verses.length} verse
         {passage.verses.length === 1 ? "" : "s"}
       </Text>
-      <ScriptureView passage={passage} />
+      <ScriptureView passage={passage} size="body" />
     </>
   );
 }

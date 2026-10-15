@@ -10,17 +10,35 @@ import {
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
 
-function Verse({ verse }: { verse: KjvPassage["verses"][number] }) {
+export type ScriptureSize = "reading" | "body";
+
+function Verse({
+  verse,
+  size,
+}: {
+  verse: KjvPassage["verses"][number];
+  size: ScriptureSize;
+}) {
   const styles = useThemedStyles(scriptureStyles);
   return (
-    <Text style={styles.verse}>
-      <Text style={styles.verseNumber}>{verse.number}</Text>
+    <Text style={[styles.verse, size === "body" && styles.verseBody]}>
+      <Text
+        style={[styles.verseNumber, size === "body" && styles.verseNumberBody]}
+      >
+        {verse.number}
+      </Text>
       {verse.text}
     </Text>
   );
 }
 
-export function ScriptureView({ passage }: { passage: KjvPassage }) {
+export function ScriptureView({
+  passage,
+  size = "reading",
+}: {
+  passage: KjvPassage;
+  size?: ScriptureSize;
+}) {
   const styles = useThemedStyles(scriptureStyles);
   const first = passage.verses[0];
   const last = passage.verses[passage.verses.length - 1];
@@ -43,7 +61,7 @@ export function ScriptureView({ passage }: { passage: KjvPassage }) {
             {showBreak ? (
               <Text style={styles.chapterBreak}>{chapter}</Text>
             ) : null}
-            <Verse verse={v} />
+            <Verse verse={v} size={size} />
           </View>
         );
       })}
@@ -70,6 +88,10 @@ const scriptureStyles = defineThemedStyles({
     color: "var(--text)",
     marginBottom: 4,
   },
+  verseBody: {
+    fontSize: 18,
+    lineHeight: 30,
+  },
   verseNumber: {
     fontFamily: SERIF_FONT,
     fontSize: 12,
@@ -77,6 +99,10 @@ const scriptureStyles = defineThemedStyles({
     color: "var(--text-secondary)",
     marginRight: 3,
     fontWeight: "400",
+  },
+  verseNumberBody: {
+    fontSize: 13,
+    lineHeight: 17,
   },
   chapterBreak: {
     fontFamily: SERIF_SEMI_FONT,

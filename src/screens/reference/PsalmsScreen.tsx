@@ -198,7 +198,7 @@ const PsalmDetailBody = memo(function PsalmDetailBody({
       <Text style={styles.detailSubtitle}>
         {verses} verse{verses === 1 ? "" : "s"}
       </Text>
-      {passage ? <PsalmText passage={passage} /> : null}
+      {passage ? <PsalmText passage={passage} size="body" /> : null}
     </>
   );
 });

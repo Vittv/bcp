@@ -112,7 +112,11 @@ function LessonRow({ lesson }: { lesson: LectionaryLesson }) {
         <Text style={styles.lessonMissing}>Reading text not available</Text>
       ) : (
         passages.map((p) => (
-          <ScriptureView key={`${p.book}-${p.chapter}`} passage={p} />
+          <ScriptureView
+            key={`${p.book}-${p.chapter}`}
+            passage={p}
+            size="body"
+          />
         ))
       )}
     </View>
@@ -133,7 +137,7 @@ function PsalmsBlock({ citations }: { citations: string[] }) {
         if (!passage) return null;
         return (
           <View key={citation} style={i === 0 ? undefined : styles.psalmItem}>
-            <PsalmText passage={passage} />
+            <PsalmText passage={passage} size="body" />
           </View>
         );
       })}
@@ -207,7 +211,7 @@ const lectionaryStyles = defineThemedStyles({
   },
   title: {
     fontFamily: HEADING_FONT,
-    fontWeight: "700",
+    fontWeight: "500",
     fontSize: 28,
     lineHeight: 36,
     color: "var(--text)",

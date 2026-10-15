@@ -1,6 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import { getAllKjvBooks } from "../../lib/content/kjv";
-import { ALL_BOOKS, pageForBook, TESTAMENTS } from "../BibleContext";
+import {
+  ALL_BOOKS,
+  pageEntryRestore,
+  pageForBook,
+  TESTAMENTS,
+} from "../BibleContext";
 
 // the app reads three corpora, and two independent things depend on the
 // routing between them: a cross-link into the bible picks the page, and the
@@ -37,6 +42,55 @@ describe("pageForBook", () => {
 
   it("returns null for a book that does not exist", () => {
     expect(pageForBook("NotABook")).toBeNull();
+  });
+});
+
+// entering a reader page must open that corpus, but a chapter arriving through
+// browser history carries its own position. the two are reconciled here: the
+// restored position holds only when it names the corpus being entered
+describe("pageEntryRestore", () => {
+  it("does nothing off the bible pages", () => {
+    expect(pageEntryRestore("today", "NT")).toBeNull();
+    expect(pageEntryRestore("psalms", "DC")).toBeNull();
+    expect(pageEntryRestore("lectionary", null)).toBeNull();
+  });
+
+  it("keeps a history restore that names the corpus being entered", () => {
+    expect(pageEntryRestore("apocrypha", "DC")).toEqual({
+      testament: "DC",
+      keepRestored: true,
+    });
+    expect(pageEntryRestore("new-testament", "NT")).toEqual({
+      testament: "NT",
+      keepRestored: true,
+    });
+  });
+
+  it("rejects a history restore from another corpus", () => {
+    // a restore that lands off the bible pages leaves the last corpus
+    // behind, so entering Apocrypha must still open DC rather than the book
+    // the restore positioned
+    expect(pageEntryRestore("apocrypha", "NT")).toEqual({
+      testament: "DC",
+      keepRestored: false,
+    });
+    expect(pageEntryRestore("old-testament", "DC")).toEqual({
+      testament: "OT",
+      keepRestored: false,
+    });
+  });
+
+  it("restores from storage when no restore positioned the page", () => {
+    for (const [page, testament] of [
+      ["old-testament", "OT"],
+      ["new-testament", "NT"],
+      ["apocrypha", "DC"],
+    ] as const) {
+      expect(pageEntryRestore(page, null)).toEqual({
+        testament,
+        keepRestored: false,
+      });
+    }
   });
 });
 

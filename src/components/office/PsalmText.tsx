@@ -8,23 +8,41 @@ import {
 
 const MEDIANT = "\u2009";
 
-function Verse({ verse }: { verse: PsalmPassage["verses"][number] }) {
+export type PsalmSize = "reading" | "body";
+
+function Verse({
+  verse,
+  size,
+}: {
+  verse: PsalmPassage["verses"][number];
+  size: PsalmSize;
+}) {
   const styles = useThemedStyles(psalmStyles);
   return (
-    <Text style={styles.verse}>
-      <Text style={styles.verseNumber}>{verse.number}</Text>
+    <Text style={[styles.verse, size === "body" && styles.verseBody]}>
+      <Text
+        style={[styles.verseNumber, size === "body" && styles.verseNumberBody]}
+      >
+        {verse.number}
+      </Text>
       {verse.text.replaceAll("*", MEDIANT)}
       {verse.stanza ? <Text style={styles.stanza}> {verse.stanza}</Text> : null}
     </Text>
   );
 }
 
-export function PsalmText({ passage }: { passage: PsalmPassage }) {
+export function PsalmText({
+  passage,
+  size = "reading",
+}: {
+  passage: PsalmPassage;
+  size?: PsalmSize;
+}) {
   const styles = useThemedStyles(psalmStyles);
   return (
     <View style={styles.block}>
       {passage.verses.map((v) => (
-        <Verse key={v.number} verse={v} />
+        <Verse key={v.number} verse={v} size={size} />
       ))}
     </View>
   );
@@ -38,6 +56,10 @@ const psalmStyles = defineThemedStyles({
     lineHeight: 29,
     color: "var(--text)",
   },
+  verseBody: {
+    fontSize: 18,
+    lineHeight: 30,
+  },
   verseNumber: {
     fontFamily: SERIF_FONT,
     fontSize: 12,
@@ -45,6 +67,10 @@ const psalmStyles = defineThemedStyles({
     color: "var(--text-secondary)",
     marginRight: 3,
     fontWeight: "400",
+  },
+  verseNumberBody: {
+    fontSize: 13,
+    lineHeight: 17,
   },
   mediant: {
     fontSize: 17,

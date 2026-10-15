@@ -209,6 +209,22 @@ function pageTestament(p: PageId): Testament {
 }
 
 /**
+ * what a page entry should restore. off the bible pages there is nothing to
+ * do. on a bible page, a history restore that already positioned this same
+ * corpus holds, so storage must not overwrite the restored chapter; a restore
+ * that landed elsewhere does not carry over, or the page opens the last
+ * corpus's book instead of its own
+ */
+export function pageEntryRestore(
+  page: PageId,
+  restored: Testament | null,
+): { testament: Testament; keepRestored: boolean } | null {
+  if (!isBiblePage(page)) return null;
+  const testament = pageTestament(page);
+  return { testament, keepRestored: restored === testament };
+}
+
+/**
  * the reader page that owns a book, for a cross-link into the bible.
  * resolves by abbrev and by any citation alias, so a link built from a
  * lesson's ref ("Sirach") lands in the same page as one built from the
@@ -260,49 +276,47 @@ export function BibleProvider({
   // browser history: pushes record each chapter/book step, restores replay
   const history = useHistory();
 
-  // set by restoreRef when a history restore re-positions the bible, so the
-  // page-change effect keeps that position instead of re-reading localStorage
-  const restoredRef = useRef(false);
+  // the corpus a history restore positioned (null when the last restore did
+  // not land on a bible page). kept per-corpus rather than as a boolean so a
+  // restore that lands elsewhere cannot suppress the next page's own restore
+  const restoredTestament = useRef<Testament | null>(null);
 
   // sync testament + restore position when page changes to a bible page
   const prevPage = useRef(page);
   useEffect(() => {
     if (prevPage.current === page) return;
     prevPage.current = page;
-    if (isBiblePage(page)) {
-      if (restoredRef.current) {
-        // the position came from a history restore; stop re-reading localStorage
-        restoredRef.current = false;
-      } else if (_pendingRefTarget) {
-        const t = pageTestament(page);
-        const ref = _pendingRefTarget;
-        _pendingRefTarget = null;
-        const found =
-          ALL_BOOKS[t].find((b) => b.abbrev === ref.abbrev) ?? ALL_BOOKS[t][0];
-        const ch = Math.min(Math.max(1, ref.chapter), found.chapters);
-        setTestament(t);
-        setBook(found);
-        setChapter(ch);
-        // the navigation entry carried this ref, but its chapter may have
-        // been clamped; fold the exact position in so any later restore of
-        // this entry replays the same book
+    const entry = pageEntryRestore(page, restoredTestament.current);
+    restoredTestament.current = null;
+    if (!entry || entry.keepRestored) return;
+    const t = entry.testament;
+    if (_pendingRefTarget) {
+      const ref = _pendingRefTarget;
+      _pendingRefTarget = null;
+      const found =
+        ALL_BOOKS[t].find((b) => b.abbrev === ref.abbrev) ?? ALL_BOOKS[t][0];
+      const ch = Math.min(Math.max(1, ref.chapter), found.chapters);
+      setTestament(t);
+      setBook(found);
+      setChapter(ch);
+      // the navigation entry carried this ref, but its chapter may have
+      // been clamped; fold the exact position in so any later restore of
+      // this entry replays the same book
+      history?.replace({
+        bible: { abbrev: found.abbrev, chapter: ch },
+      });
+    } else {
+      const pos = resolvePos(t, loadPos(t));
+      setTestament(t);
+      setBook(pos.book);
+      setChapter(pos.chapter);
+      // the navigation entry was pushed before this position existed (it
+      // comes from storage, not the navigate call), so fold it into the top
+      // snapshot: replaying this entry must restore the book, not clear it
+      if (pos.book) {
         history?.replace({
-          bible: { abbrev: found.abbrev, chapter: ch },
+          bible: { abbrev: pos.book.abbrev, chapter: pos.chapter },
         });
-      } else {
-        const t = pageTestament(page);
-        const pos = resolvePos(t, loadPos(t));
-        setTestament(t);
-        setBook(pos.book);
-        setChapter(pos.chapter);
-        // the navigation entry was pushed before this position existed (it
-        // comes from storage, not the navigate call), so fold it into the top
-        // snapshot: replaying this entry must restore the book, not clear it
-        if (pos.book) {
-          history?.replace({
-            bible: { abbrev: pos.book.abbrev, chapter: pos.chapter },
-          });
-        }
       }
     }
   }, [page, history?.replace]);
@@ -462,7 +476,7 @@ export function BibleProvider({
       }
       const found = bookByAbbrev(ref.abbrev);
       if (!found) return;
-      restoredRef.current = true;
+      restoredTestament.current = found.testament;
       setTestament(found.testament);
       setBook(found);
       setChapter(Math.min(Math.max(1, ref.chapter), found.chapters));
