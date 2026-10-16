@@ -402,7 +402,8 @@ const BibleChapterBody = memo(function BibleChapterBody() {
     if (!atStart) {
       prevChapter();
     } else if (prevBook) {
-      selectBook(prevBook.abbrev);
+      // step back onto the previous book's last chapter, mirroring the next arrow
+      selectBook(prevBook.abbrev, prevBook.chapters);
     }
   };
 

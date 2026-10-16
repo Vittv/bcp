@@ -12,6 +12,7 @@ import { useHistory, useHistoryField } from "../context/HistoryContext";
 import {
   getScriptureBookMeta,
   getScriptureBooksByTestament,
+  readingRank,
 } from "../lib/content/bible";
 import { markReached } from "../lib/content/bibleProgress";
 import type { ScriptureBookMeta } from "../lib/content/scripture";
@@ -163,7 +164,7 @@ type BibleState = {
   chapter: number;
   books: ScriptureBookMeta[];
   selectTestament: (t: Testament) => void;
-  selectBook: (abbrev: string) => void;
+  selectBook: (abbrev: string, chapter?: number) => void;
   clearBook: () => void;
   nextChapter: () => void;
   prevChapter: () => void;
@@ -335,15 +336,18 @@ export function BibleProvider({
     }
   }, [page, testament, book, chapter, onReadingChange]);
 
-  // scroll to top when chapter advances (skip initial mount, skip going backward)
-  const prevChapterRef = useRef(chapter);
+  // scroll to top when the reader advances to a later position, so a next-book
+  // step scrolls up like a next-chapter step; a backward move keeps its place
+  const prevPosRef = useRef({ abbrev: book?.abbrev ?? null, chapter });
   useEffect(() => {
-    if (prevChapterRef.current !== chapter) {
-      const wentForward = chapter > prevChapterRef.current;
-      prevChapterRef.current = chapter;
-      if (wentForward) onChapterChange?.();
+    const prev = prevPosRef.current;
+    const abbrev = book?.abbrev ?? null;
+    if (prev.abbrev === abbrev && prev.chapter === chapter) return;
+    prevPosRef.current = { abbrev, chapter };
+    if (readingRank(abbrev, chapter) > readingRank(prev.abbrev, prev.chapter)) {
+      onChapterChange?.();
     }
-  }, [chapter, onChapterChange]);
+  }, [book, chapter, onChapterChange]);
 
   const books = ALL_BOOKS[testament];
 
@@ -363,15 +367,17 @@ export function BibleProvider({
   );
 
   // the selection carries its own corpus, so picking a deuterocanonical book
-  // switches the reader to DC rather than opening it inside OT
+  // switches the reader to DC rather than opening it inside OT. the chapter
+  // defaults to the first
   const selectBook = useCallback(
-    (abbrev: string) => {
+    (abbrev: string, chapter = 1) => {
       const found = bookByAbbrev(abbrev);
       if (!found) return;
+      const ch = Math.min(Math.max(1, chapter), found.chapters);
       setTestament(found.testament);
       setBook(found);
-      setChapter(1);
-      history?.push({ bible: { abbrev: found.abbrev, chapter: 1 } });
+      setChapter(ch);
+      history?.push({ bible: { abbrev: found.abbrev, chapter: ch } });
     },
     [history],
   );

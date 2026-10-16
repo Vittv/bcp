@@ -27,6 +27,19 @@ export function getScriptureBooksByTestament(
   return ALL_SCRIPTURE_BOOKS.filter((b) => b.testament === testament);
 }
 
+// the flat order the prev/next arrows walk (OT, NT, Deuterocanon); ranking by
+// book then chapter keeps a book edge, where the chapter resets, a forward step
+const CANON_RANK = new Map<string, number>();
+ALL_SCRIPTURE_BOOKS.forEach((b, i) => {
+  CANON_RANK.set(b.abbrev, i);
+});
+
+/** rank a position in the canon, for telling a forward step from a backward one */
+export function readingRank(abbrev: string | null, chapter: number): number {
+  const book = abbrev === null ? -1 : (CANON_RANK.get(abbrev) ?? -1);
+  return book * 1000 + chapter;
+}
+
 // deuterocanon has no KJV text, so it always loads from WEB regardless of
 // the active translation; canonical OT/NT text follows the selection
 export async function loadScriptureBook(

@@ -5,6 +5,7 @@ import {
   getScriptureBooksByTestament,
   getScripturePassagesFromDolRef,
   loadScriptureBook,
+  readingRank,
 } from "../bible";
 import { loadKjvBook } from "../kjv";
 import { slicePassage } from "../scripture";
@@ -23,6 +24,33 @@ describe("combined scripture canon", () => {
     expect(getScriptureBookMeta("Gen")?.book).toBe("Genesis");
     expect(getScriptureBookMeta("Sirach")?.abbrev).toBe("Sir");
     expect(getScriptureBookMeta("Wisdom")).toBeDefined();
+  });
+});
+
+describe("readingRank", () => {
+  it("orders chapters forward within a book", () => {
+    expect(readingRank("Mark", 2)).toBeGreaterThan(readingRank("Mark", 1));
+  });
+
+  it("ranks a step into the next book as forward, though the chapter resets", () => {
+    expect(readingRank("Luke", 1)).toBeGreaterThan(readingRank("Mark", 16));
+  });
+
+  it("treats a step back into the previous book as backward", () => {
+    expect(readingRank("Mark", 16)).toBeLessThan(readingRank("Luke", 1));
+  });
+
+  it("ranks the next book ahead of a single-chapter book", () => {
+    // Jude has one chapter, so the number does not change on the step
+    expect(readingRank("Rev", 1)).toBeGreaterThan(readingRank("Jude", 1));
+  });
+
+  it("sorts the Deuterocanon after the New Testament", () => {
+    expect(readingRank("Tob", 1)).toBeGreaterThan(readingRank("Rev", 22));
+  });
+
+  it("ranks a cleared position below every open book", () => {
+    expect(readingRank(null, 1)).toBeLessThan(readingRank("Gen", 1));
   });
 });
 
