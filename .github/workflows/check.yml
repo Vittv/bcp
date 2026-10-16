@@ -12,7 +12,7 @@ concurrency:
 jobs:
   js:
     name: Lint, types, tests, release gates
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -31,7 +31,7 @@ jobs:
         run: bun run check:guard
   rust:
     name: cargo check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -45,6 +45,11 @@ jobs:
           BASE_URL: /
         run: bunx expo export -p web
       - uses: dtolnay/rust-toolchain@stable
+      - name: Cache the Rust build
+        # runs on every push, which keeps the 7-day cache alive between checks
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
       - name: cargo check
         working-directory: src-tauri
         run: cargo check

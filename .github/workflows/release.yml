@@ -23,9 +23,15 @@ jobs:
         include:
           - platform: ubuntu-22.04
             arch: x86_64
-          - platform: windows-latest
+          # pinned rather than windows-latest so the runner image stops
+          # moving underneath a release build
+          - platform: windows-2022
           - platform: macos-latest
     runs-on: ${{ matrix.platform }}
+    # rustc's default 2 MiB worker stack can overflow mid-compile on a
+    # contended runner; 16 MiB gives the release build headroom
+    env:
+      RUST_MIN_STACK: "16777216"
     permissions:
       contents: write
     steps:
@@ -49,6 +55,13 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Cache the Rust build
+        # GitHub evicts a cache 7 days after last access, so this misses on
+        # most release tags and pays only the restore; when it does hit it
+        # skips the whole cold compile of every crate
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
       - name: Read release notes
         # Windows runners default to PowerShell, which cannot run the bash
         # heredoc below; bash is present on every runner via Git for Windows.
