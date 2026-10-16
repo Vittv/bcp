@@ -202,17 +202,6 @@ function persistFont(key: string, id: string) {
   } catch {}
 }
 
-// the faint border at a fraction of its opacity, for textures that should read
-// as paper rather than structure. every theme's faint border is rgba(...)
-function fade(color: string, factor: number): string {
-  const match = color.match(/rgba?\(([^)]+)\)/);
-  if (!match) return color;
-  const [r, g, b, a] = match[1].split(",").map((part) => Number(part.trim()));
-  if (![r, g, b].every(Number.isFinite)) return color;
-  const alpha = Number.isFinite(a) ? a : 1;
-  return `rgba(${r}, ${g}, ${b}, ${Number((alpha * factor).toFixed(3))})`;
-}
-
 // paint the current theme into the document. every token becomes a css
 // custom property on the root (--bg, --text-secondary, ...), so component
 // styles that write var(--token) and the chrome-only rules below all resolve
@@ -224,9 +213,6 @@ function applyTokens(tokens: ThemeTokens, resolved: ResolvedTheme) {
   for (const [name, value] of Object.entries(tokenVars(tokens))) {
     r.setProperty(name, value);
   }
-  // the specimen's paper is a texture, not a structure: half the faint border,
-  // so the grid sits behind the type instead of competing with it
-  r.setProperty("--grid-line", fade(tokens.borderFaint, 0.5));
   // trust the color-scheme for native chrome we do not paint: the wco
   // window-controls overlay glyphs, scrollbars, and form controls. without
   // it chromium keeps the overlay light even while the app runs dark
@@ -288,15 +274,6 @@ function applyTokens(tokens: ThemeTokens, resolved: ResolvedTheme) {
     [data-bcp-wco] [data-wco-no-drag] {
       -webkit-app-region: no-drag;
       app-region: no-drag;
-    }
-    /* the font preview sits on faint graph paper: a token grid the theme
-       repaints, at half the faint border's strength so it reads as paper
-       rather than structure. only the web build paints a background-image */
-    [data-font-preview] {
-      background-image:
-        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-      background-size: 20px 20px;
     }
     /* the slider drags horizontally: the nib overhangs the thin track, so the
        hit layer owns the horizontal-resize cursor for the whole control */

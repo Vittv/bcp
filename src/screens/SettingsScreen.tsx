@@ -736,13 +736,13 @@ function ThemePreview({
   );
 }
 
-// the in-situ page mock's copy: a chrome line, a heading, a verse, and a rubric,
-// so the three roles stand together as they do in the reader
+// the in-situ page mock's copy: a passage from the Daily Office, carried by
+// the same chrome line, heading, body, and rubric the reader shows
 const MOCK_CHROME = "The Order for Morning Prayer";
-const MOCK_HEADING = "Psalm 63";
-const MOCK_VERSE =
-  "O God, thou art my God; early will I seek thee: my soul thirsteth for thee, my flesh longeth for thee in a dry and thirsty land, where no water is.";
-const MOCK_RUBRIC = "Here the people stand.";
+const MOCK_HEADING = "The Lord's Prayer";
+const MOCK_PASSAGE =
+  "Our Father, who art in heaven, hallowed be thy Name, thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread. And forgive us our trespasses, as we forgive those who trespass against us.";
+const MOCK_RUBRIC = "The People stand or kneel";
 
 type TypographySettingsProps = {
   fontPx: number;
@@ -847,14 +847,13 @@ function TypographySettings({
           />
         </View>
         {/* the specimen under the size control: a page as the reader sets it,
-            chrome, heading, verse and rubric all at the chosen scale, on the
-            faint paper the preview paints */}
-        <View style={styles.preview} dataSet={{ fontPreview: "" }}>
+            chrome, heading, prayer and rubric all at the chosen scale */}
+        <View style={styles.preview}>
           <Text style={[styles.mockChrome, scaled(12, 18)]}>{MOCK_CHROME}</Text>
-          <Text style={[styles.mockHeading, scaled(24, 32)]}>
+          <Text style={[styles.mockHeading, scaled(18, 24)]}>
             {MOCK_HEADING}
           </Text>
-          <Text style={[styles.mockBody, scaled(16, 26)]}>{MOCK_VERSE}</Text>
+          <Text style={[styles.mockBody, scaled(16, 26)]}>{MOCK_PASSAGE}</Text>
           <Text style={[styles.mockRubric, scaled(14, 22)]}>{MOCK_RUBRIC}</Text>
         </View>
       </View>
@@ -1383,6 +1382,8 @@ const styleDef = defineThemedStyles({
     paddingBottom: 0,
     marginBottom: 8,
   },
+  // the sample's paper panel, raised off the page so the specimen reads as its
+  // own object instead of as more settings content
   preview: {
     overflow: "hidden",
     backgroundColor: "var(--bg-raised)",
@@ -1393,7 +1394,7 @@ const styleDef = defineThemedStyles({
     marginBottom: 20,
   },
   // the specimen under the size control: a page as the reader sets it, a chrome
-  // line, a heading, a verse, and a rubric, the three roles together
+  // line, a heading, a prayer, and a rubric, the faces together
   mockChrome: {
     fontFamily: CHROME_FONT,
     fontSize: 12,
@@ -1404,8 +1405,8 @@ const styleDef = defineThemedStyles({
   mockHeading: {
     fontFamily: HEADING_FONT,
     fontWeight: "500",
-    fontSize: 24,
-    lineHeight: 32,
+    fontSize: 18,
+    lineHeight: 24,
     color: "var(--text)",
     marginTop: 6,
   },
