@@ -80,12 +80,11 @@ export function FontPicker({
   useEffect(() => {
     if (!IS_WEB || !open) return;
     const onPointerDown = (e: PointerEvent) => {
-      // SAFETY: pointerdown targets are DOM nodes; anything without contains()
-      // (the document, a text node) reads as outside and closes the panel
+      // SAFETY: pointerdown targets are DOM nodes; anything else (the document,
+      // a text node) reads as outside and closes the panel
       const target = e.target as Node | null;
-      // SAFETY: the View ref resolves to its DOM node on web
-      const root = rootRef.current as unknown as Node | null;
-      if (target && root?.contains(target)) return;
+      const root = rootRef.current;
+      if (target && root instanceof Node && root.contains(target)) return;
       setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown, true);
