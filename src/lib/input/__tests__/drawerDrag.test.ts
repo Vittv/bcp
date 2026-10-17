@@ -66,8 +66,8 @@ describe("progressDrag", () => {
   it("keeps delta accumulations through the clamp", () => {
     const s = createDragSession(false, 360);
     expect(progressDrag(s, 360, 4).progress).toBe(1);
-    // retarded beyond the full travel, never past the 1.2 cap
-    expect(progressDrag(s, 720, 4).progress).toBe(1.2);
+    // held at the full travel, never past it
+    expect(progressDrag(s, 720, 4).progress).toBe(1);
   });
 
   it("treats a dead session as inert from the start", () => {
@@ -98,13 +98,13 @@ describe("dragPosition", () => {
     expect(dragPosition(s, -100)).toBe(0);
   });
 
-  it("retards overshoot past either end", () => {
+  it("clamps at either end so an open drawer never slides right", () => {
     const closed = createDragSession(false, 100);
-    expect(dragPosition(closed, 200)).toBe(1.2);
-    expect(dragPosition(closed, -80)).toBe(-0.2);
+    expect(dragPosition(closed, 200)).toBe(1);
+    expect(dragPosition(closed, -80)).toBe(0);
     const open = createDragSession(true, 100);
-    expect(dragPosition(open, 200)).toBe(1.2);
-    expect(dragPosition(open, -200)).toBe(-0.2);
+    expect(dragPosition(open, 200)).toBe(1);
+    expect(dragPosition(open, -200)).toBe(0);
   });
 });
 

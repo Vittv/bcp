@@ -57,12 +57,14 @@ export function createDragSession(
   };
 }
 
-// map a horizontal delta to the drawer position; keeps a quarter of the
-// travel past either end so the drawer rubber-bands instead of flying off
+// map a horizontal delta to the drawer position, clamped to its travel. the
+// drawer slides fully off-screen when closed and fills the viewport when open,
+// so there is no slack to reveal past either end: dragging an open drawer right
+// holds it at 1 rather than sliding it off the far edge, and a closed drawer
+// dragged left holds at 0
 export function dragPosition(session: DragSession, dx: number): number {
   const raw = session.startOpen ? 1 + dx / session.width : dx / session.width;
-  const bent = raw > 1 ? 1 + (raw - 1) / 4 : raw < 0 ? raw / 4 : raw;
-  return Math.max(-0.2, Math.min(1.2, bent));
+  return Math.max(0, Math.min(1, raw));
 }
 
 // progress a drag by its displacement from the touch anchor; live:false

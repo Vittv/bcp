@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { BackHandler, Platform, Pressable, Text, View } from "react-native";
 import { ChangelogScreen } from "../../components/changelog/ChangelogScreen";
 import { SaintPopoverProvider } from "../../components/office/SaintPopover";
@@ -189,8 +195,9 @@ function ensureSidebarAnimStyle() {
   animation: bcp-sidebar-in 150ms cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 .bcp-sidebar-in-left { --bcp-from: translateX(-8px); }
-.bcp-drawer-spring {
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+.bcp-drawer {
+  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
 }
 .bcp-nav:focus-visible, .bcp-btn:focus-visible {
   outline: 2px solid var(--accent);
@@ -198,7 +205,7 @@ function ensureSidebarAnimStyle() {
   border-radius: 6px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .bcp-sidebar-in, .bcp-drawer-spring {
+  .bcp-sidebar-in, .bcp-drawer {
     animation: none; transition: none;
   }
 }`;
@@ -314,10 +321,12 @@ export function Shell() {
 
   // Transient mobile drawer open/close state; deliberately not persisted.
   const [mobileOpen, setMobileOpen] = useState(false);
-  // web only: live drawer position while a drag tracks the finger (0 closed,
-  // 1 open); null means the spring owns the transform. mobileOpen only flips
-  // once a drag commits, so history records one step per open, not per move.
-  const [drawerProgress, setDrawerProgress] = useState<number | null>(null);
+  // true only while a drag tracks the finger. the live position is written
+  // straight to the drawer node (a CSS variable) so a move never re-renders the
+  // shell; only the start and end of a gesture touch React, and mobileOpen flips
+  // once per commit, so history still records one step per open, not per move.
+  const [draggingDrawer, setDraggingDrawer] = useState(false);
+  const drawerRef = useRef<HTMLDivElement | null>(null);
 
   // Effective visibility: on mobile the drawer rides its transient state; on
   // desktop it follows the persisted preference. Resizing back to desktop
@@ -325,13 +334,33 @@ export function Shell() {
   // choice stays hidden.
   const sidebarVisible = isMobile ? mobileOpen : desktopVisible;
 
-  // web only: the drawer's rendered position and spring/drag handling. the
-  // drawer stays mounted on mobile (slid fully off-screen when closed) so
-  // both directions animate and a drag can begin from the closed state
-  const draggingDrawer = drawerProgress !== null;
-  const drawerProgressValue = drawerProgress ?? (mobileOpen ? 1 : 0);
-  const drawerWidth =
-    typeof window === "undefined" ? 0 : Math.round(window.innerWidth);
+  // web only: the mobile drawer rides a translate transform on a CSS variable,
+  // so a drag can drive it without a React render. it settles to its rest edge
+  // (closed = fully off-screen, open = flush left) here, and a drag suspends the
+  // spring meanwhile. the reduce-motion media query above disables the spring.
+  useLayoutEffect(() => {
+    if (!IS_WEB || !isMobile) return;
+    const el = drawerRef.current;
+    if (!el || draggingDrawer) return;
+    el.style.transition = "";
+    el.style.setProperty("--bcp-drawer-x", mobileOpen ? "0%" : "-100%");
+  }, [mobileOpen, draggingDrawer, isMobile]);
+
+  // live drag position from the swipe glue: track the finger through the CSS
+  // variable and suspend the spring; null hands the drawer back to its
+  // committed state (the layout effect above then springs it home)
+  const handleDrawerProgress = useCallback((progress: number | null) => {
+    if (progress === null) {
+      setDraggingDrawer(false);
+      return;
+    }
+    const el = drawerRef.current;
+    if (el) {
+      el.style.transition = "none";
+      el.style.setProperty("--bcp-drawer-x", `${(progress - 1) * 100}%`);
+    }
+    setDraggingDrawer(true);
+  }, []);
 
   // viewport width, only to feed the toolbar label-fit test below
   const [viewportWidth, setViewportWidth] = useState(() =>
@@ -391,7 +420,7 @@ export function Shell() {
     open: mobileOpen,
     onOpen: () => setMobileOpen(true),
     onClose: () => setMobileOpen(false),
-    onProgress: setDrawerProgress,
+    onProgress: handleDrawerProgress,
   });
 
   // Android hardware back hides the mobile drawer before the OS ever gets a
@@ -1387,15 +1416,17 @@ export function Shell() {
                     >
                       {isMobile ? (
                         <div
+                          ref={drawerRef}
                           data-bcp-drawer
-                          className={draggingDrawer ? "" : "bcp-drawer-spring"}
+                          className="bcp-drawer"
                           style={{
-                            transform: `translateX(${
-                              (drawerProgressValue - 1) * drawerWidth
-                            }px)`,
+                            // position rides a CSS variable the drag writes
+                            // imperatively, so React never fights the gesture
+                            transform:
+                              "translate3d(var(--bcp-drawer-x, -100%), 0, 0)",
                             touchAction: "pan-y",
                             pointerEvents:
-                              drawerProgressValue < 0.01 ? "none" : "auto",
+                              mobileOpen || draggingDrawer ? "auto" : "none",
                             ...styles.sidebarOverlay,
                           }}
                         >
