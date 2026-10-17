@@ -5,7 +5,7 @@
 <h1 align="center">bcp</h1>
 
 <p align="center">
-  <img src="assets/preview-rounded.png" width="820" alt="bcp Daily Office preview">
+  <img src="assets/preview.png" width="820" alt="bcp Daily Office preview">
 </p>
 
 <p align="center">
