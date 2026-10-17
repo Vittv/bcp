@@ -799,30 +799,41 @@ function TypographySettings({
             <Text style={styles.resetText}>Default</Text>
           </Pressable>
         </View>
-        <FontPicker
-          label="UI Font"
-          value={interfaceFont}
-          options={interfaceFaces}
-          onChange={setInterfaceFont}
-        />
-        <FontPicker
-          label="Heading Font"
-          value={headingFont}
-          options={headingFaces}
-          onChange={setHeadingFont}
-        />
-        <FontPicker
-          label="Body Font"
-          value={readingFont}
-          options={readingFaces}
-          onChange={setReadingFont}
-        />
+        {/* one field holds all three roles, the rows split by hairlines the
+            way a system settings group reads */}
+        <View style={styles.fontGroup}>
+          <FontPicker
+            label="UI Font"
+            value={interfaceFont}
+            options={interfaceFaces}
+            onChange={setInterfaceFont}
+            compact
+            description="Buttons, menus, and chrome"
+          />
+          <View style={styles.fontGroupDivider} />
+          <FontPicker
+            label="Heading Font"
+            value={headingFont}
+            options={headingFaces}
+            onChange={setHeadingFont}
+            compact
+            description="Titles and headings"
+          />
+          <View style={styles.fontGroupDivider} />
+          <FontPicker
+            label="Body Font"
+            value={readingFont}
+            options={readingFaces}
+            onChange={setReadingFont}
+            compact
+            description="Main reading text"
+          />
+        </View>
       </View>
 
       <View style={styles.section}>
-        {/* a rule between the family pickers and the size control, so each
-            group reads on its own */}
-        <View style={styles.sizeDivider} />
+        {/* the family field's own frame already closes that group, so the size
+            block needs no rule above it */}
         <View style={styles.groupRow}>
           <Text style={styles.groupLabel}>Font Size</Text>
           <Pressable
@@ -1375,12 +1386,13 @@ const styleDef = defineThemedStyles({
   sectionRaised: {
     zIndex: 1,
   },
-  // the font family pickers and the size group below read as one block, so this
-  // section draws no rule between the two and keeps only a light gap after it
+  // the font family pickers and the size group below read as one block: this
+  // section draws no rule of its own, and the field's frame closes the group,
+  // so only a gap separates it from the size block
   sectionFlush: {
     borderBottomWidth: 0,
     paddingBottom: 0,
-    marginBottom: 8,
+    marginBottom: 28,
   },
   // the sample's paper panel, raised off the page so the specimen reads as its
   // own object instead of as more settings content
@@ -1424,12 +1436,18 @@ const styleDef = defineThemedStyles({
     color: "var(--text-secondary)",
     marginTop: 8,
   },
-  // the rule between the family pickers and the size control, so the two read
-  // as separate groups
-  sizeDivider: {
+  // the font pickers share one field: a hairline frame and rounding group the
+  // three rows, and each row's own surface-filled control stays the only
+  // tinted thing, so the dropdown still reads as the interactive element. no
+  // overflow clip here: the pickers' menus float past the group's bottom edge
+  fontGroup: {
+    borderWidth: 1,
+    borderColor: "var(--border)",
+    borderRadius: 8,
+  },
+  fontGroupDivider: {
     height: 1,
     backgroundColor: "var(--border)",
-    marginBottom: 16,
   },
   label: {
     fontFamily: CHROME_FONT,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Platform,
   Pressable,
@@ -29,19 +29,30 @@ const IS_WEB = Platform.OS === "web";
 // the settings pane's scroller would stretch that scroller's content into a
 // large empty scroll range. the specimen lives in the pane below the pickers,
 // not here, so this stays a picker.
+//
+// two layouts share that machinery. the default trigger is a full-width row
+// naming the role and the current face. `compact` trades it for a settings row:
+// the role and its `description` sit on the left, and a small control on the
+// right holds the current face and a chevron. the menu is pinned under whichever
+// box anchors it, so in compact mode it spans the control rather than the row.
 export function FontPicker({
   label,
   value,
   options,
   onChange,
+  compact = false,
+  description,
 }: {
   label: string;
   value: string;
   options: FaceDef[];
   onChange: (id: string) => void;
+  compact?: boolean;
+  description?: string;
 }) {
   const styles = useThemedStyles(fontPickerStyles);
   const v = useThemeVar();
+  const rootRef = useRef<View>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [highlight, setHighlight] = useState<string | null>(null);
@@ -63,14 +74,18 @@ export function FontPicker({
 
   // web dismissal is a document listener so no oversized element sits in the
   // pane's scroller (see the header note); the listener is capture-phase so a
-  // handler below cannot swallow the click before it closes the panel
+  // handler below cannot swallow the click before it closes the panel. the
+  // scope is this picker's own root, not any picker, so pressing a sibling
+  // picker closes this one before that sibling opens
   useEffect(() => {
     if (!IS_WEB || !open) return;
     const onPointerDown = (e: PointerEvent) => {
-      // SAFETY: pointerdown targets are DOM nodes; anything without closest()
+      // SAFETY: pointerdown targets are DOM nodes; anything without contains()
       // (the document, a text node) reads as outside and closes the panel
-      const target = e.target as Element | null;
-      if (target?.closest("[data-picker]")) return;
+      const target = e.target as Node | null;
+      // SAFETY: the View ref resolves to its DOM node on web
+      const root = rootRef.current as unknown as Node | null;
+      if (target && root?.contains(target)) return;
       setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown, true);
@@ -95,123 +110,170 @@ export function FontPicker({
     setHighlight(flat[clamped]?.id ?? null);
   };
 
+  // the floating menu: it is pinned under whatever box holds it, so the caller
+  // seats it either under the full-width trigger or under the compact control
+  const menu = open ? (
+    <>
+      {/* native dismiss layer; web uses the document listener above, since
+          this oversized absolute box would otherwise stretch the pane's
+          scroller and hand it a large empty scroll range */}
+      {IS_WEB ? null : (
+        <Pressable
+          style={styles.backdrop}
+          onPress={() => setOpen(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Close font menu"
+        />
+      )}
+      <View style={styles.panel}>
+        <View style={styles.searchField}>
+          <MagnifierIcon size={15} color={v("var(--text-secondary)")} />
+          <TextInput
+            autoFocus
+            value={query}
+            onChangeText={setQuery}
+            dataSet={{ pickerSearch: "" }}
+            onKeyPress={(event) => {
+              const key = event.nativeEvent.key;
+              if (key === "ArrowDown") move(1);
+              else if (key === "ArrowUp") move(-1);
+              else if (key === "Enter") {
+                // with nothing highlighted yet, Enter takes the first match
+                const id = highlight ?? flat[0]?.id;
+                if (id) pick(id);
+              }
+            }}
+            placeholder="Search fonts"
+            placeholderTextColor={v("var(--text-secondary)")}
+            style={styles.searchInput}
+            accessibilityLabel={`Search ${label} fonts`}
+          />
+          {query ? (
+            <Pressable
+              onPress={() => setQuery("")}
+              accessibilityRole="button"
+              accessibilityLabel="Clear font search"
+              style={({ hovered }) => [
+                styles.searchClear,
+                hovered && styles.searchClearHover,
+              ]}
+            >
+              <CloseIcon size={12} color={v("var(--text-secondary)")} />
+            </Pressable>
+          ) : null}
+        </View>
+        <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
+          {flat.map((face) => {
+            const selected = face.id === value;
+            return (
+              <Pressable
+                key={face.id}
+                onHoverIn={() => setHighlight(face.id)}
+                onPress={() => pick(face.id)}
+                style={({ hovered }) => [
+                  styles.row,
+                  (hovered || face.id === highlight) && styles.rowHover,
+                  selected && styles.rowSelected,
+                ]}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+              >
+                <Text
+                  style={[styles.rowText, { fontFamily: faceStack(face) }]}
+                  numberOfLines={1}
+                >
+                  {face.label}
+                </Text>
+                {selected ? (
+                  <CheckIcon size={14} color={v("var(--accent)")} />
+                ) : null}
+              </Pressable>
+            );
+          })}
+          {flat.length === 0 ? (
+            <Text style={styles.note}>No matching fonts.</Text>
+          ) : null}
+        </ScrollView>
+      </View>
+    </>
+  ) : null;
+
   return (
     <View
       dataSet={{ picker: "" }}
-      style={[styles.wrap, open && styles.wrapOpen]}
+      style={[
+        styles.wrap,
+        compact && styles.wrapCompact,
+        open && styles.wrapOpen,
+      ]}
     >
-      <Pressable
-        onPress={toggle}
-        style={({ hovered }) => [
-          styles.trigger,
-          hovered && styles.triggerHover,
-          open && styles.triggerOpen,
-        ]}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        accessibilityLabel={`${label}: ${current?.label ?? "default"}`}
-      >
-        <View style={styles.triggerValue}>
-          <Chevron direction={open ? "up" : "down"} size={6} />
-          <Text
-            style={[
-              styles.triggerValueText,
-              // the current face, previewed on its own trigger
-              current ? { fontFamily: faceStack(current) } : null,
-            ]}
-            numberOfLines={1}
-          >
-            {current?.label ?? "Default"}
-          </Text>
-        </View>
-        <Text style={styles.triggerLabel}>{label}</Text>
-      </Pressable>
-
-      {open ? (
-        <>
-          {/* native dismiss layer; web uses the document listener above, since
-              this oversized absolute box would otherwise stretch the pane's
-              scroller and hand it a large empty scroll range */}
-          {IS_WEB ? null : (
-            <Pressable
-              style={styles.backdrop}
-              onPress={() => setOpen(false)}
-              accessibilityRole="button"
-              accessibilityLabel="Close font menu"
-            />
-          )}
-          <View style={styles.panel}>
-            <View style={styles.searchField}>
-              <MagnifierIcon size={15} color={v("var(--text-secondary)")} />
-              <TextInput
-                autoFocus
-                value={query}
-                onChangeText={setQuery}
-                dataSet={{ pickerSearch: "" }}
-                onKeyPress={(event) => {
-                  const key = event.nativeEvent.key;
-                  if (key === "ArrowDown") move(1);
-                  else if (key === "ArrowUp") move(-1);
-                  else if (key === "Enter") {
-                    // with nothing highlighted yet, Enter takes the first match
-                    const id = highlight ?? flat[0]?.id;
-                    if (id) pick(id);
-                  }
-                }}
-                placeholder="Search fonts"
-                placeholderTextColor={v("var(--text-secondary)")}
-                style={styles.searchInput}
-                accessibilityLabel={`Search ${label} fonts`}
-              />
-              {query ? (
-                <Pressable
-                  onPress={() => setQuery("")}
-                  accessibilityRole="button"
-                  accessibilityLabel="Clear font search"
-                  style={({ hovered }) => [
-                    styles.searchClear,
-                    hovered && styles.searchClearHover,
-                  ]}
-                >
-                  <CloseIcon size={12} color={v("var(--text-secondary)")} />
-                </Pressable>
-              ) : null}
-            </View>
-            <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
-              {flat.map((face) => {
-                const selected = face.id === value;
-                return (
-                  <Pressable
-                    key={face.id}
-                    onHoverIn={() => setHighlight(face.id)}
-                    onPress={() => pick(face.id)}
-                    style={({ hovered }) => [
-                      styles.row,
-                      (hovered || face.id === highlight) && styles.rowHover,
-                      selected && styles.rowSelected,
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                  >
-                    <Text
-                      style={[styles.rowText, { fontFamily: faceStack(face) }]}
-                      numberOfLines={1}
-                    >
-                      {face.label}
-                    </Text>
-                    {selected ? (
-                      <CheckIcon size={14} color={v("var(--accent)")} />
-                    ) : null}
-                  </Pressable>
-                );
-              })}
-              {flat.length === 0 ? (
-                <Text style={styles.note}>No matching fonts.</Text>
-              ) : null}
-            </ScrollView>
+      {compact ? (
+        <View style={styles.compactRow}>
+          <View style={styles.compactLabelWrap}>
+            <Text style={styles.compactLabel}>{label}</Text>
+            <Text style={styles.compactLabelSub} numberOfLines={2}>
+              {description}
+            </Text>
           </View>
-        </>
-      ) : null}
+          {/* the control anchors the menu, so the panel spans exactly the
+              control's width instead of the full row. the ref scopes outside
+              dismissal to the control and its menu, not the row's label */}
+          <View ref={rootRef} style={styles.anchor}>
+            <Pressable
+              onPress={toggle}
+              style={({ hovered }) => [
+                styles.compactControl,
+                hovered && styles.compactControlHover,
+                open && styles.compactControlOpen,
+              ]}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: open }}
+              accessibilityLabel={`${label}: ${current?.label ?? "default"}`}
+            >
+              <Text
+                style={[
+                  styles.compactControlText,
+                  current ? { fontFamily: faceStack(current) } : null,
+                ]}
+                numberOfLines={1}
+              >
+                {current?.label ?? "Default"}
+              </Text>
+              <Chevron direction={open ? "up" : "down"} size={6} />
+            </Pressable>
+            {menu}
+          </View>
+        </View>
+      ) : (
+        <View ref={rootRef} style={styles.anchor}>
+          <Pressable
+            onPress={toggle}
+            style={({ hovered }) => [
+              styles.trigger,
+              hovered && styles.triggerHover,
+              open && styles.triggerOpen,
+            ]}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: open }}
+            accessibilityLabel={`${label}: ${current?.label ?? "default"}`}
+          >
+            <View style={styles.triggerValue}>
+              <Chevron direction={open ? "up" : "down"} size={6} />
+              <Text
+                style={[
+                  styles.triggerValueText,
+                  current ? { fontFamily: faceStack(current) } : null,
+                ]}
+                numberOfLines={1}
+              >
+                {current?.label ?? "Default"}
+              </Text>
+            </View>
+            <Text style={styles.triggerLabel}>{label}</Text>
+          </Pressable>
+          {menu}
+        </View>
+      )}
     </View>
   );
 }
@@ -222,6 +284,10 @@ const fontPickerStyles = defineThemedStyles({
   wrap: {
     position: "relative",
     marginBottom: 16,
+  },
+  // the compact pickers sit in a group that supplies its own spacing
+  wrapCompact: {
+    marginBottom: 0,
   },
   // while open the wrapper becomes a stacking context, lifting the whole
   // picker above the sections that follow it in the pane (inline elements
@@ -266,6 +332,66 @@ const fontPickerStyles = defineThemedStyles({
     fontSize: 15,
     fontWeight: "500",
     color: "var(--text-secondary)",
+    flexShrink: 1,
+  },
+  compactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  // the trigger's or compact control's positioning context: the panel is pinned
+  // under it and takes its width, so the menu reads as the control's own list
+  anchor: {
+    position: "relative",
+  },
+  compactLabel: {
+    fontFamily: CHROME_FONT,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "var(--text)",
+  },
+  compactLabelSub: {
+    fontFamily: CHROME_FONT,
+    fontSize: 12,
+    lineHeight: 16,
+    color: "var(--text-secondary)",
+    marginTop: 2,
+  },
+  compactLabelWrap: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  compactControl: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "var(--border)",
+    backgroundColor: "var(--surface)",
+    minWidth: 160,
+    maxWidth: 240,
+    justifyContent: "flex-end",
+  },
+  compactControlHover: {
+    backgroundColor: "var(--control-hover)",
+  },
+  compactControlOpen: {
+    borderColor: "var(--accent)",
+  },
+  // the chosen face reads at full strength, so the control states its value;
+  // the chevron stays quiet as the affordance
+  compactControlText: {
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
+    fontWeight: "500",
+    color: "var(--text)",
     flexShrink: 1,
   },
   // full-plane dismiss layer; the huge offsets escape the trigger's box
