@@ -22,6 +22,7 @@ import {
   ClockIcon,
   CrossIcon,
   CrownIcon,
+  DiscordIcon,
   DownloadIcon,
   FileTextIcon,
   GithubIcon,
@@ -317,7 +318,20 @@ export function Sidebar({
         <ToolButton
           subtle
           footer
-          label={showLabels ? "Source" : undefined}
+          onPress={() => {
+            window.open(
+              "https://discord.gg/Gw3wCgKZTF",
+              "_blank",
+              "noreferrer",
+            );
+          }}
+          accessibilityLabel="Join the Discord community"
+        >
+          {(color) => <DiscordIcon size={14} color={color} />}
+        </ToolButton>
+        <ToolButton
+          subtle
+          footer
           onPress={() => {
             window.open(REPO_URL, "_blank", "noreferrer");
           }}
@@ -328,7 +342,6 @@ export function Sidebar({
         <ToolButton
           subtle
           footer
-          label={showLabels ? "Changelog" : undefined}
           onPress={() => onOpenModal("changelog")}
           accessibilityLabel="Changelog"
         >
@@ -337,7 +350,6 @@ export function Sidebar({
         <ToolButton
           subtle
           footer
-          label={showLabels ? "About" : undefined}
           onPress={() => onOpenModal("about")}
           accessibilityLabel="About"
         >

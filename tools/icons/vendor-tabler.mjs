@@ -1,7 +1,7 @@
 // Vendors bcp's icon subset from @tabler/icons-react (MIT) into a data module
-// so Metro resolves only the 27 used glyphs instead of the whole pack (the
-// package ships one bundled entry, no per-icon exports map, so importing from
-// the index drags in ~6k icons). Run `bun tools/icons/vendor-tabler.mjs`
+// so Metro resolves only the glyphs the app uses instead of the whole pack
+// (the package ships one bundled entry, no per-icon exports map, so importing
+// from the index drags in ~6k icons). Run `bun tools/icons/vendor-tabler.mjs`
 // after bumping @tabler/icons-react to refresh the file.
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -35,6 +35,7 @@ const NAMES = [
   "Star",
   "Sun",
   "Typography",
+  "BrandDiscord",
   "X",
 ];
 
