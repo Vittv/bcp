@@ -85,6 +85,7 @@ const ALIASES = new Map<string, string>([
   ["JAMES", "Jas"],
   ["ECCLES", "Eccl"],
   ["ECCLESIASTICUS", "Sir"],
+  ["BARUCH", "Bar"],
   ["PSALMS", "Ps"],
   ["PS", "Ps"],
 ]);
