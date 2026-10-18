@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  Free, forever. All liturgical content is public domain.
+  Free, forever. All liturgical content is public domain or openly licensed.
 </p>
 
 ## Features
@@ -111,5 +111,13 @@ The web app (Android and iPhone) never needs an update. It always runs the newes
 
 ## License
 
-bcp is free and always will be, with no ads, accounts, or paywall. All the
+bcp is free and always will be, with no ads, accounts, or paywall. The
 liturgical content is in the public domain; the app code itself is MIT.
+
+The Daily Office Lectionary tables are adapted from Reuben Lillie's
+MIT-licensed [daily-office](https://github.com/reubenlillie/daily-office)
+project, corrected locally against the printed Prayer Book; the corrections
+are listed in
+[`src/lib/content/vendor/dol/PROVENANCE.md`](src/lib/content/vendor/dol/PROVENANCE.md).
+Third-party notices ship with the app in
+[`public/licenses/THIRD-PARTY-NOTICES.txt`](public/licenses/THIRD-PARTY-NOTICES.txt).

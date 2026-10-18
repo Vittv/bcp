@@ -1,0 +1,58 @@
+bcp: third-party notices
+
+bcp itself is MIT, (c) 2026 Vittv. The full text sits in LICENSE at the root
+of the source repository, https://github.com/Vittv/bcp.
+
+This file covers the third-party material that ships inside the app. Each body
+of content also has a provenance note beside its files in the source
+repository, under src/lib/content/vendor/.
+
+Daily Office Lectionary tables
+
+The readings and psalm schedule for the two-year cycle, the holy days and the
+special occasions are adapted from Reuben Lillie's project,
+
+  daily-office: The Daily Office from the Book of Common Prayer in JSON
+  https://github.com/reubenlillie/daily-office
+
+  Copyright (c) 2018 Reuben L. Lillie
+
+used under the MIT License reproduced below, with local corrections against
+the printed 1979 Book of Common Prayer. The corrections are listed in
+src/lib/content/vendor/dol/PROVENANCE.md.
+
+  MIT License
+
+  Copyright (c) 2018 Reuben L. Lillie
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+Liturgical and scriptural texts
+
+The 1979 Book of Common Prayer, the King James Version and the World English
+Bible (British Edition) are in the public domain and carry no restrictions.
+Their provenance notes are in src/lib/content/vendor/bcp, kjv and web. The
+Prayer Book is additionally licensed for reproduction by the Church Pension
+Fund; the public-domain E-text edition is the basis used here.
+
+Fonts
+
+Crimson Pro, EB Garamond, Libron, Playfair Display, JetBrains Mono and Inter
+Tight ship under the SIL Open Font License 1.1. The license texts are in
+assets/fonts/LICENSES/, and sources and roles are in assets/fonts/FONTS.md.

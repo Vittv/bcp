@@ -67,8 +67,10 @@ export function AboutScreen() {
           or in the future.
         </Text>
         <Text style={styles.body}>
-          All the content it reads is in the public domain; the app code itself
-          is MIT.
+          All the liturgical content it reads is in the public domain; the app's
+          own code is MIT. The Daily Office lectionary tables are adapted from
+          Reuben Lillie's MIT-licensed project, corrected locally against the
+          printed Prayer Book.
         </Text>
       </View>
 
@@ -85,6 +87,12 @@ export function AboutScreen() {
         </ExternalLink>
         <ExternalLink href={REPO_URL} style={web.link}>
           Source code on GitHub
+        </ExternalLink>
+        <ExternalLink
+          href={`${REPO_URL}/blob/main/public/licenses/THIRD-PARTY-NOTICES.txt`}
+          style={web.link}
+        >
+          Third-party notices
         </ExternalLink>
         <ExternalLink href={KO_FI_URL} style={web.donateLink}>
           <span style={web.link}>
