@@ -101,14 +101,6 @@ The desktop app checks the release page for a newer version. In Settings, choose
 
 The web app (Android and iPhone) never needs an update. It always runs the newest version, loading fresh content on every visit, so there is nothing to install.
 
-## Platform notes
-
-- The Expo web export is deployed to GitHub Pages at `/bcp` on every push to
-  main by `deploy.yml`; `BASE_URL` configures the asset root per target.
-- The desktop shell embeds the same web export in a Tauri webview.
-- All app, browser, and platform icons are derived from a single 1024x1024
-  flat master by `tools/icons/regenerate.mjs` (`bun icons`).
-
 ## License
 
 bcp is free and always will be, with no ads, accounts, or paywall. The
