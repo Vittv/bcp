@@ -1,10 +1,4 @@
-import {
-  daysFromCivil,
-  sundayOfWeek,
-  sundayOnOrBefore,
-  toDays,
-  weekday,
-} from "./date";
+import { daysFromCivil, sundayOnOrBefore, toDays, weekday } from "./date";
 import { feastsForEasterYear } from "./feasts";
 import { eveForDate, SANCTORALE_SLUGS, sanctoraleForDate } from "./sanctorale";
 import { easterYear, liturgicalYearStart } from "./season";
@@ -228,12 +222,12 @@ function resolveBase(date: CalendarDate): DolSlot {
   );
 }
 
-// the numbered Proper whose date is closest. the DOL notes govern the
-// transition weeks: weekdays after Pentecost use the Proper closest to
-// Pentecost, and the Trinity week (Trinity Sunday through the following
-// Saturday) uses the Proper closest to Trinity. From the next Monday the
-// regular weekly cycle resumes, keyed on the Sunday of the current
-// Monday-to-Sunday week.
+// the numbered Proper whose anchor date is closest. the DOL notes govern
+// the transition weeks: weekdays after Pentecost use the Proper closest
+// to Pentecost, and the Trinity week (Trinity Sunday through the
+// following Saturday) uses the Proper closest to Trinity. every other
+// date belongs to the week of the Sunday on or before it, because each
+// printed Proper block runs Sunday through Saturday.
 export function properIndex(date: CalendarDate): number {
   const y = easterYear(date);
   const f = feastsForEasterYear(y);
@@ -243,7 +237,7 @@ export function properIndex(date: CalendarDate): number {
   if (d <= f.trinity + 6) {
     ref = d < f.trinity ? f.pentecost : f.trinity;
   } else {
-    ref = toDays(sundayOfWeek(date));
+    ref = toDays(sundayOnOrBefore(date));
   }
   const n = 1 + Math.round((ref - may11) / 7);
   return Math.min(29, Math.max(1, n));

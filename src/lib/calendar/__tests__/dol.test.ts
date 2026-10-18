@@ -156,11 +156,23 @@ describe("properIndex (Season after Pentecost)", () => {
     expect(properIndex({ year: 2025, month: 6, day: 21 })).toBe(6);
     // Weekly cycle resumes: Sunday June 22 starts the week of Proper 7
     expect(properIndex({ year: 2025, month: 6, day: 22 })).toBe(7);
-    expect(properIndex({ year: 2025, month: 6, day: 23 })).toBe(8);
-    // Proper 25 (anchor October 26) week
-    expect(properIndex({ year: 2025, month: 10, day: 20 })).toBe(25);
-    // Proper 29 closes the season
-    expect(properIndex({ year: 2025, month: 11, day: 17 })).toBe(29);
+    expect(properIndex({ year: 2025, month: 6, day: 23 })).toBe(7);
+    // Monday October 20 belongs to the week of Sunday October 19 (Proper 24)
+    expect(properIndex({ year: 2025, month: 10, day: 20 })).toBe(24);
+    // Monday November 17 belongs to the week of Sunday November 16 (Proper 28)
+    expect(properIndex({ year: 2025, month: 11, day: 17 })).toBe(28);
+  });
+
+  test("weekdays stay in the week of the Sunday on or before them", () => {
+    // printed DOL: each Proper block runs Sunday through Saturday, so
+    // Saturday October 17 2026 stays in Proper 23 (week of October 11)
+    expect(properIndex({ year: 2026, month: 10, day: 11 })).toBe(23);
+    expect(properIndex({ year: 2026, month: 10, day: 12 })).toBe(23);
+    expect(properIndex({ year: 2026, month: 10, day: 17 })).toBe(23);
+    // Sunday October 18 starts Proper 24, which runs through Saturday 24
+    expect(properIndex({ year: 2026, month: 10, day: 18 })).toBe(24);
+    expect(properIndex({ year: 2026, month: 10, day: 19 })).toBe(24);
+    expect(properIndex({ year: 2026, month: 10, day: 24 })).toBe(24);
   });
 
   test("late Easter 2038", () => {

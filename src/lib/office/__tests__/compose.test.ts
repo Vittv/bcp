@@ -211,18 +211,19 @@ describe("composeOffice: the evening boundary", () => {
       "evening-rite-two",
     );
     expect(doc.entryTitle).toBeNull();
-    expect(psalmNumbers(doc)).toEqual([68]);
+    // Tuesday of Proper 11 (week of Sunday July 19 2026)
+    expect(psalmNumbers(doc)).toEqual([47, 48]);
     // SAFETY: nodesOf filters by kind.
     const lessons = nodesOf(doc, "lessons")[0] as Extract<
       ComposedNode,
       { kind: "lessons" }
     >;
     expect(lessons.lessons.map((l) => l.ref)).toEqual([
-      "Judg 2:1–5, 11–23",
-      "Rom 16:17–27",
-      "Matt 27:32–44",
+      "Josh 8:1–22",
+      "Rom 14:1–12",
+      "Matt 26:47–56",
     ]);
-    expect(collectOf(doc)?.passage.title).toBe("Proper 12");
+    expect(collectOf(doc)?.passage.title).toBe("Proper 11");
   });
 
   test("every part of a holy day names the day", () => {
@@ -286,8 +287,9 @@ describe("composeOffice: the evening boundary", () => {
       "morning-rite-two",
     );
     expect(doc.entryTitle).toBeNull();
-    // ordinary weekday entry, psalms of the day (not the holy day's).
-    expect(psalmNumbers(doc)).toEqual([61, 62]);
+    // ordinary weekday entry, psalms of the day (not the holy day's):
+    // Tuesday of Proper 11 appoints Psalm 45 in the morning.
+    expect(psalmNumbers(doc)).toEqual([45]);
   });
 });
 
@@ -372,14 +374,9 @@ describe("composeOffice: DOL special-case days", () => {
       { year: 2026, month: 8, day: 12 },
       "morning-rite-two",
     );
-    expect(collectOf(doc)?.passage.title).toBe("Proper 15");
-    // SAFETY: nodesOf filters by kind.
-    const ps119 = nodesOf(doc, "psalm")[0] as Extract<
-      ComposedNode,
-      { kind: "psalm" }
-    >;
-    expect(ps119.citation).toBe("119:145–176");
-    expect(ps119.passage.verses).toHaveLength(32);
+    // Wednesday of Proper 14 (week of Sunday August 9 2026)
+    expect(collectOf(doc)?.passage.title).toBe("Proper 14");
+    expect(psalmCitations(doc)).toEqual(["101", "109:1–4(5–19)20–30"]);
   });
 
   test("daily collects during Easter and Holy Weeks", () => {
@@ -471,7 +468,9 @@ describe("composeOffice: preferences and other offices", () => {
   });
 
   test("alternative lessons are hidden unless requested", () => {
-    const date = { year: 2026, month: 9, day: 15 };
+    // Tuesday of Proper 20 (week of Sunday September 20 2026) carries an
+    // alternate first lesson (Jdt)
+    const date = { year: 2026, month: 9, day: 22 };
     const doc = composeOffice(date, "evening-rite-two");
     // SAFETY: nodesOf filters by kind.
     const lessons = nodesOf(doc, "lessons").flatMap(
