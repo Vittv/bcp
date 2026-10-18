@@ -1,17 +1,17 @@
-## Themes
+## The lectionary keeps the right day
 
-Ten theme families now dress the whole app, each in light and dark: Canterbury, Oxford, Salisbury, York, Chester, Lindisfarne, Durham, Iona, Washington and Vague. Settings previews each one, and Mode (Light, Dark or System) applies to whichever you pick.
+The office you open now carries the readings and psalms the Prayer Book assigns to that date. Weekdays were being matched to the Sunday coming up rather than the one just past, which ran their Propers about a week ahead; every office is now anchored on the Sunday on or before it, with Pentecost and Trinity week keeping their own counting. The citations behind the Lectionary were also read back against the printed book, which turned up 57 slips in the transcription: ranges a verse or a chapter out, the wrong book on a handful of days, a psalm missing from Good Friday evening, and the Eve of the Ascension carrying Ascension Day's lessons. The evenings, Holy Week and the holy days were checked the same way, and a script now rebuilds two years of offices and compares them day by day, so a future edit that drifts gets caught.
 
-## Typography
+## Every psalm gets its own title
 
-Interface, heading and body fonts are chosen independently from a searchable picker, drawing on a set of faces the app ships itself. One size ladder backs both the Settings slider and the top bar's A−/A+.
+Psalms in the Lectionary stand as their own labeled blocks, "Psalm 20" over its text, the way lessons already do, instead of one run of numbers above a merged block. A citation the psalter does not carry still shows its name rather than disappearing.
 
-## The reader
+## Discord
 
-The chapter arrows now cross book edges, carrying you into the next book and scrolling forward like a chapter step, and each scripture page keeps its own place. Scripture and psalms read at the body size on the pages you pick them from, the Bible, Lectionary, Psalms and Proverbs; only inside the Daily Office do they stay a size down, where the smaller type sets them apart.
+There is now a Discord server for the project, and its invite sits in the footer beside GitHub, with the same link in the About window: [discord.gg/Gw3wCgKZTF](https://discord.gg/Gw3wCgKZTF). Bug reports, feature talk and questions have somewhere to land. The footer gave up its labels to fit: four named buttons plus the version read wider than the pane at its narrowest, so the row is icon-only now, each button keeping its name for screen readers.
 
-## Shipped polish
+## Smaller changes
 
-Escape closes one layer at a time, and columns hold their width as the type scales.
+Settings' font pickers are compact rows, the mobile drawer drag follows the finger more closely and stops at its travel limits, and the About window credits the app's sources and links the third-party notices it now ships.
 
-**Full Changelog**: <https://github.com/Vittv/bcp/compare/v0.4.0...v0.5.0>
+**Full Changelog**: <https://github.com/Vittv/bcp/compare/v0.5.0...v0.5.1>
