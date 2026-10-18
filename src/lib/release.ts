@@ -16,3 +16,7 @@ export const LINUX_INSTALL_URL = `https://raw.githubusercontent.com/${RELEASE_RE
 export const PWA_URL = "https://vittv.github.io/bcp/";
 
 export const KO_FI_URL = "https://ko-fi.com/vittv";
+
+// The project's community server, invited from the sidebar footer and the
+// About window's link list.
+export const DISCORD_URL = "https://discord.gg/Gw3wCgKZTF";

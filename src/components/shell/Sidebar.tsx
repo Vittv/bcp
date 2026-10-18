@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { IS_STANDALONE, IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
+import { DISCORD_URL } from "../../lib/release";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -319,11 +320,7 @@ export function Sidebar({
           subtle
           footer
           onPress={() => {
-            window.open(
-              "https://discord.gg/Gw3wCgKZTF",
-              "_blank",
-              "noreferrer",
-            );
+            window.open(DISCORD_URL, "_blank", "noreferrer");
           }}
           accessibilityLabel="Join the Discord community"
         >

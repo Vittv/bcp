@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { ExternalLink } from "../components/ExternalLink";
 import { REPO_URL } from "../components/shell/Sidebar";
 import { CHROME_FONT } from "../lib/fonts";
-import { KO_FI_URL, RELEASE_PAGE } from "../lib/release";
+import { DISCORD_URL, KO_FI_URL, RELEASE_PAGE } from "../lib/release";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -84,6 +84,9 @@ export function AboutScreen() {
           style={web.link}
         >
           Contribute to BCP
+        </ExternalLink>
+        <ExternalLink href={DISCORD_URL} style={web.link}>
+          Join the community on Discord
         </ExternalLink>
         <ExternalLink href={REPO_URL} style={web.link}>
           Source code on GitHub
