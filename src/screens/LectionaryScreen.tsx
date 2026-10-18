@@ -123,21 +123,20 @@ function LessonRow({ lesson }: { lesson: LectionaryLesson }) {
   );
 }
 
+// each psalm is its own labeled block the way lessons are: the citation
+// line ("Psalm 20") leads, the psalm text follows underneath.
 function PsalmsBlock({ citations }: { citations: string[] }) {
   const styles = useThemedStyles(lectionaryStyles);
   if (citations.length === 0) return null;
   return (
     <View style={styles.psalmBlock}>
-      <Text style={styles.psalmRef}>
-        Psalm{citations.length > 1 ? "s" : ""} {citations.join(", ")}
-      </Text>
       {citations.map((citation, i) => {
         const parsed = parsePsalmCitation(citation);
         const passage = parsed ? psalmPassage(parsed) : undefined;
-        if (!passage) return null;
         return (
           <View key={citation} style={i === 0 ? undefined : styles.psalmItem}>
-            <PsalmText passage={passage} size="body" />
+            <Text style={styles.psalmRef}>Psalm {citation}</Text>
+            {passage ? <PsalmText passage={passage} size="body" /> : null}
           </View>
         );
       })}
