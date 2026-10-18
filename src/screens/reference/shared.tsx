@@ -24,6 +24,7 @@ import { useHistory, useHistoryField } from "../../context/HistoryContext";
 import {
   SANCTORALE_ENTRIES,
   sanctoraleBySlug,
+  sanctoraleForDate,
 } from "../../lib/calendar/sanctorale";
 import type { CalendarDate } from "../../lib/calendar/types";
 import { canticleTitle } from "../../lib/content/canticles";
@@ -40,8 +41,14 @@ import { detailPageScale, sharedStyles } from "./styles";
 export const FIRST_COLLECT = searchCollects("")[0];
 
 // the saint the desktop pane shows before anything is picked: the first
-// entry of the calendar, i.e. the Conversion of Saint Peter, Jan 18
+// entry of the calendar, i.e. the Confession of Saint Peter the Apostle, Jan 18
 export const FIRST_SAINT = SANCTORALE_ENTRIES[0].slug;
+
+// the holy days page opens on today's feast when the day has one, so a
+// reader arriving on Saint Luke finds Saint Luke, not the top of the list
+export function defaultSaint(): string {
+  return sanctoraleForDate(today())?.slug ?? FIRST_SAINT;
+}
 
 export const noSelect = {
   userSelect: "none" as const,
@@ -415,7 +422,7 @@ export function ReferenceProvider({
         : page === "collects"
           ? (selectedCollect ?? FIRST_COLLECT).title
           : page === "saints"
-            ? (sanctoraleBySlug(openSaint ?? FIRST_SAINT)?.title ?? null)
+            ? (sanctoraleBySlug(openSaint ?? defaultSaint())?.title ?? null)
             : page === "proverbs"
               ? `Proverbs ${openProvChapter ?? 1}`
               : page === "canticles"

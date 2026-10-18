@@ -17,8 +17,8 @@ import { type SaintHit, searchSaints } from "../../lib/reference/search";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   DetailPage,
+  defaultSaint,
   EmptyMessage,
-  FIRST_SAINT,
   IndexRow,
   noSelect,
   PickerButton,
@@ -44,7 +44,7 @@ export function SaintsScreen({
       <View style={styles.container}>
         <DetailPage compact>
           <SanctoraleCard
-            slug={openSaint ?? FIRST_SAINT}
+            slug={openSaint ?? defaultSaint()}
             showBio={saintBio}
             showLiturgy={saintLiturgy}
           />
@@ -58,8 +58,8 @@ export function SaintsScreen({
       onScrollProgress={onScrollProgress}
       detail={
         <SanctoraleCard
-          slug={openSaint ?? FIRST_SAINT}
-          key={openSaint ?? FIRST_SAINT}
+          slug={openSaint ?? defaultSaint()}
+          key={openSaint ?? defaultSaint()}
           showBio={saintBio}
           showLiturgy={saintLiturgy}
         />
@@ -109,7 +109,7 @@ export function SaintsBar({ leading }: { leading?: ReactNode }) {
     </View>
   );
 
-  const sel = sanctoraleBySlug(openSaint ?? FIRST_SAINT);
+  const sel = sanctoraleBySlug(openSaint ?? defaultSaint());
 
   return (
     <View style={[styles.bar, noSelect]}>
