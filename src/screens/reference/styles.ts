@@ -454,17 +454,14 @@ export const sharedStyles = defineThemedStyles({
     color: "var(--text)",
   },
   // canticles read like psalms but carry unnumbered verses grouped into
-  // titled sections, so each section is its own serif block
+  // titled sections, so each section is its own serif block; the title itself
+  // is the shared subheading voice (useSubheading), which drops its own top
+  // margin here because canticleSection already spaces the sections
   canticleSection: {
     marginBottom: 18,
   },
   canticleSectionTitle: {
-    fontFamily: HEADING_FONT,
-    fontSize: 18,
-    lineHeight: 25,
-    fontWeight: "500",
-    color: "var(--accent)",
-    marginBottom: 6,
+    marginTop: 0,
   },
   canticleVerse: {
     fontFamily: SERIF_FONT,

@@ -1,6 +1,7 @@
 import {
   DEFAULT_HEADING_FONT,
   DEFAULT_READING_FONT,
+  DEFAULT_SUBHEADING_FONT,
   FACES,
   faceStack,
   SYSTEM_UI,
@@ -34,4 +35,13 @@ export const SERIF_ITALIC_FONT = `var(--reading-font-italic, ${faceStack(
 export const HEADING_FONT = `var(--heading-font, ${faceStack(
   FACES[DEFAULT_HEADING_FONT],
   "body",
+)})`;
+
+// the subheading face titles every block inside a page (canticle titles,
+// "A Reading", rubric groups). it reads through the semibold register so a
+// static face (EB Garamond) reaches its real semibold file rather than a
+// synthesized weight; a variable face reaches its axis through font-weight.
+export const SUBHEADING_FONT = `var(--subheading-font, ${faceStack(
+  FACES[DEFAULT_SUBHEADING_FONT],
+  "semibold",
 )})`;

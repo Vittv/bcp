@@ -19,6 +19,7 @@ import {
   DEFAULT_HEADING_FONT,
   DEFAULT_INTERFACE_FONT,
   DEFAULT_READING_FONT,
+  DEFAULT_SUBHEADING_FONT,
   FACES,
   type FaceDef,
   type FaceRole,
@@ -29,6 +30,7 @@ import {
   INTERFACE_FACES,
   READING_FACES,
   readingStack,
+  SUBHEADING_FACES,
 } from "../lib/typography/faces";
 import { ensureFace, ensureReadingFace } from "../lib/typography/loader";
 import {
@@ -52,10 +54,11 @@ type ThemeContextValue = {
   theme: ThemeId;
   /**
    * the font custom properties a style may reference: `--chrome-font` for the
-   * interface face, `--heading-font` for the heading face, and the reading
-   * face's three registers. the resolver swaps var() for these values so a face
-   * follows the choice on web and native alike, matching the css custom
-   * properties applyFonts paints on the root.
+   * interface face, `--heading-font` for the page-title face, `--subheading-font`
+   * for the block-title face, and the reading face's three registers. the
+   * resolver swaps var() for these values so a face follows the choice on web
+   * and native alike, matching the css custom properties applyFonts paints on
+   * the root.
    */
   fontVars: Record<string, string>;
   fontScale: number;
@@ -67,27 +70,31 @@ type ThemeContextValue = {
    */
   fontPx: number;
   /**
-   * the interface, heading, and reading face ids, separate axes so the chrome
-   * face, the display face, and the reader face are chosen independently. plain
-   * strings so a stored id survives a reload; the resolver falls back to the
-   * role's default.
+   * the interface, heading, subheading, and reading face ids, separate axes so
+   * the chrome face, the page-title face, the block-title face, and the reader
+   * face are chosen independently. plain strings so a stored id survives a
+   * reload; the resolver falls back to the role's default.
    */
   interfaceFont: string;
   headingFont: string;
+  subheadingFont: string;
   readingFont: string;
   /** the faces each role picker offers. */
   interfaceFaces: FaceDef[];
   headingFaces: FaceDef[];
+  subheadingFaces: FaceDef[];
   readingFaces: FaceDef[];
   setMode: (mode: ThemeMode) => void;
   setTheme: (theme: ThemeId) => void;
   setFontPx: (px: number) => void;
   setInterfaceFont: (id: string) => void;
   setHeadingFont: (id: string) => void;
+  setSubheadingFont: (id: string) => void;
   setReadingFont: (id: string) => void;
   /** return one role to its default face. */
   resetInterfaceFont: () => void;
   resetHeadingFont: () => void;
+  resetSubheadingFont: () => void;
   resetReadingFont: () => void;
 };
 
@@ -96,6 +103,7 @@ const STORAGE_KEY_THEME_FAMILY = "bcp-theme-family";
 const STORAGE_KEY_FONT = "bcp-font-scale";
 const STORAGE_KEY_INTERFACE_FONT = "bcp-font-interface";
 const STORAGE_KEY_HEADING_FONT = "bcp-font-heading";
+const STORAGE_KEY_SUBHEADING_FONT = "bcp-font-subheading";
 const STORAGE_KEY_READING_FONT = "bcp-font-reading";
 // the retired single font-mode key, read once so an existing chrome-face
 // choice carries over to the interface-font key
@@ -196,6 +204,11 @@ function loadHeadingFont(): string {
   return stored && stored.length > 0 ? stored : DEFAULT_HEADING_FONT;
 }
 
+function loadSubheadingFont(): string {
+  const stored = webStorage()?.getItem(STORAGE_KEY_SUBHEADING_FONT);
+  return stored && stored.length > 0 ? stored : DEFAULT_SUBHEADING_FONT;
+}
+
 function persistFont(key: string, id: string) {
   try {
     webStorage()?.setItem(key, id);
@@ -290,13 +303,14 @@ function resolveFace(id: string, role: FaceRole, fallback: FaceDef): FaceDef {
   return fallback;
 }
 
-// the font vars a style may reference: the interface face, the heading face, and
-// the reading face's three registers, each a full font-family stack. one source
-// for both the css custom properties (applyFonts) and the js resolver, so the two
-// cannot drift.
+// the font vars a style may reference: the interface face, the heading face, the
+// subheading face, and the reading face's three registers, each a full font-family
+// stack. one source for both the css custom properties (applyFonts) and the js
+// resolver, so the two cannot drift.
 function fontVarsFor(
   interfaceFont: string,
   headingFont: string,
+  subheadingFont: string,
   readingFont: string,
 ): Record<string, string> {
   const iface = resolveFace(
@@ -309,6 +323,11 @@ function fontVarsFor(
     "heading",
     FACES[DEFAULT_HEADING_FONT],
   );
+  const subheading = resolveFace(
+    subheadingFont,
+    "subheading",
+    FACES[DEFAULT_SUBHEADING_FONT],
+  );
   const reading = resolveFace(
     readingFont,
     "reading",
@@ -317,6 +336,7 @@ function fontVarsFor(
   return {
     "--chrome-font": faceStack(iface, "body"),
     "--heading-font": faceStack(heading, "body"),
+    "--subheading-font": faceStack(subheading, "semibold"),
     "--reading-font": readingStack(reading, "body"),
     "--reading-font-semibold": readingStack(reading, "semibold"),
     "--reading-font-italic": readingStack(reading, "italic"),
@@ -324,12 +344,14 @@ function fontVarsFor(
 }
 
 // paint the font vars on the root and register the injected faces: the bundled
-// interface face, the heading face, and the reading face under its scaled
-// alias. useFonts registers the same files at startup but declares no weight,
-// so a variable heading face is registered here too to expose its weight axis.
+// interface face, the heading and subheading faces, and the reading face under
+// its scaled alias. useFonts registers the same files at startup but declares no
+// weight, so a variable heading face is registered here too to expose its weight
+// axis.
 function applyFonts(
   interfaceFont: string,
   headingFont: string,
+  subheadingFont: string,
   readingFont: string,
 ) {
   if (Platform.OS !== "web" || typeof document === "undefined") return;
@@ -345,6 +367,12 @@ function applyFonts(
     FACES[DEFAULT_HEADING_FONT],
   );
   if (!heading.system) ensureFace(heading);
+  const subheading = resolveFace(
+    subheadingFont,
+    "subheading",
+    FACES[DEFAULT_SUBHEADING_FONT],
+  );
+  if (!subheading.system) ensureFace(subheading);
   const reading = resolveFace(
     readingFont,
     "reading",
@@ -353,7 +381,7 @@ function applyFonts(
   if (!reading.system) ensureReadingFace(reading);
   const r = document.documentElement.style;
   for (const [name, value] of Object.entries(
-    fontVarsFor(interfaceFont, headingFont, readingFont),
+    fontVarsFor(interfaceFont, headingFont, subheadingFont, readingFont),
   )) {
     r.setProperty(name, value);
   }
@@ -367,24 +395,29 @@ const ThemeContext = createContext<ThemeContextValue>({
   fontVars: fontVarsFor(
     DEFAULT_INTERFACE_FONT,
     DEFAULT_HEADING_FONT,
+    DEFAULT_SUBHEADING_FONT,
     DEFAULT_READING_FONT,
   ),
   fontScale: 1,
   fontPx: DEFAULT_FONT_PX,
   interfaceFont: DEFAULT_INTERFACE_FONT,
   headingFont: DEFAULT_HEADING_FONT,
+  subheadingFont: DEFAULT_SUBHEADING_FONT,
   readingFont: DEFAULT_READING_FONT,
   interfaceFaces: INTERFACE_FACES,
   headingFaces: HEADING_FACES,
+  subheadingFaces: SUBHEADING_FACES,
   readingFaces: READING_FACES,
   setMode: () => {},
   setTheme: () => {},
   setFontPx: () => {},
   setInterfaceFont: () => {},
   setHeadingFont: () => {},
+  setSubheadingFont: () => {},
   setReadingFont: () => {},
   resetInterfaceFont: () => {},
   resetHeadingFont: () => {},
+  resetSubheadingFont: () => {},
   resetReadingFont: () => {},
 });
 
@@ -395,14 +428,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [interfaceFont, setInterfaceFontState] =
     useState<string>(loadInterfaceFont);
   const [headingFont, setHeadingFontState] = useState<string>(loadHeadingFont);
+  const [subheadingFont, setSubheadingFontState] =
+    useState<string>(loadSubheadingFont);
   const [readingFont, setReadingFontState] = useState<string>(loadReadingFont);
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
 
   const resolved: ResolvedTheme = mode === "system" ? systemTheme : mode;
   const tokens = themeTokens(theme, resolved);
   const fontVars = useMemo(
-    () => fontVarsFor(interfaceFont, headingFont, readingFont),
-    [interfaceFont, headingFont, readingFont],
+    () => fontVarsFor(interfaceFont, headingFont, subheadingFont, readingFont),
+    [interfaceFont, headingFont, subheadingFont, readingFont],
   );
 
   useEffect(() => {
@@ -410,8 +445,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [tokens, resolved]);
 
   useEffect(() => {
-    applyFonts(interfaceFont, headingFont, readingFont);
-  }, [interfaceFont, headingFont, readingFont]);
+    applyFonts(interfaceFont, headingFont, subheadingFont, readingFont);
+  }, [interfaceFont, headingFont, subheadingFont, readingFont]);
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;
@@ -457,6 +492,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     persistFont(STORAGE_KEY_HEADING_FONT, id);
   }, []);
 
+  const setSubheadingFont = useCallback((id: string) => {
+    setSubheadingFontState(id);
+    persistFont(STORAGE_KEY_SUBHEADING_FONT, id);
+  }, []);
+
   const setReadingFont = useCallback((id: string) => {
     setReadingFontState(id);
     persistFont(STORAGE_KEY_READING_FONT, id);
@@ -470,6 +510,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const resetHeadingFont = useCallback(() => {
     setHeadingFontState(DEFAULT_HEADING_FONT);
     persistFont(STORAGE_KEY_HEADING_FONT, DEFAULT_HEADING_FONT);
+  }, []);
+
+  const resetSubheadingFont = useCallback(() => {
+    setSubheadingFontState(DEFAULT_SUBHEADING_FONT);
+    persistFont(STORAGE_KEY_SUBHEADING_FONT, DEFAULT_SUBHEADING_FONT);
   }, []);
 
   const resetReadingFont = useCallback(() => {
@@ -488,18 +533,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       fontPx,
       interfaceFont,
       headingFont,
+      subheadingFont,
       readingFont,
       interfaceFaces: INTERFACE_FACES,
       headingFaces: HEADING_FACES,
+      subheadingFaces: SUBHEADING_FACES,
       readingFaces: READING_FACES,
       setMode,
       setTheme,
       setFontPx,
       setInterfaceFont,
       setHeadingFont,
+      setSubheadingFont,
       setReadingFont,
       resetInterfaceFont,
       resetHeadingFont,
+      resetSubheadingFont,
       resetReadingFont,
     }),
     [
@@ -512,15 +561,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       fontPx,
       interfaceFont,
       headingFont,
+      subheadingFont,
       readingFont,
       setMode,
       setTheme,
       setFontPx,
       setInterfaceFont,
       setHeadingFont,
+      setSubheadingFont,
       setReadingFont,
       resetInterfaceFont,
       resetHeadingFont,
+      resetSubheadingFont,
       resetReadingFont,
     ],
   );

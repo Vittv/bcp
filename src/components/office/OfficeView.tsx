@@ -3,12 +3,7 @@ import { Text, View } from "react-native";
 import { useTranslation } from "../../context/TranslationContext";
 import { getScripturePassagesFromDolRef } from "../../lib/content/bible";
 import type { KjvPassage, OfficeSpeaker } from "../../lib/content/types";
-import {
-  CHROME_FONT,
-  HEADING_FONT,
-  SERIF_FONT,
-  SERIF_ITALIC_FONT,
-} from "../../lib/fonts";
+import { CHROME_FONT, SERIF_FONT, SERIF_ITALIC_FONT } from "../../lib/fonts";
 import type {
   ComposedLesson,
   ComposedNode,
@@ -19,7 +14,7 @@ import {
   defineThemedStyles,
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
-import { useSectionHeading } from "./contentHeadings";
+import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { MentionedText } from "./MentionedText";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
@@ -81,9 +76,10 @@ function NodeView({
   todaySlug,
 }: NodeViewProps) {
   const styles = useThemedStyles(officeViewStyles);
+  const subheading = useSubheading();
   switch (node.kind) {
     case "heading":
-      return <Text style={styles.heading}>{node.text}</Text>;
+      return <Text style={subheading}>{node.text}</Text>;
     case "rubric":
       if (!showRubrics) return null;
       return <Text style={styles.rubric}>{node.text}</Text>;
@@ -236,15 +232,6 @@ function nodeKey(node: ComposedNode): string {
 const officeViewStyles = defineThemedStyles({
   section: {
     marginBottom: 20,
-  },
-  heading: {
-    fontFamily: HEADING_FONT,
-    fontWeight: "500",
-    fontSize: 22,
-    lineHeight: 30,
-    marginTop: 22,
-    marginBottom: 8,
-    color: "var(--text)",
   },
   rubric: {
     fontFamily: SERIF_ITALIC_FONT,

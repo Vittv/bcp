@@ -21,7 +21,7 @@ import {
   defineThemedStyles,
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
-import { useSectionHeading } from "./contentHeadings";
+import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 
@@ -34,7 +34,7 @@ const RITE_LABELS: Record<string, string> = {
 // ScriptureView's own reference heading; refs that resolve across the
 // combined canon (KJV for the OT/NT, WEB for the Apocrypha) render their
 // text, others stay citation-only.
-function LessonRow({ ref }: { ref: string }) {
+function LessonRow({ ref, first }: { ref: string; first?: boolean }) {
   const styles = useThemedStyles(sanctoraleCardStyles);
   const { translation } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[]>([]);
@@ -49,15 +49,16 @@ function LessonRow({ ref }: { ref: string }) {
     };
   }, [ref, translation]);
 
+  const row = [styles.lessonRow, first && styles.blockFirst];
   if (passages.length === 0) {
     return (
-      <View style={styles.lessonRow}>
+      <View style={row}>
         <Text style={styles.lessonMissing}>{ref}</Text>
       </View>
     );
   }
   return (
-    <View style={styles.lessonRow}>
+    <View style={row}>
       {passages.map((p) => (
         <ScriptureView key={`${p.book}-${p.chapter}`} passage={p} />
       ))}
@@ -84,6 +85,7 @@ export function SanctoraleCard({
 }) {
   const styles = useThemedStyles(sanctoraleCardStyles);
   const heading = useSectionHeading();
+  const subheading = useSubheading();
   const entry = sanctoraleBySlug(slug);
   if (!entry) return null;
   const feast = entry.eveOf ? sanctoraleBySlug(entry.eveOf) : undefined;
@@ -142,13 +144,19 @@ export function SanctoraleCard({
             <View style={styles.group}>
               <Text style={heading}>Psalms</Text>
               {psalmGroups.map((group) => (
-                <View key={group.label} style={styles.timeBlock}>
-                  <Text style={styles.groupSubheading}>{group.label}</Text>
-                  {group.citations.map((citation) => {
+                <View key={group.label}>
+                  <Text style={subheading}>{group.label}</Text>
+                  {group.citations.map((citation, i) => {
                     const parsed = parsePsalmCitation(citation);
                     const passage = parsed ? psalmPassage(parsed) : undefined;
                     return (
-                      <View key={citation} style={styles.psalmBlock}>
+                      <View
+                        key={citation}
+                        style={[
+                          styles.psalmBlock,
+                          i === 0 && styles.blockFirst,
+                        ]}
+                      >
                         <Text style={styles.psalmRef}>Psalm {citation}</Text>
                         {passage ? <PsalmText passage={passage} /> : null}
                       </View>
@@ -163,10 +171,10 @@ export function SanctoraleCard({
             <View style={styles.group}>
               <Text style={heading}>Readings</Text>
               {lessonGroups.map((group) => (
-                <View key={group.label} style={styles.timeBlock}>
-                  <Text style={styles.groupSubheading}>{group.label}</Text>
-                  {group.refs.map((ref) => (
-                    <LessonRow key={ref} ref={ref} />
+                <View key={group.label}>
+                  <Text style={subheading}>{group.label}</Text>
+                  {group.refs.map((ref, i) => (
+                    <LessonRow key={ref} ref={ref} first={i === 0} />
                   ))}
                 </View>
               ))}
@@ -199,22 +207,14 @@ const sanctoraleCardStyles = defineThemedStyles({
   group: {
     marginBottom: 22,
   },
-  // the time-of-day marker above a psalm or lesson group: same serif
-  // italic paper-ink voice as the collect title, a touch larger than
-  // body labels so the morning/evening split reads as a section heading.
-  // no top margin, the block beneath it carries the separation
-  groupSubheading: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 16,
-    lineHeight: 24,
-    color: "var(--text)",
-    marginBottom: 8,
-  },
-  timeBlock: {
-    marginBottom: 18,
-  },
+  // consecutive psalms sit apart; the leading one after a time marker adds no
+  // top margin of its own, so the shared subheading above keeps its small gap
+  // below and hugs the psalm it introduces
   psalmBlock: {
     marginTop: 16,
+  },
+  blockFirst: {
+    marginTop: 0,
   },
   psalmRef: {
     fontFamily: SERIF_ITALIC_FONT,

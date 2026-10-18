@@ -3,7 +3,12 @@
 // naming faces at each call site. pure data, no asset imports, so it stays
 // importable under bun test.
 
-export type FaceRole = "interface" | "reading" | "heading" | "code";
+export type FaceRole =
+  | "interface"
+  | "reading"
+  | "heading"
+  | "subheading"
+  | "code";
 export type FaceStyle = "normal" | "italic";
 
 export const SYSTEM_UI =
@@ -57,8 +62,9 @@ export const FACES = {
     id: "crimson-pro",
     label: "Crimson Pro",
     role: "reading",
-    // also offered for headings: a body serif is a plausible display pairing
-    roles: ["reading", "heading"],
+    // also offered for headings and subheadings: a body serif is a plausible
+    // display pairing
+    roles: ["reading", "heading", "subheading"],
     generic: SERIF_GENERIC,
     xHeight: 0.42,
     variants: [
@@ -71,6 +77,8 @@ export const FACES = {
     id: "playfair-display",
     label: "Playfair Display",
     role: "heading",
+    // the display serif is also a candidate for the block titles
+    roles: ["heading", "subheading"],
     generic: HEADING_GENERIC,
     xHeight: 0.514,
     variants: [
@@ -100,7 +108,7 @@ export const FACES = {
     id: "eb-garamond",
     label: "EB Garamond",
     role: "reading",
-    roles: ["reading", "heading"],
+    roles: ["reading", "heading", "subheading"],
     generic: SERIF_GENERIC,
     xHeight: 0.4,
     variants: [
@@ -153,14 +161,16 @@ export function facesByRole(role: FaceRole): FaceDef[] {
   return FACE_LIST.filter((face) => faceHasRole(face, role));
 }
 
-// the roles a picker offers: interface, heading, and reading. code stays
-// design-fixed for now.
+// the roles a picker offers: interface, heading, subheading, and reading. code
+// stays design-fixed for now.
 export const INTERFACE_FACES = facesByRole("interface");
 export const HEADING_FACES = facesByRole("heading");
+export const SUBHEADING_FACES = facesByRole("subheading");
 export const READING_FACES = facesByRole("reading");
 
 export const DEFAULT_INTERFACE_FONT: FaceId = "inter";
 export const DEFAULT_HEADING_FONT: FaceId = "playfair-display";
+export const DEFAULT_SUBHEADING_FONT: FaceId = "eb-garamond";
 export const DEFAULT_READING_FONT: FaceId = "libron";
 
 // the reader's three registers: the body face plus the emphasis and italic files

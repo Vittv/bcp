@@ -1,5 +1,6 @@
 import { memo, type ReactNode, useCallback, useMemo } from "react";
 import { Text, View } from "react-native";
+import { useSubheading } from "../../components/office/contentHeadings";
 import { usePalette } from "../../context/PaletteContext";
 import {
   CANTICLE_COUNT,
@@ -256,13 +257,16 @@ const CanticleDetailBody = memo(function CanticleDetailBody({
 // verses are unnumbered, so each section is a serif block of its own
 function CanticleText({ passage }: { passage: CanticlePassage }) {
   const styles = useThemedStyles(styleDef);
+  const subheading = useSubheading();
   return (
     <View>
       {passage.sections.map((section, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: static sections, never reorder
         <View key={i} style={styles.canticleSection}>
           {section.title ? (
-            <Text style={styles.canticleSectionTitle}>{section.title}</Text>
+            <Text style={[subheading, styles.canticleSectionTitle]}>
+              {section.title}
+            </Text>
           ) : null}
           {section.verses.map((verse, j) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: static verses, never reorder

@@ -42,6 +42,7 @@ import {
   HEADING_FONT,
   SERIF_FONT,
   SERIF_ITALIC_FONT,
+  SUBHEADING_FONT,
 } from "../lib/fonts";
 import { filterSearch } from "../lib/search";
 import { type SettingsSectionId, visibleSettings } from "../lib/settings";
@@ -230,14 +231,18 @@ export function SettingsScreen({
             setInterfaceFont={theme.setInterfaceFont}
             headingFont={theme.headingFont}
             setHeadingFont={theme.setHeadingFont}
+            subheadingFont={theme.subheadingFont}
+            setSubheadingFont={theme.setSubheadingFont}
             readingFont={theme.readingFont}
             setReadingFont={theme.setReadingFont}
             interfaceFaces={theme.interfaceFaces}
             headingFaces={theme.headingFaces}
+            subheadingFaces={theme.subheadingFaces}
             readingFaces={theme.readingFaces}
             onResetFonts={() => {
               theme.resetInterfaceFont();
               theme.resetHeadingFont();
+              theme.resetSubheadingFont();
               theme.resetReadingFont();
             }}
           />
@@ -739,7 +744,8 @@ function ThemePreview({
 // the in-situ page mock's copy: a passage from the Daily Office, carried by
 // the same chrome line, heading, body, and rubric the reader shows
 const MOCK_CHROME = "The Order for Morning Prayer";
-const MOCK_HEADING = "The Lord's Prayer";
+const MOCK_HEADING = "Daily Morning Prayer";
+const MOCK_SUBHEADING = "The First Song of Isaiah";
 const MOCK_PASSAGE =
   "Our Father, who art in heaven, hallowed be thy Name, thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread. And forgive us our trespasses, as we forgive those who trespass against us.";
 const MOCK_RUBRIC = "The People stand or kneel";
@@ -751,10 +757,13 @@ type TypographySettingsProps = {
   setInterfaceFont: (id: string) => void;
   headingFont: string;
   setHeadingFont: (id: string) => void;
+  subheadingFont: string;
+  setSubheadingFont: (id: string) => void;
   readingFont: string;
   setReadingFont: (id: string) => void;
   interfaceFaces: FaceDef[];
   headingFaces: FaceDef[];
+  subheadingFaces: FaceDef[];
   readingFaces: FaceDef[];
   // return every role to its default face
   onResetFonts: () => void;
@@ -767,10 +776,13 @@ function TypographySettings({
   setInterfaceFont,
   headingFont,
   setHeadingFont,
+  subheadingFont,
+  setSubheadingFont,
   readingFont,
   setReadingFont,
   interfaceFaces,
   headingFaces,
+  subheadingFaces,
   readingFaces,
   onResetFonts,
 }: TypographySettingsProps) {
@@ -817,7 +829,16 @@ function TypographySettings({
             options={headingFaces}
             onChange={setHeadingFont}
             compact
-            description="Titles and headings"
+            description="Page titles"
+          />
+          <View style={styles.fontGroupDivider} />
+          <FontPicker
+            label="Subheading Font"
+            value={subheadingFont}
+            options={subheadingFaces}
+            onChange={setSubheadingFont}
+            compact
+            description="Block and section titles"
           />
           <View style={styles.fontGroupDivider} />
           <FontPicker
@@ -863,6 +884,9 @@ function TypographySettings({
           <Text style={[styles.mockChrome, scaled(12, 18)]}>{MOCK_CHROME}</Text>
           <Text style={[styles.mockHeading, scaled(18, 24)]}>
             {MOCK_HEADING}
+          </Text>
+          <Text style={[styles.mockSubheading, scaled(16, 22)]}>
+            {MOCK_SUBHEADING}
           </Text>
           <Text style={[styles.mockBody, scaled(16, 26)]}>{MOCK_PASSAGE}</Text>
           <Text style={[styles.mockRubric, scaled(14, 22)]}>{MOCK_RUBRIC}</Text>
@@ -1406,7 +1430,7 @@ const styleDef = defineThemedStyles({
     marginBottom: 20,
   },
   // the specimen under the size control: a page as the reader sets it, a chrome
-  // line, a heading, a prayer, and a rubric, the faces together
+  // line, a page title, a block title, a prayer, and a rubric, the faces together
   mockChrome: {
     fontFamily: CHROME_FONT,
     fontSize: 12,
@@ -1421,6 +1445,14 @@ const styleDef = defineThemedStyles({
     lineHeight: 24,
     color: "var(--text)",
     marginTop: 6,
+  },
+  mockSubheading: {
+    fontFamily: SUBHEADING_FONT,
+    fontWeight: "600",
+    fontSize: 16,
+    lineHeight: 22,
+    color: "var(--text)",
+    marginTop: 8,
   },
   mockBody: {
     fontFamily: SERIF_FONT,

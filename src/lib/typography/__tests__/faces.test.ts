@@ -3,6 +3,7 @@ import {
   DEFAULT_HEADING_FONT,
   DEFAULT_INTERFACE_FONT,
   DEFAULT_READING_FONT,
+  DEFAULT_SUBHEADING_FONT,
   FACE_LIST,
   FACES,
   faceById,
@@ -15,6 +16,7 @@ import {
   readingSizeAdjust,
   readingStack,
   SERIF_GENERIC,
+  SUBHEADING_FACES,
   SYSTEM_UI,
 } from "../faces";
 
@@ -47,19 +49,26 @@ describe("face registry", () => {
   it("resolves the defaults to faces that serve their own roles", () => {
     const iface = faceById(DEFAULT_INTERFACE_FONT);
     const heading = faceById(DEFAULT_HEADING_FONT);
+    const subheading = faceById(DEFAULT_SUBHEADING_FONT);
     const reading = faceById(DEFAULT_READING_FONT);
     expect(iface && faceHasRole(iface, "interface")).toBe(true);
     expect(heading && faceHasRole(heading, "heading")).toBe(true);
+    expect(subheading && faceHasRole(subheading, "subheading")).toBe(true);
     expect(reading && faceHasRole(reading, "reading")).toBe(true);
   });
 
-  it("offers the interface, heading, and reading roles in the pickers", () => {
+  it("offers the interface, heading, subheading, and reading roles in the pickers", () => {
     expect(INTERFACE_FACES.map((face) => face.id)).toEqual([
       "inter",
       "libron",
       "system",
     ]);
     expect(HEADING_FACES.map((face) => face.id)).toEqual([
+      "crimson-pro",
+      "playfair-display",
+      "eb-garamond",
+    ]);
+    expect(SUBHEADING_FACES.map((face) => face.id)).toEqual([
       "crimson-pro",
       "playfair-display",
       "eb-garamond",
