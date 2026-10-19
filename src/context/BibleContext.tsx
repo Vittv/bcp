@@ -94,9 +94,54 @@ export function clearSavedPositions(): void {
     for (const t of TESTAMENTS) {
       localStorage.removeItem(storageKey(t));
     }
+    localStorage.removeItem(BOOK_STORAGE_KEY);
   } catch {
     // ignore
   }
+}
+
+// per-book position, the picker's "where you left this book". the corpus
+// position names one book at a time, so it cannot tell a reader who comes
+// back to a book which chapter they were in; this map holds one entry per
+// book and is what a pick without a chapter restores
+const BOOK_STORAGE_KEY = "bcp-bible-books";
+
+function loadBookPositions(): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(BOOK_STORAGE_KEY);
+    if (!raw) return {};
+    // SAFETY: entries are validated by the guard below
+    const parsed = JSON.parse(raw) as Record<string, number>;
+    const positions: Record<string, number> = {};
+    for (const [abbrev, chapter] of Object.entries(parsed)) {
+      if (typeof chapter === "number") positions[abbrev] = chapter;
+    }
+    return positions;
+  } catch {
+    return {};
+  }
+}
+
+function saveBookPos(abbrev: string, chapter: number): void {
+  try {
+    const positions = loadBookPositions();
+    positions[abbrev] = chapter;
+    localStorage.setItem(BOOK_STORAGE_KEY, JSON.stringify(positions));
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * the chapter a book pick opens at: where the reader last left the book,
+ * clamped to its length, chapter 1 when it was never opened
+ */
+export function lastChapterFor(abbrev: string): number {
+  const meta = bookByAbbrev(abbrev);
+  if (!meta) return 1;
+  const stored = loadBookPositions()[abbrev];
+  if (typeof stored !== "number") return 1;
+  return Math.min(Math.max(1, Math.floor(stored)), meta.chapters);
 }
 
 // only a position the reader would actually restore: a book a content drop
@@ -330,6 +375,9 @@ export function BibleProvider({
         chapter,
         savedAt: Date.now(),
       });
+      // the corpus position names one book, so the per-book entry keeps every
+      // book's own place for the picker to reopen
+      saveBookPos(book.abbrev, chapter);
       // every route into a chapter lands here, so a cross-link counts as read
       markReached(book.abbrev, chapter);
       onReadingChange?.(`${bibleBookName(book.abbrev)} ${chapter}`);
@@ -367,13 +415,17 @@ export function BibleProvider({
   );
 
   // the selection carries its own corpus, so picking a deuterocanonical book
-  // switches the reader to DC rather than opening it inside OT. the chapter
-  // defaults to the first
+  // switches the reader to DC rather than opening it inside OT. a pick with
+  // no chapter opens the book where the reader last left it rather than at
+  // the first
   const selectBook = useCallback(
-    (abbrev: string, chapter = 1) => {
+    (abbrev: string, chapter?: number) => {
       const found = bookByAbbrev(abbrev);
       if (!found) return;
-      const ch = Math.min(Math.max(1, chapter), found.chapters);
+      const ch = Math.min(
+        Math.max(1, chapter ?? lastChapterFor(abbrev)),
+        found.chapters,
+      );
       setTestament(found.testament);
       setBook(found);
       setChapter(ch);

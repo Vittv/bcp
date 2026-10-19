@@ -411,7 +411,9 @@ const BibleChapterBody = memo(function BibleChapterBody() {
     if (!atEnd) {
       nextChapter();
     } else if (nextBook) {
-      selectBook(nextBook.abbrev);
+      // the arrow is a linear read, so it enters the next book at its first
+      // chapter rather than resuming a place the reader left there before
+      selectBook(nextBook.abbrev, 1);
     }
   };
 

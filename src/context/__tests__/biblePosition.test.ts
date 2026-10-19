@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import {
   ALL_BOOKS,
   clearSavedPositions,
+  lastChapterFor,
   openingRef,
   savedPositions,
   type Testament,
@@ -35,6 +36,10 @@ type StoredPos = { abbrev: string; chapter: number; savedAt?: number };
 
 function store(corpus: Testament, pos: StoredPos): void {
   localStorage.setItem(`bcp-bible-${corpus}`, JSON.stringify(pos));
+}
+
+function storeBooks(positions: Record<string, number>): void {
+  localStorage.setItem("bcp-bible-books", JSON.stringify(positions));
 }
 
 describe("savedPositions", () => {
@@ -142,8 +147,11 @@ describe("savedPositions", () => {
     store("OT", { abbrev: "Gen", chapter: 12, savedAt: 100 });
     store("NT", { abbrev: "John", chapter: 3, savedAt: 200 });
     store("DC", { abbrev: "Sir", chapter: 40, savedAt: 300 });
+    storeBooks({ Gen: 12, John: 3 });
     clearSavedPositions();
     expect(savedPositions()).toEqual({ OT: null, NT: null, DC: null });
+    expect(lastChapterFor("Gen")).toBe(1);
+    expect(lastChapterFor("John")).toBe(1);
   });
 });
 
@@ -175,5 +183,63 @@ describe("openingRef", () => {
     // Settings gates its reset button on savedPositions still reading null,
     // so the fallback must not leak into that shape
     expect(savedPositions()).toEqual({ OT: null, NT: null, DC: null });
+  });
+});
+
+// the picker hands a bare book to selectBook, so this is what decides the
+// chapter a reopened book lands on: the place the reader left it, never a
+// stale one past the book's end
+describe("lastChapterFor", () => {
+  it("opens a book the reader has never been in at its first chapter", () => {
+    expect(lastChapterFor("Luke")).toBe(1);
+    expect(lastChapterFor("Tob")).toBe(1);
+  });
+
+  it("returns where the reader last left the book", () => {
+    storeBooks({ Luke: 12, Matt: 5 });
+    expect(lastChapterFor("Luke")).toBe(12);
+    expect(lastChapterFor("Matt")).toBe(5);
+  });
+
+  it("keeps every book's place independent of the others", () => {
+    storeBooks({ Luke: 12, John: 3 });
+    expect(lastChapterFor("Luke")).toBe(12);
+    expect(lastChapterFor("Mark")).toBe(1);
+  });
+
+  it("clamps a place past the end of the book", () => {
+    storeBooks({ John: 99 });
+    expect(lastChapterFor("John")).toBe(21);
+  });
+
+  it("clamps a place below the first chapter", () => {
+    storeBooks({ Gen: 0 });
+    expect(lastChapterFor("Gen")).toBe(1);
+  });
+
+  it("ignores an entry naming a book that does not exist", () => {
+    storeBooks({ Gone: 4 });
+    expect(lastChapterFor("Gone")).toBe(1);
+  });
+
+  it("ignores an entry that is not a chapter number", () => {
+    localStorage.setItem(
+      "bcp-bible-books",
+      JSON.stringify({ Luke: "12", Ps: null }),
+    );
+    expect(lastChapterFor("Luke")).toBe(1);
+    expect(lastChapterFor("Ps")).toBe(1);
+  });
+
+  it("ignores storage that is not the stored shape", () => {
+    localStorage.setItem("bcp-bible-books", "not json");
+    expect(lastChapterFor("Luke")).toBe(1);
+  });
+
+  it("survives storage that throws on read", () => {
+    localStorage.getItem = () => {
+      throw new Error("blocked");
+    };
+    expect(lastChapterFor("Luke")).toBe(1);
   });
 });
