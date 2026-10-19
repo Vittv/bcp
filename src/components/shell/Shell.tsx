@@ -1403,7 +1403,6 @@ export function Shell() {
                       nextSeason={nextSeason}
                       holyDay={slot.holyDay ?? null}
                       windowControls={windowControls}
-                      compact={compactBars}
                     />
                     <div
                       style={{

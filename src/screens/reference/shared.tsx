@@ -34,6 +34,7 @@ import type { PageStepper } from "../../lib/input/sequenceNav";
 import { registerPageStepper, stepLinear } from "../../lib/input/sequenceNav";
 import { searchCollects } from "../../lib/reference/search";
 import { useThemedStyles, useThemeVar } from "../../lib/theme/themedStyles";
+import { useShowHotkeyCap } from "../../lib/viewport";
 import { detailPageScale, sharedStyles } from "./styles";
 
 // the collect the desktop pane shows before anything is picked: the
@@ -497,7 +498,6 @@ export const COARSE_POINTER =
 // desktop-only affordances, so they drop wherever the pointer is coarse
 export const HOTKEY_MOD =
   IS_WEB && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl";
-export const SHOW_HOTKEY_CAP = IS_WEB && !COARSE_POINTER;
 
 // desktop: a reading pane beside a persistent index; with no list the
 // pane fills the full column (the picker lives in a floating modal now).
@@ -658,6 +658,8 @@ export function PickerButton({
 }) {
   const styles = useThemedStyles(sharedStyles);
   const v = useThemeVar();
+  // the "/" cap only earns its space with a fine pointer and a wide enough bar
+  const showHotkeyCap = useShowHotkeyCap();
   return (
     <Pressable
       style={({ hovered }) => [
@@ -677,7 +679,7 @@ export function PickerButton({
           {meta}
         </Text>
       ) : null}
-      {SHOW_HOTKEY_CAP ? (
+      {showHotkeyCap ? (
         <KeyCap
           label="/"
           style={meta ? { marginLeft: 8 } : { marginLeft: "auto" }}

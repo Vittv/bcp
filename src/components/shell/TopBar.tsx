@@ -17,11 +17,11 @@ import {
   stepFontSize,
 } from "../../lib/typography/sizes";
 import {
-  COARSE_POINTER,
-  HOTKEY_MOD,
-  KeyCap,
-  SHOW_HOTKEY_CAP,
-} from "../../screens/reference/shared";
+  useShowHotkeyCap,
+  useViewport,
+  WIDTH_FONT_LABEL,
+} from "../../lib/viewport";
+import { HOTKEY_MOD, KeyCap } from "../../screens/reference/shared";
 import { useSaintPopover } from "../office/SaintPopover";
 import { MagnifierIcon, MoonIcon, SunIcon, SystemIcon } from "./Icon";
 import { WindowControls } from "./WindowControls";
@@ -100,9 +100,6 @@ type TopBarProps = {
   // resolved window-control visibility (auto-detected + setting);
   // undefined while the shell is still resolving
   windowControls?: boolean;
-  // narrow layout: keep the edge-anchored items, drop the
-  // informational extras (countdown, font percentage)
-  compact?: boolean;
 };
 
 const noSelect = {
@@ -116,7 +113,6 @@ export function TopBar({
   nextSeason,
   holyDay,
   windowControls = false,
-  compact = false,
 }: TopBarProps) {
   const { mode, setMode, fontPx, setFontPx, tokens } = useTheme();
   const styles = useThemedStyles(topBarStyles);
@@ -129,6 +125,15 @@ export function TopBar({
   const sizeLabel = `${fontPx}px`;
   const atMinSize = fontPx <= MIN_FONT_PX;
   const atMaxSize = fontPx >= MAX_FONT_PX;
+
+  // the bar sheds segments by measured width, widest first, so a narrow
+  // desktop window collapses the same way a phone does instead of clipping:
+  // the ⌘K cap goes first, then the countdown, then the font-size readout.
+  // the search chip keeps its magnifier down to the icon alone.
+  const { compact, width } = useViewport();
+  const showHotkeyCap = useShowHotkeyCap();
+  const showSearchLabel = !compact;
+  const showFontLabel = width >= WIDTH_FONT_LABEL;
 
   const showingControls = IS_TAURI && !IS_MACOS_TAURI && windowControls;
 
@@ -216,14 +221,16 @@ export function TopBar({
           accessibilityLabel="Search the whole prayer book"
         >
           <MagnifierIcon size={13} color={v("var(--text-secondary)")} />
-          {COARSE_POINTER ? null : (
+          {showSearchLabel ? (
             <Text style={styles.searchText}>Search</Text>
-          )}
-          {SHOW_HOTKEY_CAP ? <KeyCap label={`${HOTKEY_MOD} K`} /> : null}
+          ) : null}
+          {showHotkeyCap ? <KeyCap label={`${HOTKEY_MOD} K`} /> : null}
         </Pressable>
 
         <View style={styles.fontControl}>
-          <Text style={styles.fontSizeLabel}>{sizeLabel}</Text>
+          {showFontLabel ? (
+            <Text style={styles.fontSizeLabel}>{sizeLabel}</Text>
+          ) : null}
           <Pressable
             dataSet={{ bcpBtn: "" }}
             style={({ hovered, pressed }) => [
@@ -325,6 +332,9 @@ const topBarStyles = defineThemedStyles({
   seasonLabel: {
     flexDirection: "row",
     alignItems: "center",
+    // let the season name ellipsize before it can push the controls off the bar
+    flexShrink: 1,
+    minWidth: 0,
   },
   appIcon: {
     width: 18,
@@ -336,6 +346,7 @@ const topBarStyles = defineThemedStyles({
     fontWeight: "500",
     fontSize: 12,
     color: "var(--text-secondary)",
+    flexShrink: 1,
   },
   countdown: {
     borderRadius: 4,
