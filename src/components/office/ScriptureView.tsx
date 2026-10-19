@@ -1,10 +1,6 @@
 import { Text, View } from "react-native";
 import type { KjvPassage } from "../../lib/content/types";
-import {
-  SERIF_FONT,
-  SERIF_ITALIC_FONT,
-  SERIF_SEMI_FONT,
-} from "../../lib/fonts";
+import { SERIF_FONT, SERIF_ITALIC_FONT } from "../../lib/fonts";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -59,7 +55,7 @@ export function ScriptureView({
         return (
           <View key={`${chapter}:${v.number}`}>
             {showBreak ? (
-              <Text style={styles.chapterBreak}>{chapter}</Text>
+              <Text style={styles.chapterBreak}>Chapter {chapter}</Text>
             ) : null}
             <Verse verse={v} size={size} />
           </View>
@@ -105,10 +101,11 @@ const scriptureStyles = defineThemedStyles({
     lineHeight: 17,
   },
   chapterBreak: {
-    fontFamily: SERIF_SEMI_FONT,
-    fontSize: 16,
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 15,
+    lineHeight: 25,
     color: "var(--text-secondary)",
-    marginTop: 10,
+    marginTop: 4,
     marginBottom: 4,
   },
 });

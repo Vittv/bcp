@@ -145,10 +145,9 @@ function PsalmsBlock({ citations }: { citations: string[] }) {
 }
 
 function OfficeBlock({ office }: { office: LectionaryOffice }) {
-  const styles = useThemedStyles(lectionaryStyles);
   const heading = useSectionHeading();
   return (
-    <View style={styles.group}>
+    <View>
       <Text style={heading}>{office.label}</Text>
       <PsalmsBlock citations={office.psalms} />
       {office.lessons.map((lesson) => (
@@ -178,17 +177,17 @@ export function LectionaryScreen({ date }: { date: CalendarDate }) {
         </>
       ) : day?.kind === "shared" ? (
         <>
-          <View style={styles.group}>
+          <View>
             <Text style={heading}>Morning Psalms</Text>
             <PsalmsBlock citations={day.psalms.morning} />
           </View>
-          <View style={styles.group}>
+          <View>
             <Text style={heading}>Readings</Text>
             {day.lessons.map((lesson) => (
               <LessonRow key={lesson.ref} lesson={lesson} />
             ))}
           </View>
-          <View style={styles.group}>
+          <View>
             <Text style={heading}>Evening Psalms</Text>
             <PsalmsBlock citations={day.psalms.evening} />
           </View>
@@ -205,8 +204,6 @@ const lectionaryStyles = defineThemedStyles({
   header: {
     marginBottom: 24,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "var(--border-content)",
   },
   title: {
     fontFamily: HEADING_FONT,
@@ -232,10 +229,8 @@ const lectionaryStyles = defineThemedStyles({
     color: "var(--accent)",
     marginTop: 8,
   },
-  group: {
-    marginBottom: 22,
-  },
   psalmBlock: {
+    marginBottom: 22,
     paddingLeft: 4,
   },
   psalmItem: {
@@ -248,7 +243,7 @@ const lectionaryStyles = defineThemedStyles({
     marginBottom: 6,
   },
   lesson: {
-    marginTop: 22,
+    marginBottom: 22,
   },
   lessonRef: {
     fontFamily: SERIF_ITALIC_FONT,
