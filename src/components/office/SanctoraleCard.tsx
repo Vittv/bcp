@@ -143,41 +143,49 @@ export function SanctoraleCard({
           {psalmGroups.length > 0 ? (
             <View style={styles.group}>
               <Text style={heading}>Psalms</Text>
-              {psalmGroups.map((group) => (
-                <View key={group.label}>
-                  <Text style={subheading}>{group.label}</Text>
-                  {group.citations.map((citation, i) => {
-                    const parsed = parsePsalmCitation(citation);
-                    const passage = parsed ? psalmPassage(parsed) : undefined;
-                    return (
-                      <View
-                        key={citation}
-                        style={[
-                          styles.psalmBlock,
-                          i === 0 && styles.blockFirst,
-                        ]}
-                      >
-                        <Text style={styles.psalmRef}>Psalm {citation}</Text>
-                        {passage ? <PsalmText passage={passage} /> : null}
-                      </View>
-                    );
-                  })}
-                </View>
-              ))}
+              <View style={styles.timeGroups}>
+                {psalmGroups.map((group) => (
+                  <View key={group.label}>
+                    <Text style={[subheading, styles.timeLabel]}>
+                      {group.label}
+                    </Text>
+                    {group.citations.map((citation, i) => {
+                      const parsed = parsePsalmCitation(citation);
+                      const passage = parsed ? psalmPassage(parsed) : undefined;
+                      return (
+                        <View
+                          key={citation}
+                          style={[
+                            styles.psalmBlock,
+                            i === 0 && styles.blockFirst,
+                          ]}
+                        >
+                          <Text style={styles.psalmRef}>Psalm {citation}</Text>
+                          {passage ? <PsalmText passage={passage} /> : null}
+                        </View>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
             </View>
           ) : null}
 
           {lessonGroups.length > 0 ? (
             <View style={styles.group}>
               <Text style={heading}>Readings</Text>
-              {lessonGroups.map((group) => (
-                <View key={group.label}>
-                  <Text style={subheading}>{group.label}</Text>
-                  {group.refs.map((ref, i) => (
-                    <LessonRow key={ref} ref={ref} first={i === 0} />
-                  ))}
-                </View>
-              ))}
+              <View style={styles.timeGroups}>
+                {lessonGroups.map((group) => (
+                  <View key={group.label}>
+                    <Text style={[subheading, styles.timeLabel]}>
+                      {group.label}
+                    </Text>
+                    {group.refs.map((ref, i) => (
+                      <LessonRow key={ref} ref={ref} first={i === 0} />
+                    ))}
+                  </View>
+                ))}
+              </View>
             </View>
           ) : null}
 
@@ -206,6 +214,15 @@ export function SanctoraleCard({
 const sanctoraleCardStyles = defineThemedStyles({
   group: {
     marginBottom: 22,
+  },
+  // the time labels drop the shared subheading's top margin: the section rule
+  // already closes over the first one, and the gap between morning and evening
+  // belongs to the group break, not to the label
+  timeGroups: {
+    gap: 30,
+  },
+  timeLabel: {
+    marginTop: 0,
   },
   // consecutive psalms sit apart; the leading one after a time marker adds no
   // top margin of its own, so the shared subheading above keeps its small gap
