@@ -100,10 +100,8 @@ export function clearSavedPositions(): void {
   }
 }
 
-// per-book position, the picker's "where you left this book". the corpus
-// position names one book at a time, so it cannot tell a reader who comes
-// back to a book which chapter they were in; this map holds one entry per
-// book and is what a pick without a chapter restores
+// per-book place for the picker; the corpus position names only one book,
+// so a bare pick would otherwise reopen every book at its first chapter
 const BOOK_STORAGE_KEY = "bcp-bible-books";
 
 function loadBookPositions(): Record<string, number> {
@@ -132,10 +130,7 @@ function saveBookPos(abbrev: string, chapter: number): void {
   }
 }
 
-/**
- * the chapter a book pick opens at: where the reader last left the book,
- * clamped to its length, chapter 1 when it was never opened
- */
+/** where a book pick opens: the reader's last place, clamped, 1 if never opened */
 export function lastChapterFor(abbrev: string): number {
   const meta = bookByAbbrev(abbrev);
   if (!meta) return 1;
@@ -375,8 +370,7 @@ export function BibleProvider({
         chapter,
         savedAt: Date.now(),
       });
-      // the corpus position names one book, so the per-book entry keeps every
-      // book's own place for the picker to reopen
+      // keep the book's own place for the picker
       saveBookPos(book.abbrev, chapter);
       // every route into a chapter lands here, so a cross-link counts as read
       markReached(book.abbrev, chapter);
@@ -414,10 +408,8 @@ export function BibleProvider({
     [history],
   );
 
-  // the selection carries its own corpus, so picking a deuterocanonical book
-  // switches the reader to DC rather than opening it inside OT. a pick with
-  // no chapter opens the book where the reader last left it rather than at
-  // the first
+  // the book carries its own corpus, so a deuterocanonical pick switches the
+  // reader to DC; a pick without a chapter reopens the reader's last place
   const selectBook = useCallback(
     (abbrev: string, chapter?: number) => {
       const found = bookByAbbrev(abbrev);

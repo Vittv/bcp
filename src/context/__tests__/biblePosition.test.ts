@@ -186,9 +186,8 @@ describe("openingRef", () => {
   });
 });
 
-// the picker hands a bare book to selectBook, so this is what decides the
-// chapter a reopened book lands on: the place the reader left it, never a
-// stale one past the book's end
+// a bare pick from the picker lands where the reader left the book, clamped
+// to its length so a stale place cannot point past the end
 describe("lastChapterFor", () => {
   it("opens a book the reader has never been in at its first chapter", () => {
     expect(lastChapterFor("Luke")).toBe(1);

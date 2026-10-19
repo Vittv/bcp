@@ -119,27 +119,21 @@ function NodeView({
     case "collect":
       return (
         <View style={styles.collectBlock}>
-          <Text style={styles.collectCross}>{"\u2720"}</Text>
-          <View style={styles.collectBody}>
-            <Text style={styles.collectTitle}>
-              <MentionedText text={node.passage.title} todaySlug={todaySlug} />
-            </Text>
-            <Text style={styles.collectText}>{node.passage.text}</Text>
-          </View>
+          <Text style={styles.collectTitle}>
+            <MentionedText text={node.passage.title} todaySlug={todaySlug} />
+          </Text>
+          <Text style={styles.collectText}>{node.passage.text}</Text>
         </View>
       );
     case "fixed-collect":
       return (
         <View style={styles.fixedCollectBlock}>
-          <Text style={styles.collectCross}>{"\u2720"}</Text>
-          <View style={styles.collectBody}>
-            {node.title ? (
-              <Text style={styles.fixedCollectTitle}>
-                <MentionedText text={node.title} todaySlug={todaySlug} />
-              </Text>
-            ) : null}
-            <Text style={styles.fixedCollectText}>{node.text}</Text>
-          </View>
+          {node.title ? (
+            <Text style={styles.fixedCollectTitle}>
+              <MentionedText text={node.title} todaySlug={todaySlug} />
+            </Text>
+          ) : null}
+          <Text style={styles.fixedCollectText}>{node.text}</Text>
         </View>
       );
   }
@@ -290,16 +284,7 @@ const officeViewStyles = defineThemedStyles({
   collectBlock: {
     marginTop: 10,
     marginBottom: 10,
-    flexDirection: "row",
-  },
-  collectCross: {
-    fontFamily: 'Georgia, "Times New Roman", serif',
-    fontSize: 16,
-    color: "var(--accent)",
-    marginRight: 4,
-  },
-  collectBody: {
-    flex: 1,
+    paddingLeft: 4,
   },
   collectTitle: {
     fontFamily: SERIF_ITALIC_FONT,
@@ -316,7 +301,7 @@ const officeViewStyles = defineThemedStyles({
   fixedCollectBlock: {
     marginTop: 10,
     marginBottom: 10,
-    flexDirection: "row",
+    paddingLeft: 4,
   },
   fixedCollectTitle: {
     fontFamily: SERIF_ITALIC_FONT,

@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { Platform, useWindowDimensions } from "react-native";
 
 // the app's responsiveness vocabulary: one measured viewport plus the shared
-// width thresholds the chrome collapses at, so no component re-invents a
-// breakpoint or freezes one at module load. layout follows width; affordances
-// that genuinely depend on the input device follow the pointer type instead.
+// breakpoints, so no component re-invents one. layout follows width; input
+// affordances follow the pointer type.
 
 // the sidebar/drawer switch: below this the persistent pane becomes a drawer
 export const WIDTH_MOBILE = 740;
@@ -24,9 +23,8 @@ export type Viewport = {
   compact: boolean;
 };
 
-// the live viewport size. react-native-web's useWindowDimensions already
-// subscribes to window resize on web and to Dimensions on native, so one hook
-// covers both platforms without a second listener.
+// the live viewport size: useWindowDimensions already subscribes to resize on
+// both platforms, so no second listener is needed
 export function useViewport(): Viewport {
   const { width, height } = useWindowDimensions();
   return {
@@ -37,10 +35,8 @@ export function useViewport(): Viewport {
   };
 }
 
-// the primary pointer type, watched live so a touchscreen laptop or a tablet
-// with a mouse attached flips as the active pointer changes. kept apart from
-// width: pointer type decides affordances (can this user press a hotkey),
-// never layout.
+// the primary pointer type, watched live: it decides input affordances, never
+// layout, so a touchscreen laptop flips as the active pointer changes
 export function useCoarsePointer(): boolean {
   const [coarse, setCoarse] = useState(() => {
     if (Platform.OS !== "web") return true;

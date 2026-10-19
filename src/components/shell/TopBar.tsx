@@ -127,9 +127,7 @@ export function TopBar({
   const atMaxSize = fontPx >= MAX_FONT_PX;
 
   // the bar sheds segments by measured width, widest first, so a narrow
-  // desktop window collapses the same way a phone does instead of clipping:
-  // the ⌘K cap goes first, then the countdown, then the font-size readout.
-  // the search chip keeps its magnifier down to the icon alone.
+  // desktop collapses like a phone: cap, then countdown, then font readout
   const { compact, width } = useViewport();
   const showHotkeyCap = useShowHotkeyCap();
   const showSearchLabel = !compact;
