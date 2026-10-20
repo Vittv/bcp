@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Platform, useWindowDimensions } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 
 // the app's responsiveness vocabulary: one measured viewport plus the shared
 // breakpoints, so no component re-invents one. layout follows width; input
@@ -17,21 +18,31 @@ export const WIDTH_FONT_LABEL = 440;
 export type Viewport = {
   width: number;
   height: number;
+  // the window before the UI zoom is divided out
+  rawWidth: number;
+  rawHeight: number;
   // narrow enough to stack (drawer chrome) rather than sit side by side
   isMobile: boolean;
   // narrow enough that the bars shed their optional segments
   compact: boolean;
 };
 
-// the live viewport size: useWindowDimensions already subscribes to resize on
-// both platforms, so no second listener is needed
+// the live viewport, with the UI zoom divided out on web so breakpoints follow
+// the space the layout actually has. useWindowDimensions owns the resize
+// subscription; native does not zoom, so it keeps the raw size.
 export function useViewport(): Viewport {
   const { width, height } = useWindowDimensions();
+  const { uiScale } = useTheme();
+  const zoom = Platform.OS === "web" ? uiScale : 1;
+  const effectiveWidth = width / zoom;
+  const effectiveHeight = height / zoom;
   return {
-    width,
-    height,
-    isMobile: width < WIDTH_MOBILE,
-    compact: width < WIDTH_COMPACT,
+    width: effectiveWidth,
+    height: effectiveHeight,
+    rawWidth: width,
+    rawHeight: height,
+    isMobile: effectiveWidth < WIDTH_MOBILE,
+    compact: effectiveWidth < WIDTH_COMPACT,
   };
 }
 

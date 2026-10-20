@@ -90,6 +90,7 @@ import {
   useThemeVar,
 } from "../../lib/theme/themedStyles";
 import { useAppVersion } from "../../lib/version";
+import { useViewport, WIDTH_MOBILE } from "../../lib/viewport";
 import { BibleBar, BibleReaderScreen } from "../../screens/BibleReaderScreen";
 import { CalendarScreen } from "../../screens/CalendarScreen";
 import {
@@ -263,7 +264,7 @@ function AutoscrollGlyph({ indicator }: { indicator: AutoscrollIndicator }) {
 }
 
 export function Shell() {
-  const { fontScale, tokens } = useTheme();
+  const { fontScale, uiScale, tokens } = useTheme();
   const styles = useThemedStyles(shellStyles);
   const v = useThemeVar();
 
@@ -299,10 +300,16 @@ export function Shell() {
   const [reading, setReading] = useState<string | null>(null);
   const [scrollPct, setScrollPct] = useState(0);
 
-  const [isMobile, setIsMobile] = useState(() => {
-    if (Platform.OS !== "web") return true;
-    return window.matchMedia("(max-width: 740px)").matches;
-  });
+  // breakpoints follow the space inside the zoom, not the raw window: a large
+  // UI scale is equivalent to a narrower screen. native does not zoom.
+  const viewport = useViewport();
+  const viewportWidth = viewport.width;
+  const isMobile = Platform.OS !== "web" || viewport.isMobile;
+  const compactBars = Platform.OS !== "web" || viewport.compact;
+  // the settings modal is outside the zoom, so its layout follows the raw
+  // window rather than the zoomed width
+  const settingsMobile =
+    Platform.OS !== "web" || viewport.rawWidth < WIDTH_MOBILE;
 
   // Persistent sidebar visibility on desktop, deliberately toggled by the
   // user. The mobile drawer is a separate, transient state (mobileOpen) so a
@@ -321,6 +328,11 @@ export function Shell() {
 
   // Transient mobile drawer open/close state; deliberately not persisted.
   const [mobileOpen, setMobileOpen] = useState(false);
+  // entering mobile closes the transient drawer (no persistence); the derived
+  // sidebarVisible restores the desktop choice on the way back up
+  useEffect(() => {
+    if (isMobile) setMobileOpen(false);
+  }, [isMobile]);
   // true only while a drag tracks the finger. the live position is written
   // straight to the drawer node (a CSS variable) so a move never re-renders the
   // shell; only the start and end of a gesture touch React, and mobileOpen flips
@@ -362,11 +374,6 @@ export function Shell() {
     setDraggingDrawer(true);
   }, []);
 
-  // viewport width, only to feed the toolbar label-fit test below
-  const [viewportWidth, setViewportWidth] = useState(() =>
-    typeof window === "undefined" ? 0 : window.innerWidth,
-  );
-
   // labeled toolbar pills only where the pane has room: the desktop column
   // clamps to 200-340px, so at 25% width labels fit from ~1088px up; the
   // mobile drawer is full-width and native always labels
@@ -390,26 +397,6 @@ export function Shell() {
   const setWindowControls = useCallback((v: boolean) => {
     setWindowControlsRaw(v);
     saveWindowControls(v);
-  }, []);
-
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-    const mq = window.matchMedia("(max-width: 740px)");
-    const onChange = (e: MediaQueryListEvent) => {
-      // entering mobile just resets the transient drawer (no persistence);
-      // the derived sidebarVisible handles the desktop restore on the way up
-      setIsMobile(e.matches);
-      if (e.matches) setMobileOpen(false);
-    };
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-    const onResize = () => setViewportWidth(window.innerWidth);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   // mobile drawer drag: any horizontal drag opens or closes the drawer with
@@ -447,23 +434,6 @@ export function Shell() {
     (IS_TAURI && !IS_WINDOWS_TAURI) || IS_LINUX_CHROMIUM,
   );
 
-  // narrow layout for the chrome bars themselves: they keep working
-  // well below the sidebar's mobile breakpoint by dropping their
-  // least informative segments
-  const [compactBars, setCompactBars] = useState(() => {
-    if (Platform.OS !== "web") return true;
-    return window.matchMedia("(max-width: 560px)").matches;
-  });
-
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-    const mq = window.matchMedia("(max-width: 560px)");
-    const onChange = (e: MediaQueryListEvent) => {
-      setCompactBars(e.matches);
-    };
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
   const {
     showRubrics,
     setShowRubrics,
@@ -1328,7 +1298,7 @@ export function Shell() {
             titleBar={false}
           >
             <SettingsScreen
-              mobile={isMobile}
+              mobile={settingsMobile}
               onClose={closeModal}
               initialSection={settingsSection ?? modal}
               showWindowControls={IS_TAURI && !IS_MACOS_TAURI}
@@ -1389,12 +1359,15 @@ export function Shell() {
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      height: "100vh",
+                      // percentage widths resolve inside the zoom, but vh does
+                      // not, so divide the height to keep the frame on screen
+                      height: `calc(100vh / ${uiScale})`,
                       width: "100%",
                       boxSizing: "border-box",
                       overflow: "hidden",
                       touchAction: "pan-y",
                       backgroundColor: tokens.bg,
+                      zoom: String(uiScale),
                     }}
                   >
                     <TopBar
@@ -1543,13 +1516,16 @@ export function Shell() {
                         />
                       </div>
                     </div>
-                    {autoscroll ? (
-                      <AutoscrollGlyph indicator={autoscroll} />
-                    ) : null}
-                    {modalContent}
-                    <PaletteHost />
-                    <HintLayer ref={hintsRef} />
                   </div>
+                  {/* the settings modal, palette, and hints stay outside the
+                      zoom, so a large scale can never push its own controls
+                      out of reach */}
+                  {autoscroll ? (
+                    <AutoscrollGlyph indicator={autoscroll} />
+                  ) : null}
+                  {modalContent}
+                  <PaletteHost />
+                  <HintLayer ref={hintsRef} />
                 </SaintPopoverProvider>
               </PaletteProvider>
             </NavigationContext.Provider>
