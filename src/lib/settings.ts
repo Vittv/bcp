@@ -29,13 +29,18 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "appearance",
     title: "Appearance",
-    description: "Color theme and light/dark mode for the whole app.",
+    description:
+      "Color theme, light/dark mode, and UI scale for the whole app.",
     keywords: [
       "theme",
       "mode",
       "light",
       "dark",
       "system",
+      "scale",
+      "ui scale",
+      "zoom",
+      "size",
       "canterbury",
       "oxford",
       "vague",

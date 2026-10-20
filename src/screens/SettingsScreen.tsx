@@ -1,10 +1,12 @@
 import { type ReactNode, useEffect, useState } from "react";
 import {
+  Platform,
   Pressable,
   ScrollView,
   type StyleProp,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
   type ViewStyle,
 } from "react-native";
@@ -62,7 +64,15 @@ import {
   MAX_FONT_PX,
   MIN_FONT_PX,
 } from "../lib/typography/sizes";
+import {
+  defaultUiScalePercent,
+  MOBILE_DEFAULT_UI_SCALE_PERCENT,
+  percentToUiScale,
+  UI_SCALE_PERCENTAGES,
+  uiScaleToPercent,
+} from "../lib/uiScale";
 import { useUpdateStatus } from "../lib/updater";
+import { WIDTH_MOBILE } from "../lib/viewport";
 import { AboutScreen } from "./AboutScreen";
 import { InstallScreen } from "./InstallScreen";
 
@@ -220,6 +230,8 @@ export function SettingsScreen({
             theme={theme.theme}
             setTheme={theme.setTheme}
             resolved={theme.resolved}
+            uiScale={theme.uiScale}
+            setUiScale={theme.setUiScale}
           />
         );
       case "typography":
@@ -647,6 +659,8 @@ type AppearanceSettingsProps = {
   theme: ThemeId;
   setTheme: (theme: ThemeId) => void;
   resolved: ResolvedTheme;
+  uiScale: number;
+  setUiScale: (scale: number) => void;
 };
 
 function AppearanceSettings({
@@ -655,8 +669,13 @@ function AppearanceSettings({
   theme,
   setTheme,
   resolved,
+  uiScale,
+  setUiScale,
 }: AppearanceSettingsProps) {
   const styles = useThemedStyles(styleDef);
+  // reset to the first-run default: 120% on small screens, 100% elsewhere
+  const { width } = useWindowDimensions();
+  const smallScreen = Platform.OS !== "web" || width < WIDTH_MOBILE;
   return (
     <>
       <View style={styles.section}>
@@ -678,6 +697,44 @@ function AppearanceSettings({
           ))}
         </View>
       </View>
+
+      {Platform.OS === "web" ? (
+        <View style={styles.section}>
+          <View style={styles.groupRow}>
+            <View style={styles.groupLabelRow}>
+              <Text style={styles.groupLabel}>UI Scale</Text>
+              <Text
+                style={styles.value}
+              >{`${uiScaleToPercent(uiScale)}%`}</Text>
+            </View>
+            <Pressable
+              onPress={() =>
+                setUiScale(percentToUiScale(defaultUiScalePercent(smallScreen)))
+              }
+              style={({ hovered }) => [
+                styles.reset,
+                hovered && styles.resetHover,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Reset UI scale"
+            >
+              <Text style={styles.resetText}>Reset</Text>
+            </Pressable>
+          </View>
+          <View style={styles.sliderWrap}>
+            <Slider
+              value={uiScaleToPercent(uiScale)}
+              onChange={(pct) => setUiScale(percentToUiScale(pct))}
+              steps={UI_SCALE_PERCENTAGES}
+              thumb="round"
+              formatTick={(pct) => `${pct}%`}
+            />
+          </View>
+          <Text style={styles.settingDescription}>
+            {`Scales the whole interface. 100% as default; mobile at ${MOBILE_DEFAULT_UI_SCALE_PERCENT}% for readability.`}
+          </Text>
+        </View>
+      ) : null}
     </>
   );
 }
@@ -1499,6 +1556,11 @@ const styleDef = defineThemedStyles({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 12,
+  },
+  groupLabelRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 8,
   },
   groupLabel: {
     fontFamily: CHROME_FONT,

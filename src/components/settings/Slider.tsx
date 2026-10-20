@@ -1,5 +1,5 @@
 import { createElement, useEffect, useRef, useState } from "react";
-import { PanResponder, Text, View } from "react-native";
+import { PanResponder, Platform, Text, View } from "react-native";
 import { CHROME_FONT } from "../../lib/fonts";
 import {
   defineThemedStyles,
@@ -33,6 +33,29 @@ function NibThumb({ fill, stroke }: { fill: string; stroke: string }) {
   );
 }
 
+// the UI scale knob: a plain accent ring instead of the nib, so the scale
+// reads as its own control
+function RoundThumb({ fill, stroke }: { fill: string; stroke: string }) {
+  return createElement(
+    "svg",
+    {
+      width: 20,
+      height: 20,
+      viewBox: "0 0 20 20",
+      "aria-hidden": "true",
+      style: { display: "block" },
+    },
+    createElement("circle", {
+      cx: 10,
+      cy: 10,
+      r: 8,
+      fill,
+      stroke,
+      strokeWidth: 2,
+    }),
+  );
+}
+
 type SliderProps = {
   value: number;
   min?: number;
@@ -40,6 +63,11 @@ type SliderProps = {
   step?: number;
   onChange: (v: number) => void;
   steps?: readonly number[];
+  // the thumb silhouette: the writing nib for the type ladder, a plain round
+  // knob for the UI scale
+  thumb?: "nib" | "round";
+  // render a ladder value as its tick label; the type ladder defaults to px
+  formatTick?: (value: number) => string;
 };
 
 export function Slider({
@@ -49,12 +77,17 @@ export function Slider({
   step = 0.01,
   onChange,
   steps,
+  thumb = "nib",
+  formatTick = (v) => `${v}px`,
 }: SliderProps) {
   const styles = useThemedStyles(sliderStyles);
   const v = useThemeVar();
   const trackRef = useRef<View | null>(null);
   const [width, setWidth] = useState(0);
   const values = steps && steps.length > 0 ? steps : null;
+  const round = thumb === "round";
+  const thumbSize = round ? 20 : 18;
+  const pad = round ? 10 : 9;
 
   const clamped = values
     ? values.reduce((prev, curr) =>
@@ -76,7 +109,7 @@ export function Slider({
       : 1;
   const snap = (px: number) => Math.round(px * dpr) / dpr;
   const valueX = snap(width * ratio);
-  const thumbLeft = valueX - 9;
+  const thumbLeft = valueX - thumbSize / 2;
 
   const panResponder = useRef(
     PanResponder.create({
@@ -117,7 +150,25 @@ export function Slider({
   }
 
   function measureTrack() {
-    trackRef.current?.measure((_x, _y, w, _h, pageX) => {
+    const node = trackRef.current;
+    if (!node) return;
+    // on web, CSS zoom leaves measure()'s offset geometry unscaled while
+    // pageX arrives zoomed, so read the rect for hit math and offsetWidth for
+    // the rendered width
+    if (Platform.OS === "web") {
+      // SAFETY: react-native-web renders View as a DOM element, so the ref is
+      // the track node on web
+      const el = node instanceof HTMLElement ? node : null;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0) {
+        trackWidth.current = rect.width;
+        setWidth(el.offsetWidth);
+      }
+      trackX.current = rect.left + window.scrollX;
+      return;
+    }
+    node.measure((_x, _y, w, _h, pageX) => {
       if (w > 0) {
         trackWidth.current = w;
         setWidth(w);
@@ -134,7 +185,7 @@ export function Slider({
 
   return (
     <View
-      style={styles.container}
+      style={[styles.container, { paddingHorizontal: pad }]}
       onLayout={() => {
         measureTrack();
       }}
@@ -146,15 +197,29 @@ export function Slider({
         collapsable={false}
       >
         <View style={[styles.fill, { width: Math.max(0, valueX) }]} />
-        <View style={[styles.thumb, { left: thumbLeft }]}>
-          <NibThumb fill={v("var(--bg)")} stroke={v("var(--accent)")} />
+        <View
+          style={[
+            styles.thumb,
+            {
+              left: thumbLeft,
+              width: thumbSize,
+              height: thumbSize,
+              top: round ? -8 : -15,
+            },
+          ]}
+        >
+          {round ? (
+            <RoundThumb fill={v("var(--bg)")} stroke={v("var(--accent)")} />
+          ) : (
+            <NibThumb fill={v("var(--bg)")} stroke={v("var(--accent)")} />
+          )}
         </View>
         {values ? (
           <View style={styles.ticks}>
             {values.map((v) => {
               const r = (v - rangeMin) / Math.max(1e-6, rangeMax - rangeMin);
               // an even-width mark centred on the snapped column, so its
-              // centre is a whole pixel and lands under the nib's point (a 1px
+              // centre is a whole pixel and lands under the thumb's point (a 1px
               // hairline would centre on a half pixel and sit 0.5px off)
               const left = snap(width * r) - 1;
               return <View key={v} style={[styles.tick, { left }]} />;
@@ -162,7 +227,7 @@ export function Slider({
           </View>
         ) : null}
       </View>
-      {/* a clear hit layer over the track and the nib's overhang (the track
+      {/* a clear hit layer over the track and the thumb's overhang (the track
           itself is only 4px), so the whole control is draggable and carries
           the horizontal-resize cursor */}
       <View
@@ -172,7 +237,7 @@ export function Slider({
         {...panResponder.panHandlers}
       />
       {values ? (
-        <View style={styles.tickLabels}>
+        <View style={[styles.tickLabels, { left: pad, right: pad }]}>
           {values.map((v) => {
             const r = (v - rangeMin) / Math.max(1e-6, rangeMax - rangeMin);
             // centered on its tick, so the end labels sit on the track edges;
@@ -180,7 +245,7 @@ export function Slider({
             const left = snap(width * r) - 20;
             return (
               <Text key={v} style={[styles.tickLabel, { left }]}>
-                {v}px
+                {formatTick(v)}
               </Text>
             );
           })}
@@ -196,7 +261,6 @@ const sliderStyles = defineThemedStyles({
     height: 56,
     justifyContent: "center",
     position: "relative",
-    paddingHorizontal: 9,
   },
   track: {
     height: 4,
@@ -223,13 +287,9 @@ const sliderStyles = defineThemedStyles({
     left: 0,
     top: 0,
   },
-  // the nib's tip (svg y 17) lands on the track's center line, so the pen
-  // points at the value rather than floating over it
+  // size and offset vary by thumb silhouette, so set them at the call site
   thumb: {
     position: "absolute",
-    top: -15,
-    width: 18,
-    height: 18,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 10,
@@ -252,8 +312,6 @@ const sliderStyles = defineThemedStyles({
   tickLabels: {
     position: "absolute",
     top: -34,
-    left: 9,
-    right: 9,
     height: 16,
   },
   tickLabel: {

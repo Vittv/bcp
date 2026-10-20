@@ -39,6 +39,13 @@ import {
   fontPxToScale,
   scaleToFontPx,
 } from "../lib/typography/sizes";
+import {
+  clampUiScale,
+  DEFAULT_UI_SCALE,
+  defaultUiScalePercent,
+  percentToUiScale,
+  snapUiScale,
+} from "../lib/uiScale";
 
 export type { ResolvedTheme, ThemeMode };
 
@@ -70,6 +77,11 @@ type ThemeContextValue = {
    */
   fontPx: number;
   /**
+   * the UI scale factor (1 = the original app size, shown as 100%). desktops
+   * default to 1, small screens to a larger step; applied as a whole-app zoom.
+   */
+  uiScale: number;
+  /**
    * the interface, heading, subheading, and reading face ids, separate axes so
    * the chrome face, the page-title face, the block-title face, and the reader
    * face are chosen independently. plain strings so a stored id survives a
@@ -91,6 +103,7 @@ type ThemeContextValue = {
   setHeadingFont: (id: string) => void;
   setSubheadingFont: (id: string) => void;
   setReadingFont: (id: string) => void;
+  setUiScale: (scale: number) => void;
   /** return one role to its default face. */
   resetInterfaceFont: () => void;
   resetHeadingFont: () => void;
@@ -101,6 +114,7 @@ type ThemeContextValue = {
 const STORAGE_KEY_THEME = "bcp-theme-mode";
 const STORAGE_KEY_THEME_FAMILY = "bcp-theme-family";
 const STORAGE_KEY_FONT = "bcp-font-scale";
+const STORAGE_KEY_UI_SCALE = "bcp-ui-scale";
 const STORAGE_KEY_INTERFACE_FONT = "bcp-font-interface";
 const STORAGE_KEY_HEADING_FONT = "bcp-font-heading";
 const STORAGE_KEY_SUBHEADING_FONT = "bcp-font-subheading";
@@ -115,6 +129,13 @@ function getSystemTheme(): ResolvedTheme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
+}
+
+// the app's 740px small-screen breakpoint, used to pick the first-run ui scale
+function isMobileViewport(): boolean {
+  if (Platform.OS !== "web") return true;
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(max-width: 740px)").matches;
 }
 
 function webStorage(): Storage | null {
@@ -146,6 +167,21 @@ function loadFontScale(): number {
   return fontPxToScale(DEFAULT_FONT_PX);
 }
 
+function loadUiScale(): number {
+  // CSS zoom has no native equivalent, so native keeps the original size
+  if (Platform.OS !== "web") return DEFAULT_UI_SCALE;
+  const storage = webStorage();
+  if (storage) {
+    const v = storage.getItem(STORAGE_KEY_UI_SCALE);
+    if (v) {
+      const n = Number.parseFloat(v);
+      if (!Number.isNaN(n)) return snapUiScale(clampUiScale(n));
+    }
+  }
+  // first run: desktops at 100%, small screens a step larger for legibility
+  return percentToUiScale(defaultUiScalePercent(isMobileViewport()));
+}
+
 function persistThemeMode(mode: ThemeMode) {
   try {
     webStorage()?.setItem(STORAGE_KEY_THEME, mode);
@@ -173,6 +209,12 @@ function persistThemeFamily(theme: ThemeId) {
 function persistFontScale(scale: number) {
   try {
     webStorage()?.setItem(STORAGE_KEY_FONT, String(scale));
+  } catch {}
+}
+
+function persistUiScale(scale: number) {
+  try {
+    webStorage()?.setItem(STORAGE_KEY_UI_SCALE, String(scale));
   } catch {}
 }
 
@@ -400,6 +442,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   ),
   fontScale: 1,
   fontPx: DEFAULT_FONT_PX,
+  uiScale: DEFAULT_UI_SCALE,
   interfaceFont: DEFAULT_INTERFACE_FONT,
   headingFont: DEFAULT_HEADING_FONT,
   subheadingFont: DEFAULT_SUBHEADING_FONT,
@@ -415,6 +458,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   setHeadingFont: () => {},
   setSubheadingFont: () => {},
   setReadingFont: () => {},
+  setUiScale: () => {},
   resetInterfaceFont: () => {},
   resetHeadingFont: () => {},
   resetSubheadingFont: () => {},
@@ -425,6 +469,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(loadThemeMode);
   const [theme, setThemeState] = useState<ThemeId>(loadThemeFamily);
   const [fontScale, setFontScaleState] = useState<number>(loadFontScale);
+  const [uiScale, setUiScaleState] = useState<number>(loadUiScale);
   const [interfaceFont, setInterfaceFontState] =
     useState<string>(loadInterfaceFont);
   const [headingFont, setHeadingFontState] = useState<string>(loadHeadingFont);
@@ -482,6 +527,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const fontPx = scaleToFontPx(fontScale);
 
+  const setUiScale = useCallback((scale: number) => {
+    // always store a ladder entry, the same rule the font size follows
+    const snapped = snapUiScale(clampUiScale(scale));
+    setUiScaleState(snapped);
+    persistUiScale(snapped);
+  }, []);
+
   const setInterfaceFont = useCallback((id: string) => {
     setInterfaceFontState(id);
     persistFont(STORAGE_KEY_INTERFACE_FONT, id);
@@ -531,6 +583,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       fontVars,
       fontScale,
       fontPx,
+      uiScale,
       interfaceFont,
       headingFont,
       subheadingFont,
@@ -546,6 +599,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setHeadingFont,
       setSubheadingFont,
       setReadingFont,
+      setUiScale,
       resetInterfaceFont,
       resetHeadingFont,
       resetSubheadingFont,
@@ -559,6 +613,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       fontVars,
       fontScale,
       fontPx,
+      uiScale,
       interfaceFont,
       headingFont,
       subheadingFont,
@@ -570,6 +625,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setHeadingFont,
       setSubheadingFont,
       setReadingFont,
+      setUiScale,
       resetInterfaceFont,
       resetHeadingFont,
       resetSubheadingFont,
