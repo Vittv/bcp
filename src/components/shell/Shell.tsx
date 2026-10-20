@@ -12,6 +12,7 @@ import {
   AppModal,
   dismissEscapeConsumers,
 } from "../../components/shell/AppModal";
+import { PullChevron } from "../../components/shell/Chevron";
 import { type HintHandle, HintLayer } from "../../components/shell/HintLayer";
 import { SidebarIcon } from "../../components/shell/Icon";
 import type { ModalType, PageId } from "../../components/shell/Sidebar";
@@ -1152,24 +1153,29 @@ export function Shell() {
     });
   }, []);
 
-  const sidebarShowButton = !sidebarVisible ? (
-    <Pressable
-      style={({ hovered }) => [
-        styles.auxShowBtn,
-        hovered && styles.auxShowBtnHover,
-      ]}
-      onPress={openSidebar}
-      accessibilityLabel="Show sidebar"
-      accessibilityRole="button"
-    >
-      {({ hovered }) => (
-        <SidebarIcon
-          size={14}
-          color={hovered ? v("var(--text)") : v("var(--text-secondary)")}
-        />
-      )}
-    </Pressable>
-  ) : null;
+  const sidebarShowButton =
+    !sidebarVisible && !(IS_WEB && isMobile) ? (
+      <Pressable
+        style={styles.auxShowHit}
+        onPress={openSidebar}
+        accessibilityLabel="Show sidebar"
+        accessibilityRole="button"
+      >
+        {({ hovered, pressed }) => (
+          <View
+            style={[
+              styles.auxShowBtn,
+              (hovered || pressed) && styles.auxShowBtnHover,
+            ]}
+          >
+            <SidebarIcon
+              size={14}
+              color={hovered ? v("var(--text)") : v("var(--text-secondary)")}
+            />
+          </View>
+        )}
+      </Pressable>
+    ) : null;
 
   // every page gets the auxiliary 30px row under the TopBar: the
   // page's own bar where one exists, otherwise a bare strip
@@ -1444,6 +1450,24 @@ export function Shell() {
                             dragging={draggingDrawer}
                             showLabels={toolbarLabels}
                           />
+                          <Pressable
+                            style={styles.edgeCloseHit}
+                            onPress={hideSidebar}
+                            accessibilityLabel="Hide sidebar"
+                            accessibilityRole="button"
+                          >
+                            {({ hovered, pressed }) => (
+                              <View
+                                style={[
+                                  styles.edgeClose,
+                                  (hovered || pressed) &&
+                                    styles.edgeCloseActive,
+                                ]}
+                              >
+                                <PullChevron direction="left" />
+                              </View>
+                            )}
+                          </Pressable>
                         </div>
                       ) : sidebarVisible ? (
                         <div
@@ -1548,6 +1572,25 @@ export function Shell() {
                           compact={compactBars}
                         />
                       </div>
+                      {isMobile && !mobileOpen ? (
+                        <Pressable
+                          style={styles.edgePullHit}
+                          onPress={openSidebar}
+                          accessibilityLabel="Show sidebar"
+                          accessibilityRole="button"
+                        >
+                          {({ hovered, pressed }) => (
+                            <View
+                              style={[
+                                styles.edgePull,
+                                (hovered || pressed) && styles.edgePullActive,
+                              ]}
+                            >
+                              <PullChevron direction="right" />
+                            </View>
+                          )}
+                        </Pressable>
+                      ) : null}
                     </div>
                   </div>
                   {/* the settings modal, palette, and hints stay outside the
@@ -1662,6 +1705,17 @@ const shellStyles = defineThemedStyles({
     borderBottomColor: "var(--border)",
     backgroundColor: "var(--bg)",
   },
+  // the visible chip stays 24px; this frame absorbs the strip's padding and the
+  // gap after it, so the touch target grows without shifting neighbors or
+  // taking row space
+  auxShowHit: {
+    width: 34,
+    marginLeft: -6,
+    marginRight: -4,
+    alignSelf: "stretch",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   auxShowBtn: {
     width: 24,
     height: 24,
@@ -1674,6 +1728,73 @@ const shellStyles = defineThemedStyles({
   },
   auxShowBtnHover: {
     backgroundColor: "var(--control-hover)",
+  },
+  // a small thumb in the left margin keeps the closed drawer reachable by tap
+  // or edge swipe; it stays 14px wide to clear the text gutter, while the
+  // invisible 26px frame gives the browser a finger-sized target
+  edgePullHit: {
+    position: "absolute",
+    left: 0,
+    top: "50%",
+    marginTop: -32,
+    width: 26,
+    height: 64,
+    zIndex: 25,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    cursor: "pointer",
+    userSelect: "none",
+    // leave vertical reading scroll to the page; only horizontal drags belong
+    // to the drawer
+    touchAction: "pan-y",
+  },
+  edgePull: {
+    width: 14,
+    height: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "var(--surface)",
+    borderWidth: 1,
+    borderLeftWidth: 0,
+    borderColor: "var(--border)",
+    borderTopRightRadius: 6,
+    borderBottomRightRadius: 6,
+  },
+  edgePullActive: {
+    backgroundColor: "var(--control-hover)",
+    borderColor: "var(--accent)",
+  },
+  // the same thumb mirrored on the drawer's trailing edge, so the handle reads
+  // as the edge of a sliding pane rather than a list footer
+  edgeCloseHit: {
+    position: "absolute",
+    right: 0,
+    top: "50%",
+    marginTop: -32,
+    width: 26,
+    height: 64,
+    zIndex: 25,
+    alignItems: "flex-end",
+    justifyContent: "center",
+    cursor: "pointer",
+    userSelect: "none",
+    touchAction: "pan-y",
+  },
+  edgeClose: {
+    width: 14,
+    height: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "var(--surface)",
+    borderWidth: 1,
+    borderRightWidth: 0,
+    borderColor: "var(--border)",
+    borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6,
+  },
+  edgeCloseActive: {
+    backgroundColor: "var(--control-hover)",
+    borderColor: "var(--accent)",
   },
   sidebarOverlay: {
     position: "absolute",
