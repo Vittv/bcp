@@ -119,6 +119,27 @@ import { DEVOTIONS, OFFICES, OfficeTabs } from "./OfficeTabs";
 import { StatusBar } from "./StatusBar";
 import { TopBar } from "./TopBar";
 
+// a transient history step carries its layer name, so the drawer and modal
+// steps can be told apart even though they snapshot the same app state
+const LAYER_STEP = "__bcpLayerStep";
+
+function markHistoryStep(kind: "drawer" | "modal"): string {
+  const state = window.history.state;
+  if (!state || typeof state !== "object") {
+    return JSON.stringify(state ?? null);
+  }
+  const marked = { ...state, [LAYER_STEP]: kind };
+  window.history.replaceState(marked, "");
+  return JSON.stringify(marked);
+}
+
+function historyLayer(): string | null {
+  const state = window.history.state;
+  if (!state || typeof state !== "object") return null;
+  const layer = state[LAYER_STEP];
+  return typeof layer === "string" ? layer : null;
+}
+
 type TabId = "morning" | "noonday" | "evening" | "compline";
 
 // the sidebar's trailing info for the Today row mirrors the office tabs
@@ -542,7 +563,7 @@ export function Shell() {
     const top = JSON.stringify(window.history.state ?? null) ?? null;
     if (top === drawerRecord.current) return;
     historyController.record();
-    drawerRecord.current = JSON.stringify(window.history.state ?? null) ?? null;
+    drawerRecord.current = markHistoryStep("drawer");
   }, [mobileOpen, historyController]);
 
   // reify the modal-open as its own history step, exactly like the drawer:
@@ -554,7 +575,7 @@ export function Shell() {
     const top = JSON.stringify(window.history.state ?? null) ?? null;
     if (top === modalRecord.current) return;
     historyController.record();
-    modalRecord.current = JSON.stringify(window.history.state ?? null) ?? null;
+    modalRecord.current = markHistoryStep("modal");
   }, [modal, historyController]);
 
   // the global palette hands the settings modal a section to land on through
@@ -616,12 +637,16 @@ export function Shell() {
   // this never double-consumes.
   useEffect(() => {
     if (mobileOpen) return;
+    // a modal records its own step on top of the drawer's; both snapshot the
+    // same app state, so popping here while the modal is open would consume
+    // the modal's step and dismiss it. leave the drawer step for after it
+    if (modal || modalRecord.current) return;
     if (!historyController || !drawerRecord.current) return;
     const top = JSON.stringify(window.history.state ?? null) ?? null;
     if (top !== drawerRecord.current) return;
     drawerRecord.current = null;
     window.history.back();
-  }, [mobileOpen, historyController]);
+  }, [mobileOpen, modal, historyController]);
 
   // a UI dismiss of the modal (X, Esc, backdrop) consumes its recorded step
   // via history.back() the way the drawer-close path does, so Back never
@@ -696,7 +721,15 @@ export function Shell() {
           setSettingsSection(null);
           return;
         }
-        if (consumed) return;
+        if (consumed) {
+          // a drawer auto-closed behind the modal can leave its step on top;
+          // consume that too so one Back does not stop on the closed drawer
+          if (!mobileOpenRef.current && historyLayer() === "drawer") {
+            drawerRecord.current = null;
+            window.history.back();
+          }
+          return;
+        }
         if (mobileOpenRef.current) setMobileOpen(false);
         drawerRecord.current = null;
         return;
