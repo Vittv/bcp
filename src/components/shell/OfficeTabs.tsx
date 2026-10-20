@@ -1,11 +1,12 @@
-import type { ReactNode } from "react";
-import { Pressable, Text, useWindowDimensions, View } from "react-native";
+import { type ReactNode, useState } from "react";
+import { type LayoutChangeEvent, Pressable, Text, View } from "react-native";
 import type { OfficeId } from "../../lib/content/types";
 import { CHROME_FONT } from "../../lib/fonts";
 import {
   defineThemedStyles,
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
+import { useViewport } from "../../lib/viewport";
 
 const noSelect = {
   userSelect: "none" as const,
@@ -81,12 +82,24 @@ export function OfficeTabs({
   onToggleDevotions,
 }: OfficeTabsProps) {
   const styles = useThemedStyles(officeBarStyles);
-  const { width } = useWindowDimensions();
+  const { width: viewportWidth } = useViewport();
+  // the bar's own width, since the sidebar and the UI scale both shrink it
+  // well below the window; the effective viewport is the first paint
+  const [barWidth, setBarWidth] = useState(0);
+  const width = barWidth || viewportWidth;
   // abbreviated names kick in before phone widths; tighter chrome later
   const shortLabels = width < 640;
   const compact = width < 500;
+  // below this even abbreviated tabs and the secondary toggles cannot share a
+  // row; rubrics and speakers also live in Settings -> Office, so drop them
+  const hideToggles = width < 380;
   return (
-    <View style={[styles.bar, noSelect]}>
+    <View
+      style={[styles.bar, noSelect]}
+      onLayout={(e: LayoutChangeEvent) =>
+        setBarWidth(e.nativeEvent.layout.width)
+      }
+    >
       <View style={[styles.tabsLeft, compact && styles.groupCompact]}>
         {leading}
         <Pressable
@@ -126,28 +139,30 @@ export function OfficeTabs({
           );
         })}
       </View>
-      <View style={[styles.togglesRight, compact && styles.groupCompact]}>
-        <Pressable
-          style={({ hovered }) => [
-            styles.toggle,
-            compact && styles.itemCompact,
-            hovered && styles.tabHover,
-          ]}
-          onPress={onToggleRubrics}
-        >
-          <SteadyToggleText text="Rubrics" on={showRubrics} />
-        </Pressable>
-        <Pressable
-          style={({ hovered }) => [
-            styles.toggle,
-            compact && styles.itemCompact,
-            hovered && styles.tabHover,
-          ]}
-          onPress={onToggleSpeakers}
-        >
-          <SteadyToggleText text="Speakers" on={showSpeakers} />
-        </Pressable>
-      </View>
+      {hideToggles ? null : (
+        <View style={[styles.togglesRight, compact && styles.groupCompact]}>
+          <Pressable
+            style={({ hovered }) => [
+              styles.toggle,
+              compact && styles.itemCompact,
+              hovered && styles.tabHover,
+            ]}
+            onPress={onToggleRubrics}
+          >
+            <SteadyToggleText text="Rubrics" on={showRubrics} />
+          </Pressable>
+          <Pressable
+            style={({ hovered }) => [
+              styles.toggle,
+              compact && styles.itemCompact,
+              hovered && styles.tabHover,
+            ]}
+            onPress={onToggleSpeakers}
+          >
+            <SteadyToggleText text="Speakers" on={showSpeakers} />
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
