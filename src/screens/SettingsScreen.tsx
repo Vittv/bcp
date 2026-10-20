@@ -1650,20 +1650,20 @@ const styleDef = defineThemedStyles({
   themeGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 16,
+    gap: 12,
   },
   themeOption: {
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
   // the frame carries the family's page background; the inner panel stands in
   // for a raised surface so the two tones read apart at a glance
   themeCard: {
-    width: 136,
-    height: 92,
-    borderRadius: 8,
+    width: 104,
+    height: 70,
+    borderRadius: 6,
     borderWidth: 1,
-    padding: 10,
+    padding: 8,
     overflow: "hidden",
   },
   // selection wears the live accent, so it reads even before the card's own
@@ -1674,41 +1674,41 @@ const styleDef = defineThemedStyles({
   },
   themePanel: {
     flex: 1,
-    borderRadius: 5,
-    paddingHorizontal: 9,
-    paddingVertical: 8,
+    borderRadius: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 6,
     justifyContent: "center",
-    gap: 6,
+    gap: 4,
   },
   themeLine: {
-    height: 5,
-    borderRadius: 3,
+    height: 4,
+    borderRadius: 2,
     width: "72%",
   },
   themeLineShort: {
-    height: 4,
+    height: 3,
     borderRadius: 2,
     width: "46%",
   },
   themeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginTop: 2,
+    gap: 5,
+    marginTop: 1,
   },
   themeDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  themeChip: {
+    width: 8,
     height: 8,
     borderRadius: 4,
+  },
+  themeChip: {
+    height: 6,
+    borderRadius: 3,
     flex: 1,
   },
   themeLabel: {
     fontFamily: CHROME_FONT,
-    fontSize: 13,
+    fontSize: 12,
     color: "var(--text-secondary)",
   },
   themeLabelActive: {
