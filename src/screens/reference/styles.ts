@@ -66,6 +66,11 @@ export const sharedStyles = defineThemedStyles({
     // keep the trailing controls clear of the current-pick chip
     marginLeft: 4,
   },
+  // narrow bars tighten the chip spacing so the office name, date, and rites
+  // share one line; Today joins them once there is room
+  barRightCompact: {
+    gap: 2,
+  },
   // the search fills whatever bar space the leading/back buttons leave,
   // borderless so the whole strip reads as one field; keep its height
   // under the 30px bar so it never crowds the border above. the small
@@ -488,6 +493,9 @@ export const sharedStyles = defineThemedStyles({
     paddingVertical: 4,
     borderRadius: 4,
   },
+  dateBtnCompact: {
+    paddingHorizontal: 5,
+  },
   dateBtnHover: {
     backgroundColor: "var(--control-hover)",
   },
@@ -572,6 +580,9 @@ export const sharedStyles = defineThemedStyles({
     paddingVertical: 4,
     borderRadius: 4,
   },
+  todayBtnCompact: {
+    paddingHorizontal: 5,
+  },
   todayText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
@@ -646,6 +657,23 @@ export const sharedStyles = defineThemedStyles({
     color: "var(--accent)",
     fontWeight: "700",
   },
+  // the picker's Today shortcut, which stays available when the bar drops
+  // its own chip on narrow phones
+  popToday: {
+    marginTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: "var(--border)",
+    paddingVertical: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 4,
+  },
+  popTodayText: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
+    fontSize: 11,
+    color: "var(--text-secondary)",
+  },
   // office picker tabs in the desktop bar, spread directly from the
   // Today page's OfficeTabs stylesheet so the two bars cannot drift
   offTabs: {
@@ -664,16 +692,22 @@ export const sharedStyles = defineThemedStyles({
   offTabTextActive: {
     ...officeBarStyles.tabTextActive,
   },
-  // trad/cont rite toggle: the same chip language as OfficeTabs'
-  // Rubrics/Speakers toggles, as a two-option segment
+  // rite I/II toggle: the same chip language as OfficeTabs'
+  // Rubrics/Speakers toggles, laid out as a two-option segment
   riteSeg: {
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
     marginRight: 6,
   },
+  riteSegCompact: {
+    marginRight: 0,
+  },
   riteChip: {
     ...officeBarStyles.toggle,
+  },
+  riteChipCompact: {
+    paddingHorizontal: 5,
   },
   riteChipText: {
     ...officeBarStyles.toggleText,
@@ -704,6 +738,9 @@ export const sharedStyles = defineThemedStyles({
     paddingVertical: 4,
     borderRadius: 4,
     marginLeft: 6,
+  },
+  officeBtnCompact: {
+    paddingHorizontal: 5,
   },
   officeBtnHover: {
     backgroundColor: "var(--control-hover)",

@@ -24,6 +24,7 @@ import type { CalendarDate } from "../../lib/calendar/types";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
+import { useViewport } from "../../lib/viewport";
 import {
   BASE_OFFICES,
   noSelect,
@@ -37,6 +38,11 @@ import { sharedStyles as styleDef } from "./styles";
 
 // SAFETY: the literals are exactly the OfficeRite union members
 const RITES: OfficeRite[] = ["One", "Two"];
+
+const RITE_LABELS: Record<OfficeRite, string> = {
+  One: "Rite I",
+  Two: "Rite II",
+};
 
 function sameDate(a: CalendarDate, b: CalendarDate): boolean {
   return a.year === b.year && a.month === b.month && a.day === b.day;
@@ -116,10 +122,16 @@ export function OfficesBar({
     setOfficeDate,
   } = useReference();
   const { tokens } = useTheme();
+  const { width } = useViewport();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const styles = useThemedStyles(styleDef);
   const current = openOffice ?? "morning";
+  // narrow bars tighten the chips; the main office bar uses the same breakpoint
+  const compact = width < 500;
+  // the narrowest phones drop Today from the bar; the date picker carries
+  // the same shortcut in its footer
+  const showToday = width >= 320;
   // inline so the sheet is always painted, whatever the class engine does
   const sheetStyle = { backgroundColor: tokens.bg };
   const onToday = sameDate(officeDate, today());
@@ -139,22 +151,21 @@ export function OfficesBar({
     setMenuOpen(false);
   };
 
-  // trad/cont segment; the rite only applies to morning and evening
+  // rite I/II segment; the rite only applies to morning and evening
   const riteToggle = (
-    <View style={styles.riteSeg}>
+    <View style={[styles.riteSeg, compact && styles.riteSegCompact]}>
       {RITES.map((r) => (
         <Pressable
           key={r}
           style={({ hovered }) => [
             styles.riteChip,
+            compact && styles.riteChipCompact,
             hovered && styles.offTabActive,
           ]}
           onPress={() => setOfficeRite(r)}
           accessibilityRole="button"
           accessibilityState={{ selected: r === officeRite }}
-          accessibilityLabel={
-            r === "One" ? "Traditional rite" : "Contemporary rite"
-          }
+          accessibilityLabel={RITE_LABELS[r]}
         >
           <Text
             style={[
@@ -162,7 +173,7 @@ export function OfficesBar({
               r === officeRite && styles.riteChipTextOn,
             ]}
           >
-            {r === "One" ? "Trad" : "Cont"}
+            {RITE_LABELS[r]}
           </Text>
         </Pressable>
       ))}
@@ -170,7 +181,7 @@ export function OfficesBar({
   );
 
   const controls = (
-    <View style={styles.barRight}>
+    <View style={[styles.barRight, compact && styles.barRightCompact]}>
       <Pressable
         style={({ hovered }) => [styles.stepBtn, hovered && styles.rowHover]}
         onPress={() => step(-1)}
@@ -182,6 +193,7 @@ export function OfficesBar({
       <Pressable
         style={({ hovered }) => [
           styles.dateBtn,
+          compact && styles.dateBtnCompact,
           hovered && styles.dateBtnHover,
         ]}
         onPress={openPicker}
@@ -201,17 +213,23 @@ export function OfficesBar({
       >
         <Chevron direction="right" size={6} />
       </Pressable>
-      <Pressable
-        style={({ hovered }) => [styles.todayBtn, hovered && styles.rowHover]}
-        onPress={() => setOfficeDate(today())}
-        accessibilityLabel="Jump to today"
-        accessibilityRole="button"
-        accessibilityState={{ selected: onToday }}
-      >
-        <Text style={[styles.todayText, onToday && styles.todayTextOn]}>
-          Today
-        </Text>
-      </Pressable>
+      {showToday ? (
+        <Pressable
+          style={({ hovered }) => [
+            styles.todayBtn,
+            compact && styles.todayBtnCompact,
+            hovered && styles.rowHover,
+          ]}
+          onPress={() => setOfficeDate(today())}
+          accessibilityLabel="Jump to today"
+          accessibilityRole="button"
+          accessibilityState={{ selected: onToday }}
+        >
+          <Text style={[styles.todayText, onToday && styles.todayTextOn]}>
+            Today
+          </Text>
+        </Pressable>
+      ) : null}
       {riteToggle}
     </View>
   );
@@ -224,6 +242,7 @@ export function OfficesBar({
           <Pressable
             style={({ hovered }) => [
               styles.officeBtn,
+              compact && styles.officeBtnCompact,
               hovered && styles.officeBtnHover,
             ]}
             onPress={openMenu}
@@ -483,6 +502,14 @@ function MonthPicker({
           );
         })}
       </View>
+      <Pressable
+        style={({ hovered }) => [styles.popToday, hovered && styles.rowHover]}
+        onPress={() => onChange(now)}
+        accessibilityLabel="Jump to today"
+        accessibilityRole="button"
+      >
+        <Text style={styles.popTodayText}>Today</Text>
+      </Pressable>
     </View>
   );
 }
