@@ -14,7 +14,7 @@ import {
 } from "../uiScale";
 
 describe("UI scale ladder", () => {
-  it("is ascending and centred on the 100% default", () => {
+  it("is ascending and centered on the 100% default", () => {
     const sorted = [...UI_SCALE_PERCENTAGES].sort((a, b) => a - b);
     expect(UI_SCALE_PERCENTAGES).toEqual(sorted);
     expect(UI_SCALE_PERCENTAGES).toContain(100);

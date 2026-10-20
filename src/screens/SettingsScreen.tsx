@@ -726,7 +726,6 @@ function AppearanceSettings({
               value={uiScaleToPercent(uiScale)}
               onChange={(pct) => setUiScale(percentToUiScale(pct))}
               steps={UI_SCALE_PERCENTAGES}
-              thumb="round"
               formatTick={(pct) => `${pct}%`}
             />
           </View>

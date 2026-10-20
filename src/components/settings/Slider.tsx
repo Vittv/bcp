@@ -7,13 +7,9 @@ import {
   useThemeVar,
 } from "../../lib/theme/themedStyles";
 
-// a gothic nib: a broad blade with two shoulder barbs, a notched crown, and a
-// single writing point at the bottom, so the pen aims down at the track. just
-// the silhouette (outline over a background fill); drawn as inline svg (the
-// app's icon path), so the colors are resolved at the call site.
-const NIB_PATH = "M9 17L3 3L9 6.2L15 3Z";
-
-function NibThumb({ fill, stroke }: { fill: string; stroke: string }) {
+// a plain accent ring: one knob silhouette across every slider, so the fill
+// and the breakpoints carry the setting's character
+function RoundThumb({ fill, stroke }: { fill: string; stroke: string }) {
   return createElement(
     "svg",
     {
@@ -23,32 +19,10 @@ function NibThumb({ fill, stroke }: { fill: string; stroke: string }) {
       "aria-hidden": "true",
       style: { display: "block" },
     },
-    createElement("path", {
-      d: NIB_PATH,
-      fill,
-      stroke,
-      strokeWidth: 1.4,
-      strokeLinejoin: "miter",
-    }),
-  );
-}
-
-// the UI scale knob: a plain accent ring instead of the nib, so the scale
-// reads as its own control
-function RoundThumb({ fill, stroke }: { fill: string; stroke: string }) {
-  return createElement(
-    "svg",
-    {
-      width: 20,
-      height: 20,
-      viewBox: "0 0 20 20",
-      "aria-hidden": "true",
-      style: { display: "block" },
-    },
     createElement("circle", {
-      cx: 10,
-      cy: 10,
-      r: 8,
+      cx: 9,
+      cy: 9,
+      r: 7,
       fill,
       stroke,
       strokeWidth: 2,
@@ -63,9 +37,6 @@ type SliderProps = {
   step?: number;
   onChange: (v: number) => void;
   steps?: readonly number[];
-  // the thumb silhouette: the writing nib for the type ladder, a plain round
-  // knob for the UI scale
-  thumb?: "nib" | "round";
   // render a ladder value as its tick label; the type ladder defaults to px
   formatTick?: (value: number) => string;
 };
@@ -77,7 +48,6 @@ export function Slider({
   step = 0.01,
   onChange,
   steps,
-  thumb = "nib",
   formatTick = (v) => `${v}px`,
 }: SliderProps) {
   const styles = useThemedStyles(sliderStyles);
@@ -85,9 +55,8 @@ export function Slider({
   const trackRef = useRef<View | null>(null);
   const [width, setWidth] = useState(0);
   const values = steps && steps.length > 0 ? steps : null;
-  const round = thumb === "round";
-  const thumbSize = round ? 20 : 18;
-  const pad = round ? 10 : 9;
+  const thumbSize = 18;
+  const pad = 9;
 
   const clamped = values
     ? values.reduce((prev, curr) =>
@@ -99,10 +68,10 @@ export function Slider({
   const rangeMax = values ? Math.max(...values) : max;
   const ratio = (clamped - rangeMin) / Math.max(1e-6, rangeMax - rangeMin);
 
-  // the nib, the fill edge and the breakpoint lines must all land on the same
-  // physical pixel column, or a hairline mark sits a half pixel off the nib's
-  // point and reads as misaligned. snap every horizontal measure to the device
-  // pixel grid, then centre each mark on that shared column.
+  // the knob, the fill edge and the breakpoint lines must all land on the same
+  // physical pixel column, or a hairline mark sits a half pixel off the knob's
+  // center and reads as misaligned. snap every horizontal measure to the device
+  // pixel grid, then center each mark on that shared column.
   const dpr =
     typeof window !== "undefined" && window.devicePixelRatio
       ? window.devicePixelRatio
@@ -202,25 +171,18 @@ export function Slider({
             styles.thumb,
             {
               left: thumbLeft,
-              width: thumbSize,
-              height: thumbSize,
-              top: round ? -8 : -15,
             },
           ]}
         >
-          {round ? (
-            <RoundThumb fill={v("var(--bg)")} stroke={v("var(--accent)")} />
-          ) : (
-            <NibThumb fill={v("var(--bg)")} stroke={v("var(--accent)")} />
-          )}
+          <RoundThumb fill={v("var(--bg)")} stroke={v("var(--accent)")} />
         </View>
         {values ? (
           <View style={styles.ticks}>
             {values.map((v) => {
               const r = (v - rangeMin) / Math.max(1e-6, rangeMax - rangeMin);
-              // an even-width mark centred on the snapped column, so its
-              // centre is a whole pixel and lands under the thumb's point (a 1px
-              // hairline would centre on a half pixel and sit 0.5px off)
+              // an even-width mark centered on the snapped column, so its
+              // center is a whole pixel and lands under the knob's center (a 1px
+              // hairline would center on a half pixel and sit 0.5px off)
               const left = snap(width * r) - 1;
               return <View key={v} style={[styles.tick, { left }]} />;
             })}
@@ -268,7 +230,7 @@ const sliderStyles = defineThemedStyles({
     borderRadius: 2,
     position: "relative",
   },
-  // the nib overhangs the 4px track, so the hit layer spans the whole control
+  // the knob overhangs the 4px track, so the hit layer spans the whole control
   // and carries the horizontal-resize cursor
   hitArea: {
     position: "absolute",
@@ -281,37 +243,39 @@ const sliderStyles = defineThemedStyles({
   fill: {
     height: 4,
     backgroundColor: "var(--accent)",
-    opacity: 0.35,
+    opacity: 0.55,
     borderRadius: 2,
     position: "absolute",
     left: 0,
     top: 0,
   },
-  // size and offset vary by thumb silhouette, so set them at the call site
   thumb: {
     position: "absolute",
     alignItems: "center",
     justifyContent: "center",
+    width: 18,
+    height: 18,
+    top: -7,
     zIndex: 10,
   },
   ticks: {
     position: "absolute",
-    top: -16,
+    top: -10,
     left: 0,
     right: 0,
-    height: 36,
+    height: 24,
   },
   tick: {
     position: "absolute",
     top: 0,
     width: 2,
-    height: 36,
+    height: 24,
     backgroundColor: "var(--text-secondary)",
     opacity: 0.4,
   },
   tickLabels: {
     position: "absolute",
-    top: -34,
+    top: -28,
     height: 16,
   },
   tickLabel: {
