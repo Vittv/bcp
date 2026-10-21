@@ -1,12 +1,11 @@
 import { type ReactNode, useState } from "react";
 import { type LayoutChangeEvent, Pressable, Text, View } from "react-native";
 import type { OfficeId } from "../../lib/content/types";
-import { CHROME_FONT } from "../../lib/fonts";
-import {
-  defineThemedStyles,
-  useThemedStyles,
-} from "../../lib/theme/themedStyles";
-import { useViewport } from "../../lib/viewport";
+import type { OfficeRite } from "../../lib/office/types";
+import { useThemedStyles } from "../../lib/theme/themedStyles";
+import { useViewport, WIDTH_COMPACT } from "../../lib/viewport";
+import { BarDropdown, type DropdownOption } from "./BarDropdown";
+import { officeBarStyles } from "./officeBarStyles";
 
 const noSelect = {
   userSelect: "none" as const,
@@ -15,12 +14,10 @@ const noSelect = {
 
 type TabId = "morning" | "noonday" | "evening" | "compline";
 
-export const OFFICES: Record<TabId, OfficeId> = {
-  morning: "morning-rite-two",
-  noonday: "noonday",
-  evening: "evening-rite-two",
-  compline: "compline",
-};
+const RITE_OPTIONS: readonly DropdownOption<OfficeRite>[] = [
+  { id: "One", label: "Rite I" },
+  { id: "Two", label: "Rite II" },
+];
 
 // daily devotions (BCP pp. 136-140) replace each office in devotions mode.
 export const DEVOTIONS: Record<TabId, OfficeId> = {
@@ -37,9 +34,8 @@ const TABS: { id: TabId; label: string; short: string }[] = [
   { id: "compline", label: "Compline", short: "Comp" },
 ];
 
-// a toggle label that may bold on activate without reflowing the bar: an
-// invisible bold twin reserves the widest metrics while the visible text
-// floats above it, so nothing beside the chip moves when it flips
+// an invisible bold twin reserves the label's widest metrics, so the visible
+// text can bold on activate without reflowing the bar
 function SteadyToggleText({ text, on }: { text: string; on: boolean }) {
   const styles = useThemedStyles(officeBarStyles);
   return (
@@ -68,6 +64,8 @@ type OfficeTabsProps = {
   onToggleSpeakers: () => void;
   devotions: boolean;
   onToggleDevotions: () => void;
+  rite: OfficeRite;
+  onRiteChange: (r: OfficeRite) => void;
 };
 
 export function OfficeTabs({
@@ -80,6 +78,8 @@ export function OfficeTabs({
   onToggleSpeakers,
   devotions,
   onToggleDevotions,
+  rite,
+  onRiteChange,
 }: OfficeTabsProps) {
   const styles = useThemedStyles(officeBarStyles);
   const { width: viewportWidth } = useViewport();
@@ -87,12 +87,13 @@ export function OfficeTabs({
   // well below the window; the effective viewport is the first paint
   const [barWidth, setBarWidth] = useState(0);
   const width = barWidth || viewportWidth;
-  // abbreviated names kick in before phone widths; tighter chrome later
+  // abbreviated labels kick in before phone widths; tighter chrome later
   const shortLabels = width < 640;
-  const compact = width < 500;
-  // below this even abbreviated tabs and the secondary toggles cannot share a
-  // row; rubrics and speakers also live in Settings -> Office, so drop them
-  const hideToggles = width < 380;
+  const compact = width < WIDTH_COMPACT;
+  const showRite = !devotions && (active === "morning" || active === "evening");
+  // below this the reading toggles no longer fit beside the tabs and rite;
+  // Settings -> Office still offers both
+  const showReadingToggles = width >= 400;
   return (
     <View
       style={[styles.bar, noSelect]}
@@ -139,131 +140,58 @@ export function OfficeTabs({
           );
         })}
       </View>
-      {hideToggles ? null : (
+      {showReadingToggles || showRite ? (
         <View style={[styles.togglesRight, compact && styles.groupCompact]}>
-          <Pressable
-            style={({ hovered }) => [
-              styles.toggle,
-              compact && styles.itemCompact,
-              hovered && styles.tabHover,
-            ]}
-            onPress={onToggleRubrics}
-          >
-            <SteadyToggleText text="Rubrics" on={showRubrics} />
-          </Pressable>
-          <Pressable
-            style={({ hovered }) => [
-              styles.toggle,
-              compact && styles.itemCompact,
-              hovered && styles.tabHover,
-            ]}
-            onPress={onToggleSpeakers}
-          >
-            <SteadyToggleText text="Speakers" on={showSpeakers} />
-          </Pressable>
+          {showReadingToggles ? (
+            <>
+              <Pressable
+                style={({ hovered }) => [
+                  styles.toggle,
+                  compact && styles.itemCompact,
+                  hovered && styles.tabHover,
+                ]}
+                onPress={onToggleRubrics}
+                accessibilityRole="button"
+                accessibilityState={{ selected: showRubrics }}
+                accessibilityLabel="Rubrics"
+              >
+                <SteadyToggleText
+                  text={shortLabels ? "Rubr" : "Rubrics"}
+                  on={showRubrics}
+                />
+              </Pressable>
+              <Pressable
+                style={({ hovered }) => [
+                  styles.toggle,
+                  compact && styles.itemCompact,
+                  hovered && styles.tabHover,
+                ]}
+                onPress={onToggleSpeakers}
+                accessibilityRole="button"
+                accessibilityState={{ selected: showSpeakers }}
+                accessibilityLabel="Speakers"
+              >
+                <SteadyToggleText
+                  text={shortLabels ? "Spk" : "Speakers"}
+                  on={showSpeakers}
+                />
+              </Pressable>
+            </>
+          ) : null}
+          {showRite ? (
+            <BarDropdown
+              value={rite}
+              options={RITE_OPTIONS}
+              onChange={onRiteChange}
+              accent
+              steadyWidth
+              accessibilityLabel="Office rite"
+            />
+          ) : null}
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
 
 export type { TabId };
-
-// exported so the reference offices bar derives its chrome from these
-// exact tokens instead of retyping them and drifting apart. the object stays
-// a themed definition (var(--token) strings); every consumer resolves it
-// with useThemedStyles so it paints correctly on web and native alike.
-export const officeBarStyles = defineThemedStyles({
-  bar: {
-    height: 30,
-    borderBottomWidth: 1,
-    borderBottomColor: "var(--border)",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    // matches the sidebar toolbar and the reference bars
-    paddingHorizontal: 6,
-    backgroundColor: "var(--bg)",
-    flexShrink: 0,
-  },
-  tabsLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  togglesRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  tab: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  tabHover: {
-    backgroundColor: "var(--control-hover)",
-  },
-  tabText: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 11,
-    color: "var(--text-secondary)",
-  },
-  tabTextActive: {
-    color: "var(--accent)",
-    fontWeight: "700",
-  },
-  toggle: {
-    // every bar chip (picker, arrows, toggles, dropdown) is a fixed 24px
-    // so they line up across the bar
-    height: 24,
-    justifyContent: "center",
-    paddingHorizontal: 10,
-    borderRadius: 4,
-  },
-  // the mode switch (Daily Devotions) reads as a primary control: a bordered
-  // chip in the left group, accent border while active
-  modeToggle: {
-    borderWidth: 1,
-    borderColor: "var(--border)",
-    borderRadius: 4,
-    backgroundColor: "var(--surface)",
-  },
-  modeToggleOn: {
-    borderColor: "var(--accent)",
-  },
-  toggleText: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 11,
-    color: "var(--text-secondary)",
-  },
-  toggleTextOn: {
-    color: "var(--accent)",
-    fontWeight: "700",
-  },
-  // invisible bold twin reserves the widest metrics so the visible label
-  // can switch weight without reflowing the row
-  steadyText: {
-    position: "relative",
-    alignSelf: "center",
-  },
-  steadyTextGhost: {
-    opacity: 0,
-    fontWeight: "700",
-  },
-  steadyTextLabel: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    textAlign: "center",
-  },
-  groupCompact: {
-    gap: 2,
-  },
-  itemCompact: {
-    paddingHorizontal: 5,
-  },
-});

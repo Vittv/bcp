@@ -32,6 +32,7 @@ import { psalmNumbers } from "../../lib/content/psalter";
 import type { CollectSection, OfficeId } from "../../lib/content/types";
 import type { PageStepper } from "../../lib/input/sequenceNav";
 import { registerPageStepper, stepLinear } from "../../lib/input/sequenceNav";
+import type { OfficeRite } from "../../lib/office/types";
 import { searchCollects } from "../../lib/reference/search";
 import { useThemedStyles, useThemeVar } from "../../lib/theme/themedStyles";
 import { useShowHotkeyCap } from "../../lib/viewport";
@@ -109,7 +110,7 @@ export type RefOfficeBase =
   | "noonday"
   | "owe"
   | "compline";
-export type OfficeRite = "One" | "Two";
+export type { OfficeRite };
 
 export const BASE_OFFICES: {
   id: RefOfficeBase;

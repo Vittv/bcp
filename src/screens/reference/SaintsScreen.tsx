@@ -7,7 +7,7 @@ import {
 } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SanctoraleCard } from "../../components/office/SanctoraleCard";
-import { officeBarStyles } from "../../components/shell/OfficeTabs";
+import { officeBarStyles } from "../../components/shell/officeBarStyles";
 import { usePalette } from "../../context/PaletteContext";
 import {
   monthDayShortLabel,

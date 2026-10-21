@@ -10,8 +10,10 @@ import type {
 // how a reader prefers the office composed. rite selects Morning/Evening
 // Prayer Rite One vs Two; collectRite the language of the Collect of the Day;
 // personalMode strips speaker labels and the priestly absolution for solo prayer.
+export type OfficeRite = "One" | "Two";
+
 export type OfficePrefs = {
-  rite: "One" | "Two";
+  rite: OfficeRite;
   collectRite: "traditional" | "contemporary";
   showRubrics: boolean;
   showAlternates: boolean;

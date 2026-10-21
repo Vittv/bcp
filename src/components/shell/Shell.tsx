@@ -80,6 +80,7 @@ import {
   type HistoryController,
 } from "../../lib/navigation/history";
 import { composeOffice } from "../../lib/office";
+import { dailyOfficeId } from "../../lib/office/daily";
 import { DEFAULT_PREFS } from "../../lib/office/types";
 import {
   registerOpenSettingsSection,
@@ -116,7 +117,7 @@ import {
 import { PaletteHost } from "../../screens/reference/PaletteHost";
 import { SettingsScreen } from "../../screens/SettingsScreen";
 import { TodayScreen } from "../../screens/TodayScreen";
-import { DEVOTIONS, OFFICES, OfficeTabs } from "./OfficeTabs";
+import { DEVOTIONS, OfficeTabs } from "./OfficeTabs";
 import { StatusBar } from "./StatusBar";
 import { TopBar } from "./TopBar";
 
@@ -463,6 +464,8 @@ export function Shell() {
     setShowSpeakers,
     devotions,
     setDevotions,
+    rite,
+    setRite,
   } = useOfficeSettings();
   const scrollRef = useRef<HTMLDivElement>(null);
   const hintsRef = useRef<HintHandle>(null);
@@ -1086,9 +1089,10 @@ export function Shell() {
 
   const document = composeOffice(
     date,
-    devotions ? DEVOTIONS[tab] : OFFICES[tab],
+    devotions ? DEVOTIONS[tab] : dailyOfficeId(tab, rite),
     {
       ...DEFAULT_PREFS,
+      rite,
       personalMode: false,
       showRubrics,
     },
@@ -1209,6 +1213,8 @@ export function Shell() {
             onToggleSpeakers={() => setShowSpeakers((v) => !v)}
             devotions={devotions}
             onToggleDevotions={() => setDevotions(!devotions)}
+            rite={rite}
+            onRiteChange={setRite}
           />
         );
       case "lectionary":
@@ -1238,7 +1244,7 @@ export function Shell() {
       case "today":
         return (
           <TodayScreen
-            key={`${date.year}-${date.month}-${date.day}-${tab}-${devotions ? "dev" : "full"}`}
+            key={`${date.year}-${date.month}-${date.day}-${tab}-${rite}-${devotions ? "dev" : "full"}`}
             date={date}
             tab={tab}
             onTabChange={handleTabChange}

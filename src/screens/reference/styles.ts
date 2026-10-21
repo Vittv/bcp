@@ -1,5 +1,5 @@
 import type { ViewStyle } from "react-native";
-import { officeBarStyles } from "../../components/shell/OfficeTabs";
+import { officeBarStyles } from "../../components/shell/officeBarStyles";
 import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../../lib/fonts";
 import { defineThemedStyles } from "../../lib/theme/themedStyles";
 
