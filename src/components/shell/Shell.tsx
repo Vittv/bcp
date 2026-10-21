@@ -328,7 +328,6 @@ export function Shell() {
   const viewport = useViewport();
   const viewportWidth = viewport.width;
   const isMobile = Platform.OS !== "web" || viewport.isMobile;
-  const compactBars = Platform.OS !== "web" || viewport.compact;
   // the settings modal is outside the zoom, so its layout follows the raw
   // window rather than the zoomed width
   const settingsMobile =
@@ -1575,7 +1574,6 @@ export function Shell() {
                                 ? "Daily Readings"
                                 : null
                           }
-                          compact={compactBars}
                         />
                       </div>
                       {isMobile && !mobileOpen ? (

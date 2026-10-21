@@ -1,10 +1,12 @@
-import { Text, View } from "react-native";
+import { useState } from "react";
+import { type LayoutChangeEvent, Text, View } from "react-native";
 import type { Color, DolSlot, Season } from "../../lib/calendar/types";
 import { CHROME_FONT } from "../../lib/fonts";
 import {
   defineThemedStyles,
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
+import { useViewport, WIDTH_COMPACT } from "../../lib/viewport";
 import { SeasonDot } from "./SeasonDot";
 
 // bundled via expo-font; system monospace is the fallback on native
@@ -58,9 +60,6 @@ type StatusBarProps = {
   // label of the reference document currently open (e.g. "Psalm 23");
   // replaces the office name while set
   reading?: string | null;
-  // narrow layout: keep the edge-anchored items, drop the
-  // informational extras (lectionary year, scroll percentage)
-  compact?: boolean;
 };
 
 const noSelect = {
@@ -75,11 +74,20 @@ export function StatusBar({
   officeName,
   scrollPct,
   reading,
-  compact = false,
 }: StatusBarProps) {
   const styles = useThemedStyles(statusBarStyles);
+  const { width: viewportWidth } = useViewport();
+  // the window width overstates the bar once the sidebar takes its column, so
+  // measure the bar itself and shed the year and week before they clip the name
+  const [barWidth, setBarWidth] = useState(0);
+  const compact = (barWidth || viewportWidth) < WIDTH_COMPACT;
   return (
-    <View style={[styles.bar, noSelect]}>
+    <View
+      style={[styles.bar, noSelect]}
+      onLayout={(e: LayoutChangeEvent) =>
+        setBarWidth(e.nativeEvent.layout.width)
+      }
+    >
       <View style={styles.left}>
         <View style={styles.item}>
           <SeasonDot color={seasonColor} size={6} />
@@ -91,12 +99,12 @@ export function StatusBar({
           <>
             <Text style={styles.sep}>·</Text>
             <Text style={styles.text}>Year {slot.year}</Text>
+            <Text style={styles.sep}>·</Text>
+            <Text style={styles.text} numberOfLines={1}>
+              {weekLabel(slot)}
+            </Text>
           </>
         )}
-        <Text style={styles.sep}>·</Text>
-        <Text style={styles.text} numberOfLines={1}>
-          {weekLabel(slot)}
-        </Text>
       </View>
       <View style={styles.right}>
         <Text style={[styles.text, styles.rightText]} numberOfLines={1}>
