@@ -15,7 +15,11 @@ import {
 import { PullChevron } from "../../components/shell/Chevron";
 import { type HintHandle, HintLayer } from "../../components/shell/HintLayer";
 import { SidebarIcon } from "../../components/shell/Icon";
-import type { ModalType, PageId } from "../../components/shell/Sidebar";
+import type {
+  ModalType,
+  PageId,
+  SidebarDetail,
+} from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
 import {
   type AutoscrollIndicator,
@@ -1112,7 +1116,8 @@ export function Shell() {
   // corpus's own "where reading stopped" on its row. all are read from
   // storage because the bible context is cleared on every navigation, and
   // they are un-memoized so a progress reset cannot leave a stale label behind
-  const nextFeast = upcomingSanctoraleEntry(today());
+  const now = today();
+  const nextFeast = upcomingSanctoraleEntry(now);
   // the corpus the reader has selected, so the apocrypha row reads the
   // deuterocanonical corpus's own last place rather than the other one's
   const { apocrypha } = useTranslation();
@@ -1126,16 +1131,21 @@ export function Shell() {
   // row still answers "where would this take me" instead of sitting blank.
   // that is the reader's position either way, since nothing saved means the
   // first chapter is what they would land on
-  const readingLabel = (t: Testament) => {
+  const readingDetail = (t: Testament): SidebarDetail | undefined => {
     const pos = saved[t] ?? openingRef(t, apocrypha);
-    return pos ? `${pos.abbrev} ${pos.chapter}` : undefined;
+    return pos ? { text: `${pos.abbrev} ${pos.chapter}` } : undefined;
   };
-  const sidebarDetail: Partial<Record<PageId, string>> = {
-    today: OFFICE_LABEL[officeForHour(new Date().getHours())],
-    saints: nextFeast ? holyDayCountdown(nextFeast, today()) : undefined,
-    "old-testament": readingLabel("OT"),
-    "new-testament": readingLabel("NT"),
-    apocrypha: readingLabel("DC"),
+  const sidebarDetail: Partial<Record<PageId, SidebarDetail>> = {
+    today: { text: OFFICE_LABEL[officeForHour(new Date().getHours())] },
+    saints: nextFeast
+      ? {
+          text: holyDayCountdown(nextFeast, now),
+          isToday: nextFeast.month === now.month && nextFeast.day === now.day,
+        }
+      : undefined,
+    "old-testament": readingDetail("OT"),
+    "new-testament": readingDetail("NT"),
+    apocrypha: readingDetail("DC"),
   };
 
   const scrollRafRef = useRef<number | null>(null);

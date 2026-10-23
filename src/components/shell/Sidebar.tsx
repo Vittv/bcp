@@ -174,6 +174,12 @@ function ToolButton({
   );
 }
 
+export type SidebarDetail = {
+  text: string;
+  // the detail is the day itself, not a countdown to it
+  isToday?: boolean;
+};
+
 type SidebarProps = {
   active: PageId;
   onSelect: (id: PageId) => void;
@@ -181,7 +187,7 @@ type SidebarProps = {
   onOpenModal: (modal: ModalType) => void;
   // per-row trailing context (the season, countdown, office of the hour...);
   // rows without a detail keep today's single label
-  detail?: Partial<Record<PageId, string>>;
+  detail?: Partial<Record<PageId, SidebarDetail>>;
   // true while a drawer drag tracks the finger; a drag released over a row
   // is a gesture, not a tap, so it must not navigate on release
   dragging?: boolean;
@@ -259,6 +265,7 @@ export function Sidebar({
               {id && idx > 0 ? <View style={styles.sectionDivider} /> : null}
               {items.map((item) => {
                 const isActive = active === item.id;
+                const itemDetail = detail?.[item.id];
                 return (
                   <Pressable
                     key={item.id}
@@ -298,9 +305,15 @@ export function Sidebar({
                         {item.label}
                       </Text>
                     </View>
-                    {detail?.[item.id] ? (
-                      <Text style={styles.navDetail} numberOfLines={1}>
-                        {detail[item.id]}
+                    {itemDetail ? (
+                      <Text
+                        style={[
+                          styles.navDetail,
+                          itemDetail.isToday && styles.navDetailToday,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {itemDetail.text}
                       </Text>
                     ) : null}
                   </Pressable>
@@ -492,6 +505,13 @@ const sidebarStyles = defineThemedStyles({
     // long details (feast names) ellipsize within the trailing space rather
     // than squeeze the row label
     flexShrink: 1,
+  },
+  // a feast that falls today stops counting down and reads as a live marker
+  navDetailToday: {
+    color: "var(--accent)",
+    fontWeight: "700",
+    textTransform: "capitalize",
+    opacity: 1,
   },
   footer: {
     height: 24,
