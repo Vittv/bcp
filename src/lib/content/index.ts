@@ -6,6 +6,7 @@ export * from "./lessons";
 export * from "./offices";
 export * from "./psalms";
 export * from "./psalter";
+export * from "./psalterDays";
 export * from "./schemas";
 export * from "./types";
 export * from "./web";

@@ -26,6 +26,7 @@ export type HistorySnapshot = {
   officeDate: CalendarDate;
   query: string;
   psalm: number | null;
+  psalterDay: number | null;
   office: { base: RefOfficeBase; rite: OfficeRite } | null;
   collect: CollectSel | null;
   saint: string | null;

@@ -29,6 +29,10 @@ import {
 import type { CalendarDate } from "../../lib/calendar/types";
 import { canticleTitle } from "../../lib/content/canticles";
 import { psalmNumbers } from "../../lib/content/psalter";
+import {
+  PSALTER_DAY_COUNT,
+  psalterDayForDate,
+} from "../../lib/content/psalterDays";
 import type { CollectSection, OfficeId } from "../../lib/content/types";
 import type { PageStepper } from "../../lib/input/sequenceNav";
 import { registerPageStepper, stepLinear } from "../../lib/input/sequenceNav";
@@ -159,14 +163,20 @@ export type CollectSel = {
   title: string;
 };
 
-// the five index-style pickers (psalms, collects, saints, proverbs,
-// canticles) share one restorable-field implementation. null is the picker
-// page: opening pushes the selection, the mobile back button pushes null,
-// and restores replay the raw setter (null included) so Back from a detail
-// lands back on the list instead of a stale open item. picking from a
+// the six index-style pickers (psalms, psalter days, collects, saints,
+// proverbs, canticles) share one restorable-field implementation. null is the
+// picker page: opening pushes the selection, the mobile back button pushes
+// null, and restores replay the raw setter (null included) so Back from a
+// detail lands back on the list instead of a stale open item. picking from a
 // filtered list records that list as its own step first, so Back returns to
 // the exact list the pick came from.
-type IndexPickerKey = "psalm" | "collect" | "saint" | "proverb" | "canticle";
+type IndexPickerKey =
+  | "psalm"
+  | "psalterDay"
+  | "collect"
+  | "saint"
+  | "proverb"
+  | "canticle";
 
 function useIndexPicker<K extends IndexPickerKey>(
   key: K,
@@ -216,6 +226,9 @@ export type ReferenceState = {
   setQuery: (q: string) => void;
   openPsalm: number | null;
   setOpenPsalm: (n: number | null) => void;
+  // the open 30-day psalter cycle day (1..30); null shows today's day
+  openPsalterDay: number | null;
+  setOpenPsalterDay: (n: number | null) => void;
   // base office + rite; the composed id is refOfficeId(openOffice, rite)
   openOffice: RefOfficeBase | null;
   setOpenOffice: (id: RefOfficeBase) => void;
@@ -278,12 +291,19 @@ export function ReferenceProvider({
   const queryRef = useRef(query);
   queryRef.current = query;
 
-  // the five index pickers share one restorable-field implementation:
+  // the six index pickers share one restorable-field implementation:
   // opening pushes the pick, the mobile back pushes null, and restores
   // replay both branches through the raw setter
   const [openPsalm, setOpenPsalm, setPsalmRaw] = useIndexPicker(
     "psalm",
     "psalms",
+    page,
+    history,
+    queryRef,
+  );
+  const [openPsalterDay, setOpenPsalterDay, setPsalterDayRaw] = useIndexPicker(
+    "psalterDay",
+    "psalter",
     page,
     history,
     queryRef,
@@ -375,6 +395,19 @@ export function ReferenceProvider({
             return true;
           };
         }
+        case "psalter": {
+          return (delta) => {
+            const n = stepLinear(
+              openPsalterDay ?? psalterDayForDate(today()),
+              1,
+              PSALTER_DAY_COUNT,
+              delta,
+            );
+            if (n === null) return false;
+            setPsalterDayRaw(n);
+            return true;
+          };
+        }
         case "proverbs": {
           // 31 chapters, the same count the proverbs screen hard-codes
           return (delta) => {
@@ -388,7 +421,14 @@ export function ReferenceProvider({
           return null;
       }
     },
-    [openPsalm, setPsalmRaw, openProvChapter, setProverbRaw],
+    [
+      openPsalm,
+      setPsalmRaw,
+      openPsalterDay,
+      setPsalterDayRaw,
+      openProvChapter,
+      setProverbRaw,
+    ],
   );
 
   // register the active scripture page's stepper for the shell's arrow
@@ -419,17 +459,19 @@ export function ReferenceProvider({
   const readingLabel =
     page === "psalms"
       ? `Psalm ${openPsalm ?? 1}`
-      : page === "offices"
-        ? OFFICE_NAMES[refOfficeId(openOffice ?? "morning", officeRite)]
-        : page === "collects"
-          ? (selectedCollect ?? FIRST_COLLECT).title
-          : page === "saints"
-            ? (sanctoraleBySlug(openSaint ?? defaultSaint())?.title ?? null)
-            : page === "proverbs"
-              ? `Proverbs ${openProvChapter ?? 1}`
-              : page === "canticles"
-                ? (canticleTitle(openCanticle ?? 1) ?? null)
-                : null;
+      : page === "psalter"
+        ? `Day ${openPsalterDay ?? psalterDayForDate(today())}`
+        : page === "offices"
+          ? OFFICE_NAMES[refOfficeId(openOffice ?? "morning", officeRite)]
+          : page === "collects"
+            ? (selectedCollect ?? FIRST_COLLECT).title
+            : page === "saints"
+              ? (sanctoraleBySlug(openSaint ?? defaultSaint())?.title ?? null)
+              : page === "proverbs"
+                ? `Proverbs ${openProvChapter ?? 1}`
+                : page === "canticles"
+                  ? (canticleTitle(openCanticle ?? 1) ?? null)
+                  : null;
 
   useEffect(() => {
     onReadingChange(readingLabel);
@@ -449,6 +491,8 @@ export function ReferenceProvider({
     setQuery,
     openPsalm,
     setOpenPsalm,
+    openPsalterDay,
+    setOpenPsalterDay,
     openOffice,
     setOpenOffice,
     officeRite,

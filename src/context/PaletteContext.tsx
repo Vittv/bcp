@@ -13,6 +13,7 @@ import {
 // open always starts from a fresh search.
 export type PaletteScope =
   | "psalms"
+  | "psalter"
   | "canticles"
   | "collects"
   | "saints"

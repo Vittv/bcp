@@ -12,13 +12,15 @@ import {
 } from "../content/canticles";
 import { allCollects, collectText } from "../content/collects";
 import { getAllKjvBooks } from "../content/kjv";
+import { parsePsalmCitation } from "../content/psalms";
 import {
   psalmIncipit,
   psalmNumbers,
   psalmPassage,
   psalmVerseCount,
 } from "../content/psalter";
-import type { CollectSection } from "../content/types";
+import { PSALTER_DAYS, psalterDaySummary } from "../content/psalterDays";
+import type { CollectSection, PsalterDay } from "../content/types";
 import { filterSearch } from "../search";
 import { type SettingsSectionId, visibleSettings } from "../settings";
 
@@ -154,12 +156,28 @@ export function searchSaints(query: string): SaintHit[] {
   return hits;
 }
 
+// the 30-day cycle matching `query` by day number or by any psalm number in
+// its portions, so "119" finds the three days that carry it. an empty query
+// yields all 30 days.
+export function searchPsalterDays(query: string): PsalterDay[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return PSALTER_DAYS;
+  return PSALTER_DAYS.filter((day) => {
+    if (String(day.day).startsWith(q)) return true;
+    return [...day.morning, ...day.evening].some((citation) => {
+      const parsed = parsePsalmCitation(citation);
+      return parsed ? String(parsed.psalm).includes(q) : false;
+    });
+  });
+}
+
 // global palette: every section's index folds into one searchable record
 // set so the Ctrl+K palette can jump straight to any reading. each entry
 // carries the run that reopens that reading on its own page, so the
 // picker only needs switch + navigate once a result is chosen.
 export type PaletteSection =
   | "psalms"
+  | "psalter"
   | "proverbs"
   | "canticles"
   | "collects"
@@ -170,6 +188,7 @@ export type PaletteSection =
 
 export type PaletteRun =
   | { kind: "psalm"; psalm: number }
+  | { kind: "psalterDay"; day: number }
   | { kind: "proverb"; chapter: number }
   | { kind: "canticle"; number: number }
   | { kind: "collect"; section: string; title: string }
@@ -191,6 +210,7 @@ export type PaletteEntry = {
 // alone
 export const PALETTE_SECTION_ORDER: PaletteSection[] = [
   "psalms",
+  "psalter",
   "proverbs",
   "canticles",
   "collects",
@@ -232,6 +252,18 @@ function psalmEntries(query: string, cap = Infinity): PaletteEntry[] {
       label: h.incipit || `Psalm ${h.psalm}`,
       detail: `Psalm ${h.psalm} · ${h.verses} verse${h.verses === 1 ? "" : "s"}`,
       run: { kind: "psalm", psalm: h.psalm },
+    }));
+}
+
+function psalterEntries(query: string, cap = Infinity): PaletteEntry[] {
+  return searchPsalterDays(query)
+    .slice(0, cap)
+    .map((day) => ({
+      id: `psalter:${day.day}`,
+      section: "psalter",
+      label: `Day ${day.day}`,
+      detail: psalterDaySummary(day),
+      run: { kind: "psalterDay", day: day.day },
     }));
 }
 
@@ -348,6 +380,7 @@ function apocryphaKeyword(lower: string): boolean {
 function sectionKeyword(lower: string): PaletteSection | null {
   const keywords: [PaletteSection, readonly string[]][] = [
     ["psalms", ["psalm", "psalms"]],
+    ["psalter", ["psalter", "30-day psalter", "30 day psalter"]],
     ["proverbs", ["proverb", "proverbs", "prov"]],
     ["canticles", ["canticle", "canticles"]],
     ["collects", ["collect", "collects"]],
@@ -364,6 +397,8 @@ function expandSection(section: PaletteSection): PaletteEntry[] {
   switch (section) {
     case "psalms":
       return psalmEntries("");
+    case "psalter":
+      return psalterEntries("");
     case "proverbs":
       return proverbEntries("prov");
     case "canticles":
@@ -436,6 +471,7 @@ export function searchPalette(
   if (section) return expandSection(section);
 
   pushEntries(out, psalmEntries(q, PER_SECTION_CAP));
+  pushEntries(out, psalterEntries(q, PER_SECTION_CAP));
   pushEntries(out, proverbEntries(lower, PER_SECTION_CAP));
   pushEntries(out, canticleEntries(lower, PER_SECTION_CAP));
   pushEntries(out, collectEntries(q, PER_SECTION_CAP));

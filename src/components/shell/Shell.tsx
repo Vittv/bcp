@@ -69,6 +69,7 @@ import {
   registerOpenChangelog,
   writeChangelogPrefs,
 } from "../../lib/changelogPrefs";
+import { psalterDayForDate } from "../../lib/content/psalterDays";
 import {
   IS_LINUX_CHROMIUM,
   IS_MACOS_TAURI,
@@ -115,6 +116,8 @@ import {
   ProverbsScreen,
   PsalmsBar,
   PsalmsScreen,
+  PsalterBar,
+  PsalterScreen,
   ReferenceProvider,
   SaintsBar,
   SaintsScreen,
@@ -198,6 +201,7 @@ function u(n: number): string {
 function isReferencePage(p: PageId): boolean {
   return (
     p === "psalms" ||
+    p === "psalter" ||
     p === "collects" ||
     p === "offices" ||
     p === "saints" ||
@@ -840,6 +844,7 @@ export function Shell() {
     // bar would, so the hotkey lands on whichever section the user is on
     const SCOPE_FOR_PAGE: Partial<Record<PageId, PaletteScope>> = {
       psalms: "psalms",
+      psalter: "psalter",
       canticles: "canticles",
       collects: "collects",
       saints: "saints",
@@ -1146,6 +1151,7 @@ export function Shell() {
     "old-testament": readingDetail("OT"),
     "new-testament": readingDetail("NT"),
     apocrypha: readingDetail("DC"),
+    psalter: { text: `Day ${psalterDayForDate(now)}` },
   };
 
   const scrollRafRef = useRef<number | null>(null);
@@ -1200,6 +1206,8 @@ export function Shell() {
     switch (page) {
       case "psalms":
         return <PsalmsBar leading={sidebarShowButton} />;
+      case "psalter":
+        return <PsalterBar leading={sidebarShowButton} />;
       case "canticles":
         return <CanticlesBar leading={sidebarShowButton} />;
       case "collects":
@@ -1273,6 +1281,14 @@ export function Shell() {
       case "psalms":
         return (
           <PsalmsScreen
+            isMobile={isMobile}
+            fontScale={fontScale}
+            onScrollProgress={reportScroll}
+          />
+        );
+      case "psalter":
+        return (
+          <PsalterScreen
             isMobile={isMobile}
             fontScale={fontScale}
             onScrollProgress={reportScroll}

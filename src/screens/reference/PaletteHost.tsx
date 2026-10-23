@@ -16,6 +16,7 @@ import { CollectIndex } from "./CollectsScreen";
 import { GlobalIndex } from "./GlobalIndex";
 import { ChapterIndex, useProvChapterMeta } from "./ProverbsScreen";
 import { PsalmIndex } from "./PsalmsScreen";
+import { PsalterIndex } from "./PsalterScreen";
 import { SaintIndex } from "./SaintsScreen";
 import { useReference } from "./shared";
 
@@ -39,6 +40,10 @@ export function PaletteHost() {
       case "psalm":
         ref.setOpenPsalm(run.psalm);
         navigateTo("psalms");
+        break;
+      case "psalterDay":
+        ref.setOpenPsalterDay(run.day);
+        navigateTo("psalter");
         break;
       case "proverb":
         ref.setOpenProvChapter(run.chapter);
@@ -94,6 +99,24 @@ export function PaletteHost() {
               query={query}
               onSelect={(n) => {
                 ref.setOpenPsalm(n);
+                close();
+              }}
+            />
+          )}
+        />
+      );
+    case "psalter":
+      return (
+        <SearchPalette
+          placeholder="Search by day or psalm number"
+          searchLabel="Search psalter days"
+          onClose={close}
+          render={(query) => (
+            <PsalterIndex
+              query={query}
+              selected={ref.openPsalterDay}
+              onSelect={(n) => {
+                if (n !== null) ref.setOpenPsalterDay(n);
                 close();
               }}
             />

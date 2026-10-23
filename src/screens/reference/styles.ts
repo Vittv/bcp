@@ -1,6 +1,11 @@
 import type { ViewStyle } from "react-native";
 import { officeBarStyles } from "../../components/shell/officeBarStyles";
-import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../../lib/fonts";
+import {
+  CHROME_FONT,
+  HEADING_FONT,
+  SERIF_FONT,
+  SERIF_ITALIC_FONT,
+} from "../../lib/fonts";
 import { defineThemedStyles } from "../../lib/theme/themedStyles";
 
 // the detail column's fixed measures. font scaling zooms the pane, which
@@ -481,6 +486,46 @@ export const sharedStyles = defineThemedStyles({
     lineHeight: 24,
     color: "var(--text-secondary)",
     marginBottom: 18,
+  },
+  // the 30-day psalter lists each portion's citations as their own labeled
+  // blocks, the way the lectionary page prints its psalms
+  psalterBlock: {
+    marginBottom: 22,
+    paddingLeft: 4,
+  },
+  psalterItem: {
+    marginTop: 24,
+  },
+  psalterRef: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 15,
+    color: "var(--text-secondary)",
+    marginBottom: 6,
+  },
+  // picker rows stack the day above its psalm citations, so a 30-row list
+  // still answers what each day appoints without ellipsizing the long ones
+  psalterRowInner: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 2,
+    paddingVertical: 8,
+    paddingLeft: 34,
+    paddingRight: 18,
+  },
+  psalterRowTitle: {
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
+    fontWeight: "500",
+    lineHeight: 18,
+    color: "var(--text-secondary)",
+  },
+  psalterRowSummary: {
+    fontFamily: CHROME_FONT,
+    fontSize: 11,
+    fontWeight: "500",
+    lineHeight: 16,
+    color: "var(--text-secondary)",
+    opacity: 0.8,
   },
   // date trigger: a chip like every other control in these bars, no
   // border, the bar's single 11px type scale, accent red per the

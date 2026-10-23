@@ -14,6 +14,7 @@ import { useIndexKeyboard } from "./useIndexKeyboard";
 
 const SECTION_HEADINGS: Record<PaletteSection, string> = {
   psalms: "Psalms",
+  psalter: "30-Day Psalter",
   proverbs: "Proverbs",
   canticles: "Canticles",
   collects: "Collects",

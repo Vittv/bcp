@@ -44,6 +44,7 @@ export type PageId =
   | "calendar"
   | "lectionary"
   | "psalms"
+  | "psalter"
   | "collects"
   | "offices"
   | "saints"
@@ -80,6 +81,14 @@ const NAV: { id: PageId; label: string; section?: string; icon: ReactNode }[] =
       label: "Holy Days",
       section: "reference",
       icon: <StarIcon size={15} />,
+    },
+    // last in the reference block: the cycle reads as a companion to the
+    // canonical Psalms index that opens the scripture block below it
+    {
+      id: "psalter",
+      label: "30-Day Psalter",
+      section: "reference",
+      icon: <BookmarkIcon size={15} />,
     },
     {
       id: "psalms",

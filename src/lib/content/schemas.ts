@@ -135,6 +135,14 @@ export const psalterSchema = z.record(
   z.object({ parts: z.array(psalmPartSchema) }),
 ) satisfies z.ZodType<Record<string, Psalm>>;
 
+export const psalterDaySchema = z.object({
+  day: z.number().int().min(1).max(30),
+  morning: z.array(z.string()),
+  evening: z.array(z.string()),
+}) satisfies z.ZodType<import("./types").PsalterDay>;
+
+export const psalterDaysSchema = z.array(psalterDaySchema);
+
 const canticleSectionSchema = z.object({
   title: z.string().nullable().optional(),
   verses: z.array(z.string()),

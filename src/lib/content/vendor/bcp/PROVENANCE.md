@@ -24,6 +24,15 @@ and checksum in this note.
 - psalter.min.json: extracted from BCPSALT1/BCPSALT2 by
   tools/bcp-extract/extract_psalter.py. 150 psalms, 2507 verses. Latin
   incipits were not captured (part titles are null).
+- psalter-days.min.json: the psalter's 30-day cycle, generated from the
+  headings printed in psalter.min.json by scripts/gen-psalter-days.ts
+  (2026-10-23). Each heading names the portion that opens after the verse
+  carrying it, so the table is a walk through the psalms: 30 days, Morning
+  and Evening each, Psalm 119 split at verses 32, 72, 104, 144 and 176.
+  Psalm 1 carries no heading of its own: the First Day's morning heading sits
+  before it in the printed book and is not in the verse text, so the table
+  starts there. The test in src/lib/content/__tests__/psalterDays.test.ts
+  re-derives the table from the same headings.
 - canticles.min.json: extracted from BCPOFFCE by
   tools/bcp-extract/extract_canticles.py. Canticles 1-21. Known E-text
   transcription quirks preserved verbatim: canticle 6 line reads "good will

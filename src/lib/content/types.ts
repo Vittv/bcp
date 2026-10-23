@@ -75,6 +75,14 @@ export type PsalmPassage = {
   verses: { number: number; text: string; stanza?: string }[];
 };
 
+// one day of the psalter's 30-day cycle: the psalms appointed for each
+// office, as citation strings the psalm parser already reads
+export type PsalterDay = {
+  day: number;
+  morning: string[];
+  evening: string[];
+};
+
 export type CanticleSection = {
   title?: string | null;
   verses: string[];
