@@ -54,6 +54,50 @@ describe("dayInfo: fixed feasts and saints", () => {
   test("all saints is present on nov 1", () => {
     expect(names(d(2025, 11, 1))).toContain("All Saints' Day");
   });
+
+  test("lesser feasts follow a principal feast and stay optional", () => {
+    const info = dayInfo(d(2025, 1, 12));
+    expect(info.observances[0].name).toBe("The Baptism of our Lord");
+    const lesser = info.observances.filter((o) => o.rank === "lesser");
+    expect(lesser.map((o) => o.name)).toContain(
+      "Aelred of Rievaulx, Monastic and Theologian, 1167",
+    );
+    expect(lesser[0].optional).toBe(true);
+    expect(info.observances.at(-1)?.rank).toBe("lesser");
+  });
+
+  test("a lesser feast stands alone on a weekday", () => {
+    const info = dayInfo(d(2025, 2, 13));
+    expect(info.observances.map((o) => o.name)).toContain(
+      "Absalom Jones, Priest, 1818",
+    );
+    expect(info.observances[0].rank).toBe("lesser");
+  });
+
+  test("every sunday closes the list with its own name", () => {
+    const info = dayInfo(d(2025, 7, 27));
+    expect(info.observances.map((o) => o.name)).toEqual([
+      "William Reed Huntington, Priest, 1909",
+      "The Seventh Sunday after Pentecost",
+    ]);
+    expect(info.observances.at(-1)?.rank).toBe("sunday");
+    expect(info.observances[0].rank).toBe("lesser");
+  });
+
+  test("a holy day outranks the sunday name", () => {
+    const info = dayInfo(d(2026, 11, 1));
+    expect(info.observances.map((o) => o.name)).toEqual([
+      "All Saints' Day",
+      "The Twenty-Third Sunday after Pentecost",
+    ]);
+    expect(info.observances[0].rank).toBe("holy-day");
+    expect(info.observances.at(-1)?.rank).toBe("sunday");
+  });
+
+  test("a named sunday is not duplicated", () => {
+    const info = dayInfo(d(2025, 4, 20));
+    expect(info.observances.filter((o) => o.rank === "sunday")).toHaveLength(0);
+  });
 });
 
 describe("dayInfo: season boundaries", () => {

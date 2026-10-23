@@ -1,8 +1,14 @@
 import { toDays } from "./date";
 import { feastsForEasterYear } from "./feasts";
+import { lesserFeastsForDate } from "./lesserFeasts";
 import { sanctoraleForDate } from "./sanctorale";
 import { easterYear, seasonFor } from "./season";
+import { sundayName } from "./sundays";
 import type { CalendarDate, Season } from "./types";
+
+// how a day's observance ranks for ordering and display. the Sunday name is
+// the day's baseline title and always closes the list.
+export type ObservanceRank = "principal" | "holy-day" | "lesser" | "sunday";
 
 // a single named observance on a calendar day: a principal feast, a major
 // or holy day, a feast of our Lord, a fast, or a fixed-date saint.
@@ -10,6 +16,9 @@ export interface DayObservance {
   name: string;
   /** set when the observance is a saint with a page to link to. */
   slug?: string;
+  rank: ObservanceRank;
+  /** a lesser feast the Prayer Book does not require. */
+  optional?: boolean;
 }
 
 export interface DayInfo {
@@ -67,7 +76,7 @@ function moveableDays(year: number): Map<string, DayObservance> {
   }
   const map = new Map<string, DayObservance>();
   for (const [day, name] of dates) {
-    map.set(String(day), { name });
+    map.set(String(day), { name, rank: "principal" });
   }
   return map;
 }
@@ -114,12 +123,25 @@ export function dayInfo(date: CalendarDate): DayInfo {
   // fixed feasts of our Lord (Holy Name) plus the fixed-date saints.
   for (const fx of FIXED_FEASTS) {
     if (fx.month === date.month && fx.day === date.day) {
-      observances.push({ name: fx.name });
+      observances.push({ name: fx.name, rank: "principal" });
     }
   }
   const saint = sanctoraleForDate(date);
   if (saint) {
-    observances.push({ name: saint.title, slug: saint.slug });
+    observances.push({ name: saint.title, slug: saint.slug, rank: "holy-day" });
+  }
+
+  // lesser feasts are optional and yield to the day's principal feast or
+  // holy day.
+  for (const feast of lesserFeastsForDate(date)) {
+    observances.push({ name: feast.name, rank: "lesser", optional: true });
+  }
+
+  // the Sunday name is the day's baseline title and always closes the list,
+  // so it never outranks a special day or an optional commemoration.
+  const sunday = sundayName(date);
+  if (sunday) {
+    observances.push({ name: sunday, rank: "sunday" });
   }
 
   return {

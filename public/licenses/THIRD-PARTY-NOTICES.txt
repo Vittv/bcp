@@ -51,6 +51,16 @@ Their provenance notes are in src/lib/content/vendor/bcp, kjv and web. The
 Prayer Book is additionally licensed for reproduction by the Church Pension
 Fund; the public-domain E-text edition is the basis used here.
 
+Lesser Feasts and Fasts calendar
+
+The fixed-date commemorations in src/lib/content/vendor/lff/calendar.min.json
+are the calendar of Lesser Feasts and Fasts 2024, published for The Domestic
+and Foreign Missionary Society of The Protestant Episcopal Church in the
+United States of America. Only the factual calendar (names and dates) is
+reproduced; the book's biographies, collects, psalms, lessons and prefaces are
+not. The source, the omissions and the copyright notice are recorded in the
+provenance note beside the file.
+
 Fonts
 
 Crimson Pro, EB Garamond, Libron, Playfair Display, JetBrains Mono and Inter

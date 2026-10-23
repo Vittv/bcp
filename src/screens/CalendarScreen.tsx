@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { AppModal } from "../components/shell/AppModal";
 import { Chevron } from "../components/shell/Chevron";
 import { useSeasonColorMap } from "../components/shell/SeasonDot";
@@ -12,7 +12,7 @@ import {
   seasonLabel,
 } from "../lib/calendar/observances";
 import type { CalendarDate } from "../lib/calendar/types";
-import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../lib/fonts";
+import { CHROME_FONT, SERIF_FONT } from "../lib/fonts";
 import { defineThemedStyles, useThemedStyles } from "../lib/theme/themedStyles";
 import { useReference } from "./reference/shared";
 
@@ -61,14 +61,25 @@ function cellName(name: string): string {
 
 // the labels shown stacked inside a calendar cell. the season boundary name
 // always comes first (so periods like "After Pentecost" read only on their
-// first and last days), then any named observances of the day.
-function cellLabels(info: DayInfo): { season: boolean; text: string }[] {
-  const labels: { season: boolean; text: string }[] = [];
+// first and last days), then any named observances of the day. the Sunday
+// name and lesser feasts stay quiet so an actual feast leads the cell.
+function cellLabels(
+  info: DayInfo,
+): { season: boolean; quiet: boolean; text: string }[] {
+  const labels: { season: boolean; quiet: boolean; text: string }[] = [];
   if (info.seasonStart || info.seasonEnd) {
-    labels.push({ season: true, text: seasonLabel(info.season) });
+    labels.push({
+      season: true,
+      quiet: false,
+      text: seasonLabel(info.season),
+    });
   }
   for (const obs of info.observances) {
-    labels.push({ season: false, text: cellName(obs.name) });
+    labels.push({
+      season: false,
+      quiet: obs.rank === "sunday" || obs.rank === "lesser",
+      text: cellName(obs.name),
+    });
   }
   return labels;
 }
@@ -82,6 +93,10 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
   const colorMap = useSeasonColorMap();
   const { setOpenSaint } = useReference();
   const { navigateTo } = useNavigation();
+  const { height } = useWindowDimensions();
+  // chips read best at three per cell on a desktop grid and two on a phone;
+  // one of the slots is reserved for the "+N" row when a day overflows
+  const cellRows = height < 800 ? 3 : 4;
   const todayDate: CalendarDate = {
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
@@ -227,7 +242,12 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
                 const seasonColor = isValid ? colorMap[colorFor(cell)] : null;
                 const isToday = isValid && isSameDay(cell, todayDate);
                 const isSelected = isValid && isSameDay(cell, selected);
-                const labels = info ? cellLabels(info) : null;
+                const labels = info ? cellLabels(info) : [];
+                const visibleLabels =
+                  labels.length > cellRows
+                    ? labels.slice(0, cellRows - 1)
+                    : labels;
+                const hiddenLabels = labels.length - visibleLabels.length;
 
                 return (
                   <Pressable
@@ -257,23 +277,41 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
                         >
                           {dayNum}
                         </Text>
-                        {labels ? (
+                        {visibleLabels.length > 0 ? (
                           <View style={styles.cellLabels}>
-                            {labels.map((l) => (
-                              <Text
+                            {visibleLabels.map((l) => (
+                              <View
                                 key={l.text}
                                 style={[
-                                  styles.cellLabel,
-                                  l.season ? styles.cellLabelSeason : null,
+                                  styles.cellChip,
+                                  !l.quiet &&
+                                    !l.season && { borderColor: colorMap.gold },
                                   l.season && seasonColor
-                                    ? { color: seasonColor }
+                                    ? { borderColor: seasonColor }
                                     : null,
                                 ]}
-                                numberOfLines={1}
                               >
-                                {l.text}
-                              </Text>
+                                <Text
+                                  numberOfLines={1}
+                                  style={[
+                                    styles.cellLabel,
+                                    !l.quiet && styles.cellLabelFeast,
+                                    l.season ? styles.cellLabelSeason : null,
+                                    l.quiet ? styles.cellLabelQuiet : null,
+                                    l.season && seasonColor
+                                      ? { color: seasonColor }
+                                      : null,
+                                  ]}
+                                >
+                                  {l.text}
+                                </Text>
+                              </View>
                             ))}
+                            {hiddenLabels > 0 ? (
+                              <Text style={styles.cellMore}>
+                                +{hiddenLabels} more
+                              </Text>
+                            ) : null}
                           </View>
                         ) : null}
                       </View>
@@ -362,9 +400,9 @@ function DayModal({
       onClose={onClose}
       width={400}
       titleStyle={{
-        fontFamily: HEADING_FONT,
-        fontWeight: "500",
-        fontSize: 26,
+        fontFamily: CHROME_FONT,
+        fontWeight: "600",
+        fontSize: 20,
         letterSpacing: 0.2,
       }}
     >
@@ -376,22 +414,38 @@ function DayModal({
         {info.observances.length === 0 ? (
           <Text style={styles.modalEmpty}>No proper day.</Text>
         ) : (
-          info.observances.map((obs) => (
-            <Pressable
-              key={obs.slug ?? obs.name}
-              style={({ hovered }) => [
-                styles.modalRow,
-                hovered && styles.modalRowHover,
-              ]}
-              onPress={() => onGo(obs)}
-              accessibilityRole="button"
-            >
-              <Text style={styles.modalRowName}>{obs.name}</Text>
-              <Text style={styles.modalRowGo}>
-                {obs.slug ? "Open in Holy Days" : "Go to day"} ›
-              </Text>
-            </Pressable>
-          ))
+          info.observances.map((obs) =>
+            obs.rank === "lesser" ? (
+              <View key={obs.name} style={styles.modalRow}>
+                <Text style={[styles.modalRowName, styles.modalRowNameLesser]}>
+                  {obs.name}
+                </Text>
+                <Text style={styles.modalRowOptional}>Optional</Text>
+              </View>
+            ) : obs.rank === "sunday" ? (
+              <View key={obs.name} style={styles.modalRow}>
+                <Text style={[styles.modalRowName, styles.modalRowNameSunday]}>
+                  {obs.name}
+                </Text>
+              </View>
+            ) : (
+              <Pressable
+                key={obs.slug ?? obs.name}
+                style={({ hovered }) => [
+                  styles.modalRow,
+                  styles.modalRowClickable,
+                  hovered && styles.modalRowHover,
+                ]}
+                onPress={() => onGo(obs)}
+                accessibilityRole="button"
+              >
+                <Text style={styles.modalRowName}>{obs.name}</Text>
+                <Text style={styles.modalRowGo}>
+                  {obs.slug ? "Open in Holy Days" : "Go to day"} ›
+                </Text>
+              </Pressable>
+            ),
+          )
         )}
       </View>
     </AppModal>
@@ -530,6 +584,7 @@ const styleDef = defineThemedStyles({
   },
   cellInner: {
     alignItems: "flex-start",
+    width: "100%",
   },
   cellText: {
     fontFamily: CHROME_FONT,
@@ -540,17 +595,45 @@ const styleDef = defineThemedStyles({
   },
   cellLabel: {
     fontFamily: CHROME_FONT,
-    fontSize: 9.5,
-    lineHeight: 11,
+    fontSize: 12,
+    lineHeight: 15,
     fontWeight: "600",
     color: "var(--text-secondary)",
   },
+  // principal feasts and holy days read at full ink; the Sunday name and
+  // lesser feasts stay quiet
+  cellLabelFeast: {
+    color: "var(--text)",
+    fontWeight: "700",
+  },
+  cellLabelQuiet: {
+    fontWeight: "500",
+    opacity: 0.85,
+  },
   cellLabels: {
-    marginTop: 2,
-    gap: 1,
+    marginTop: 4,
+    gap: 3,
+    width: "100%",
+  },
+  cellChip: {
+    alignSelf: "stretch",
+    borderWidth: 1,
+    borderColor: "var(--border)",
+    borderRadius: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
   },
   cellLabelSeason: {
     color: "var(--accent)",
+  },
+  cellMore: {
+    fontFamily: CHROME_FONT,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "600",
+    color: "var(--text-secondary)",
+    opacity: 0.8,
+    paddingHorizontal: 4,
   },
   strip: {
     flexShrink: 0,
@@ -612,11 +695,30 @@ const styleDef = defineThemedStyles({
   modalRowHover: {
     backgroundColor: "var(--control-hover)",
   },
+  modalRowClickable: {
+    borderWidth: 1,
+    borderColor: "var(--border)",
+  },
   modalRowName: {
     fontFamily: SERIF_FONT,
     fontSize: 16,
     color: "var(--text)",
     flex: 1,
+  },
+  modalRowNameLesser: {
+    color: "var(--text-secondary)",
+    fontWeight: "500",
+  },
+  modalRowNameSunday: {
+    color: "var(--text-secondary)",
+    fontSize: 15,
+  },
+  modalRowOptional: {
+    fontFamily: CHROME_FONT,
+    fontSize: 11,
+    fontWeight: "600",
+    color: "var(--text-secondary)",
+    flexShrink: 0,
   },
   modalRowGo: {
     fontFamily: CHROME_FONT,
