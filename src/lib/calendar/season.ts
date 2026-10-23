@@ -38,8 +38,11 @@ export function colorFor(date: CalendarDate): Color {
     case "christmas":
       return "white";
     case "epiphany":
-      // the Epiphany and the Baptism of our Lord are feasts of our Lord.
-      if (d === f.epiphany || d === f.baptism) return "white";
+      // the Epiphany, the Baptism and the Transfiguration are feasts of our
+      // Lord; the rest of the season is green.
+      if (d === f.epiphany || d === f.baptism || d === f.lastEpiphany) {
+        return "white";
+      }
       return "green";
     case "lent":
       return "purple";

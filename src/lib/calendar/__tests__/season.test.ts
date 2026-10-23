@@ -86,6 +86,8 @@ describe("colorFor", () => {
     ["2027-01-06", "white"], // Epiphany (feast of our Lord)
     ["2027-01-10", "white"], // Baptism of our Lord
     ["2027-01-11", "green"], // Epiphany season
+    ["2025-01-19", "green"], // Second Sunday after the Epiphany
+    ["2025-03-02", "white"], // Last Sunday after the Epiphany (Transfiguration)
     ["2025-03-05", "purple"], // Lent
     ["2025-04-13", "red"], // Palm Sunday
     ["2025-04-17", "white"], // Maundy Thursday
