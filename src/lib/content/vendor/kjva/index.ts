@@ -4,13 +4,17 @@ import b_prman from "./prman.json";
 import b_1esd from "./1esd.json";
 import b_2macc from "./2macc.json";
 import b_1macc from "./1macc.json";
+import b_bel from "./bel.json";
+import b_sus from "./sus.json";
+import b_s3y from "./s3y.json";
 import b_bar from "./bar.json";
 import b_sir from "./sir.json";
 import b_wis from "./wis.json";
+import b_restesth from "./restesth.json";
 import b_jdt from "./jdt.json";
 import b_tob from "./tob.json";
 
-export { b_2esd, b_prman, b_1esd, b_2macc, b_1macc, b_bar, b_sir, b_wis, b_jdt, b_tob };
+export { b_2esd, b_prman, b_1esd, b_2macc, b_1macc, b_bel, b_sus, b_s3y, b_bar, b_sir, b_wis, b_restesth, b_jdt, b_tob };
 
 export type KjvaBookImports = {
   b_2esd: typeof b_2esd;
@@ -18,9 +22,13 @@ export type KjvaBookImports = {
   b_1esd: typeof b_1esd;
   b_2macc: typeof b_2macc;
   b_1macc: typeof b_1macc;
+  b_bel: typeof b_bel;
+  b_sus: typeof b_sus;
+  b_s3y: typeof b_s3y;
   b_bar: typeof b_bar;
   b_sir: typeof b_sir;
   b_wis: typeof b_wis;
+  b_restesth: typeof b_restesth;
   b_jdt: typeof b_jdt;
   b_tob: typeof b_tob;
 };
@@ -31,9 +39,13 @@ export const kjvaBookImports: Record<string, keyof KjvaBookImports> = {
   b_1esd: "b_1esd",
   b_2macc: "b_2macc",
   b_1macc: "b_1macc",
+  b_bel: "b_bel",
+  b_sus: "b_sus",
+  b_s3y: "b_s3y",
   b_bar: "b_bar",
   b_sir: "b_sir",
   b_wis: "b_wis",
+  b_restesth: "b_restesth",
   b_jdt: "b_jdt",
   b_tob: "b_tob",
 };

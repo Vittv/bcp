@@ -19,28 +19,25 @@ Only the apocrypha. No canonical book is included, so there is no path by
 which the canonical text can be swapped: the app's own KJV vendor (the 1769
 Oxford standard text) stays the canonical text under every setting.
 
-Ten deuterocanonical books, the ones whose chapter structure matches the book
-the app already has:
+Fourteen deuterocanonical books, the 1611 print's own apocryphal corpus, in
+the 1611's order:
 
-Tobit, Judith, Wisdom of Solomon, Sirach, Baruch, 1 Maccabees, 2 Maccabees,
+Tobit, Judith, Rest of Esther, Wisdom of Solomon, Sirach, Baruch, the Song of
+the Three Children, Susanna, Bel and the Dragon, 1 Maccabees, 2 Maccabees,
 1 Esdras, Prayer of Manasses, 2 Esdras.
 
-Five deuterocanonical books read in the World English Bible under both
-settings, because the KJVD either has no counterpart or has one in a
-different shape:
+Four books read in the World English Bible under the WEB corpus, because the
+source has no counterpart for them:
 
-- Esther (Greek): the KJVD carries the additions only, seven chapters keyed
+- Esther (Greek): the source carries the additions only, seven chapters keyed
   10 to 16 as the 1611 prints them, against the WEB's whole Greek Esther in
   ten chapters. Different text under a different division, not one text
-  renumbered.
-- Daniel (Greek), Psalm 151, 3 Maccabees, 4 Maccabees: no counterpart in
-  the KJVD. The 1611 print has no 3 or 4 Maccabees, and Psalm 151, which the
-  1611 did print, is missing from this source.
-
-Three KJVD-only books, 3 Holy Children's Song, Susanna and Bel and the
-Dragon, are not vendored either. The app has no standalone books for them,
-and adding them would make the deuterocanonical corpus differ between the
-two texts.
+  renumbered, so the two are never linked.
+- Daniel (Greek): the source has no Septuagint Daniel. The WEB's is the
+  whole Septuagint Daniel, chapters 1 to 12 in the Septuagint's text, then
+  Susanna and Bel and the Dragon as chapters 13 and 14.
+- Psalm 151: the 1611 print has it, the source does not.
+- 3 Maccabees and 4 Maccabees: the 1611 print has neither.
 
 ## Extraction notes
 
@@ -55,4 +52,9 @@ two texts.
 - Sirach has 1393 verses against the WEB's 1359, and 2 Esdras has 874 against
   944. The chapter structure is the same in both, the verse divisions are
   not.
-- 10 books, all deuterocanonical
+- The Rest of Esther is renumbered. The source keys its chapters 10 to 16,
+  continuing the canonical Esther the way the 1611 print does, and its first
+  chapter's verses from 4 for the same reason. The vendor file renumbers
+  both to 1-based within the book, so the app's single-number chapter count
+  keeps working. The source's original keys are recorded here.
+- 14 books, all deuterocanonical

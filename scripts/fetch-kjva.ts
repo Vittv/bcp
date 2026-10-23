@@ -9,9 +9,11 @@
  * rendering, and putting a second canonical snapshot in the tree would make
  * the canonical text swappable by accident.
  *
- * Only the books whose chapter structure matches the book the app already has
- * are vendored, so the deuterocanonical corpus keeps the same shape under
- * either apocryphal text.
+ * The fourteen books here are the 1611's own apocryphal corpus, in the 1611's
+ * order: the source module's order. Three books the 1611 print does not have
+ * (Psalm 151, 3 Maccabees, 4 Maccabees) are not in this source at all, and
+ * one book it has (the Septuagint Daniel) the source does not carry, so those
+ * four read in the World English Bible under the WEB corpus.
  *
  * Usage: bun scripts/fetch-kjva.ts
  */
@@ -20,7 +22,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { parseUsfmText } from "../tools/usfm/parse";
+import { type ChapterMap, parseUsfmText } from "../tools/usfm/parse";
 
 const SOURCE_URL = "https://eBible.org/Scriptures/eng-kjv_usfm.zip";
 const OUT_DIR = join(import.meta.dir, "../src/lib/content/vendor/kjva");
@@ -31,18 +33,42 @@ type BookInfo = {
   book: string;
   abbrev: string;
   chapters: number;
+  // the source keys this book's chapters the way the 1611 print does,
+  // continuing the canonical book it belongs to rather than starting fresh.
+  // the vendor file renumbers them to be 1-based within the book
+  sourceChapterStart?: number;
+  // the same for the first chapter's verses, which the source also continues
+  // from the canonical book's numbering
+  sourceFirstVerseStart?: number;
 };
 
-// the ten deuterocanonical books the KJVD carries in the same shape as the
-// book the app already has. the five the app has that the KJVD does not match
-// (Esther Greek, Daniel Greek, Psalm 151, 3 Maccabees, 4 Maccabees) are not
-// here, and neither are the three KJVD-only books
+// the fourteen deuterocanonical books the 1611 print carries, in the 1611's
+// order, which is the source module's order. the reader's corpus is this
+// book list read in this text
 const BOOKS: BookInfo[] = [
   { id: "41-TOB", book: "Tobit", abbrev: "Tob", chapters: 14 },
   { id: "42-JDT", book: "Judith", abbrev: "Jdt", chapters: 16 },
+  {
+    id: "43-ESG",
+    book: "Rest of Esther",
+    abbrev: "Rest Esth",
+    chapters: 7,
+    // the source keys the additions 10 to 16, continuing the canonical
+    // Esther, and the first chapter's verses from 4 for the same reason
+    sourceChapterStart: 10,
+    sourceFirstVerseStart: 4,
+  },
   { id: "45-WIS", book: "Wisdom of Solomon", abbrev: "Wis", chapters: 19 },
   { id: "46-SIR", book: "Sirach", abbrev: "Sir", chapters: 51 },
   { id: "47-BAR", book: "Baruch", abbrev: "Bar", chapters: 6 },
+  {
+    id: "49-S3Y",
+    book: "Song of the Three Children",
+    abbrev: "S3Y",
+    chapters: 1,
+  },
+  { id: "50-SUS", book: "Susanna", abbrev: "Sus", chapters: 1 },
+  { id: "51-BEL", book: "Bel and the Dragon", abbrev: "Bel", chapters: 1 },
   { id: "52-1MA", book: "1 Maccabees", abbrev: "1 Macc", chapters: 16 },
   { id: "53-2MA", book: "2 Maccabees", abbrev: "2 Macc", chapters: 15 },
   { id: "54-1ES", book: "1 Esdras", abbrev: "1 Esd", chapters: 9 },
@@ -80,6 +106,50 @@ async function ensureSource(): Promise<string> {
   return extractedDir;
 }
 
+// renumber a book the source keys the way the 1611 print does, so the app's
+// single-number chapter count keeps working and the reader sees a normal
+// verse run from 1
+function renumber(
+  verses: ChapterMap,
+  chapterStart: number,
+  firstVerseStart: number,
+): ChapterMap {
+  const out: ChapterMap = {};
+  for (const [chapterKey, chapterVerses] of Object.entries(verses)) {
+    const chapter = parseInt(chapterKey, 10) - chapterStart + 1;
+    const target: Record<string, string> = {};
+    for (const [verseKey, text] of Object.entries(chapterVerses)) {
+      const verse = parseInt(verseKey, 10);
+      const renumbered = chapter === 1 ? verse - firstVerseStart + 1 : verse;
+      target[String(renumbered)] = text;
+    }
+    out[String(chapter)] = target;
+  }
+  return out;
+}
+
+// the renumbered book must read as an ordinary book: chapters 1 to n, and
+// the first chapter's verses from 1
+function assertRenumbered(book: string, verses: ChapterMap, chapters: number) {
+  const keys = Object.keys(verses)
+    .map((k) => parseInt(k, 10))
+    .sort((a, b) => a - b);
+  const expected = Array.from({ length: chapters }, (_, i) => i + 1);
+  if (keys.join(",") !== expected.join(",")) {
+    throw new Error(
+      `${book}: renumbered chapters are ${keys.join(",")}, expected ${expected.join(",")}`,
+    );
+  }
+  const firstVerses = Object.keys(verses["1"] ?? {})
+    .map((k) => parseInt(k, 10))
+    .sort((a, b) => a - b);
+  if (firstVerses[0] !== 1) {
+    throw new Error(
+      `${book}: renumbered first chapter starts at verse ${firstVerses[0]}, expected 1`,
+    );
+  }
+}
+
 const BOOK_BY_ID = new Map(BOOKS.map((b) => [b.id, b]));
 
 async function main() {
@@ -96,7 +166,7 @@ async function main() {
     if (!idMatch) continue;
     const info = BOOK_BY_ID.get(idMatch[1]);
     if (!info) {
-      console.log(`  - skip ${file} (not one of the ten matching books)`);
+      console.log(`  - skip ${file} (not one of the fourteen books)`);
       continue;
     }
     const usfm = await readFile(join(extractedDir, file), "utf8");
@@ -108,12 +178,22 @@ async function main() {
       );
     }
 
+    let verses = parsedBook.verses;
+    if (info.sourceChapterStart !== undefined) {
+      verses = renumber(
+        verses,
+        info.sourceChapterStart,
+        info.sourceFirstVerseStart ?? 1,
+      );
+      assertRenumbered(info.book, verses, info.chapters);
+    }
+
     const book = {
       book: info.book,
       abbrev: info.abbrev,
       testament: "DC",
       chapters: parsedBook.chapters,
-      verses: parsedBook.verses,
+      verses,
     };
 
     const filename = `${info.abbrev.toLowerCase().replace(/\s+/g, "")}.json`;
@@ -185,28 +265,25 @@ Only the apocrypha. No canonical book is included, so there is no path by
 which the canonical text can be swapped: the app's own KJV vendor (the 1769
 Oxford standard text) stays the canonical text under every setting.
 
-Ten deuterocanonical books, the ones whose chapter structure matches the book
-the app already has:
+Fourteen deuterocanonical books, the 1611 print's own apocryphal corpus, in
+the 1611's order:
 
-Tobit, Judith, Wisdom of Solomon, Sirach, Baruch, 1 Maccabees, 2 Maccabees,
+Tobit, Judith, Rest of Esther, Wisdom of Solomon, Sirach, Baruch, the Song of
+the Three Children, Susanna, Bel and the Dragon, 1 Maccabees, 2 Maccabees,
 1 Esdras, Prayer of Manasses, 2 Esdras.
 
-Five deuterocanonical books read in the World English Bible under both
-settings, because the KJVD either has no counterpart or has one in a
-different shape:
+Four books read in the World English Bible under the WEB corpus, because the
+source has no counterpart for them:
 
-- Esther (Greek): the KJVD carries the additions only, seven chapters keyed
+- Esther (Greek): the source carries the additions only, seven chapters keyed
   10 to 16 as the 1611 prints them, against the WEB's whole Greek Esther in
   ten chapters. Different text under a different division, not one text
-  renumbered.
-- Daniel (Greek), Psalm 151, 3 Maccabees, 4 Maccabees: no counterpart in
-  the KJVD. The 1611 print has no 3 or 4 Maccabees, and Psalm 151, which the
-  1611 did print, is missing from this source.
-
-Three KJVD-only books, 3 Holy Children's Song, Susanna and Bel and the
-Dragon, are not vendored either. The app has no standalone books for them,
-and adding them would make the deuterocanonical corpus differ between the
-two texts.
+  renumbered, so the two are never linked.
+- Daniel (Greek): the source has no Septuagint Daniel. The WEB's is the
+  whole Septuagint Daniel, chapters 1 to 12 in the Septuagint's text, then
+  Susanna and Bel and the Dragon as chapters 13 and 14.
+- Psalm 151: the 1611 print has it, the source does not.
+- 3 Maccabees and 4 Maccabees: the 1611 print has neither.
 
 ## Extraction notes
 
@@ -221,7 +298,12 @@ two texts.
 - Sirach has 1393 verses against the WEB's 1359, and 2 Esdras has 874 against
   944. The chapter structure is the same in both, the verse divisions are
   not.
-- 10 books, all deuterocanonical
+- The Rest of Esther is renumbered. The source keys its chapters 10 to 16,
+  continuing the canonical Esther the way the 1611 print does, and its first
+  chapter's verses from 4 for the same reason. The vendor file renumbers
+  both to 1-based within the book, so the app's single-number chapter count
+  keeps working. The source's original keys are recorded here.
+- 14 books, all deuterocanonical
 `;
 
   await writeFile(join(OUT_DIR, "PROVENANCE.md"), provenance);
