@@ -1,8 +1,8 @@
 import type { PageId } from "../../components/shell/Sidebar";
 
-// left/right arrows walk each content page's reading sequence, the same
-// linear order its index lists (psalms 1-150, bible chapters, collects in
-// printed order), never browser history. a component that owns a sequence
+// left/right arrows walk each content page's sequence, the same linear order
+// its index lists (psalms 1-150, bible chapters, collects in printed order,
+// calendar months), never browser history. a component that owns a sequence
 // registers one stepper for the page it handles while that page is active;
 // the shell's keydown asks by the active page id.
 

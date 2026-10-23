@@ -977,10 +977,10 @@ export function Shell() {
         case "ArrowRight":
         case "h":
         case "l": {
-          // left/right and h/l walk the scripture page's reading sequence
-          // (its index, e.g. the psalm number or chapter list), not browser
-          // history: right and l step forward, left and h backward. psalms,
-          // proverbs and the bible pages register their steppers
+          // left/right and h/l walk the active page's sequence, not browser
+          // history: right and l step forward, left and h backward. the
+          // scripture pages step their index (psalm number or chapter list)
+          // and the calendar steps its month; each page registers a stepper.
           const forward = key === "ArrowRight" || key === "l";
           if (stepPageSequence(page, forward ? 1 : -1)) {
             e.preventDefault();

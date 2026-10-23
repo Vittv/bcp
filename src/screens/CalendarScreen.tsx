@@ -1,4 +1,10 @@
-import { type ReactNode, useMemo, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { AppModal } from "../components/shell/AppModal";
 import { Chevron } from "../components/shell/Chevron";
@@ -13,6 +19,7 @@ import {
 } from "../lib/calendar/observances";
 import type { CalendarDate } from "../lib/calendar/types";
 import { CHROME_FONT, SERIF_FONT } from "../lib/fonts";
+import { registerPageStepper } from "../lib/input/sequenceNav";
 import { defineThemedStyles, useThemedStyles } from "../lib/theme/themedStyles";
 import { useReference } from "./reference/shared";
 
@@ -133,17 +140,32 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
     return map;
   }, [viewMonth.year, viewMonth.month, days]);
 
-  const prevMonth = () => {
-    const m = viewMonth.month === 1 ? 12 : viewMonth.month - 1;
-    const y = viewMonth.month === 1 ? viewMonth.year - 1 : viewMonth.year;
-    setViewMonth({ year: y, month: m });
-  };
+  // step the visible month by one, rolling the year at the boundaries.
+  const shiftMonth = useCallback((delta: number) => {
+    const step = delta > 0 ? 1 : delta < 0 ? -1 : 0;
+    if (step === 0) return;
+    setViewMonth((current) => {
+      const month = current.month + step;
+      if (month < 1) return { year: current.year - 1, month: 12 };
+      if (month > 12) return { year: current.year + 1, month: 1 };
+      return { year: current.year, month };
+    });
+  }, []);
 
-  const nextMonth = () => {
-    const m = viewMonth.month === 12 ? 1 : viewMonth.month + 1;
-    const y = viewMonth.month === 12 ? viewMonth.year + 1 : viewMonth.year;
-    setViewMonth({ year: y, month: m });
-  };
+  const prevMonth = () => shiftMonth(-1);
+  const nextMonth = () => shiftMonth(1);
+
+  // left/right and h/l step the month while the calendar page is active. the
+  // day modal keeps the keys, so the stepper unregisters while it is open.
+  useEffect(() => {
+    if (openDay) return;
+    registerPageStepper("calendar", (delta) => {
+      if (delta === 0) return false;
+      shiftMonth(delta);
+      return true;
+    });
+    return () => registerPageStepper("calendar", null);
+  }, [openDay, shiftMonth]);
 
   const goToday = () => {
     setSelected(todayDate);
