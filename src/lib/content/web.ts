@@ -23,6 +23,8 @@ const DEUTEROCANON: {
   abbrev: string;
   chapters: number;
   dolRefNames: string[];
+  citationNames?: string[];
+  chapterTitles?: Record<number, string>;
 }[] = [
   { abbrev: "Tob", chapters: 14, dolRefNames: ["Tobit", "Tob"] },
   { abbrev: "Jdt", chapters: 16, dolRefNames: ["Judith", "Jdt"] },
@@ -31,6 +33,11 @@ const DEUTEROCANON: {
     abbrev: "Dan Grk",
     chapters: 14,
     dolRefNames: ["Dan Grk", "Daniel (Greek)"],
+    // the WEB prints the two additions as the last two chapters of its
+    // Septuagint Daniel, so a reader looking for Susanna finds the book
+    // under the name the addition carries
+    citationNames: ["Susanna", "Bel and the Dragon"],
+    chapterTitles: { 13: "Susanna", 14: "Bel and the Dragon" },
   },
   { abbrev: "Wis", chapters: 19, dolRefNames: ["Wisdom", "Wis"] },
   { abbrev: "Sir", chapters: 51, dolRefNames: ["Sirach", "Sir"] },
@@ -49,12 +56,16 @@ const DEUTEROCANON: {
   { abbrev: "4 Macc", chapters: 18, dolRefNames: ["4 Maccabees", "4 Macc"] },
 ];
 
-const DEUTEROCANON_BOOKS: ScriptureBookMeta[] = DEUTEROCANON.map((d) => ({
+// the fifteen deuterocanonical books, the WEB's own corpus: this book list
+// read in the WEB's text
+export const WEB_DC_BOOKS: ScriptureBookMeta[] = DEUTEROCANON.map((d) => ({
   book: bookNameFor(d.abbrev),
   abbrev: d.abbrev,
   testament: "DC",
   chapters: d.chapters,
   dolRefNames: d.dolRefNames,
+  citationNames: d.citationNames,
+  chapterTitles: d.chapterTitles,
 }));
 
 function bookNameFor(abbrev: string): string {
@@ -94,13 +105,10 @@ function bookNameFor(abbrev: string): string {
   }
 }
 
-// the combined canon: KJV for the OT and NT, WEB for the deuterocanon.
-// DOL references resolve against this superset, picking the KJV text for
-// OT/NT readings and the WEB text for deuterocanonical readings.
-export const WEB_BOOKS: ScriptureBookMeta[] = [
-  ...KJV_BOOKS,
-  ...DEUTEROCANON_BOOKS,
-];
+// the app's catalogue: the 66 canonical books plus the 15 deuterocanonical
+// ones. DOL references resolve against this superset, picking the KJV text
+// for OT/NT readings and the WEB text for deuterocanonical readings.
+export const WEB_BOOKS: ScriptureBookMeta[] = [...KJV_BOOKS, ...WEB_DC_BOOKS];
 
 const WEB_FILENAME_MAP: Record<string, string> = {};
 for (const b of WEB_BOOKS) {

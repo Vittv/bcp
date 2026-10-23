@@ -39,18 +39,20 @@ function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
 
 function LessonRow({ lesson }: { lesson: ComposedLesson }) {
   const styles = useThemedStyles(officeViewStyles);
-  const { translation } = useTranslation();
+  const { translation, apocrypha } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    getScripturePassagesFromDolRef(translation, lesson.ref).then((ps) => {
-      if (!cancelled) setPassages(ps);
-    });
+    getScripturePassagesFromDolRef({ translation, apocrypha }, lesson.ref).then(
+      (ps) => {
+        if (!cancelled) setPassages(ps);
+      },
+    );
     return () => {
       cancelled = true;
     };
-  }, [lesson.ref, translation]);
+  }, [lesson.ref, translation, apocrypha]);
 
   return (
     <View style={styles.lessonRow}>

@@ -86,19 +86,21 @@ export function LectionaryBar({
 
 function LessonRow({ lesson }: { lesson: LectionaryLesson }) {
   const styles = useThemedStyles(lectionaryStyles);
-  const { translation } = useTranslation();
+  const { translation, apocrypha } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setPassages(null);
-    getScripturePassagesFromDolRef(translation, lesson.ref).then((ps) => {
-      if (!cancelled) setPassages(ps);
-    });
+    getScripturePassagesFromDolRef({ translation, apocrypha }, lesson.ref).then(
+      (ps) => {
+        if (!cancelled) setPassages(ps);
+      },
+    );
     return () => {
       cancelled = true;
     };
-  }, [lesson.ref, translation]);
+  }, [lesson.ref, translation, apocrypha]);
 
   return (
     <View style={styles.lesson}>

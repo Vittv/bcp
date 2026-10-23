@@ -1,5 +1,6 @@
 import { memo, useCallback, useMemo } from "react";
 import { Text, View } from "react-native";
+import { useBible } from "../../context/BibleContext";
 import {
   PALETTE_SECTION_ORDER,
   type PaletteEntry,
@@ -69,7 +70,8 @@ export function GlobalIndex({
   query: string;
   onSelect: (entry: PaletteEntry) => void;
 }) {
-  const hits = useMemo(() => searchPalette(query), [query]);
+  const { corpus } = useBible();
+  const hits = useMemo(() => searchPalette(query, corpus), [query, corpus]);
   const onEnter = useCallback(
     (_i: number, entry: PaletteEntry) => onSelect(entry),
     [onSelect],

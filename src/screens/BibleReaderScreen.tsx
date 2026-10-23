@@ -20,7 +20,7 @@ import { sliceKjvPassage } from "../lib/content/kjv";
 import type { ScriptureBookMeta } from "../lib/content/scripture";
 import type { KjvBook } from "../lib/content/types";
 import { useThemedStyles } from "../lib/theme/themedStyles";
-import { TRANSLATION_OPTIONS } from "../lib/translations";
+import { APOCRYPHA_OPTIONS, TRANSLATION_OPTIONS } from "../lib/translations";
 import {
   DetailPage,
   EmptyMessage,
@@ -74,27 +74,50 @@ export function BibleReaderScreen({
 // ---------------------------------------------------------------------------
 
 export function BibleBar({ leading }: { leading?: ReactNode }) {
-  const { book, chapter, nextChapter, prevChapter, testament } = useBible();
-  const { translation, setTranslation } = useTranslation();
+  const {
+    book,
+    chapter,
+    nextChapter,
+    prevChapter,
+    testament,
+    books,
+    switchCorpus,
+  } = useBible();
+  const { translation, setTranslation, apocrypha } = useTranslation();
   const palette = usePalette();
   const styles = useThemedStyles(styleDef);
   const total = book?.chapters ?? 0;
   const atStart = chapter <= 1;
   const atEnd = total > 0 && chapter >= total;
-  // the deuterocanonical books exist only in WEB, so there is nothing to
-  // switch between and no choice worth offering. the picker is left out
-  // rather than pinned: a control the reader cannot move is a label, and
-  // the bar does not need one
-  const webOnly = testament === "DC";
+  // the chip follows the corpus the page is showing, so an apocryphal page
+  // offers the apocryphal corpora and a canonical page the canonical ones
+  const apocryphal = testament === "DC";
+  // the book's place in its corpus, so the corpus is visible in the bar: the
+  // reader can see which list they are in and how long it is
+  const bookIndex = book
+    ? books.findIndex((b) => b.abbrev === book.abbrev)
+    : -1;
+  const corpusMeta =
+    bookIndex >= 0 ? `${bookIndex + 1} of ${books.length}` : undefined;
 
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
-        {/* translation picker: reads the active translation and opens the
-            full list. the code reads in accent red, the app's selected-state
-            color, in both bar and menu */}
-        {webOnly ? null : (
+        {/* text picker: reads the active text and opens the full list. the
+            code reads in accent red, the app's selected-state color, in both
+            bar and menu */}
+        {apocryphal ? (
+          <BarDropdown
+            value={apocrypha}
+            options={APOCRYPHA_OPTIONS}
+            onChange={switchCorpus}
+            mono
+            accent
+            align="start"
+            accessibilityLabel="Apocrypha corpus"
+          />
+        ) : (
           <BarDropdown
             value={translation}
             options={TRANSLATION_OPTIONS}
@@ -107,6 +130,7 @@ export function BibleBar({ leading }: { leading?: ReactNode }) {
         )}
         <PickerButton
           label={book ? bibleBookName(book.abbrev) : "Book"}
+          meta={corpusMeta}
           onPress={() => palette.open("bible")}
         />
       </View>
@@ -267,12 +291,14 @@ export function BibleBookList({
 // so "Current" is tested first and wins the slot when the two coincide
 const BibleChapterRow = memo(function BibleChapterRow({
   chapter,
+  title,
   active,
   selected,
   continueAt,
   onSelect,
 }: {
   chapter: number;
+  title?: string;
   active: boolean;
   selected: number;
   continueAt: number;
@@ -293,7 +319,7 @@ const BibleChapterRow = memo(function BibleChapterRow({
             numberOfLines={1}
             style={[styles.incipit, { flex: 1 }, a && styles.rowTextActive]}
           >
-            Chapter {chapter}
+            {title ? `Chapter ${chapter} · ${title}` : `Chapter ${chapter}`}
           </Text>
           {label ? (
             <Text
@@ -314,15 +340,19 @@ const BibleChapterRow = memo(function BibleChapterRow({
 
 // chapter index for one bible book, searchable by number like the proverbs
 // chapter index; picking lands on the chapter and closes the palette.
-// `continueAt` is the book's high-water mark, 0 when never opened
+// `continueAt` is the book's high-water mark, 0 when never opened.
+// `chapterTitles` names the chapters a book names rather than numbers, so
+// the WEB's Daniel (Greek) lists its two additions as Susanna and Bel
 export function BibleChapterList({
   chapters,
+  chapterTitles,
   query,
   selected,
   continueAt,
   onSelect,
 }: {
   chapters: number[];
+  chapterTitles?: Record<number, string>;
   query: string;
   selected: number;
   continueAt: number;
@@ -350,6 +380,7 @@ export function BibleChapterList({
         <BibleChapterRow
           key={c}
           chapter={c}
+          title={chapterTitles?.[c]}
           active={i === cursor}
           selected={selected}
           continueAt={continueAt}
@@ -367,7 +398,7 @@ export function BibleChapterList({
 const BibleChapterBody = memo(function BibleChapterBody() {
   const { book, chapter, nextChapter, prevChapter, selectBook, books } =
     useBible();
-  const { translation } = useTranslation();
+  const { translation, apocrypha } = useTranslation();
   const [bookData, setBookData] = useState<KjvBook | null | undefined>(
     undefined,
   );
@@ -376,13 +407,13 @@ const BibleChapterBody = memo(function BibleChapterBody() {
     setBookData(undefined);
     if (!book) return;
     let active = true;
-    loadScriptureBook(translation, book.abbrev).then((d) => {
+    loadScriptureBook({ translation, apocrypha }, book.abbrev).then((d) => {
       if (active) setBookData(d);
     });
     return () => {
       active = false;
     };
-  }, [book, translation]);
+  }, [book, translation, apocrypha]);
 
   const styles = useThemedStyles(styleDef);
 

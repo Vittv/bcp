@@ -199,6 +199,7 @@ export function PaletteHost() {
           render={(query) => (
             <BibleChapterList
               chapters={Array.from({ length: book.chapters }, (_, i) => i + 1)}
+              chapterTitles={book.chapterTitles}
               query={query}
               selected={chapter}
               // clamped: a mark from an older content build can exceed a shorter book

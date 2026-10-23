@@ -32,22 +32,23 @@ const RITE_LABELS: Record<string, string> = {
 
 // a lesson citation. the card expands the passage inline with
 // ScriptureView's own reference heading; refs that resolve across the
-// combined canon (KJV for the OT/NT, WEB for the Apocrypha) render their
-// text, others stay citation-only.
+// combined canon render their text, others stay citation-only.
 function LessonRow({ ref, first }: { ref: string; first?: boolean }) {
   const styles = useThemedStyles(sanctoraleCardStyles);
-  const { translation } = useTranslation();
+  const { translation, apocrypha } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    getScripturePassagesFromDolRef(translation, ref).then((ps) => {
-      if (!cancelled) setPassages(ps);
-    });
+    getScripturePassagesFromDolRef({ translation, apocrypha }, ref).then(
+      (ps) => {
+        if (!cancelled) setPassages(ps);
+      },
+    );
     return () => {
       cancelled = true;
     };
-  }, [ref, translation]);
+  }, [ref, translation, apocrypha]);
 
   const row = [styles.lessonRow, first && styles.blockFirst];
   if (passages.length === 0) {
@@ -67,9 +68,9 @@ function LessonRow({ ref, first }: { ref: string; first?: boolean }) {
 }
 
 // the shared card for a sanctorale entry: a biographical note by default,
-// plus the liturgical content (psalms, lesson citations with inline KJV
-// passages, and the day's collect in both rites) shown on demand. used by
-// the Saints reference pane and the mention modal.
+// plus the liturgical content (psalms, lesson citations with inline
+// scripture passages, and the day's collect in both rites) shown on demand.
+// used by the Saints reference pane and the mention modal.
 export function SanctoraleCard({
   slug,
   showTitle = true,
@@ -249,9 +250,8 @@ const sanctoraleCardStyles = defineThemedStyles({
     lineHeight: 24,
     color: "var(--text-secondary)",
   },
-  // deuterocanonical readings (Sirach, Wisdom, 2 Esdras) have no KJV
-  // text vendored yet; the citation stays, with a quiet notice instead
-  // of a dangling label over empty space
+  // a citation that resolves to no text stays put, in quiet italic, rather
+  // than leaving a dangling label over empty space
   lessonMissing: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 13,

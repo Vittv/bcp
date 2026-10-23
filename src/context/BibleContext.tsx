@@ -9,7 +9,12 @@ import {
 } from "react";
 import type { PageId } from "../components/shell/Sidebar";
 import { useHistory, useHistoryField } from "../context/HistoryContext";
+import { useTranslation } from "../context/TranslationContext";
 import {
+  type ApocryphaCorpus,
+  corpusHolding,
+  corpusLink,
+  dcBooks,
   getScriptureBookMeta,
   getScriptureBooksByTestament,
   readingRank,
@@ -22,14 +27,31 @@ import { registerPageStepper } from "../lib/input/sequenceNav";
 export type { Testament };
 
 // the app's three readable corpora: the canonical 66 in either translation,
-// plus the 15 deuterocanonical books, which exist only in WEB. DC is a
-// corpus here, not an appendix of the page: it gets its own list, resume
-// slot and reading progress like OT and NT
-export const ALL_BOOKS: Record<Testament, ScriptureBookMeta[]> = {
-  OT: getScriptureBooksByTestament("OT"),
-  NT: getScriptureBooksByTestament("NT"),
-  DC: getScriptureBooksByTestament("DC"),
+// plus the deuterocanonical corpus, whose book list is whichever corpus the
+// reader has selected. DC is a corpus here, not an appendix of the page: it
+// gets its own list, resume slot and reading progress like OT and NT
+const BOOKS_BY_CORPUS: Record<
+  ApocryphaCorpus,
+  Record<Testament, ScriptureBookMeta[]>
+> = {
+  kjva: {
+    OT: getScriptureBooksByTestament("OT"),
+    NT: getScriptureBooksByTestament("NT"),
+    DC: dcBooks("kjva"),
+  },
+  web: {
+    OT: getScriptureBooksByTestament("OT"),
+    NT: getScriptureBooksByTestament("NT"),
+    DC: dcBooks("web"),
+  },
 };
+
+/** the three readable corpora, for the corpus the reader has selected */
+export function booksFor(
+  corpus: ApocryphaCorpus,
+): Record<Testament, ScriptureBookMeta[]> {
+  return BOOKS_BY_CORPUS[corpus];
+}
 
 // the readable corpora, in the order they appear in the sidebar's scripture
 // block. anything that iterates all three (a reset, an aggregate) uses this
@@ -37,9 +59,15 @@ export const ALL_BOOKS: Record<Testament, ScriptureBookMeta[]> = {
 // missed by the other
 export const TESTAMENTS: Testament[] = ["OT", "NT", "DC"];
 
-function bookByAbbrev(abbrev: string): ScriptureBookMeta | undefined {
+// the two deuterocanonical corpora, for the slots a reset has to clear
+const CORPORA: ApocryphaCorpus[] = ["kjva", "web"];
+
+function bookByAbbrev(
+  abbrev: string,
+  corpus: ApocryphaCorpus,
+): ScriptureBookMeta | undefined {
   for (const t of TESTAMENTS) {
-    const found = ALL_BOOKS[t].find((b) => b.abbrev === abbrev);
+    const found = booksFor(corpus)[t].find((b) => b.abbrev === abbrev);
     if (found) return found;
   }
   return undefined;
@@ -53,13 +81,16 @@ export type SavedPos = { abbrev: string; chapter: number; savedAt: number };
 
 const STORAGE_PREFIX = "bcp-bible-";
 
-function storageKey(t: Testament): string {
-  return `${STORAGE_PREFIX}${t}`;
+// the deuterocanonical slot is one per corpus, so a switch lands on the new
+// corpus's own last place rather than the old one's. the canonical two keep
+// one slot each, because the canonical text does not move with the corpus
+function storageKey(t: Testament, corpus: ApocryphaCorpus): string {
+  return t === "DC" ? `${STORAGE_PREFIX}DC-${corpus}` : `${STORAGE_PREFIX}${t}`;
 }
 
-function loadPos(t: Testament): SavedPos | null {
+function loadPos(t: Testament, corpus: ApocryphaCorpus): SavedPos | null {
   try {
-    const raw = localStorage.getItem(storageKey(t));
+    const raw = localStorage.getItem(storageKey(t, corpus));
     if (!raw) return null;
     // SAFETY: fields validated by the type guard below
     const parsed = JSON.parse(raw) as SavedPos;
@@ -80,9 +111,9 @@ function loadPos(t: Testament): SavedPos | null {
   return null;
 }
 
-function savePos(t: Testament, pos: SavedPos): void {
+function savePos(t: Testament, corpus: ApocryphaCorpus, pos: SavedPos): void {
   try {
-    localStorage.setItem(storageKey(t), JSON.stringify(pos));
+    localStorage.setItem(storageKey(t, corpus), JSON.stringify(pos));
   } catch {
     // ignore
   }
@@ -92,7 +123,9 @@ function savePos(t: Testament, pos: SavedPos): void {
 export function clearSavedPositions(): void {
   try {
     for (const t of TESTAMENTS) {
-      localStorage.removeItem(storageKey(t));
+      for (const corpus of CORPORA) {
+        localStorage.removeItem(storageKey(t, corpus));
+      }
     }
     localStorage.removeItem(BOOK_STORAGE_KEY);
   } catch {
@@ -101,7 +134,9 @@ export function clearSavedPositions(): void {
 }
 
 // per-book place for the picker; the corpus position names only one book,
-// so a bare pick would otherwise reopen every book at its first chapter
+// so a bare pick would otherwise reopen every book at its first chapter.
+// the map is keyed by abbrev and shared, so the books common to both corpora
+// remember their place across a switch
 const BOOK_STORAGE_KEY = "bcp-bible-books";
 
 function loadBookPositions(): Record<string, number> {
@@ -131,8 +166,11 @@ function saveBookPos(abbrev: string, chapter: number): void {
 }
 
 /** where a book pick opens: the reader's last place, clamped, 1 if never opened */
-export function lastChapterFor(abbrev: string): number {
-  const meta = bookByAbbrev(abbrev);
+export function lastChapterFor(
+  abbrev: string,
+  corpus: ApocryphaCorpus,
+): number {
+  const meta = bookByAbbrev(abbrev, corpus);
   if (!meta) return 1;
   const stored = loadBookPositions()[abbrev];
   if (typeof stored !== "number") return 1;
@@ -142,9 +180,13 @@ export function lastChapterFor(abbrev: string): number {
 // only a position the reader would actually restore: a book a content drop
 // removed, or a chapter past the end, would label the row with a tap that
 // disagrees. clamping mirrors resolvePos
-function usablePos(t: Testament, pos: SavedPos | null): SavedPos | null {
+function usablePos(
+  t: Testament,
+  corpus: ApocryphaCorpus,
+  pos: SavedPos | null,
+): SavedPos | null {
   if (!pos) return null;
-  const found = ALL_BOOKS[t].find((b) => b.abbrev === pos.abbrev);
+  const found = booksFor(corpus)[t].find((b) => b.abbrev === pos.abbrev);
   if (!found) return null;
   return {
     ...pos,
@@ -161,12 +203,26 @@ function usablePos(t: Testament, pos: SavedPos | null): SavedPos | null {
 // an untouched reader apart from one with progress to clear. the sidebar
 // pairs this with openingRef rather than a default baked in here, so a null
 // keeps meaning "nothing saved" for that gate
-export function savedPositions(): Record<Testament, SavedPos | null> {
+export function savedPositions(
+  corpus: ApocryphaCorpus,
+): Record<Testament, SavedPos | null> {
   return {
-    OT: usablePos("OT", loadPos("OT")),
-    NT: usablePos("NT", loadPos("NT")),
-    DC: usablePos("DC", loadPos("DC")),
+    OT: usablePos("OT", corpus, loadPos("OT", corpus)),
+    NT: usablePos("NT", corpus, loadPos("NT", corpus)),
+    DC: usablePos("DC", corpus, loadPos("DC", corpus)),
   };
+}
+
+// whether any corpus holds a saved position. the settings reset gates on
+// this rather than on the current corpus's own positions, so a reader who
+// read in one corpus can still clear it while standing in the other
+export function hasSavedPosition(): boolean {
+  for (const corpus of CORPORA) {
+    for (const t of TESTAMENTS) {
+      if (loadPos(t, corpus)) return true;
+    }
+  }
+  return false;
 }
 
 // where a corpus opens when nothing is saved: the first chapter of its first
@@ -175,8 +231,9 @@ export function savedPositions(): Record<Testament, SavedPos | null> {
 // take me" instead of sitting blank until the first read
 export function openingRef(
   t: Testament,
+  corpus: ApocryphaCorpus,
 ): { abbrev: string; chapter: number } | null {
-  const first = ALL_BOOKS[t][0];
+  const first = booksFor(corpus)[t][0];
   return first ? { abbrev: first.abbrev, chapter: 1 } : null;
 }
 
@@ -203,8 +260,10 @@ type BibleState = {
   book: ScriptureBookMeta | null;
   chapter: number;
   books: ScriptureBookMeta[];
+  corpus: ApocryphaCorpus;
   selectTestament: (t: Testament) => void;
   selectBook: (abbrev: string, chapter?: number) => void;
+  switchCorpus: (corpus: ApocryphaCorpus) => void;
   clearBook: () => void;
   nextChapter: () => void;
   prevChapter: () => void;
@@ -279,12 +338,13 @@ export function pageForBook(abbrevOrName: string): PageId | null {
 /** Resolve a saved position to a real book + chapter, falling back to first book. */
 function resolvePos(
   t: Testament,
+  corpus: ApocryphaCorpus,
   saved: SavedPos | null,
 ): {
   book: ScriptureBookMeta | null;
   chapter: number;
 } {
-  const books = ALL_BOOKS[t];
+  const books = booksFor(corpus)[t];
   if (books.length === 0) return { book: null, chapter: 1 };
   if (saved) {
     const found = books.find((b) => b.abbrev === saved.abbrev);
@@ -294,6 +354,45 @@ function resolvePos(
     }
   }
   return { book: books[0], chapter: 1 };
+}
+
+// where a corpus switch lands, in the order the ladder defines:
+// 1. the new corpus has the book at the same address, so the reader stays
+// 2. the new corpus has the same work at another address, so the reader goes
+// 3. the new corpus's last read position
+// 4. the new corpus's first book
+export function corpusLanding(
+  from: ApocryphaCorpus,
+  to: ApocryphaCorpus,
+  current: ScriptureBookMeta,
+  chapter: number,
+): { abbrev: string; chapter: number } | null {
+  const nextBooks = dcBooks(to);
+
+  const same = nextBooks.find((b) => b.abbrev === current.abbrev);
+  if (same) {
+    return {
+      abbrev: same.abbrev,
+      chapter: Math.min(Math.max(1, chapter), same.chapters),
+    };
+  }
+
+  const link = corpusLink(from, current.abbrev, chapter);
+  if (link) {
+    const target = nextBooks.find((b) => b.abbrev === link.abbrev);
+    if (target) {
+      return {
+        abbrev: target.abbrev,
+        chapter: Math.min(Math.max(1, link.chapter), target.chapters),
+      };
+    }
+  }
+
+  const saved = usablePos("DC", to, loadPos("DC", to));
+  if (saved) return { abbrev: saved.abbrev, chapter: saved.chapter };
+
+  const first = nextBooks[0];
+  return first ? { abbrev: first.abbrev, chapter: 1 } : null;
 }
 
 export function BibleProvider({
@@ -307,8 +406,17 @@ export function BibleProvider({
   onReadingChange?: (label: string | null) => void;
   onChapterChange?: () => void;
 }) {
+  // the corpus the reader has selected. it lives in the translation context
+  // because it is a setting, but the switch has to run here, where the
+  // reader's position is, so the landing is picked against the new corpus
+  const { apocrypha, setApocrypha } = useTranslation();
+
   const initialTestament = isBiblePage(page) ? pageTestament(page) : "OT";
-  const initial = resolvePos(initialTestament, loadPos(initialTestament));
+  const initial = resolvePos(
+    initialTestament,
+    apocrypha,
+    loadPos(initialTestament, apocrypha),
+  );
 
   const [testament, setTestament] = useState<Testament>(initialTestament);
   const [book, setBook] = useState<ScriptureBookMeta | null>(initial.book);
@@ -335,7 +443,8 @@ export function BibleProvider({
       const ref = _pendingRefTarget;
       _pendingRefTarget = null;
       const found =
-        ALL_BOOKS[t].find((b) => b.abbrev === ref.abbrev) ?? ALL_BOOKS[t][0];
+        booksFor(apocrypha)[t].find((b) => b.abbrev === ref.abbrev) ??
+        booksFor(apocrypha)[t][0];
       const ch = Math.min(Math.max(1, ref.chapter), found.chapters);
       setTestament(t);
       setBook(found);
@@ -347,7 +456,7 @@ export function BibleProvider({
         bible: { abbrev: found.abbrev, chapter: ch },
       });
     } else {
-      const pos = resolvePos(t, loadPos(t));
+      const pos = resolvePos(t, apocrypha, loadPos(t, apocrypha));
       setTestament(t);
       setBook(pos.book);
       setChapter(pos.chapter);
@@ -360,12 +469,12 @@ export function BibleProvider({
         });
       }
     }
-  }, [page, history?.replace]);
+  }, [page, history?.replace, apocrypha]);
 
   // persist position + report to status bar (only while on a bible page)
   useEffect(() => {
     if (book && isBiblePage(page)) {
-      savePos(testament, {
+      savePos(testament, apocrypha, {
         abbrev: book.abbrev,
         chapter,
         savedAt: Date.now(),
@@ -376,7 +485,7 @@ export function BibleProvider({
       markReached(book.abbrev, chapter);
       onReadingChange?.(`${bibleBookName(book.abbrev)} ${chapter}`);
     }
-  }, [page, testament, book, chapter, onReadingChange]);
+  }, [page, testament, apocrypha, book, chapter, onReadingChange]);
 
   // scroll to top when the reader advances to a later position, so a next-book
   // step scrolls up like a next-chapter step; a backward move keeps its place
@@ -386,17 +495,20 @@ export function BibleProvider({
     const abbrev = book?.abbrev ?? null;
     if (prev.abbrev === abbrev && prev.chapter === chapter) return;
     prevPosRef.current = { abbrev, chapter };
-    if (readingRank(abbrev, chapter) > readingRank(prev.abbrev, prev.chapter)) {
+    if (
+      readingRank(abbrev, chapter, apocrypha) >
+      readingRank(prev.abbrev, prev.chapter, apocrypha)
+    ) {
       onChapterChange?.();
     }
-  }, [book, chapter, onChapterChange]);
+  }, [book, chapter, apocrypha, onChapterChange]);
 
-  const books = ALL_BOOKS[testament];
+  const books = booksFor(apocrypha)[testament];
 
   const selectTestament = useCallback(
     (t: Testament) => {
       setTestament(t);
-      const pos = resolvePos(t, loadPos(t));
+      const pos = resolvePos(t, apocrypha, loadPos(t, apocrypha));
       setBook(pos.book);
       setChapter(pos.chapter);
       history?.push({
@@ -405,17 +517,17 @@ export function BibleProvider({
           : null,
       });
     },
-    [history],
+    [history, apocrypha],
   );
 
   // the book carries its own corpus, so a deuterocanonical pick switches the
   // reader to DC; a pick without a chapter reopens the reader's last place
   const selectBook = useCallback(
     (abbrev: string, chapter?: number) => {
-      const found = bookByAbbrev(abbrev);
+      const found = bookByAbbrev(abbrev, apocrypha);
       if (!found) return;
       const ch = Math.min(
-        Math.max(1, chapter ?? lastChapterFor(abbrev)),
+        Math.max(1, chapter ?? lastChapterFor(abbrev, apocrypha)),
         found.chapters,
       );
       setTestament(found.testament);
@@ -423,7 +535,33 @@ export function BibleProvider({
       setChapter(ch);
       history?.push({ bible: { abbrev: found.abbrev, chapter: ch } });
     },
-    [history],
+    [history, apocrypha],
+  );
+
+  // the corpus switch, with the landing the ladder defines. it lives in the
+  // provider rather than in the bar, because the bar would otherwise set the
+  // corpus and pick a book against the old one
+  const switchCorpus = useCallback(
+    (next: ApocryphaCorpus) => {
+      if (next === apocrypha) return;
+      // the canonical books do not move with the corpus, so a reader on an
+      // OT or NT page stays exactly where they are
+      if (testament !== "DC" || !book) {
+        setApocrypha(next);
+        return;
+      }
+      const landing = corpusLanding(apocrypha, next, book, chapter);
+      setApocrypha(next);
+      if (!landing) return;
+      const found = dcBooks(next).find((b) => b.abbrev === landing.abbrev);
+      if (!found) return;
+      const ch = Math.min(Math.max(1, landing.chapter), found.chapters);
+      setTestament("DC");
+      setBook(found);
+      setChapter(ch);
+      history?.push({ bible: { abbrev: found.abbrev, chapter: ch } });
+    },
+    [apocrypha, book, chapter, history, setApocrypha, testament],
   );
 
   const clearBook = useCallback(() => {
@@ -524,14 +662,21 @@ export function BibleProvider({
         setChapter(1);
         return;
       }
-      const found = bookByAbbrev(ref.abbrev);
+      const found =
+        bookByAbbrev(ref.abbrev, apocrypha) ?? getScriptureBookMeta(ref.abbrev);
       if (!found) return;
       restoredTestament.current = found.testament;
+      // a book the current corpus does not hold reads in the corpus that
+      // does, so a restored position opens where it was left
+      if (found.testament === "DC") {
+        const holding = corpusHolding(found.abbrev, apocrypha);
+        if (holding !== apocrypha) setApocrypha(holding);
+      }
       setTestament(found.testament);
       setBook(found);
       setChapter(Math.min(Math.max(1, ref.chapter), found.chapters));
     },
-    [],
+    [apocrypha, setApocrypha],
   );
 
   // snapshot the open position while on a bible page; a restore replays it
@@ -548,8 +693,10 @@ export function BibleProvider({
         book,
         chapter,
         books,
+        corpus: apocrypha,
         selectTestament,
         selectBook,
+        switchCorpus,
         clearBook,
         nextChapter,
         prevChapter,

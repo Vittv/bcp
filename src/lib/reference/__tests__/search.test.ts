@@ -144,14 +144,18 @@ describe("searchSaints", () => {
 });
 
 describe("searchPalette", () => {
+  // the palette lists the books of one corpus. most assertions exercise the
+  // web corpus, whose fifteen books are the full deuterocanonical set
+  const palette = (query: string) => searchPalette(query, "web");
+
   test("empty or blank query is intentionally empty", () => {
     for (const q of ["", "   "]) {
-      expect(searchPalette(q)).toEqual([]);
+      expect(palette(q)).toEqual([]);
     }
   });
 
   test("matches psalms by number and by verse text", () => {
-    const byNum = searchPalette("119");
+    const byNum = palette("119");
     expect(
       byNum.some(
         (e) =>
@@ -161,7 +165,7 @@ describe("searchPalette", () => {
       ),
     ).toBe(true);
 
-    const byText = searchPalette("shepherd");
+    const byText = palette("shepherd");
     expect(
       byText.some(
         (e) =>
@@ -174,7 +178,7 @@ describe("searchPalette", () => {
   });
 
   test("lists proverbs chapters for a plain chapter number", () => {
-    const hits = searchPalette("prov 3");
+    const hits = palette("prov 3");
     const prov = hits.filter((e) => e.section === "proverbs");
     expect(prov.length).toBeGreaterThan(0);
     expect(prov.every((e) => e.run.kind === "proverb")).toBe(true);
@@ -184,26 +188,26 @@ describe("searchPalette", () => {
   });
 
   test("matches a canticle by title", () => {
-    const hits = searchPalette("mary");
+    const hits = palette("mary");
     const cants = hits.filter((e) => e.section === "canticles");
     expect(cants.some((e) => e.run.kind === "canticle")).toBe(true);
     expect(cants[0]?.label).toContain("Mary");
   });
 
   test("matches collects by title and by text", () => {
-    const byTitle = searchPalette("for peace").filter(
+    const byTitle = palette("for peace").filter(
       (e) => e.section === "collects",
     );
     expect(byTitle.some((e) => e.label.includes("Peace"))).toBe(true);
 
-    const byText = searchPalette("cast away the works of darkness").filter(
+    const byText = palette("cast away the works of darkness").filter(
       (e) => e.section === "collects",
     );
     expect(byText.length).toBeGreaterThan(0);
   });
 
   test("matches a saint by name variant", () => {
-    const slugs = searchPalette("saint james").reduce<string[]>((acc, e) => {
+    const slugs = palette("saint james").reduce<string[]>((acc, e) => {
       if (e.run.kind === "saint") acc.push(e.run.slug);
       return acc;
     }, []);
@@ -213,15 +217,15 @@ describe("searchPalette", () => {
   });
 
   test("matches bible books by name and abbreviation", () => {
-    const gen = searchPalette("gen").filter((e) => e.section === "bible");
+    const gen = palette("gen").filter((e) => e.section === "bible");
     expect(gen.some((e) => e.label === "Genesis")).toBe(true);
 
-    const byName = searchPalette("john").filter((e) => e.section === "bible");
+    const byName = palette("john").filter((e) => e.section === "bible");
     expect(byName.some((e) => e.label === "John")).toBe(true);
   });
 
   test("no results for unknown text", () => {
-    expect(searchPalette("xyzzyplugh")).toEqual([]);
+    expect(palette("xyzzyplugh")).toEqual([]);
   });
 
   test("every section is reachable through its own vocabulary", () => {
@@ -234,13 +238,13 @@ describe("searchPalette", () => {
       ["bible", "gen"],
     ];
     for (const [section, query] of probes) {
-      const hits = searchPalette(query).filter((e) => e.section === section);
+      const hits = palette(query).filter((e) => e.section === section);
       expect(hits.length).toBeGreaterThan(0);
     }
   });
 
   test("a bare section name expands to its full listing", () => {
-    const psalms = searchPalette("psalm");
+    const psalms = palette("psalm");
     expect(psalms).toHaveLength(150);
     expect(psalms.every((e) => e.section === "psalms")).toBe(true);
     expect(psalms[0].run.kind).toBe("psalm");
@@ -250,16 +254,16 @@ describe("searchPalette", () => {
     expect(last.kind).toBe("psalm");
     if (last.kind === "psalm") expect(last.psalm).toBe(150);
 
-    const plural = searchPalette("PSALMS");
+    const plural = palette("PSALMS");
     expect(plural.map((e) => e.label)).toEqual(psalms.map((e) => e.label));
 
-    expect(searchPalette("collects")).toHaveLength(142);
-    expect(searchPalette("saints")).toHaveLength(36);
-    expect(searchPalette("proverbs")).toHaveLength(31);
+    expect(palette("collects")).toHaveLength(142);
+    expect(palette("saints")).toHaveLength(36);
+    expect(palette("proverbs")).toHaveLength(31);
   });
 
   test("bible expands to every chapter, restricable to a testament", () => {
-    const bible = searchPalette("bible");
+    const bible = palette("bible");
     expect(bible.length).toBe(1189);
     expect(bible[0]).toMatchObject({
       section: "bible",
@@ -267,17 +271,17 @@ describe("searchPalette", () => {
       run: { kind: "bible", book: "Gen", chapter: 1 },
     });
 
-    const nt = searchPalette("new testament");
+    const nt = palette("new testament");
     expect(nt.length).toBe(260);
     expect(nt.every((e) => e.run.kind === "bible")).toBe(true);
     expect(nt.at(-1)).toMatchObject({ label: "Revelation 22" });
 
-    const ot = searchPalette("old testament");
+    const ot = palette("old testament");
     expect(ot.length).toBe(929);
   });
 
   test("apocrypha expands to every deuterocanonical chapter, in its own section", () => {
-    const ap = searchPalette("apocrypha");
+    const ap = palette("apocrypha");
     // 213 chapters across the 15 vendored books
     expect(ap.length).toBe(213);
     expect(ap.every((e) => e.section === "apocrypha")).toBe(true);
@@ -288,40 +292,61 @@ describe("searchPalette", () => {
     });
 
     // its own vocabulary, so "deuterocanonical" reaches the same list
-    expect(searchPalette("deuterocanonical").length).toBe(213);
+    expect(palette("deuterocanonical").length).toBe(213);
+  });
+
+  test("the apocrypha listing follows the selected corpus", () => {
+    // KJVA is fourteen books, 173 chapters, and lists the 1611's own books
+    // that the WEB corpus files differently or does not carry
+    const kjva = searchPalette("apocrypha", "kjva");
+    expect(kjva).toHaveLength(173);
+    expect(kjva.every((e) => e.section === "apocrypha")).toBe(true);
+    const kjvaBooks = new Set(
+      kjva.map((e) => (e.run.kind === "bible" ? e.run.book : "")),
+    );
+    expect(kjvaBooks.has("Sus")).toBe(true);
+    expect(kjvaBooks.has("Rest Esth")).toBe(true);
+    expect(kjvaBooks.has("Dan Grk")).toBe(false);
+    expect(kjvaBooks.has("Add Esth")).toBe(false);
+
+    // the WEB corpus files Susanna inside Daniel (Greek), so the citation
+    // name is how a search for it lands on a book that exists there
+    const susanna = searchPalette("susanna", "web").filter(
+      (e) => e.section === "apocrypha",
+    );
+    expect(susanna.some((e) => e.label === "Daniel (Greek)")).toBe(true);
+    expect(
+      searchPalette("susanna", "kjva").some((e) => e.label === "Susanna"),
+    ).toBe(true);
   });
 
   test("the canonical bible expansion stays the 66 canonical books", () => {
     // apocrypha is a separate section, so "bible" must not absorb it
-    const bible = searchPalette("bible");
+    const bible = palette("bible");
     expect(bible.length).toBe(1189);
     expect(bible.every((e) => e.section === "bible")).toBe(true);
     expect(bible.some((e) => e.label.startsWith("Tobit"))).toBe(false);
   });
 
   test("deuterocanonical books match by name and land in the apocrypha section", () => {
-    const sirach = searchPalette("sirach").filter(
-      (e) => e.section === "apocrypha",
-    );
+    const sirach = palette("sirach").filter((e) => e.section === "apocrypha");
     expect(sirach.some((e) => e.label === "Sirach")).toBe(true);
 
     // by abbreviation too, since the DOL cites these by their short forms
-    const byAbbrev = searchPalette("jdt").filter(
-      (e) => e.section === "apocrypha",
-    );
+    const byAbbrev = palette("jdt").filter((e) => e.section === "apocrypha");
     expect(byAbbrev.some((e) => e.label === "Judith")).toBe(true);
   });
 
   test("expansion keywords do not swallow specific queries", () => {
     // "psalm 20" stays an exact psalms match, not a 150-row dump
-    const psalm20 = searchPalette("psalm 20");
+    const psalm20 = palette("psalm 20");
     expect(
       psalm20.some((e) => e.run.kind === "psalm" && e.run.psalm === 20),
     ).toBe(true);
     expect(psalm20.length).toBeLessThan(150);
 
     // "prov 3" lists chapter 3, not all 31
-    const prov3 = searchPalette("prov 3");
+    const prov3 = palette("prov 3");
     expect(
       prov3.some((e) => e.run.kind === "proverb" && e.run.chapter === 3),
     ).toBe(true);

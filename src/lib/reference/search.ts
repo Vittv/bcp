@@ -4,7 +4,7 @@ import {
   sanctoraleDateLabel,
   sanctoraleNameVariants,
 } from "../calendar/sanctorale";
-import { getScriptureBooksByTestament } from "../content/bible";
+import { type ApocryphaCorpus, dcBooks } from "../content/bible";
 import {
   canticleExists,
   canticlePassage,
@@ -186,8 +186,9 @@ export type PaletteEntry = {
 };
 
 // the canonical section order of the global palette's headings. apocrypha
-// follows bible: same reader, but a separate corpus with its own WEB-only
-// text, so a result's provenance stays obvious in the heading alone
+// follows bible: same reader, but a separate corpus with its own book list
+// and its own text, so a result's provenance stays obvious in the heading
+// alone
 export const PALETTE_SECTION_ORDER: PaletteSection[] = [
   "psalms",
   "proverbs",
@@ -338,8 +339,8 @@ function bibleKeyword(lower: string): BibleExpansion | null {
 }
 
 // the deuterocanonical books answer to their own vocabulary rather than
-// folding into the canonical "bible" search, so 15 books never cited by the
-// lectionary cannot crowd out the 66 that are
+// folding into the canonical "bible" search, so the corpus's books never
+// cited by the lectionary cannot crowd out the 66 that are
 function apocryphaKeyword(lower: string): boolean {
   return ["apocrypha", "apocryphal", "deuterocanonical"].includes(lower);
 }
@@ -396,9 +397,12 @@ function expandBible(expansion: BibleExpansion): PaletteEntry[] {
   return out;
 }
 
-function expandApocrypha(): PaletteEntry[] {
+// the deuterocanonical books of the corpus the reader has selected. the
+// corpus is a book list and a text together, so the palette lists the
+// books the reader can actually open and nothing else
+function expandApocrypha(corpus: ApocryphaCorpus): PaletteEntry[] {
   const out: PaletteEntry[] = [];
-  for (const b of getScriptureBooksByTestament("DC")) {
+  for (const b of dcBooks(corpus)) {
     for (let chapter = 1; chapter <= b.chapters; chapter++) {
       out.push({
         id: `apocrypha:${b.abbrev}:${chapter}`,
@@ -413,8 +417,13 @@ function expandApocrypha(): PaletteEntry[] {
 
 // one merged result list across every picker section, in printed order.
 // an empty query stays blank; an exact section name expands to its full
-// listing, otherwise each section returns capped content matches.
-export function searchPalette(query: string): PaletteEntry[] {
+// listing, otherwise each section returns capped content matches. the
+// corpus is the reader's selected deuterocanonical corpus, which decides
+// the apocryphal book list and the text those books are read in
+export function searchPalette(
+  query: string,
+  corpus: ApocryphaCorpus,
+): PaletteEntry[] {
   const q = query.trim();
   if (!q) return [];
   const out: PaletteEntry[] = [];
@@ -422,7 +431,7 @@ export function searchPalette(query: string): PaletteEntry[] {
 
   const bibleExpansion = bibleKeyword(lower);
   if (bibleExpansion) return expandBible(bibleExpansion);
-  if (apocryphaKeyword(lower)) return expandApocrypha();
+  if (apocryphaKeyword(lower)) return expandApocrypha(corpus);
   const section = sectionKeyword(lower);
   if (section) return expandSection(section);
 
@@ -453,12 +462,15 @@ export function searchPalette(query: string): PaletteEntry[] {
   );
 
   // apocrypha: its own section, so "sirach" or "wis" lands here rather than
-  // competing with the canonical hits for the same eight-row budget
-  const apocryphaHits = getScriptureBooksByTestament("DC")
+  // competing with the canonical hits for the same eight-row budget. the
+  // citation names catch the books the corpus files under another name, so
+  // a search for Susanna finds it under the WEB's Daniel (Greek)
+  const apocryphaHits = dcBooks(corpus)
     .filter(
       (b) =>
         b.book.toLowerCase().includes(lower) ||
-        b.abbrev.toLowerCase().includes(lower),
+        b.abbrev.toLowerCase().includes(lower) ||
+        (b.citationNames ?? []).some((n) => n.toLowerCase().includes(lower)),
     )
     .slice(0, PER_SECTION_CAP);
   pushEntries(

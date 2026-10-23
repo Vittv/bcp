@@ -9,11 +9,10 @@ export type { KjvBook };
 
 export type KjvaBookMeta = ScriptureBookMeta;
 
-// the ten deuterocanonical books the KJVA carries in the same shape as the
-// book the app already has, so the corpus keeps its shape under either
-// apocryphal text. the five the app has that the KJVA does not carry in a
-// matching shape (Esther Greek, Daniel Greek, Psalm 151, 3 Maccabees,
-// 4 Maccabees) are not here, and read in the WEB under either setting
+// the fourteen deuterocanonical books the 1611 print carries, in the 1611's
+// own order, which is the source module's order. every one of them reads in
+// the 1611's apocryphal text, so the book list and the text are one corpus
+// and nothing is ever mixed
 export const KJVA_BOOKS: KjvaBookMeta[] = [
   {
     book: "Tobit",
@@ -28,6 +27,13 @@ export const KJVA_BOOKS: KjvaBookMeta[] = [
     testament: "DC",
     chapters: 16,
     dolRefNames: ["Judith", "Jdt"],
+  },
+  {
+    book: "Rest of Esther",
+    abbrev: "Rest Esth",
+    testament: "DC",
+    chapters: 7,
+    dolRefNames: ["Rest of Esther", "Rest Esth"],
   },
   {
     book: "Wisdom of Solomon",
@@ -49,6 +55,27 @@ export const KJVA_BOOKS: KjvaBookMeta[] = [
     testament: "DC",
     chapters: 6,
     dolRefNames: ["Baruch", "Bar"],
+  },
+  {
+    book: "Song of the Three Children",
+    abbrev: "S3Y",
+    testament: "DC",
+    chapters: 1,
+    dolRefNames: ["Song of the Three Children", "S3Y"],
+  },
+  {
+    book: "Susanna",
+    abbrev: "Sus",
+    testament: "DC",
+    chapters: 1,
+    dolRefNames: ["Susanna", "Sus"],
+  },
+  {
+    book: "Bel and the Dragon",
+    abbrev: "Bel",
+    testament: "DC",
+    chapters: 1,
+    dolRefNames: ["Bel and the Dragon", "Bel"],
   },
   {
     book: "1 Maccabees",
@@ -137,9 +164,8 @@ export async function loadKjvABook(
   }
 }
 
-// whether the KJVA carries this book. the routing asks this before choosing
-// a text, so the five books the 1611 does not have fall to the WEB by name
-// rather than by a silent catch
+// whether the KJVA carries this book. the routing asks this first, so the
+// books the 1611 does not have fall to the WEB by name, not by a catch
 export function getKjvaBookMeta(
   abbrevOrName: string,
 ): KjvaBookMeta | undefined {

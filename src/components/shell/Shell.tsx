@@ -46,6 +46,7 @@ import {
   requestPalette,
 } from "../../context/PaletteContext";
 import { useTheme } from "../../context/ThemeContext";
+import { useTranslation } from "../../context/TranslationContext";
 import type { SanctoraleEntry } from "../../lib/calendar";
 import {
   addDays,
@@ -1112,7 +1113,10 @@ export function Shell() {
   // storage because the bible context is cleared on every navigation, and
   // they are un-memoized so a progress reset cannot leave a stale label behind
   const nextFeast = upcomingSanctoraleEntry(today());
-  const saved = savedPositions();
+  // the corpus the reader has selected, so the apocrypha row reads the
+  // deuterocanonical corpus's own last place rather than the other one's
+  const { apocrypha } = useTranslation();
+  const saved = savedPositions(apocrypha);
   // abbreviated, not the full name: the row shares one narrow column with
   // "Old Testament", and "1 Thessalonians 12" is wide enough to push the label
   // into the ellipsis it yields to the detail. the Apocrypha row's own books
@@ -1123,7 +1127,7 @@ export function Shell() {
   // that is the reader's position either way, since nothing saved means the
   // first chapter is what they would land on
   const readingLabel = (t: Testament) => {
-    const pos = saved[t] ?? openingRef(t);
+    const pos = saved[t] ?? openingRef(t, apocrypha);
     return pos ? `${pos.abbrev} ${pos.chapter}` : undefined;
   };
   const sidebarDetail: Partial<Record<PageId, string>> = {

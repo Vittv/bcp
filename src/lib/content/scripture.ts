@@ -9,6 +9,13 @@ export type ScriptureBookMeta = {
   testament: Testament;
   chapters: number;
   dolRefNames: string[];
+  // extra names the book answers to in a search, without becoming a ref
+  // alias. the WEB's Daniel (Greek) carries the two additions it prints as
+  // its own chapters, so a search for Susanna finds the book
+  citationNames?: string[];
+  // the title of a chapter, where the chapter is named rather than only
+  // numbered
+  chapterTitles?: Record<number, string>;
 };
 
 export type ParseResult = {

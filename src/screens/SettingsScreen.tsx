@@ -29,10 +29,10 @@ import {
 } from "../components/shell/Icon";
 import type { ModalType } from "../components/shell/Sidebar";
 import {
-  ALL_BOOKS,
+  booksFor,
   clearSavedPositions,
-  savedPositions,
-  TESTAMENTS,
+  hasSavedPosition,
+  useBible,
 } from "../context/BibleContext";
 import { useOfficeSettings } from "../context/OfficeSettingsContext";
 import { type ThemeMode, useTheme } from "../context/ThemeContext";
@@ -55,7 +55,7 @@ import {
 } from "../lib/theme/themedStyles";
 import { THEME_LIST, type ThemeId, themeTokens } from "../lib/theme/themes";
 import type { ResolvedTheme, ThemeTokens } from "../lib/theme/tokens";
-import { TRANSLATION_OPTIONS } from "../lib/translations";
+import { APOCRYPHA_OPTIONS, TRANSLATION_OPTIONS } from "../lib/translations";
 import type { FaceDef } from "../lib/typography/faces";
 import {
   BASE_FONT_PX,
@@ -1000,22 +1000,31 @@ type BibleSettingsProps = {
 
 function BibleSettings({ translation, setTranslation }: BibleSettingsProps) {
   const styles = useThemedStyles(styleDef);
+  // the corpus the reader has selected, and the switch that changes it. the
+  // switch lives in the bible provider because it lands the reader on the
+  // new corpus's own position, so the row means the same thing here as the
+  // chip on the bar
+  const { corpus, switchCorpus } = useBible();
   // storage is the source of truth; the counter is only ever bumped, so the
   // reset forces a fresh read below rather than caching a stale answer
   const [, reread] = useState(0);
   const marks = getAllProgress();
-  // every chapter the reader can open, deuterocanonical included: reaching
-  // Sirach 40 is reading progress, so it counts toward the same aggregate
-  const books = [...ALL_BOOKS.OT, ...ALL_BOOKS.NT, ...ALL_BOOKS.DC];
+  // every chapter the reader can open in the corpus they have selected,
+  // deuterocanonical included: reaching Sirach 40 is reading progress, so
+  // it counts toward the same aggregate, and the total follows the corpus's
+  // own book list
+  const corpusBooks = booksFor(corpus);
+  const books = [...corpusBooks.OT, ...corpusBooks.NT, ...corpusBooks.DC];
   const total = books.reduce((n, b) => n + b.chapters, 0);
   // clamped, so a stale mark can never push the total past a full bible
   const reached = books.reduce(
     (n, b) => n + Math.min(marks[b.abbrev] ?? 0, b.chapters),
     0,
   );
-  // a position with no mark is an upgrading reader, so the reset stays live
-  const saved = savedPositions();
-  const hasProgress = reached > 0 || TESTAMENTS.some((t) => saved[t] !== null);
+  // a position with no mark is an upgrading reader, so the reset stays live.
+  // the gate spans both corpora, so a reader who read in the other one can
+  // still clear it from here
+  const hasProgress = reached > 0 || hasSavedPosition();
   const reset = () => {
     clearProgress();
     clearSavedPositions();
@@ -1034,6 +1043,18 @@ function BibleSettings({ translation, setTranslation }: BibleSettingsProps) {
         />
         <Text style={styles.settingDescription}>
           {TRANSLATION_OPTIONS.find((o) => o.id === translation)?.description}
+        </Text>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.label}>Apocrypha</Text>
+        <OptionChips
+          options={APOCRYPHA_OPTIONS}
+          value={corpus}
+          onSelect={switchCorpus}
+          mono
+        />
+        <Text style={styles.settingDescription}>
+          {APOCRYPHA_OPTIONS.find((o) => o.id === corpus)?.description}
         </Text>
       </View>
       <View style={styles.section}>

@@ -32,17 +32,17 @@ const PROVERS_CHAPTERS = 31;
 // the whole book loads once and stays cached; every chapter's verse count
 // and full text derive from that single in-memory object
 function useProverbsBook(): KjvBook | null {
-  const { translation } = useTranslation();
+  const { translation, apocrypha } = useTranslation();
   const [book, setBook] = useState<KjvBook | null>(null);
   useEffect(() => {
     let cancelled = false;
-    loadScriptureBook(translation, "Proverbs").then((b) => {
+    loadScriptureBook({ translation, apocrypha }, "Proverbs").then((b) => {
       if (!cancelled) setBook(b);
     });
     return () => {
       cancelled = true;
     };
-  }, [translation]);
+  }, [translation, apocrypha]);
   return book;
 }
 
