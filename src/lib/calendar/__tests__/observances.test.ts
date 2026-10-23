@@ -74,6 +74,24 @@ describe("dayInfo: fixed feasts and saints", () => {
     expect(info.observances[0].rank).toBe("lesser");
   });
 
+  test("lesser feasts carry their own page slug", () => {
+    const info = dayInfo(d(2025, 1, 4));
+    const lesser = info.observances.find((o) => o.rank === "lesser");
+    expect(lesser?.lesserSlug).toBe(
+      "elizabeth-ann-seton-vowed-religious-and-educator",
+    );
+    expect(lesser?.slug).toBeUndefined();
+    expect(lesser?.optional).toBe(true);
+  });
+
+  test("holy days keep the sanctorale slug", () => {
+    const holy = dayInfo(d(2025, 12, 21)).observances.find(
+      (o) => o.rank === "holy-day",
+    );
+    expect(holy?.slug).toBe("st-thomas");
+    expect(holy?.lesserSlug).toBeUndefined();
+  });
+
   test("every sunday closes the list with its own name", () => {
     const info = dayInfo(d(2025, 7, 27));
     expect(info.observances.map((o) => o.name)).toEqual([

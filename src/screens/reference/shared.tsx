@@ -22,6 +22,10 @@ import type { PageId } from "../../components/shell/Sidebar";
 import type { HistoryApi, HistorySnapshot } from "../../context/HistoryContext";
 import { useHistory, useHistoryField } from "../../context/HistoryContext";
 import {
+  firstLesserFeastForDate,
+  lesserFeastBySlug,
+} from "../../lib/calendar/lesserFeasts";
+import {
   SANCTORALE_ENTRIES,
   sanctoraleBySlug,
   sanctoraleForDate,
@@ -54,6 +58,12 @@ export const FIRST_SAINT = SANCTORALE_ENTRIES[0].slug;
 // reader arriving on Saint Luke finds Saint Luke, not the top of the list
 export function defaultSaint(): string {
   return sanctoraleForDate(today())?.slug ?? FIRST_SAINT;
+}
+
+// the lesser feasts page opens on today's commemoration when there is one,
+// else the first entry in date order
+export function defaultLesserFeast(): string {
+  return firstLesserFeastForDate(today()).slug;
 }
 
 export const noSelect = {
@@ -163,18 +173,19 @@ export type CollectSel = {
   title: string;
 };
 
-// the six index-style pickers (psalms, psalter days, collects, saints,
-// proverbs, canticles) share one restorable-field implementation. null is the
-// picker page: opening pushes the selection, the mobile back button pushes
-// null, and restores replay the raw setter (null included) so Back from a
-// detail lands back on the list instead of a stale open item. picking from a
-// filtered list records that list as its own step first, so Back returns to
-// the exact list the pick came from.
+// the seven index-style pickers (psalms, psalter days, collects, saints,
+// lesser feasts, proverbs, canticles) share one restorable-field
+// implementation. null is the picker page: opening pushes the selection, the
+// mobile back button pushes null, and restores replay the raw setter (null
+// included) so Back from a detail lands back on the list instead of a stale
+// open item. picking from a filtered list records that list as its own step
+// first, so Back returns to the exact list the pick came from.
 type IndexPickerKey =
   | "psalm"
   | "psalterDay"
   | "collect"
   | "saint"
+  | "lesserFeast"
   | "proverb"
   | "canticle";
 
@@ -238,6 +249,8 @@ export type ReferenceState = {
   setSelectedCollect: (c: CollectSel | null) => void;
   openSaint: string | null;
   setOpenSaint: (slug: string | null) => void;
+  openLesserFeast: string | null;
+  setOpenLesserFeast: (slug: string | null) => void;
   // the open Proverbs chapter (1..31); null shows the chapter index
   openProvChapter: number | null;
   setOpenProvChapter: (n: number | null) => void;
@@ -291,7 +304,7 @@ export function ReferenceProvider({
   const queryRef = useRef(query);
   queryRef.current = query;
 
-  // the six index pickers share one restorable-field implementation:
+  // the seven index pickers share one restorable-field implementation:
   // opening pushes the pick, the mobile back pushes null, and restores
   // replay both branches through the raw setter
   const [openPsalm, setOpenPsalm, setPsalmRaw] = useIndexPicker(
@@ -318,6 +331,13 @@ export function ReferenceProvider({
   const [openSaint, setOpenSaint] = useIndexPicker(
     "saint",
     "saints",
+    page,
+    history,
+    queryRef,
+  );
+  const [openLesserFeast, setOpenLesserFeast] = useIndexPicker(
+    "lesserFeast",
+    "lesser-feasts",
     page,
     history,
     queryRef,
@@ -467,11 +487,14 @@ export function ReferenceProvider({
             ? (selectedCollect ?? FIRST_COLLECT).title
             : page === "saints"
               ? (sanctoraleBySlug(openSaint ?? defaultSaint())?.title ?? null)
-              : page === "proverbs"
-                ? `Proverbs ${openProvChapter ?? 1}`
-                : page === "canticles"
-                  ? (canticleTitle(openCanticle ?? 1) ?? null)
-                  : null;
+              : page === "lesser-feasts"
+                ? (lesserFeastBySlug(openLesserFeast ?? defaultLesserFeast())
+                    ?.name ?? null)
+                : page === "proverbs"
+                  ? `Proverbs ${openProvChapter ?? 1}`
+                  : page === "canticles"
+                    ? (canticleTitle(openCanticle ?? 1) ?? null)
+                    : null;
 
   useEffect(() => {
     onReadingChange(readingLabel);
@@ -501,6 +524,8 @@ export function ReferenceProvider({
     setSelectedCollect,
     openSaint,
     setOpenSaint,
+    openLesserFeast,
+    setOpenLesserFeast,
     openProvChapter,
     setOpenProvChapter,
     openCanticle,

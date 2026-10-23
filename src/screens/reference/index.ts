@@ -1,5 +1,9 @@
 export { CanticlesBar, CanticlesScreen } from "./CanticlesScreen";
 export { CollectsBar, CollectsScreen } from "./CollectsScreen";
+export {
+  LesserFeastsBar,
+  LesserFeastsScreen,
+} from "./LesserFeastsScreen";
 export { OfficesBar, OfficesScreen } from "./OfficesScreen";
 export { ProverbsBar, ProverbsScreen } from "./ProverbsScreen";
 export { PsalmsBar, PsalmsScreen } from "./PsalmsScreen";

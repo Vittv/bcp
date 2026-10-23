@@ -98,7 +98,7 @@ type CalendarScreenProps = {
 export function CalendarScreen({ leading }: CalendarScreenProps) {
   const styles = useThemedStyles(styleDef);
   const colorMap = useSeasonColorMap();
-  const { setOpenSaint } = useReference();
+  const { setOpenSaint, setOpenLesserFeast } = useReference();
   const { navigateTo } = useNavigation();
   const { height } = useWindowDimensions();
   // chips read best at three per cell on a desktop grid and two on a phone;
@@ -176,6 +176,11 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
   const totalCells = Math.ceil((firstDay + days) / 7) * 7;
 
   const goToObservance = (obs: DayObservance) => {
+    if (obs.lesserSlug) {
+      setOpenLesserFeast(obs.lesserSlug);
+      navigateTo({ page: "lesser-feasts" });
+      return;
+    }
     if (obs.slug) {
       setOpenSaint(obs.slug);
       navigateTo({ page: "saints" });
@@ -437,7 +442,24 @@ function DayModal({
           <Text style={styles.modalEmpty}>No proper day.</Text>
         ) : (
           info.observances.map((obs) =>
-            obs.rank === "lesser" ? (
+            obs.lesserSlug ? (
+              <Pressable
+                key={obs.lesserSlug}
+                style={({ hovered }) => [
+                  styles.modalRow,
+                  styles.modalRowClickable,
+                  hovered && styles.modalRowHover,
+                ]}
+                onPress={() => onGo(obs)}
+                accessibilityRole="button"
+              >
+                <Text style={[styles.modalRowName, styles.modalRowNameLesser]}>
+                  {obs.name}
+                </Text>
+                <Text style={styles.modalRowOptional}>Optional</Text>
+                <Text style={styles.modalRowGo}>Open ›</Text>
+              </Pressable>
+            ) : obs.rank === "lesser" ? (
               <View key={obs.name} style={styles.modalRow}>
                 <Text style={[styles.modalRowName, styles.modalRowNameLesser]}>
                   {obs.name}

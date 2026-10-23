@@ -34,6 +34,7 @@ import {
   SettingsIcon,
   SidebarIcon,
   StarIcon,
+  SunIcon,
 } from "./Icon";
 import { UpdateBanner } from "./UpdateBanner";
 
@@ -48,6 +49,7 @@ export type PageId =
   | "collects"
   | "offices"
   | "saints"
+  | "lesser-feasts"
   | "proverbs"
   | "canticles"
   | "old-testament"
@@ -81,6 +83,13 @@ const NAV: { id: PageId; label: string; section?: string; icon: ReactNode }[] =
       label: "Holy Days",
       section: "reference",
       icon: <StarIcon size={15} />,
+    },
+    // the optional calendar beside the Holy Days it yields to
+    {
+      id: "lesser-feasts",
+      label: "Lesser Feasts",
+      section: "reference",
+      icon: <SunIcon size={15} />,
     },
     // last in the reference block: the cycle reads as a companion to the
     // canonical Psalms index that opens the scripture block below it

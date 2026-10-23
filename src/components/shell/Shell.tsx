@@ -51,7 +51,6 @@ import {
 } from "../../context/PaletteContext";
 import { useTheme } from "../../context/ThemeContext";
 import { useTranslation } from "../../context/TranslationContext";
-import type { SanctoraleEntry } from "../../lib/calendar";
 import {
   addDays,
   colorFor,
@@ -59,6 +58,7 @@ import {
   diffDays,
   resolve,
   seasonFor,
+  upcomingLesserFeast,
   upcomingSanctoraleEntry,
 } from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
@@ -110,6 +110,8 @@ import {
   CanticlesScreen,
   CollectsBar,
   CollectsScreen,
+  LesserFeastsBar,
+  LesserFeastsScreen,
   OfficesBar,
   OfficesScreen,
   ProverbsBar,
@@ -167,9 +169,12 @@ function officeForHour(hour: number): TabId {
   return "compline";
 }
 
-// sidebar Holy Days detail: the days until the next fixed feast ("today" on
-// a feast day), wrapping to the start of the sanctorale when the year ends
-function holyDayCountdown(entry: SanctoraleEntry, from: CalendarDate): string {
+// sidebar observance detail: the days until the next fixed feast ("today" on
+// a feast day), wrapping to the start of the table when the year ends
+function holyDayCountdown(
+  entry: { month: number; day: number },
+  from: CalendarDate,
+): string {
   const sameYear =
     entry.month > from.month ||
     (entry.month === from.month && entry.day >= from.day);
@@ -205,6 +210,7 @@ function isReferencePage(p: PageId): boolean {
     p === "collects" ||
     p === "offices" ||
     p === "saints" ||
+    p === "lesser-feasts" ||
     p === "proverbs" ||
     p === "canticles" ||
     p === "old-testament" ||
@@ -848,6 +854,7 @@ export function Shell() {
       canticles: "canticles",
       collects: "collects",
       saints: "saints",
+      "lesser-feasts": "lesser-feasts",
       proverbs: "proverbs",
       "old-testament": "bible",
       "new-testament": "bible",
@@ -1117,8 +1124,9 @@ export function Shell() {
   );
 
   // the sidebar's per-row trailing info: the office of the hour for Today, the
-  // countdown to the next fixed feast on Holy Days, and each scripture
-  // corpus's own "where reading stopped" on its row. all are read from
+  // countdown to the next fixed feast on Holy Days and the next lesser feast
+  // on its row, and each scripture corpus's own "where reading stopped" on
+  // its row. all are read from
   // storage because the bible context is cleared on every navigation, and
   // they are un-memoized so a progress reset cannot leave a stale label behind
   const now = today();
@@ -1140,6 +1148,7 @@ export function Shell() {
     const pos = saved[t] ?? openingRef(t, apocrypha);
     return pos ? { text: `${pos.abbrev} ${pos.chapter}` } : undefined;
   };
+  const nextLesserFeast = upcomingLesserFeast(now);
   const sidebarDetail: Partial<Record<PageId, SidebarDetail>> = {
     today: { text: OFFICE_LABEL[officeForHour(new Date().getHours())] },
     saints: nextFeast
@@ -1148,6 +1157,11 @@ export function Shell() {
           isToday: nextFeast.month === now.month && nextFeast.day === now.day,
         }
       : undefined,
+    "lesser-feasts": {
+      text: holyDayCountdown(nextLesserFeast, now),
+      isToday:
+        nextLesserFeast.month === now.month && nextLesserFeast.day === now.day,
+    },
     "old-testament": readingDetail("OT"),
     "new-testament": readingDetail("NT"),
     apocrypha: readingDetail("DC"),
@@ -1216,6 +1230,8 @@ export function Shell() {
         return <OfficesBar leading={sidebarShowButton} isMobile={isMobile} />;
       case "saints":
         return <SaintsBar leading={sidebarShowButton} />;
+      case "lesser-feasts":
+        return <LesserFeastsBar leading={sidebarShowButton} />;
       case "proverbs":
         return <ProverbsBar leading={sidebarShowButton} />;
       case "old-testament":
@@ -1317,6 +1333,14 @@ export function Shell() {
       case "saints":
         return (
           <SaintsScreen
+            isMobile={isMobile}
+            fontScale={fontScale}
+            onScrollProgress={reportScroll}
+          />
+        );
+      case "lesser-feasts":
+        return (
+          <LesserFeastsScreen
             isMobile={isMobile}
             fontScale={fontScale}
             onScrollProgress={reportScroll}

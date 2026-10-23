@@ -17,6 +17,7 @@ export type PaletteScope =
   | "canticles"
   | "collects"
   | "saints"
+  | "lesser-feasts"
   | "proverbs"
   | "bible"
   | "bible-chapter"

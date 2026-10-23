@@ -30,6 +30,7 @@ export type HistorySnapshot = {
   office: { base: RefOfficeBase; rite: OfficeRite } | null;
   collect: CollectSel | null;
   saint: string | null;
+  lesserFeast: string | null;
   proverb: number | null;
   canticle: number | null;
   bible: { abbrev: string; chapter: number } | null;

@@ -14,15 +14,16 @@ import { BibleBookList, BibleChapterList } from "../BibleReaderScreen";
 import { CanticleIndex } from "./CanticlesScreen";
 import { CollectIndex } from "./CollectsScreen";
 import { GlobalIndex } from "./GlobalIndex";
+import { LesserFeastIndex } from "./LesserFeastsScreen";
 import { ChapterIndex, useProvChapterMeta } from "./ProverbsScreen";
 import { PsalmIndex } from "./PsalmsScreen";
 import { PsalterIndex } from "./PsalterScreen";
 import { SaintIndex } from "./SaintsScreen";
 import { useReference } from "./shared";
 
-// one modal, eight scopes: each page's own index renders inside the shared
-// picker window, so the floating picker is the exact same list (with its
-// same keyboard handling) the side pane always was. picking applies the
+// one modal, one scope per picker: each page's own index renders inside the
+// shared picker window, so the floating picker is the exact same list (with
+// its same keyboard handling) the side pane always was. picking applies the
 // selection through the page's own setter and closes the window.
 export function PaletteHost() {
   const { scope, close } = usePalette();
@@ -65,6 +66,10 @@ export function PaletteHost() {
       case "saint":
         ref.setOpenSaint(run.slug);
         navigateTo("saints");
+        break;
+      case "lesserFeast":
+        ref.setOpenLesserFeast(run.slug);
+        navigateTo("lesser-feasts");
         break;
       case "bible": {
         // the book names its own page, so a deuterocanonical result opens
@@ -171,6 +176,24 @@ export function PaletteHost() {
               selected={ref.openSaint}
               onSelect={(slug) => {
                 if (slug) ref.setOpenSaint(slug);
+                close();
+              }}
+            />
+          )}
+        />
+      );
+    case "lesser-feasts":
+      return (
+        <SearchPalette
+          placeholder="Search lesser feasts by name or date"
+          searchLabel="Search lesser feasts"
+          onClose={close}
+          render={(query) => (
+            <LesserFeastIndex
+              query={query}
+              selected={ref.openLesserFeast}
+              onSelect={(slug) => {
+                if (slug) ref.setOpenLesserFeast(slug);
                 close();
               }}
             />

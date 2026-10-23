@@ -16,6 +16,8 @@ export interface DayObservance {
   name: string;
   /** set when the observance is a saint with a page to link to. */
   slug?: string;
+  /** set when the observance is a lesser feast with a page to link to. */
+  lesserSlug?: string;
   rank: ObservanceRank;
   /** a lesser feast the Prayer Book does not require. */
   optional?: boolean;
@@ -134,7 +136,12 @@ export function dayInfo(date: CalendarDate): DayInfo {
   // lesser feasts are optional and yield to the day's principal feast or
   // holy day.
   for (const feast of lesserFeastsForDate(date)) {
-    observances.push({ name: feast.name, rank: "lesser", optional: true });
+    observances.push({
+      name: feast.name,
+      lesserSlug: feast.slug,
+      rank: "lesser",
+      optional: true,
+    });
   }
 
   // the Sunday name is the day's baseline title and always closes the list,

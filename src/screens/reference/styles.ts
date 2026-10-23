@@ -527,6 +527,28 @@ export const sharedStyles = defineThemedStyles({
     color: "var(--text-secondary)",
     opacity: 0.8,
   },
+  // a lesser feast's original biography uses the same serif voice as the
+  // sanctorale notes, and the PDF link sits one quiet step below the text
+  lesserBio: {
+    fontFamily: SERIF_FONT,
+    fontSize: 17,
+    lineHeight: 28,
+    color: "var(--text)",
+    marginBottom: 22,
+  },
+  lesserLinkRow: {
+    alignSelf: "flex-start",
+    borderRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    marginLeft: -6,
+  },
+  lesserLink: {
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "var(--accent)",
+  },
   // date trigger: a chip like every other control in these bars, no
   // border, the bar's single 11px type scale, accent red per the
   // standing decision that date/office triggers read in red

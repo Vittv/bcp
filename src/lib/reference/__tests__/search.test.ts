@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   searchCollects,
+  searchLesserFeasts,
   searchPalette,
   searchPsalms,
   searchSaints,
@@ -143,6 +144,50 @@ describe("searchSaints", () => {
   });
 });
 
+describe("searchLesserFeasts", () => {
+  test("empty query lists all 247 entries in calendar order", () => {
+    const hits = searchLesserFeasts("");
+    expect(hits).toHaveLength(247);
+    expect(hits[0].name).toContain("Elizabeth Ann Seton"); // Jan 4
+    expect(hits[0].snippet).toBeNull();
+  });
+
+  test("matches by name case-insensitively", () => {
+    const hits = searchLesserFeasts("seton");
+    expect(hits).toHaveLength(1);
+    expect(hits[0].slug).toBe(
+      "elizabeth-ann-seton-vowed-religious-and-educator",
+    );
+    expect(hits[0].snippet?.toLowerCase()).toContain("seton");
+    expect(searchLesserFeasts("MARY AND MARTHA").map((h) => h.name)).toContain(
+      "Mary and Martha of Bethany",
+    );
+  });
+
+  test("matches by full and short date", () => {
+    for (const q of ["January 4", "Jan 4"]) {
+      expect(searchLesserFeasts(q).map((h) => h.slug)).toContain(
+        "elizabeth-ann-seton-vowed-religious-and-educator",
+      );
+    }
+  });
+
+  test("matches the trial-use marker", () => {
+    const hits = searchLesserFeasts("trial");
+    expect(hits).toHaveLength(5);
+    expect(hits.every((h) => h.trial)).toBe(true);
+  });
+
+  test("unknown text yields no results", () => {
+    expect(searchLesserFeasts("xyzzyplugh")).toHaveLength(0);
+  });
+
+  test("the holy days search stays sanctorale-only", () => {
+    expect(searchSaints("seton")).toHaveLength(0);
+    expect(searchSaints("")).toHaveLength(36);
+  });
+});
+
 describe("searchPalette", () => {
   // the palette lists the books of one corpus. most assertions exercise the
   // web corpus, whose fifteen books are the full deuterocanonical set
@@ -235,6 +280,7 @@ describe("searchPalette", () => {
       ["canticles", "mary"],
       ["collects", "peace"],
       ["saints", "james"],
+      ["lesser-feasts", "seton"],
       ["bible", "gen"],
     ];
     for (const [section, query] of probes) {
@@ -259,7 +305,22 @@ describe("searchPalette", () => {
 
     expect(palette("collects")).toHaveLength(142);
     expect(palette("saints")).toHaveLength(36);
+    expect(palette("lesser feasts")).toHaveLength(247);
+    expect(palette("commemorations")).toHaveLength(247);
     expect(palette("proverbs")).toHaveLength(31);
+  });
+
+  test("lesser feast hits carry a run that opens their page", () => {
+    const hits = palette("seton").filter((e) => e.section === "lesser-feasts");
+    expect(hits).toHaveLength(1);
+    expect(hits[0]).toMatchObject({
+      section: "lesser-feasts",
+      run: {
+        kind: "lesserFeast",
+        slug: "elizabeth-ann-seton-vowed-religious-and-educator",
+      },
+    });
+    expect(hits[0].detail).toContain("Jan 4");
   });
 
   test("bible expands to every chapter, restricable to a testament", () => {

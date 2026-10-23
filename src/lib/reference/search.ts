@@ -1,4 +1,6 @@
+import { LESSER_FEASTS } from "../calendar/lesserFeasts";
 import {
+  monthDayLabel,
   monthDayShortLabel,
   SANCTORALE_ENTRIES,
   sanctoraleDateLabel,
@@ -156,6 +158,41 @@ export function searchSaints(query: string): SaintHit[] {
   return hits;
 }
 
+export type LesserFeastHit = {
+  slug: string;
+  name: string;
+  month: number;
+  day: number;
+  trial?: boolean;
+  snippet: string | null;
+};
+
+// lesser feasts matching `query` by name or by either date form. an empty
+// query yields all 247 entries in calendar-date order.
+export function searchLesserFeasts(query: string): LesserFeastHit[] {
+  const q = query.trim().toLowerCase();
+  const hits: LesserFeastHit[] = [];
+  for (const feast of LESSER_FEASTS) {
+    if (q) {
+      const matched =
+        feast.name.toLowerCase().includes(q) ||
+        monthDayLabel(feast.month, feast.day).toLowerCase().includes(q) ||
+        monthDayShortLabel(feast.month, feast.day).toLowerCase().includes(q) ||
+        (feast.trial === true && "trial use".includes(q));
+      if (!matched) continue;
+    }
+    hits.push({
+      slug: feast.slug,
+      name: feast.name,
+      month: feast.month,
+      day: feast.day,
+      trial: feast.trial,
+      snippet: q ? snippet(feast.name, q) : null,
+    });
+  }
+  return hits;
+}
+
 // the 30-day cycle matching `query` by day number or by any psalm number in
 // its portions, so "119" finds the three days that carry it. an empty query
 // yields all 30 days.
@@ -182,6 +219,7 @@ export type PaletteSection =
   | "canticles"
   | "collects"
   | "saints"
+  | "lesser-feasts"
   | "bible"
   | "apocrypha"
   | "settings";
@@ -193,6 +231,7 @@ export type PaletteRun =
   | { kind: "canticle"; number: number }
   | { kind: "collect"; section: string; title: string }
   | { kind: "saint"; slug: string }
+  | { kind: "lesserFeast"; slug: string }
   | { kind: "bible"; book: string; chapter: number }
   | { kind: "settings"; section: SettingsSectionId };
 
@@ -215,6 +254,7 @@ export const PALETTE_SECTION_ORDER: PaletteSection[] = [
   "canticles",
   "collects",
   "saints",
+  "lesser-feasts",
   "bible",
   "apocrypha",
   "settings",
@@ -344,6 +384,18 @@ function saintEntries(query: string, cap = Infinity): PaletteEntry[] {
     }));
 }
 
+function lesserFeastEntries(query: string, cap = Infinity): PaletteEntry[] {
+  return searchLesserFeasts(query)
+    .slice(0, cap)
+    .map((h) => ({
+      id: `lesser-feast:${h.slug}`,
+      section: "lesser-feasts",
+      label: h.name,
+      detail: `${monthDayShortLabel(h.month, h.day)}${h.trial ? " · Trial use" : ""}`,
+      run: { kind: "lesserFeast", slug: h.slug },
+    }));
+}
+
 // settings sections fold into the same palette using the shared rail-search
 // matcher, so "theme" or "shortcuts" reaches the matching settings pane
 function settingsEntries(query: string, cap = Infinity): PaletteEntry[] {
@@ -385,6 +437,18 @@ function sectionKeyword(lower: string): PaletteSection | null {
     ["canticles", ["canticle", "canticles"]],
     ["collects", ["collect", "collects"]],
     ["saints", ["saint", "saints"]],
+    [
+      "lesser-feasts",
+      [
+        "lesser feast",
+        "lesser feasts",
+        "lesser feast and fasts",
+        "lesser feasts and fasts",
+        "lff",
+        "commemoration",
+        "commemorations",
+      ],
+    ],
     ["settings", ["settings", "preferences"]],
   ];
   for (const [section, names] of keywords) {
@@ -407,6 +471,8 @@ function expandSection(section: PaletteSection): PaletteEntry[] {
       return collectEntries("");
     case "saints":
       return saintEntries("");
+    case "lesser-feasts":
+      return lesserFeastEntries("");
     case "settings":
       return settingsEntries("");
     default:
@@ -476,6 +542,7 @@ export function searchPalette(
   pushEntries(out, canticleEntries(lower, PER_SECTION_CAP));
   pushEntries(out, collectEntries(q, PER_SECTION_CAP));
   pushEntries(out, saintEntries(q, PER_SECTION_CAP));
+  pushEntries(out, lesserFeastEntries(q, PER_SECTION_CAP));
   pushEntries(out, settingsEntries(q, PER_SECTION_CAP));
 
   // bible: full book names and abbreviations
