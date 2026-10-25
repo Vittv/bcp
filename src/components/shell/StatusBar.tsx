@@ -6,7 +6,7 @@ import {
   defineThemedStyles,
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
-import { useViewport, WIDTH_COMPACT } from "../../lib/viewport";
+import { useViewport } from "../../lib/viewport";
 import { SeasonDot } from "./SeasonDot";
 
 // bundled via expo-font; system monospace is the fallback on native
@@ -78,9 +78,12 @@ export function StatusBar({
   const styles = useThemedStyles(statusBarStyles);
   const { width: viewportWidth } = useViewport();
   // the window width overstates the bar once the sidebar takes its column, so
-  // measure the bar itself and shed the year and week before they clip the name
+  // measure the bar itself and shed the year, week, and season before they
+  // clip the reading name
   const [barWidth, setBarWidth] = useState(0);
-  const compact = (barWidth || viewportWidth) < WIDTH_COMPACT;
+  const compact = (barWidth || viewportWidth) < 480;
+  // the season label and its dot leave together; the name and percent stay
+  const veryCompact = (barWidth || viewportWidth) < 340;
   return (
     <View
       style={[styles.bar, noSelect]}
@@ -89,12 +92,14 @@ export function StatusBar({
       }
     >
       <View style={styles.left}>
-        <View style={styles.item}>
-          <SeasonDot color={seasonColor} size={6} />
-          <Text style={styles.text} numberOfLines={1}>
-            {SEASON_LABELS[season]}
-          </Text>
-        </View>
+        {!veryCompact && (
+          <View style={styles.item}>
+            <SeasonDot color={seasonColor} size={6} />
+            <Text style={styles.text} numberOfLines={1}>
+              {SEASON_LABELS[season]}
+            </Text>
+          </View>
+        )}
         {!compact && (
           <>
             <Text style={styles.sep}>·</Text>
@@ -141,6 +146,10 @@ const statusBarStyles = defineThemedStyles({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    flexShrink: 1,
+    minWidth: 0,
+    justifyContent: "flex-end",
+    overflow: "hidden",
   },
   item: {
     flexDirection: "row",

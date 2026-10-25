@@ -70,6 +70,7 @@ export const sharedStyles = defineThemedStyles({
     gap: 4,
     // keep the trailing controls clear of the current-pick chip
     marginLeft: 4,
+    flexShrink: 0,
   },
   // narrow bars tighten the chip spacing so the office name, date, and rites
   // share one line; Today joins them once there is room

@@ -24,11 +24,13 @@ export const officeBarStyles = defineThemedStyles({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    flexShrink: 0,
   },
   togglesRight: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    flexShrink: 0,
   },
   tab: {
     paddingHorizontal: 10,

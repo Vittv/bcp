@@ -90,10 +90,14 @@ export function OfficeTabs({
   // abbreviated labels kick in before phone widths; tighter chrome later
   const shortLabels = width < 640;
   const compact = width < WIDTH_COMPACT;
+  // once the four office tabs no longer share the bar with the reading
+  // toggles and the rite picker, the tabs collapse into a picker of their
+  // own and the other controls keep their place
+  const tabsAsMenu = width < 520;
+  // the devotions chip is the only label left to trim once the tabs collapse
+  const devotionsLabel =
+    width >= 640 ? "Daily Devotions" : width < 400 ? "Dev" : "Devotions";
   const showRite = !devotions && (active === "morning" || active === "evening");
-  // below this the reading toggles no longer fit beside the tabs and rite;
-  // Settings -> Office still offers both
-  const showReadingToggles = width >= 400;
   return (
     <View
       style={[styles.bar, noSelect]}
@@ -116,80 +120,86 @@ export function OfficeTabs({
           accessibilityState={{ selected: devotions }}
           accessibilityLabel="Daily Devotions"
         >
+          <SteadyToggleText text={devotionsLabel} on={devotions} />
+        </Pressable>
+        {tabsAsMenu ? (
+          <BarDropdown
+            value={active}
+            options={TABS.map((t) => ({
+              id: t.id,
+              label: shortLabels ? t.short : t.label,
+            }))}
+            onChange={onSelect}
+            align="start"
+            accessibilityLabel="Office"
+          />
+        ) : (
+          TABS.map((t) => {
+            const isActive = active === t.id;
+            return (
+              <Pressable
+                key={t.id}
+                onPress={() => onSelect(t.id)}
+                style={({ hovered }) => [
+                  styles.tab,
+                  compact && styles.itemCompact,
+                  hovered && styles.tabHover,
+                ]}
+              >
+                <Text
+                  style={[styles.tabText, isActive && styles.tabTextActive]}
+                >
+                  {shortLabels ? t.short : t.label}
+                </Text>
+              </Pressable>
+            );
+          })
+        )}
+      </View>
+      <View style={[styles.togglesRight, compact && styles.groupCompact]}>
+        <Pressable
+          style={({ hovered }) => [
+            styles.toggle,
+            compact && styles.itemCompact,
+            hovered && styles.tabHover,
+          ]}
+          onPress={onToggleRubrics}
+          accessibilityRole="button"
+          accessibilityState={{ selected: showRubrics }}
+          accessibilityLabel="Rubrics"
+        >
           <SteadyToggleText
-            text={shortLabels ? "Devotions" : "Daily Devotions"}
-            on={devotions}
+            text={shortLabels ? "Rubr" : "Rubrics"}
+            on={showRubrics}
           />
         </Pressable>
-        {TABS.map((t) => {
-          const isActive = active === t.id;
-          return (
-            <Pressable
-              key={t.id}
-              onPress={() => onSelect(t.id)}
-              style={({ hovered }) => [
-                styles.tab,
-                compact && styles.itemCompact,
-                hovered && styles.tabHover,
-              ]}
-            >
-              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
-                {shortLabels ? t.short : t.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+        <Pressable
+          style={({ hovered }) => [
+            styles.toggle,
+            compact && styles.itemCompact,
+            hovered && styles.tabHover,
+          ]}
+          onPress={onToggleSpeakers}
+          accessibilityRole="button"
+          accessibilityState={{ selected: showSpeakers }}
+          accessibilityLabel="Speakers"
+        >
+          <SteadyToggleText
+            text={shortLabels ? "Spk" : "Speakers"}
+            on={showSpeakers}
+          />
+        </Pressable>
+        {showRite ? (
+          <BarDropdown
+            value={rite}
+            options={RITE_OPTIONS}
+            onChange={onRiteChange}
+            accent
+            steadyWidth
+            accessibilityLabel="Office rite"
+          />
+        ) : null}
       </View>
-      {showReadingToggles || showRite ? (
-        <View style={[styles.togglesRight, compact && styles.groupCompact]}>
-          {showReadingToggles ? (
-            <>
-              <Pressable
-                style={({ hovered }) => [
-                  styles.toggle,
-                  compact && styles.itemCompact,
-                  hovered && styles.tabHover,
-                ]}
-                onPress={onToggleRubrics}
-                accessibilityRole="button"
-                accessibilityState={{ selected: showRubrics }}
-                accessibilityLabel="Rubrics"
-              >
-                <SteadyToggleText
-                  text={shortLabels ? "Rubr" : "Rubrics"}
-                  on={showRubrics}
-                />
-              </Pressable>
-              <Pressable
-                style={({ hovered }) => [
-                  styles.toggle,
-                  compact && styles.itemCompact,
-                  hovered && styles.tabHover,
-                ]}
-                onPress={onToggleSpeakers}
-                accessibilityRole="button"
-                accessibilityState={{ selected: showSpeakers }}
-                accessibilityLabel="Speakers"
-              >
-                <SteadyToggleText
-                  text={shortLabels ? "Spk" : "Speakers"}
-                  on={showSpeakers}
-                />
-              </Pressable>
-            </>
-          ) : null}
-          {showRite ? (
-            <BarDropdown
-              value={rite}
-              options={RITE_OPTIONS}
-              onChange={onRiteChange}
-              accent
-              steadyWidth
-              accessibilityLabel="Office rite"
-            />
-          ) : null}
-        </View>
-      ) : null}
     </View>
   );
 }
