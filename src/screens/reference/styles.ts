@@ -503,31 +503,6 @@ export const sharedStyles = defineThemedStyles({
     color: "var(--text-secondary)",
     marginBottom: 6,
   },
-  // picker rows stack the day above its psalm citations, so a 30-row list
-  // still answers what each day appoints without ellipsizing the long ones
-  psalterRowInner: {
-    flexDirection: "column",
-    alignItems: "flex-start",
-    gap: 2,
-    paddingVertical: 8,
-    paddingLeft: 34,
-    paddingRight: 18,
-  },
-  psalterRowTitle: {
-    fontFamily: CHROME_FONT,
-    fontSize: 13,
-    fontWeight: "500",
-    lineHeight: 18,
-    color: "var(--text-secondary)",
-  },
-  psalterRowSummary: {
-    fontFamily: CHROME_FONT,
-    fontSize: 11,
-    fontWeight: "500",
-    lineHeight: 16,
-    color: "var(--text-secondary)",
-    opacity: 0.8,
-  },
   // a lesser feast's original biography uses the same serif voice as the
   // sanctorale notes, and the PDF link sits one quiet step below the text
   lesserBio: {

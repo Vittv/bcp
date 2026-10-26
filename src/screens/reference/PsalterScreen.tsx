@@ -138,13 +138,16 @@ const PsalterRow = memo(function PsalterRow({
       onPress={() => onSelect(selected === day.day ? null : day.day)}
     >
       {(a) => (
-        <View style={styles.psalterRowInner}>
-          <Text style={[styles.psalterRowTitle, a && styles.rowTextActive]}>
+        <View style={styles.collectRowInner}>
+          <Text
+            numberOfLines={1}
+            style={[styles.canticleIndexTitle, a && styles.rowTextActive]}
+          >
             Day {day.day}
           </Text>
           <Text
-            numberOfLines={2}
-            style={[styles.psalterRowSummary, a && styles.rowTextActive]}
+            numberOfLines={1}
+            style={[styles.rowMeta, a && styles.rowTextActive]}
           >
             {psalterDaySummary(day)}
           </Text>
