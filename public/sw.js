@@ -39,19 +39,24 @@ async function cacheFirst(request) {
   const hit = await cache.match(request);
   if (hit) return hit;
   const response = await fetch(request);
-  if (response.ok) cache.put(request, response.clone());
+  // await the write: the worker can be stopped as soon as respondWith settles
+  if (response.ok) await cache.put(request, response.clone());
   return response;
 }
 
-async function networkFirst(request) {
+// the document and manifest revalidate in the background: the cached copy
+// answers at once, so a launch never waits on a slow or absent network
+async function refresh(request) {
   const cache = await caches.open(CACHE);
-  try {
-    const response = await fetch(request);
-    if (response.ok) cache.put(request, response.clone());
-    return response;
-  } catch {
-    return cache.match(request);
-  }
+  const response = await fetch(request);
+  if (response.ok) await cache.put(request, response.clone());
+  return response;
+}
+
+async function cacheThenRefresh(request, refreshed) {
+  const cache = await caches.open(CACHE);
+  const cached = await cache.match(request);
+  return cached ?? refreshed;
 }
 
 self.addEventListener("fetch", (event) => {
@@ -61,8 +66,10 @@ self.addEventListener("fetch", (event) => {
   }
   if (isImmutable(url)) {
     event.respondWith(cacheFirst(event.request));
-  } else {
-    // index.html, manifest, sw itself: fresh when online, cached offline
-    event.respondWith(networkFirst(event.request));
+    return;
   }
+  // index.html and the manifest: cached first, refreshed behind the scenes
+  const refreshed = refresh(event.request);
+  event.waitUntil(refreshed.catch(() => {}));
+  event.respondWith(cacheThenRefresh(event.request, refreshed));
 });
