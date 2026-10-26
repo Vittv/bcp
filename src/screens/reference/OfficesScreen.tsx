@@ -249,10 +249,10 @@ export function OfficesBar({
             accessibilityLabel="Pick office"
             accessibilityRole="button"
           >
+            <Chevron direction={menuOpen ? "up" : "down"} size={5} />
             <Text style={styles.officeBtnText}>
               {BASE_OFFICES.find((b) => b.id === current)?.label}
             </Text>
-            <Chevron direction={menuOpen ? "up" : "down"} size={5} />
           </Pressable>
         </View>
         {controls}

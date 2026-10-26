@@ -776,7 +776,7 @@ export const sharedStyles = defineThemedStyles({
   officeBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 7,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 4,
