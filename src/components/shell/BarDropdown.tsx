@@ -31,6 +31,7 @@ export function BarDropdown<T extends string>({
   align = "end",
   accent = false,
   steadyWidth = false,
+  plain = false,
 }: {
   value: T;
   options: readonly DropdownOption<T>[];
@@ -45,6 +46,8 @@ export function BarDropdown<T extends string>({
   accent?: boolean;
   // reserve the widest option's width so switching labels never reflows the bar
   steadyWidth?: boolean;
+  // read as plain bar text: no chip border or fill, just the label and chevron
+  plain?: boolean;
 }) {
   const styles = useThemedStyles(barDropdownStyles);
   const barStyles = useThemedStyles(officeBarStyles);
@@ -74,7 +77,7 @@ export function BarDropdown<T extends string>({
       <Pressable
         style={({ hovered }) => [
           barStyles.toggle,
-          barStyles.modeToggle,
+          !plain && barStyles.modeToggle,
           styles.trigger,
           hovered && barStyles.tabHover,
         ]}

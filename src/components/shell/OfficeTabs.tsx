@@ -1,5 +1,5 @@
-import { type ReactNode, useState } from "react";
-import { type LayoutChangeEvent, Pressable, Text, View } from "react-native";
+import type { ReactNode } from "react";
+import { Pressable, Text, View } from "react-native";
 import type { OfficeId } from "../../lib/content/types";
 import type { OfficeRite } from "../../lib/office/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
@@ -27,11 +27,11 @@ export const DEVOTIONS: Record<TabId, OfficeId> = {
   compline: "devotions-close",
 };
 
-const TABS: { id: TabId; label: string; short: string }[] = [
-  { id: "morning", label: "Morning", short: "Morn" },
-  { id: "noonday", label: "Noonday", short: "Noon" },
-  { id: "evening", label: "Evening", short: "Eve" },
-  { id: "compline", label: "Compline", short: "Comp" },
+const TABS: { id: TabId; label: string }[] = [
+  { id: "morning", label: "Morning" },
+  { id: "noonday", label: "Noonday" },
+  { id: "evening", label: "Evening" },
+  { id: "compline", label: "Compline" },
 ];
 
 // an invisible bold twin reserves the label's widest metrics, so the visible
@@ -82,29 +82,18 @@ export function OfficeTabs({
   onRiteChange,
 }: OfficeTabsProps) {
   const styles = useThemedStyles(officeBarStyles);
-  const { width: viewportWidth } = useViewport();
-  // the bar's own width, since the sidebar and the UI scale both shrink it
-  // well below the window; the effective viewport is the first paint
-  const [barWidth, setBarWidth] = useState(0);
-  const width = barWidth || viewportWidth;
-  // abbreviated labels kick in before phone widths; tighter chrome later
+  const { width } = useViewport();
+  // the full row needs about 600px of bar, which a desktop window only has
+  // from 800px with the sidebar open
+  const tabsAsMenu = width < 800;
+  // the reading toggles abbreviate first, then the bar's padding tightens
   const shortLabels = width < 640;
   const compact = width < WIDTH_COMPACT;
-  // once the four office tabs no longer share the bar with the reading
-  // toggles and the rite picker, the tabs collapse into a picker of their
-  // own and the other controls keep their place
-  const tabsAsMenu = width < 520;
-  // the devotions chip is the only label left to trim once the tabs collapse
   const devotionsLabel =
     width >= 640 ? "Daily Devotions" : width < 400 ? "Dev" : "Devotions";
   const showRite = !devotions && (active === "morning" || active === "evening");
   return (
-    <View
-      style={[styles.bar, noSelect]}
-      onLayout={(e: LayoutChangeEvent) =>
-        setBarWidth(e.nativeEvent.layout.width)
-      }
-    >
+    <View style={[styles.bar, noSelect]}>
       <View style={[styles.tabsLeft, compact && styles.groupCompact]}>
         {leading}
         <Pressable
@@ -125,12 +114,12 @@ export function OfficeTabs({
         {tabsAsMenu ? (
           <BarDropdown
             value={active}
-            options={TABS.map((t) => ({
-              id: t.id,
-              label: shortLabels ? t.short : t.label,
-            }))}
+            options={TABS}
             onChange={onSelect}
             align="start"
+            accent
+            plain
+            steadyWidth
             accessibilityLabel="Office"
           />
         ) : (
@@ -149,7 +138,7 @@ export function OfficeTabs({
                 <Text
                   style={[styles.tabText, isActive && styles.tabTextActive]}
                 >
-                  {shortLabels ? t.short : t.label}
+                  {t.label}
                 </Text>
               </Pressable>
             );
@@ -195,6 +184,7 @@ export function OfficeTabs({
             options={RITE_OPTIONS}
             onChange={onRiteChange}
             accent
+            plain
             steadyWidth
             accessibilityLabel="Office rite"
           />
