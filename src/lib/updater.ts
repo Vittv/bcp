@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IS_LINUX_TAURI, IS_TAURI } from "./desktop";
 
+// the launch check runs past the first paint, so a slow or offline release
+// lookup never competes with boot
+const LAUNCH_CHECK_DELAY_MS = 2000;
+
 export type UpdateStatus =
   | "idle"
   | "checking"
@@ -72,12 +76,16 @@ export function useUpdateStatus(auto = false) {
     }
   }, [version]);
 
-  // one auto-check per mount, so the banner fires on launch without
-  // polling or re-checking on every navigation
+  // one auto-check per mount: the timer keeps a slow release lookup off the
+  // first paint, and hasChecked keeps navigation from re-running it
   useEffect(() => {
     if (!auto || hasChecked.current) return;
-    hasChecked.current = true;
-    void check();
+    const timer = setTimeout(() => {
+      if (hasChecked.current) return;
+      hasChecked.current = true;
+      void check();
+    }, LAUNCH_CHECK_DELAY_MS);
+    return () => clearTimeout(timer);
   }, [auto, check]);
 
   return { status, version, message, body, check, install };
