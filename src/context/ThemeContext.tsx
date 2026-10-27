@@ -303,7 +303,7 @@ function applyTokens(tokens: ThemeTokens, resolved: ResolvedTheme) {
     *::-webkit-scrollbar-track { background: transparent; }
     *::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
     *::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
-    ::selection { background: var(--control-hover); color: var(--text); }
+    ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--text); }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     [data-picker-search]:focus-visible { outline: none; }
     /* the settings search lights up as one block: the focusing input pulls

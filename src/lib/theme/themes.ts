@@ -222,18 +222,18 @@ const OxfordDark: ThemeTokens = {
 // surfaces, iris accent); the light set is a derived companion that keeps the
 // same muted hues on a cool off-white page.
 const VagueLight: ThemeTokens = {
-  bg: "#cdcdcd",
-  bgRaised: "#d9d9d9",
-  inputBg: "#d9d9d9",
-  surface: "#c4c4c4",
-  controlHover: "#b9b9b9",
-  selectedBg: "#cfcfcf",
-  keyBg: "rgba(20, 20, 21, 0.09)",
-  todayBg: "rgba(79, 99, 196, 0.16)",
+  bg: "#e5e5e7",
+  bgRaised: "#eeeeef",
+  inputBg: "#eeeeef",
+  surface: "#e2e2e5",
+  controlHover: "#d9d9dd",
+  selectedBg: "#e7e7ea",
+  keyBg: "rgba(20, 20, 21, 0.08)",
+  todayBg: "rgba(79, 99, 196, 0.14)",
 
-  border: "#b7b7b7",
-  borderContent: "#7d7d87",
-  borderFaint: "rgba(20, 20, 21, 0.09)",
+  border: "#c7c7cc",
+  borderContent: "#8d8d96",
+  borderFaint: "rgba(20, 20, 21, 0.08)",
 
   text: "#23232b",
   textSecondary: "#4f4f56",
@@ -244,13 +244,13 @@ const VagueLight: ThemeTokens = {
   hintBg: "#4f63c4",
   hintText: "#f2f3fa",
 
-  scrollbar: "#8f8f99",
+  scrollbar: "#a3a3ad",
 
-  scrim: "rgba(20, 20, 24, 0.45)",
+  scrim: "rgba(20, 20, 24, 0.42)",
   shadowColor: "#141415",
-  shadowSoft: "rgba(15, 15, 20, 0.35)",
-  shadowStrong: "rgba(15, 15, 20, 0.45)",
-  panelShadow: "rgba(15, 15, 20, 0.18)",
+  shadowSoft: "rgba(15, 15, 20, 0.32)",
+  shadowStrong: "rgba(15, 15, 20, 0.42)",
+  panelShadow: "rgba(15, 15, 20, 0.16)",
 
   danger: "#c14a63",
   dangerText: "#ffffff",
