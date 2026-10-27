@@ -72,11 +72,8 @@ import {
 import { psalterDayForDate } from "../../lib/content/psalterDays";
 import {
   IS_LINUX_CHROMIUM,
-  IS_MACOS_TAURI,
   IS_TAURI,
   IS_WINDOWS_TAURI,
-  loadWindowControls,
-  saveWindowControls,
 } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
 import { stepPageSequence } from "../../lib/input/sequenceNav";
@@ -99,6 +96,12 @@ import {
 } from "../../lib/theme/themedStyles";
 import { useAppVersion } from "../../lib/version";
 import { useViewport, WIDTH_MOBILE } from "../../lib/viewport";
+import {
+  loadWindowControlStyle,
+  resolveWindowControlStyle,
+  saveWindowControlStyle,
+  type WindowControlStyleId,
+} from "../../lib/windowDecorations";
 import { BibleBar, BibleReaderScreen } from "../../screens/BibleReaderScreen";
 import { CalendarScreen } from "../../screens/CalendarScreen";
 import {
@@ -130,6 +133,7 @@ import { TodayScreen } from "../../screens/TodayScreen";
 import { DEVOTIONS, OfficeTabs } from "./OfficeTabs";
 import { StatusBar } from "./StatusBar";
 import { TopBar } from "./TopBar";
+import { useWindowDecorations } from "./useWindowDecorations";
 
 // a transient history step carries its layer name, so the drawer and modal
 // steps can be told apart even though they snapshot the same app state
@@ -429,12 +433,17 @@ export function Shell() {
     else setDesktopVisible(false);
   }, [isMobile, setDesktopVisible]);
 
-  // windows-control buttons in the titlebar (desktop shell only)
-  const [windowControls, setWindowControlsRaw] = useState(loadWindowControls);
-  const setWindowControls = useCallback((v: boolean) => {
-    setWindowControlsRaw(v);
-    saveWindowControls(v);
+  // stored window-control choice; "system" resolves to the host convention
+  const [windowControlStyle, setWindowControlStyleRaw] = useState(
+    loadWindowControlStyle,
+  );
+  const setWindowControlStyle = useCallback((style: WindowControlStyleId) => {
+    setWindowControlStyleRaw(style);
+    saveWindowControlStyle(style);
   }, []);
+  const resolvedWindowControlStyle =
+    resolveWindowControlStyle(windowControlStyle);
+  useWindowDecorations(resolvedWindowControlStyle);
 
   // mobile drawer drag: any horizontal drag opens or closes the drawer with
   // the edge following the finger, full-screen. a modal takes precedence over
@@ -1399,9 +1408,9 @@ export function Shell() {
               mobile={settingsMobile}
               onClose={closeModal}
               initialSection={settingsSection ?? modal}
-              showWindowControls={IS_TAURI && !IS_MACOS_TAURI}
-              windowControls={windowControls}
-              onWindowControlsChange={setWindowControls}
+              showWindowControls={IS_TAURI}
+              windowControlStyle={windowControlStyle}
+              onWindowControlStyleChange={setWindowControlStyle}
             />
           </AppModal>
         );
@@ -1473,7 +1482,7 @@ export function Shell() {
                       daysUntilNext={daysUntilNext}
                       nextSeason={nextSeason}
                       holyDay={slot.holyDay ?? null}
-                      windowControls={windowControls}
+                      windowControlStyle={resolvedWindowControlStyle}
                     />
                     <div
                       style={{
@@ -1686,7 +1695,7 @@ export function Shell() {
                     daysUntilNext={daysUntilNext}
                     nextSeason={nextSeason}
                     holyDay={slot.holyDay ?? null}
-                    windowControls={windowControls}
+                    windowControlStyle={resolvedWindowControlStyle}
                   />
                   <View style={styles.body}>
                     {sidebarVisible ? (

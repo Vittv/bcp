@@ -73,6 +73,10 @@ import {
 } from "../lib/uiScale";
 import { useUpdateStatus } from "../lib/updater";
 import { WIDTH_MOBILE } from "../lib/viewport";
+import {
+  WINDOW_CONTROL_OPTIONS,
+  type WindowControlStyleId,
+} from "../lib/windowDecorations";
 import { AboutScreen } from "./AboutScreen";
 import { InstallScreen } from "./InstallScreen";
 
@@ -167,10 +171,10 @@ type SettingsScreenProps = {
   // the sidebar button or global palette that opened the modal lands on
   // this section
   initialSection?: ModalType | SettingsSectionId;
-  // only meaningful inside the desktop shell on win/linux
+  // window controls are a tauri-shell setting, hidden in a browser tab
   showWindowControls?: boolean;
-  windowControls?: boolean;
-  onWindowControlsChange?: (show: boolean) => void;
+  windowControlStyle?: WindowControlStyleId;
+  onWindowControlStyleChange?: (style: WindowControlStyleId) => void;
 };
 
 export function SettingsScreen({
@@ -178,8 +182,8 @@ export function SettingsScreen({
   onClose,
   initialSection: requested,
   showWindowControls = false,
-  windowControls = true,
-  onWindowControlsChange,
+  windowControlStyle = "system",
+  onWindowControlStyleChange,
 }: SettingsScreenProps) {
   const styles = useThemedStyles(styleDef);
   const v = useThemeVar();
@@ -281,8 +285,8 @@ export function SettingsScreen({
         return (
           <DesktopSettings
             showWindowControls={showWindowControls}
-            windowControls={windowControls}
-            onWindowControlsChange={onWindowControlsChange}
+            windowControlStyle={windowControlStyle}
+            onWindowControlStyleChange={onWindowControlStyleChange}
             status={updater.status}
             version={updater.version}
             message={updater.message}
@@ -605,15 +609,17 @@ function OptionChips<T extends string | boolean = string>({
   value,
   onSelect,
   mono = false,
+  wrap = false,
 }: {
   options: readonly { id: T; label: string }[];
   value: T;
   onSelect: (id: T) => void;
   mono?: boolean;
+  wrap?: boolean;
 }) {
   const styles = useThemedStyles(styleDef);
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, wrap && styles.rowWrap]}>
       {options.map(({ id, label }) => (
         <Text
           key={String(id)}
@@ -1084,8 +1090,8 @@ function BibleSettings({ translation, setTranslation }: BibleSettingsProps) {
 
 type DesktopSettingsProps = {
   showWindowControls: boolean;
-  windowControls: boolean;
-  onWindowControlsChange?: (show: boolean) => void;
+  windowControlStyle: WindowControlStyleId;
+  onWindowControlStyleChange?: (style: WindowControlStyleId) => void;
   status: ReturnType<typeof useUpdateStatus>["status"];
   version: ReturnType<typeof useUpdateStatus>["version"];
   message: ReturnType<typeof useUpdateStatus>["message"];
@@ -1095,8 +1101,8 @@ type DesktopSettingsProps = {
 
 function DesktopSettings({
   showWindowControls,
-  windowControls,
-  onWindowControlsChange,
+  windowControlStyle,
+  onWindowControlStyleChange,
   status,
   version,
   message,
@@ -1110,16 +1116,11 @@ function DesktopSettings({
         <View style={styles.section}>
           <Text style={styles.label}>Window Controls</Text>
           <OptionChips
-            options={[
-              { id: true as const, label: "Show" },
-              { id: false as const, label: "Hide" },
-            ]}
-            value={windowControls}
-            onSelect={(v) => onWindowControlsChange?.(v)}
+            options={WINDOW_CONTROL_OPTIONS}
+            value={windowControlStyle}
+            onSelect={(style) => onWindowControlStyleChange?.(style)}
+            wrap
           />
-          <Text style={styles.settingDescription}>
-            Minimize, maximize, and close buttons in the title bar.
-          </Text>
         </View>
       ) : null}
 
@@ -1610,6 +1611,10 @@ const styleDef = defineThemedStyles({
   row: {
     flexDirection: "row",
     gap: 8,
+  },
+  // let five-option style pickers wrap on narrow panes instead of shrinking
+  rowWrap: {
+    flexWrap: "wrap",
   },
   option: {
     fontFamily: CHROME_FONT,

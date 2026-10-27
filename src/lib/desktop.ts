@@ -1,6 +1,4 @@
-// desktop-shell detection and window-control preference. The
-// preference persists in localStorage today; a ~/.config file can
-// back it later without touching call sites.
+// desktop-shell and platform detection for window chrome and reading gestures
 export const IS_TAURI =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -48,15 +46,3 @@ export const IS_LINUX_CHROMIUM =
   !/Android/i.test(navigator.userAgent) &&
   /Linux/i.test(navigator.userAgent) &&
   /Chrome/i.test(navigator.userAgent);
-
-const WINDOW_CONTROLS_KEY = "windowControls";
-
-export function loadWindowControls(): boolean {
-  if (typeof localStorage === "undefined") return true;
-  return localStorage.getItem(WINDOW_CONTROLS_KEY) !== "false";
-}
-
-export function saveWindowControls(show: boolean): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(WINDOW_CONTROLS_KEY, String(show));
-}

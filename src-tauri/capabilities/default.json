@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Default core access plus the window operations the custom titlebar needs (drag, minimize, maximize toggle, close).",
+  "description": "Default core access plus the window operations the custom titlebar needs (drag, minimize, maximize toggle, close, decoration and title bar style switching).",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -9,6 +9,8 @@
     "core:window:allow-toggle-maximize",
     "core:window:allow-start-dragging",
     "core:window:allow-close",
+    "core:window:allow-set-decorations",
+    "core:window:allow-set-title-bar-style",
     "process:default",
     "updater:default"
   ]

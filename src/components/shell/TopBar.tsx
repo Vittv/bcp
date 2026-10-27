@@ -21,6 +21,10 @@ import {
   useViewport,
   WIDTH_FONT_LABEL,
 } from "../../lib/viewport";
+import {
+  decorationFor,
+  type ResolvedWindowControlStyle,
+} from "../../lib/windowDecorations";
 import { HOTKEY_MOD, KeyCap } from "../../screens/reference/shared";
 import { useSaintPopover } from "../office/SaintPopover";
 import { MagnifierIcon, MoonIcon, SunIcon, SystemIcon } from "./Icon";
@@ -97,9 +101,8 @@ type TopBarProps = {
   // replaced by the feast name so the feasts can be seen at a glance
   // (clicking opens the saint modal)
   holyDay?: string | null;
-  // resolved window-control visibility (auto-detected + setting);
-  // undefined while the shell is still resolving
-  windowControls?: boolean;
+  // resolved window-control style; undefined until the shell loads the choice
+  windowControlStyle?: ResolvedWindowControlStyle;
 };
 
 const noSelect = {
@@ -112,7 +115,7 @@ export function TopBar({
   daysUntilNext,
   nextSeason,
   holyDay,
-  windowControls = false,
+  windowControlStyle = "none",
 }: TopBarProps) {
   const { mode, setMode, fontPx, setFontPx, tokens } = useTheme();
   const styles = useThemedStyles(topBarStyles);
@@ -133,7 +136,11 @@ export function TopBar({
   const showSearchLabel = !compact;
   const showFontLabel = width >= WIDTH_FONT_LABEL;
 
-  const showingControls = IS_TAURI && !IS_MACOS_TAURI && windowControls;
+  const showingControls = IS_TAURI && !wco && windowControlStyle !== "none";
+  const decoration = decorationFor(windowControlStyle);
+  const nativeMac = IS_MACOS_TAURI && windowControlStyle === "macos";
+  const showCustomControls = showingControls && !nativeMac;
+  const controlsOnLeft = decoration.side === "left";
 
   // on a feast of a saint, the countdown gives way to the feast name so
   // the day's observance is visible at a glance; it's a single source of
@@ -144,12 +151,19 @@ export function TopBar({
 
   return (
     <View
-      style={[styles.bar, noSelect]}
+      style={[
+        styles.bar,
+        noSelect,
+        showCustomControls && controlsOnLeft && styles.barCustomLeft,
+      ]}
       dataSet={wco ? WCO_DATA : IS_TAURI ? DRAG_DATA : undefined}
     >
-      {IS_MACOS_TAURI && (
+      {nativeMac && (
         <View style={styles.macGap} dataSet={wco ? WCO_STOP : undefined} />
       )}
+      {showCustomControls && controlsOnLeft ? (
+        <WindowControls style={windowControlStyle} />
+      ) : null}
 
       <View
         style={styles.seasonLabel}
@@ -299,7 +313,9 @@ export function TopBar({
         </Pressable>
       </View>
 
-      {showingControls && !wco && <WindowControls />}
+      {showCustomControls && !controlsOnLeft ? (
+        <WindowControls style={windowControlStyle} />
+      ) : null}
     </View>
   );
 }
@@ -317,6 +333,10 @@ const topBarStyles = defineThemedStyles({
     flexShrink: 0,
     backgroundColor: "var(--bg)",
     overflow: "hidden",
+  },
+  // pull the traffic lights closer to the window edge than the right controls
+  barCustomLeft: {
+    paddingLeft: 8,
   },
   controls: {
     marginLeft: "auto",
