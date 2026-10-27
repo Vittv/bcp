@@ -1,25 +1,34 @@
-## Bible picker resumes per book
+## Features
 
-Each book now reopens at its last chapter; the next-book arrow still enters the next book at chapter 1.
+- settings: add UI Scale control for web and desktop.
+- shell: add mobile sidebar edge handles; keep settings open on mobile resize.
+- offices: add Rite I/Rite II selection with responsive bar labels.
+- bible: select the apocryphal corpus.
+- content: vendor the full KJVA apocrypha.
+- calendar: add lesser feasts and Sunday titles, arrow navigation with h/l, and navigate to lesser feasts from the calendar.
+- shell: mark today's feast in the sidebar.
+- psalter: add the 30-day psalter reference page.
+- reference: add the Lesser Feasts reference page.
+- lesser-feasts: add biographies for the full calendar and a Today shortcut.
+- calendar: make day labels responsive on narrow screens and use sans text in modals.
 
-## Collects lose the cross marker
+## Bug Fixes
 
-The ✠ glyph was read as "make the sign of the cross" rather than a bullet. Collects now render as plain title + text blocks with a 4px left inset like psalms and lessons. The Collects nav icon (Latin cross) stays as a section label.
+- office: keep the tab bar from clipping under zoom.
+- settings: polish sliders and scale down theme previews.
+- shell: drop the status bar year and week on narrow bars.
+- calendar: show the Transfiguration in white.
+- psalter: align picker summaries at the row end.
+- calendar: drop the optional label from Lesser Feasts.
+- lesser-feasts: move the optional note to provenance and polish the detail page.
+- offices: align the office picker with the bar and collapse tabs by screen width.
+- shell: keep bar controls visible at large UI scales.
+- pwa: serve the cached shell before the network.
+- theme: brighten Vague light mode and use the accent color for text selections.
 
-## Holy day reference opens on today's feast
+## Performance
 
-The Saints reference pane now defaults to the feast of the day instead of the first saint in the list.
+- boot: delay the launch update check.
+- theme: cache resolved stylesheets.
 
-## Typography fixes & subheadings
-
-Inconsistent heading sizes across the office, saints, and settings screens are unified. A shared subheading voice (semibold, reader-chosen serif) is introduced for block titles under section rules; it drops its top margin when the block above already owns bottom spacing.
-
-## Holy day & Lectionary layout tightened
-
-Morning/Evening labels sit under the PSALMS/READINGS rule without extra space; the gap between them is owned by the group break. The header rule is removed so the first section rule is the only line. Section blocks carry their own bottom margin. Chapter breaks in multi-chapter readings read "Chapter N" in italic grey.
-
-## Top bar collapses by width
-
-Narrow desktop windows shed segments (cap → countdown → font readout) like a phone instead of clipping.
-
-**Full Changelog**: <https://github.com/Vittv/bcp/compare/v0.5.1...v0.5.2>
+**Full Changelog**: <https://github.com/Vittv/bcp/compare/v0.5.2...v0.6.0>
