@@ -18,9 +18,10 @@ import {
   seasonLabel,
 } from "../lib/calendar/observances";
 import type { CalendarDate } from "../lib/calendar/types";
-import { CHROME_FONT, SERIF_FONT } from "../lib/fonts";
+import { CHROME_FONT } from "../lib/fonts";
 import { registerPageStepper } from "../lib/input/sequenceNav";
 import { defineThemedStyles, useThemedStyles } from "../lib/theme/themedStyles";
+import { useViewport, WIDTH_COMPACT } from "../lib/viewport";
 import { useReference } from "./reference/shared";
 
 const noSelect = {
@@ -101,9 +102,21 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
   const { setOpenSaint, setOpenLesserFeast } = useReference();
   const { navigateTo } = useNavigation();
   const { height } = useWindowDimensions();
+  const { width } = useViewport();
   // chips read best at three per cell on a desktop grid and two on a phone;
   // one of the slots is reserved for the "+N" row when a day overflows
   const cellRows = height < 800 ? 3 : 4;
+  const narrowCells = width < 420;
+  const compactCells = width < WIDTH_COMPACT;
+  const cellPad = narrowCells ? 2 : compactCells ? 3 : 4;
+  const cellLabelSize = narrowCells ? 9 : compactCells ? 10 : 12;
+  const cellLabelLineHeight = narrowCells ? 12 : compactCells ? 13 : 15;
+  const cellTextSize = narrowCells ? 11 : compactCells ? 12 : 13;
+  const chipPadH = narrowCells ? 2 : compactCells ? 3 : 4;
+  const chipPadV = narrowCells ? 0 : 1;
+  const cellLabelGap = narrowCells ? 2 : 3;
+  const cellLabelsMarginTop = narrowCells ? 2 : 4;
+  const cellMoreSize = narrowCells ? 8 : 9;
   const todayDate: CalendarDate = {
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
@@ -287,6 +300,7 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
                     }}
                     style={({ hovered }) => [
                       styles.cell,
+                      { padding: cellPad },
                       dayOfWeek < 6 && styles.cellRight,
                       week < totalCells / 7 - 1 && styles.cellBottom,
                       isToday && styles.cellToday,
@@ -299,18 +313,31 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
                         <Text
                           style={[
                             styles.cellText,
+                            { fontSize: cellTextSize },
                             seasonColor ? { color: seasonColor } : undefined,
                           ]}
                         >
                           {dayNum}
                         </Text>
                         {visibleLabels.length > 0 ? (
-                          <View style={styles.cellLabels}>
+                          <View
+                            style={[
+                              styles.cellLabels,
+                              {
+                                marginTop: cellLabelsMarginTop,
+                                gap: cellLabelGap,
+                              },
+                            ]}
+                          >
                             {visibleLabels.map((l) => (
                               <View
                                 key={l.text}
                                 style={[
                                   styles.cellChip,
+                                  {
+                                    paddingHorizontal: chipPadH,
+                                    paddingVertical: chipPadV,
+                                  },
                                   !l.quiet &&
                                     !l.season && { borderColor: colorMap.gold },
                                   l.season && seasonColor
@@ -322,6 +349,10 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
                                   numberOfLines={1}
                                   style={[
                                     styles.cellLabel,
+                                    {
+                                      fontSize: cellLabelSize,
+                                      lineHeight: cellLabelLineHeight,
+                                    },
                                     !l.quiet && styles.cellLabelFeast,
                                     l.season ? styles.cellLabelSeason : null,
                                     l.quiet ? styles.cellLabelQuiet : null,
@@ -335,7 +366,12 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
                               </View>
                             ))}
                             {hiddenLabels > 0 ? (
-                              <Text style={styles.cellMore}>
+                              <Text
+                                style={[
+                                  styles.cellMore,
+                                  { fontSize: cellMoreSize },
+                                ]}
+                              >
                                 +{hiddenLabels} more
                               </Text>
                             ) : null}
@@ -456,7 +492,6 @@ function DayModal({
                 <Text style={[styles.modalRowName, styles.modalRowNameLesser]}>
                   {obs.name}
                 </Text>
-                <Text style={styles.modalRowOptional}>Optional</Text>
                 <Text style={styles.modalRowGo}>Open ›</Text>
               </Pressable>
             ) : obs.rank === "lesser" ? (
@@ -464,7 +499,6 @@ function DayModal({
                 <Text style={[styles.modalRowName, styles.modalRowNameLesser]}>
                   {obs.name}
                 </Text>
-                <Text style={styles.modalRowOptional}>Optional</Text>
               </View>
             ) : obs.rank === "sunday" ? (
               <View key={obs.name} style={styles.modalRow}>
@@ -744,8 +778,8 @@ const styleDef = defineThemedStyles({
     borderColor: "var(--border)",
   },
   modalRowName: {
-    fontFamily: SERIF_FONT,
-    fontSize: 16,
+    fontFamily: CHROME_FONT,
+    fontSize: 15,
     color: "var(--text)",
     flex: 1,
   },
@@ -755,14 +789,7 @@ const styleDef = defineThemedStyles({
   },
   modalRowNameSunday: {
     color: "var(--text-secondary)",
-    fontSize: 15,
-  },
-  modalRowOptional: {
-    fontFamily: CHROME_FONT,
-    fontSize: 11,
-    fontWeight: "600",
-    color: "var(--text-secondary)",
-    flexShrink: 0,
+    fontSize: 14,
   },
   modalRowGo: {
     fontFamily: CHROME_FONT,
