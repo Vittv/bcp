@@ -16,9 +16,8 @@ describe("lesser feast biographies", () => {
     }
   });
 
-  test("january's entries carry an original biography", () => {
-    expect(january).toHaveLength(20);
-    for (const feast of january) {
+  test("every entry carries an original biography", () => {
+    for (const feast of LESSER_FEASTS) {
       expect(LESSER_FEAST_BIOS[feast.slug]?.trim().length).toBeGreaterThan(0);
     }
   });
