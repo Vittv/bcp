@@ -6,11 +6,13 @@ import {
   useMemo,
 } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useSubheading } from "../../components/office/contentHeadings";
 import { usePalette } from "../../context/PaletteContext";
 import { LESSER_FEAST_BIOS } from "../../lib/calendar/lesserFeastBios";
 import {
   LESSER_FEASTS_URL,
   lesserFeastBySlug,
+  lesserFeastsForDate,
 } from "../../lib/calendar/lesserFeasts";
 import {
   LESSER_FEAST_WIKI,
@@ -34,6 +36,7 @@ import {
   noSelect,
   PickerButton,
   SplitPane,
+  today,
   useReference,
 } from "./shared";
 import { sharedStyles as styleDef } from "./styles";
@@ -71,13 +74,17 @@ export function LesserFeastsScreen({
 }
 
 // the bar mirrors the holy days bar: the sidebar-show button and the
-// current-feast chip that re-opens the floating picker. there are no view
-// toggles because the page carries no permitted propers to hide
+// current-feast chip that re-opens the floating picker. a Today chip returns
+// to the day's commemoration after browsing elsewhere; it appears only when
+// the calendar has an entry for today, since there is nothing to return to
+// on a day without one.
 export function LesserFeastsBar({ leading }: { leading?: ReactNode }) {
-  const { openLesserFeast } = useReference();
+  const { openLesserFeast, setOpenLesserFeast } = useReference();
   const palette = usePalette();
   const styles = useThemedStyles(styleDef);
   const feast = lesserFeastBySlug(openLesserFeast ?? defaultLesserFeast());
+  const todayFeast = lesserFeastsForDate(today())[0];
+  const onToday = todayFeast !== undefined && feast?.slug === todayFeast.slug;
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
@@ -88,6 +95,24 @@ export function LesserFeastsBar({ leading }: { leading?: ReactNode }) {
           onPress={() => palette.open("lesser-feasts")}
         />
       </View>
+      {todayFeast ? (
+        <View style={styles.barRight}>
+          <Pressable
+            style={({ hovered }) => [
+              styles.todayBtn,
+              hovered && styles.rowHover,
+            ]}
+            onPress={() => setOpenLesserFeast(todayFeast.slug)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: onToday }}
+            accessibilityLabel="Jump to today's lesser feast"
+          >
+            <Text style={[styles.todayText, onToday && styles.todayTextOn]}>
+              Today
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -178,6 +203,7 @@ export const LesserFeastIndex = memo(function LesserFeastIndex({
 // wikipedia article and the official book
 export function LesserFeastCard({ slug }: { slug: string }) {
   const styles = useThemedStyles(styleDef);
+  const subheading = useSubheading();
   const feast = lesserFeastBySlug(slug);
   if (!feast) return null;
   const bio = LESSER_FEAST_BIOS[slug];
@@ -185,7 +211,7 @@ export function LesserFeastCard({ slug }: { slug: string }) {
   const date = monthDayLabel(feast.month, feast.day);
   return (
     <View>
-      <Text style={styles.detailTitle}>{feast.name}</Text>
+      <Text style={[subheading, styles.lesserFeastTitle]}>{feast.name}</Text>
       <Text style={styles.detailSubtitle}>
         {date}
         {feast.trial ? " · Trial use" : ""}
@@ -233,11 +259,6 @@ export function LesserFeastCard({ slug }: { slug: string }) {
           <Text style={styles.lesserLink}>{"Search Wikipedia ›"}</Text>
         </Pressable>
       )}
-      <Text style={styles.canticleNote}>
-        {
-          "Lesser feasts are optional and yield to Sundays, Principal Feasts and Holy Days. The 2024 edition's biographies and propers are not reproduced here."
-        }
-      </Text>
       <Pressable
         style={({ hovered }) => [
           styles.lesserLinkRow,

@@ -16,6 +16,11 @@ large-scale reproduction without written permission from Church Publishing.
 Only the factual calendar (names and dates) is reproduced here; the
 copyrighted propers are deliberately absent.
 
+## Status in the app
+
+Lesser feasts are optional and yield to Sundays, Principal Feasts and Holy
+Days. The 2024 edition's biographies and propers are not reproduced here.
+
 ## Shape
 
 One row per commemoration, sorted by month and day:

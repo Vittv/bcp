@@ -503,8 +503,14 @@ export const sharedStyles = defineThemedStyles({
     color: "var(--text-secondary)",
     marginBottom: 6,
   },
+  // a lesser feast's title is a block title rather than the page's main
+  // heading, so it takes the shared subheading voice; the pane already opens
+  // at the top, so the subheading's own top margin is dropped
+  lesserFeastTitle: {
+    marginTop: 0,
+  },
   // a lesser feast's original biography uses the same serif voice as the
-  // sanctorale notes, and the PDF link sits one quiet step below the text
+  // sanctorale notes, with the Wikipedia and official PDF links below it
   lesserBio: {
     fontFamily: SERIF_FONT,
     fontSize: 17,
@@ -619,11 +625,17 @@ export const sharedStyles = defineThemedStyles({
     borderRadius: 4,
   },
   todayBtn: {
+    // fixed width so the bold active label cannot widen the chip and shift
+    // the bar's flexed content; the label stays centered in the reserved slot
+    width: 56,
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 4,
   },
   todayBtnCompact: {
+    width: 46,
     paddingHorizontal: 5,
   },
   todayText: {
@@ -633,7 +645,8 @@ export const sharedStyles = defineThemedStyles({
     color: "var(--text-secondary)",
   },
   todayTextOn: {
-    ...officeBarStyles.tabTextActive,
+    color: "var(--accent)",
+    fontWeight: "700",
   },
   popBackdrop: {
     position: "absolute",
