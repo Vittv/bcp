@@ -12,8 +12,6 @@ export const WIDTH_MOBILE = 740;
 export const WIDTH_COMPACT = 560;
 // below this the keyboard-hint caps stop earning their space
 export const WIDTH_HOTKEY_CAP = 700;
-// below this the top bar drops the font-size readout, keeping the A−/A+ buttons
-export const WIDTH_FONT_LABEL = 440;
 
 export type Viewport = {
   width: number;

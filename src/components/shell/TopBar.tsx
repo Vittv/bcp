@@ -16,11 +16,7 @@ import {
   MIN_FONT_PX,
   stepFontSize,
 } from "../../lib/typography/sizes";
-import {
-  useShowHotkeyCap,
-  useViewport,
-  WIDTH_FONT_LABEL,
-} from "../../lib/viewport";
+import { useShowHotkeyCap, useViewport } from "../../lib/viewport";
 import {
   decorationFor,
   type ResolvedWindowControlStyle,
@@ -130,11 +126,11 @@ export function TopBar({
   const atMaxSize = fontPx >= MAX_FONT_PX;
 
   // the bar sheds segments by measured width, widest first, so a narrow
-  // desktop collapses like a phone: cap, then countdown, then font readout
-  const { compact, width } = useViewport();
+  // desktop collapses like a phone: cap, then countdown. the size readout
+  // stays put: it is the only feedback for what A−/A+ just did.
+  const { compact } = useViewport();
   const showHotkeyCap = useShowHotkeyCap();
   const showSearchLabel = !compact;
-  const showFontLabel = width >= WIDTH_FONT_LABEL;
 
   const showingControls = IS_TAURI && !wco && windowControlStyle !== "none";
   const decoration = decorationFor(windowControlStyle);
@@ -240,9 +236,7 @@ export function TopBar({
         </Pressable>
 
         <View style={styles.fontControl}>
-          {showFontLabel ? (
-            <Text style={styles.fontSizeLabel}>{sizeLabel}</Text>
-          ) : null}
+          <Text style={styles.fontSizeLabel}>{sizeLabel}</Text>
           <Pressable
             dataSet={{ bcpBtn: "" }}
             style={({ hovered, pressed }) => [
