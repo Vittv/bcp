@@ -73,7 +73,7 @@ function Bullet({ text }: { text: string }) {
   return (
     <View style={styles.bulletRow}>
       <Text style={styles.bulletMark}>•</Text>
-      <Text style={styles.paragraph}>
+      <Text style={styles.bulletText}>
         <InlineText nodes={parseInline(text)} />
       </Text>
     </View>
@@ -161,19 +161,29 @@ const markdownStyles = defineThemedStyles({
     marginBottom: 10,
   },
   bullets: {
-    marginBottom: 10,
+    marginBottom: 8,
   },
   bulletRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   bulletMark: {
     fontFamily: CHROME_FONT,
     fontSize: 15,
-    lineHeight: 23,
+    lineHeight: 21,
     color: "var(--accent)",
+  },
+  // bullets sit tighter than prose paragraphs: release notes are a scannable
+  // list, so each line carries its own line-height but no paragraph margin
+  bulletText: {
+    flex: 1,
+    fontFamily: CHROME_FONT,
+    fontWeight: "400",
+    fontSize: 15,
+    lineHeight: 21,
+    color: "var(--text-secondary)",
   },
   // inline spans inside a paragraph keep the surrounding face unless asked
   // to differ, so bold only bumps the weight and code only swaps the face
