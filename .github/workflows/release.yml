@@ -26,7 +26,9 @@ jobs:
           # pinned rather than windows-latest so the runner image stops
           # moving underneath a release build
           - platform: windows-2022
-          - platform: macos-latest
+          # the apple silicon pool is capacity constrained and can drop a
+          # queued job outright; an intel host still builds both targets
+          - platform: macos-15-intel
     runs-on: ${{ matrix.platform }}
     # rustc's default 2 MiB worker stack can overflow mid-compile on a
     # contended runner; 16 MiB gives the release build headroom
