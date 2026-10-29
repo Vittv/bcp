@@ -76,6 +76,7 @@ import {
   IS_WINDOWS_TAURI,
 } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
+import { AUTOSCROLL_INDICATOR_SIZE } from "../../lib/input/autoscroll";
 import { stepPageSequence } from "../../lib/input/sequenceNav";
 import { activeScrollTarget } from "../../lib/input/vim";
 import {
@@ -256,8 +257,8 @@ function ensureSidebarAnimStyle() {
 }
 
 // the scroll-click autoscroll glyph, drawn to match the browser's own: a
-// white circle with a black border, two chevrons (up and down), and a dot
-// in the center. parked where the middle-click landed.
+// small white circle with a black border, two chevrons (up and down), and a
+// dot in the center. parked where the middle-click landed.
 function AutoscrollGlyph({ indicator }: { indicator: AutoscrollIndicator }) {
   const styles = useThemedStyles(shellStyles);
   return (
@@ -269,8 +270,8 @@ function AutoscrollGlyph({ indicator }: { indicator: AutoscrollIndicator }) {
       ]}
     >
       <svg
-        width={40}
-        height={40}
+        width={AUTOSCROLL_INDICATOR_SIZE}
+        height={AUTOSCROLL_INDICATOR_SIZE}
         viewBox="0 0 40 40"
         role="img"
         aria-label="Autoscroll"
@@ -284,7 +285,7 @@ function AutoscrollGlyph({ indicator }: { indicator: AutoscrollIndicator }) {
           strokeWidth="1.5"
         />
         <path
-          d="M11 15 L20 6 L29 15"
+          d="M12.4 15.8 L20 7.9 L27.6 15.8"
           fill="none"
           stroke="#000000"
           strokeWidth="2"
@@ -293,7 +294,7 @@ function AutoscrollGlyph({ indicator }: { indicator: AutoscrollIndicator }) {
         />
         <circle cx="20" cy="20" r="2" fill="#000000" />
         <path
-          d="M11 25 L20 34 L29 25"
+          d="M12.4 24.2 L20 32.1 L27.6 24.2"
           fill="none"
           stroke="#000000"
           strokeWidth="2"
@@ -1883,10 +1884,10 @@ const shellStyles = defineThemedStyles({
   autoscrollIndicator: {
     position: "absolute",
     zIndex: 100,
-    width: 40,
-    height: 40,
-    marginLeft: -20,
-    marginTop: -20,
+    width: AUTOSCROLL_INDICATOR_SIZE,
+    height: AUTOSCROLL_INDICATOR_SIZE,
+    marginLeft: -AUTOSCROLL_INDICATOR_SIZE / 2,
+    marginTop: -AUTOSCROLL_INDICATOR_SIZE / 2,
   },
   content: {
     flex: 1,

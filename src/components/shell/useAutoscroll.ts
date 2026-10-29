@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  AUTOSCROLL_INDICATOR_SIZE,
   autoscrollDelta,
   findScrollableAncestor,
   type Scroller,
@@ -102,9 +103,10 @@ export function useAutoscroll(enabled: boolean): AutoscrollIndicator | null {
       s.pointerX = e.clientX;
       s.pointerY = e.clientY;
       if (!s.raf) s.raf = requestAnimationFrame(tick);
+      const half = AUTOSCROLL_INDICATOR_SIZE / 2;
       setIndicator({
-        x: Math.min(window.innerWidth - 20, Math.max(20, e.clientX)),
-        y: Math.min(window.innerHeight - 20, Math.max(20, e.clientY)),
+        x: Math.min(window.innerWidth - half, Math.max(half, e.clientX)),
+        y: Math.min(window.innerHeight - half, Math.max(half, e.clientY)),
       });
     };
 

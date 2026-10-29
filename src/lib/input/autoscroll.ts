@@ -9,6 +9,9 @@ export const AUTOSCROLL_DEAD_ZONE = 8;
 // px scrolled per frame per px of pointer travel past the dead zone, at a
 // 60fps baseline; the loop scales it by the real frame delta
 export const AUTOSCROLL_SPEED = 0.12;
+// the indicator's on-screen diameter; the hook clamps by half and the shell
+// draws the glyph at this size
+export const AUTOSCROLL_INDICATOR_SIZE = 28;
 
 // the minimal surface findScrollableAncestor needs from a DOM node, kept
 // structural so tests pass plain objects and the hook passes real Elements
