@@ -6,6 +6,7 @@ import {
   SERIF_FONT,
   SERIF_ITALIC_FONT,
 } from "../../lib/fonts";
+import { FLOATING_MENU_SURFACE } from "../../lib/theme/surfaces";
 import { defineThemedStyles } from "../../lib/theme/themedStyles";
 
 // the detail column's fixed measures. font scaling zooms the pane, which
@@ -657,22 +658,16 @@ export const sharedStyles = defineThemedStyles({
     zIndex: 40,
   },
   popover: {
+    ...FLOATING_MENU_SURFACE,
     position: "absolute",
     top: 30,
     left: 10,
     zIndex: 50,
     width: 259,
     padding: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "var(--border-content)",
     // raised surface: one step lighter than --bg so panels float over
     // the page instead of reading as a hole in it
     backgroundColor: "var(--bg-raised)",
-    shadowColor: "var(--shadow-color)",
-    shadowOpacity: 0.24,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
   },
   popNav: {
     flexDirection: "row",

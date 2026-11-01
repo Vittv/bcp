@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { CHROME_FONT } from "../../lib/fonts";
+import { FLOATING_MENU_SURFACE } from "../../lib/theme/surfaces";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -308,18 +309,12 @@ const barDropdownStyles = defineThemedStyles({
     zIndex: 40,
   },
   menu: {
+    ...FLOATING_MENU_SURFACE,
     position: "absolute",
     top: 30,
     zIndex: 50,
     padding: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "var(--border-content)",
     backgroundColor: "var(--bg)",
-    shadowColor: "var(--shadow-color)",
-    shadowOpacity: 0.24,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
   },
   item: {
     paddingVertical: 6,

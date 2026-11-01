@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { CHROME_FONT } from "../../lib/fonts";
+import { FLOATING_MENU_SURFACE } from "../../lib/theme/surfaces";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -407,21 +408,15 @@ const fontPickerStyles = defineThemedStyles({
   // it matches the rest of the shell (the lift comes from the picker section's
   // z-index, not a brighter fill)
   panel: {
+    ...FLOATING_MENU_SURFACE,
     position: "absolute",
     top: "100%",
     left: 0,
     right: 0,
     marginTop: 6,
     zIndex: 50,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "var(--border-content)",
     backgroundColor: "var(--bg)",
     overflow: "hidden",
-    shadowColor: "var(--shadow-color)",
-    shadowOpacity: 0.24,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
   },
   // the field mirrors the rail's search: a magnifier, the input, and a clear
   // button when there is a query. inside the panel it goes borderless, seated
