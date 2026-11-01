@@ -415,7 +415,11 @@ function NodeView({
       return (
         <View style={styles.collectBlock}>
           <Text style={styles.collectTitle}>
-            <MentionedText text={node.passage.title} todaySlug={todaySlug} />
+            <MentionedText
+              text={node.passage.title}
+              todaySlug={todaySlug}
+              slug={node.slug}
+            />
           </Text>
           <Text style={styles.collectText}>{node.passage.text}</Text>
         </View>

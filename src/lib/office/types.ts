@@ -75,7 +75,12 @@ export type ComposedNode =
       slot: 1 | 2;
       suggested: boolean;
     }
-  | { kind: "collect"; passage: CollectPassage }
+  | {
+      kind: "collect";
+      passage: CollectPassage;
+      // the feast the collect belongs to, for linking its title
+      slug?: string;
+    }
   | { kind: "fixed-collect"; text: string; title?: string };
 
 export type ComposedSection = {

@@ -277,6 +277,31 @@ describe("composeOffice: the evening boundary", () => {
     expect(lessonRefsOf(doc).length).toBeGreaterThan(0);
   });
 
+  test("the collect carries its feast's slug for the title link", () => {
+    const allSaints = composeOffice(
+      { year: 2026, month: 11, day: 1 },
+      "morning-rite-two",
+    );
+    // the printed title differs from the lectionary feast it links to
+    expect(collectOf(allSaints)?.passage.title).toBe("All Saint's Day");
+    expect(collectOf(allSaints)?.slug).toBe("all-saints");
+
+    // an eve borrows the following feast's collect, so the title links there
+    const eve = composeOffice(
+      { year: 2025, month: 10, day: 31 },
+      "evening-rite-two",
+    );
+    expect(collectOf(eve)?.slug).toBe("all-saints");
+
+    // a feast yielding to Sunday keeps the Sunday collect, with no feast slug
+    const sunday = composeOffice(
+      { year: 2026, month: 10, day: 18 },
+      "morning-rite-two",
+    );
+    expect(collectOf(sunday)?.passage.title).toBe("Proper 24");
+    expect(collectOf(sunday)?.slug).toBeUndefined();
+  });
+
   test("Morning Prayer on an eve date stays an ordinary weekday", () => {
     const doc = composeOffice(
       { year: 2025, month: 10, day: 31 },

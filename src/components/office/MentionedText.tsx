@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { Text } from "react-native";
-import { tokenizeSanctoraleMentions } from "../../lib/calendar/sanctorale";
+import {
+  sanctoraleBySlug,
+  tokenizeSanctoraleMentions,
+} from "../../lib/calendar/sanctorale";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -14,13 +17,32 @@ import { useSaintPopover } from "./SaintPopover";
 export function MentionedText({
   text,
   todaySlug,
+  slug,
 }: {
   text: string;
   todaySlug?: string;
+  /** link the whole run to this feast, whatever its printed wording. */
+  slug?: string;
 }) {
   const { openSaint } = useSaintPopover();
   const styles = useThemedStyles(mentionStyles);
   const runs = useMemo(() => tokenizeSanctoraleMentions(text), [text]);
+  // a slug links the whole run to its feast, whatever the printed title
+  const forced = slug ? sanctoraleBySlug(slug) : undefined;
+  if (forced) {
+    return (
+      <Text
+        onPress={() => openSaint(forced.slug)}
+        style={[
+          styles.mention,
+          forced.slug === todaySlug && styles.mentionToday,
+        ]}
+        accessibilityRole="button"
+      >
+        {text}
+      </Text>
+    );
+  }
   // keyed by text start-offset (not the array index): unique and stable
   // even when the same surface repeats, and purely positional
   let cursor = 0;

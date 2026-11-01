@@ -1156,7 +1156,9 @@ function collectNode(ctx: ComposeContext): ComposedNode | undefined {
     found.title,
   );
   if (!passage) return undefined;
-  return { kind: "collect", passage };
+  // holy day collects carry the feast slug for the title link
+  const slug = found.section === "holy-days" ? ctx.litSlot.holyDay : undefined;
+  return { kind: "collect", passage, slug };
 }
 
 function collectForDate(
