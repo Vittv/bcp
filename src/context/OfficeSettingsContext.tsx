@@ -6,13 +6,23 @@ import {
   useState,
 } from "react";
 
+import type { OfficeId } from "../lib/content/types";
+import {
+  applyCustomization,
+  EMPTY_CUSTOMIZATION,
+  type OfficeCustomization,
+  type OfficeCustomizations,
+  sanitizeCustomizations,
+} from "../lib/office/customization";
 import type { OfficeRite } from "../lib/office/types";
 
 // how the daily office reads on screen. rubrics, speakers, rite and devotions
 // are persistence toggles surfaced both in the office bar and in Settings, so
 // they live in one source of truth here (the same role TranslationContext
 // plays for the Bible translation). devotions swaps the full office for the
-// short office.
+// short office. inline choices for each office are stored here too: only the
+// reader's explicit overrides live in storage, so the printed defaults keep
+// following the calendar.
 
 type ToggleUpdate = boolean | ((prev: boolean) => boolean);
 
@@ -21,16 +31,24 @@ type OfficeSettingsValue = {
   showSpeakers: boolean;
   devotions: boolean;
   rite: OfficeRite;
+  customizations: OfficeCustomizations;
   setShowRubrics: (update: ToggleUpdate) => void;
   setShowSpeakers: (update: ToggleUpdate) => void;
   setDevotions: (v: boolean) => void;
   setRite: (r: OfficeRite) => void;
+  customizationFor: (officeId: OfficeId) => OfficeCustomization;
+  setOfficeChoice: (
+    officeId: OfficeId,
+    patch: Partial<OfficeCustomization>,
+  ) => void;
+  resetOffice: (officeId: OfficeId) => void;
 };
 
 const KEY_RUBRICS = "rubrics";
 const KEY_SPEAKERS = "speakers";
 const KEY_DEVOTIONS = "devotions";
 const KEY_RITE = "rite";
+const KEY_CUSTOMIZATIONS = "office:customizations:v1";
 
 // the printed book always carries rubrics and speakers, so a reader with no
 // stored preference starts with both shown; an explicit off survives
@@ -76,15 +94,37 @@ function persistRite(v: OfficeRite): void {
   }
 }
 
+function loadCustomizations(): OfficeCustomizations {
+  try {
+    const raw = localStorage.getItem(KEY_CUSTOMIZATIONS);
+    if (raw) return sanitizeCustomizations(JSON.parse(raw));
+  } catch {
+    // ignore
+  }
+  return {};
+}
+
+function persistCustomizations(v: OfficeCustomizations): void {
+  try {
+    localStorage.setItem(KEY_CUSTOMIZATIONS, JSON.stringify(v));
+  } catch {
+    // ignore
+  }
+}
+
 const Ctx = createContext<OfficeSettingsValue>({
   showRubrics: DEFAULT_RUBRICS,
   showSpeakers: DEFAULT_SPEAKERS,
   devotions: DEFAULT_DEVOTIONS,
   rite: DEFAULT_RITE,
+  customizations: {},
   setShowRubrics: () => {},
   setShowSpeakers: () => {},
   setDevotions: () => {},
   setRite: () => {},
+  customizationFor: () => EMPTY_CUSTOMIZATION,
+  setOfficeChoice: () => {},
+  resetOffice: () => {},
 });
 
 export function OfficeSettingsProvider({ children }: { children: ReactNode }) {
@@ -98,6 +138,8 @@ export function OfficeSettingsProvider({ children }: { children: ReactNode }) {
     load(KEY_DEVOTIONS, DEFAULT_DEVOTIONS),
   );
   const [rite, setRiteState] = useState(loadRite);
+  const [customizations, setCustomizations] =
+    useState<OfficeCustomizations>(loadCustomizations);
 
   const setShowRubrics = useCallback((update: ToggleUpdate) => {
     setShowRubricsState((prev) => {
@@ -121,6 +163,35 @@ export function OfficeSettingsProvider({ children }: { children: ReactNode }) {
     setRiteState(r);
     persistRite(r);
   }, []);
+  const customizationFor = useCallback(
+    (officeId: OfficeId) => customizations[officeId] ?? EMPTY_CUSTOMIZATION,
+    [customizations],
+  );
+  const setOfficeChoice = useCallback(
+    (officeId: OfficeId, patch: Partial<OfficeCustomization>) => {
+      setCustomizations((prev) => {
+        const clean = applyCustomization(prev[officeId], patch);
+        const next = { ...prev };
+        if (Object.keys(clean).length === 0) {
+          delete next[officeId];
+        } else {
+          next[officeId] = clean;
+        }
+        persistCustomizations(next);
+        return next;
+      });
+    },
+    [],
+  );
+  const resetOffice = useCallback((officeId: OfficeId) => {
+    setCustomizations((prev) => {
+      if (!(officeId in prev)) return prev;
+      const next = { ...prev };
+      delete next[officeId];
+      persistCustomizations(next);
+      return next;
+    });
+  }, []);
 
   return (
     <Ctx.Provider
@@ -129,10 +200,14 @@ export function OfficeSettingsProvider({ children }: { children: ReactNode }) {
         showSpeakers,
         devotions,
         rite,
+        customizations,
         setShowRubrics,
         setShowSpeakers,
         setDevotions,
         setRite,
+        customizationFor,
+        setOfficeChoice,
+        resetOffice,
       }}
     >
       {children}

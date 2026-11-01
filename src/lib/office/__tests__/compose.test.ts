@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
+import { parsePsalmCitation } from "../../content/psalms";
+import { psalterDay, psalterDayForDate } from "../../content/psalterDays";
 import { composeOffice, dayLabel } from "../compose";
-import type { ComposedNode, ComposedSection, OfficeDocument } from "../types";
+import type {
+  ComposedLesson,
+  ComposedNode,
+  ComposedSection,
+  OfficeDocument,
+} from "../types";
 import { DEFAULT_PREFS } from "../types";
 
 function section(
@@ -41,9 +48,22 @@ function psalmCitations(doc: OfficeDocument): string[] {
 }
 
 function lessonRefsOf(doc: OfficeDocument): string[] {
-  // SAFETY: nodesOf filters by kind, so every element has kind "lessons".
-  return nodesOf(doc, "lessons").flatMap((n) =>
-    (n as Extract<ComposedNode, { kind: "lessons" }>).lessons.map((l) => l.ref),
+  return doc.sections.flatMap((s) =>
+    s.nodes.flatMap((n) =>
+      n.kind === "lessons"
+        ? n.lessons.map((l) => l.ref)
+        : n.kind === "reading"
+          ? [n.lesson.ref]
+          : [],
+    ),
+  );
+}
+
+function lessonsOf(doc: OfficeDocument): ComposedLesson[] {
+  return doc.sections.flatMap((s) =>
+    s.nodes.flatMap((n) =>
+      n.kind === "lessons" ? n.lessons : n.kind === "reading" ? [n.lesson] : [],
+    ),
   );
 }
 
@@ -63,6 +83,10 @@ function textOf(doc: OfficeDocument): string[] {
           return n.title ? [n.title, n.text] : [n.text];
         case "lessons":
           return [n.lessons.map((l) => l.ref).join(" ")];
+        case "reading":
+          return [n.lesson.ref];
+        case "canticle":
+          return [n.passage?.title ?? ""];
         default:
           return [""];
       }
@@ -104,12 +128,7 @@ describe("composeOffice: Advent 1 2026", () => {
   });
 
   test("lessons render as labeled references", () => {
-    // SAFETY: nodesOf filters by kind.
-    const lessons = nodesOf(doc, "lessons")[0] as Extract<
-      ComposedNode,
-      { kind: "lessons" }
-    >;
-    expect(lessons.lessons.map((l) => [l.label, l.ref])).toEqual([
+    expect(lessonsOf(doc).map((l) => [l.label, l.ref])).toEqual([
       ["First Lesson", "Isa 1:1–9"],
       ["Second Lesson", "2 Pet 3:1–10"],
       ["Gospel", "Matt 25:1–13"],
@@ -122,14 +141,31 @@ describe("composeOffice: Advent 1 2026", () => {
     expect(collect?.passage.rite).toBe("contemporary");
   });
 
-  test("opening sentences are the Advent group", () => {
+  test("opening sentences show one seasonal sentence", () => {
     const texts = textOf(doc);
-    expect(texts).toContain("Advent");
-    expect(texts).toContain("At any Time");
+    expect(texts).not.toContain("Advent");
+    expect(texts).not.toContain("At any Time");
     expect(texts).toContain(
       "Watch, for you do not know when the master of the house will come, in the evening, or at midnight, or at cockcrow, or in the morning, lest he come suddenly and find you asleep.",
     );
     expect(texts).not.toContain("Alleluia! Christ is risen.");
+    // the other Advent sentences are no longer printed by default
+    expect(hasText(doc, "In the wilderness prepare the way of the Lord")).toBe(
+      false,
+    );
+  });
+
+  test("the opening sentence picker can still show all sentences", () => {
+    const all = composeOffice(date, "morning-rite-two", {
+      ...DEFAULT_PREFS,
+      customization: { opening: "all" },
+    });
+    expect(hasText(all, "In the wilderness prepare the way of the Lord")).toBe(
+      true,
+    );
+    expect(
+      hasText(all, "Watch, for you do not know when the master of the house"),
+    ).toBe(true);
   });
 
   test("dayLabel", () => {
@@ -146,12 +182,7 @@ describe("composeOffice: the evening boundary", () => {
     );
     expect(doc.entryTitle).toBe("The First Sunday of Advent");
     expect(psalmNumbers(doc)).toEqual([111, 112, 113]);
-    // SAFETY: nodesOf filters by kind.
-    const lessons = nodesOf(doc, "lessons")[0] as Extract<
-      ComposedNode,
-      { kind: "lessons" }
-    >;
-    expect(lessons.lessons.map((l) => l.ref)).toEqual([
+    expect(lessonRefsOf(doc)).toEqual([
       "Isa 1:1–9",
       "2 Pet 3:1–10",
       "Matt 25:1–13",
@@ -167,15 +198,7 @@ describe("composeOffice: the evening boundary", () => {
     expect(doc.entryTitle).toBe("Christmas Eve");
     const psalms = nodesOf(doc, "psalm");
     expect(psalms[0]).toMatchObject({ citation: "89:1–29" });
-    // SAFETY: nodesOf filters by kind.
-    const lessons = nodesOf(doc, "lessons")[0] as Extract<
-      ComposedNode,
-      { kind: "lessons" }
-    >;
-    expect(lessons.lessons.map((l) => l.ref)).toEqual([
-      "Isa 59:15b–21",
-      "Phil 2:5–11",
-    ]);
+    expect(lessonRefsOf(doc)).toEqual(["Isa 59:15b–21", "Phil 2:5–11"]);
     // the collect belongs to the feast whose first evensong this is.
     expect(collectOf(doc)?.passage.title).toBe(
       "The Nativity of Our Lord:  Christmas Day",
@@ -191,15 +214,7 @@ describe("composeOffice: the evening boundary", () => {
     );
     expect(doc.entryTitle).toBe("Eve of Holy Cross");
     expect(psalmNumbers(doc)).toEqual([46, 87]);
-    // SAFETY: nodesOf filters by kind.
-    const lessons = nodesOf(doc, "lessons")[0] as Extract<
-      ComposedNode,
-      { kind: "lessons" }
-    >;
-    expect(lessons.lessons.map((l) => l.ref)).toEqual([
-      "1 Kgs 8:22–30",
-      "Eph 2:11–22",
-    ]);
+    expect(lessonRefsOf(doc)).toEqual(["1 Kgs 8:22–30", "Eph 2:11–22"]);
     expect(collectOf(doc)?.passage.title).toBe("Holy Cross Day");
   });
 
@@ -213,12 +228,7 @@ describe("composeOffice: the evening boundary", () => {
     expect(doc.entryTitle).toBeNull();
     // Tuesday of Proper 11 (week of Sunday July 19 2026)
     expect(psalmNumbers(doc)).toEqual([47, 48]);
-    // SAFETY: nodesOf filters by kind.
-    const lessons = nodesOf(doc, "lessons")[0] as Extract<
-      ComposedNode,
-      { kind: "lessons" }
-    >;
-    expect(lessons.lessons.map((l) => l.ref)).toEqual([
+    expect(lessonRefsOf(doc)).toEqual([
       "Josh 8:1–22",
       "Rom 14:1–12",
       "Matt 26:47–56",
@@ -264,12 +274,7 @@ describe("composeOffice: the evening boundary", () => {
     expect(collectOf(doc)?.passage.title).toBe("All Saint's Day");
     const psalms = nodesOf(doc, "psalm");
     expect(psalms.length).toBeGreaterThan(0);
-    // SAFETY: nodesOf filters by kind.
-    const lessons = nodesOf(doc, "lessons")[0] as Extract<
-      ComposedNode,
-      { kind: "lessons" }
-    >;
-    expect(lessons.lessons.length).toBeGreaterThan(0);
+    expect(lessonRefsOf(doc).length).toBeGreaterThan(0);
   });
 
   test("Morning Prayer on an eve date stays an ordinary weekday", () => {
@@ -324,9 +329,8 @@ describe("composeOffice: golden Sundays", () => {
     expect(collectOf(doc)?.passage.title).toBe(
       "The Day of Pentecost:  Whitsunday",
     );
-    expect(textOf(doc)).toContain(
-      "Easter Season, including Ascension Day and the Day of Pentecost",
-    );
+    // the seasonal heading is no longer printed; its first sentence is
+    expect(textOf(doc)).toContain("Alleluia! Christ is risen.");
   });
 
   test("Trinity 2025", () => {
@@ -340,7 +344,6 @@ describe("composeOffice: golden Sundays", () => {
     expect(collectOf(doc)?.passage.title).toBe(
       "First Sunday after Pentecost:  Trinity Sunday",
     );
-    expect(textOf(doc)).toContain("Trinity Sunday");
     expect(textOf(doc)).toContain(
       "Holy, holy, holy is the Lord God Almighty, who was, and is, and is to come!",
     );
@@ -472,11 +475,7 @@ describe("composeOffice: preferences and other offices", () => {
     // alternate first lesson (Jdt)
     const date = { year: 2026, month: 9, day: 22 };
     const doc = composeOffice(date, "evening-rite-two");
-    // SAFETY: nodesOf filters by kind.
-    const lessons = nodesOf(doc, "lessons").flatMap(
-      (n) => (n as Extract<ComposedNode, { kind: "lessons" }>).lessons,
-    );
-    expect(lessons.map((l) => l.ref)).toEqual([
+    expect(lessonsOf(doc).map((l) => l.ref)).toEqual([
       "Esth 5:1–14",
       "Acts 18:12–28",
       "Luke 3:15–22",
@@ -485,11 +484,7 @@ describe("composeOffice: preferences and other offices", () => {
       ...DEFAULT_PREFS,
       showAlternates: true,
     });
-    const altLessons = nodesOf(withAlt, "lessons").flatMap(
-      // SAFETY: nodesOf filters by kind, so every element has kind "lessons".
-      (n) => (n as Extract<ComposedNode, { kind: "lessons" }>).lessons,
-    );
-    expect(altLessons.map((l) => l.ref)).toEqual([
+    expect(lessonsOf(withAlt).map((l) => l.ref)).toEqual([
       "Esth 5:1–14",
       "Jdt 8:9–17; 9:1, 7–10",
       "Acts 18:12–28",
@@ -541,29 +536,85 @@ describe("composeOffice: preferences and other offices", () => {
     ).toBe(false);
   });
 
-  test("as many canticles as lessons are kept", () => {
-    // SAFETY: nodesOf filters by kind.
+  test("readings and canticles interleave, two canticles for three readings", () => {
     const canticles = (doc: OfficeDocument) =>
-      nodesOf(doc, "heading")
-        .map((n) => (n as Extract<ComposedNode, { kind: "heading" }>).text)
-        .filter((t) => /^(\d+|The Song of|Song of)/.test(t));
+      doc.sections
+        .flatMap((s) => s.nodes)
+        .flatMap((n) =>
+          n.kind === "canticle" ? [n.passage?.number ?? null] : [],
+        );
     const morning = composeOffice(
       { year: 2026, month: 8, day: 14 },
       "morning-rite-two",
     );
-    expect(canticles(morning)).toEqual([
-      "8 The Song of Moses Cantemus Domino",
-      "9 The First Song of Isaiah Ecce, Deus",
-      "10 The Second Song of Isaiah Quaerite Dominum",
-    ]);
+    // Friday morning: Canticle 10 after the first reading, 18 after the second
+    expect(canticles(morning)).toEqual([10, 18]);
     const evening = composeOffice(
       { year: 2026, month: 8, day: 14 },
       "evening-rite-two",
     );
-    expect(canticles(evening)).toEqual([
-      "The Song of Mary Magnificat",
-      "Song of Simeon Nunc Dimittis",
+    // Friday evening: Canticle 13 then 17
+    expect(canticles(evening)).toEqual([13, 17]);
+
+    // the sequence in the lessons section is R1, C1, R2, C2, Gospel
+    const kinds = section(morning, "lessons")?.nodes.map((n) => n.kind);
+    expect(kinds).toContain("reading");
+    expect(kinds).toContain("canticle");
+    const order = (section(morning, "lessons")?.nodes ?? []).filter(
+      (n) => n.kind === "reading" || n.kind === "canticle",
+    );
+    expect(order.map((n) => n.kind)).toEqual([
+      "reading",
+      "canticle",
+      "reading",
+      "canticle",
+      "reading",
     ]);
+  });
+
+  test("canticles follow the p. 144 table for both rites", () => {
+    const numbers = (doc: OfficeDocument) =>
+      doc.sections
+        .flatMap((s) => s.nodes)
+        .flatMap((n) =>
+          n.kind === "canticle" ? [n.passage?.number ?? null] : [],
+        );
+    const date = { year: 2026, month: 8, day: 14 };
+    expect(numbers(composeOffice(date, "morning-rite-one"))).toEqual([10, 18]);
+    expect(numbers(composeOffice(date, "evening-rite-one"))).toEqual([2, 5]);
+    // an ordinary Sunday: 4/16 then 7/21 in Rite I / Rite II
+    const sunday = { year: 2026, month: 8, day: 9 };
+    expect(numbers(composeOffice(sunday, "morning-rite-one"))).toEqual([4, 7]);
+    expect(numbers(composeOffice(sunday, "morning-rite-two"))).toEqual([
+      16, 21,
+    ]);
+    // Advent Sunday morning takes 11 after the Old Testament reading
+    const advent = { year: 2026, month: 11, day: 29 };
+    expect(numbers(composeOffice(advent, "morning-rite-one"))).toEqual([11, 4]);
+    expect(numbers(composeOffice(advent, "morning-rite-two"))).toEqual([
+      11, 16,
+    ]);
+  });
+
+  test("an explicit canticle choice overrides the table, null removes it", () => {
+    const numbers = (doc: OfficeDocument) =>
+      doc.sections
+        .flatMap((s) => s.nodes)
+        .flatMap((n) =>
+          n.kind === "canticle" ? [n.passage?.number ?? null] : [],
+        );
+    const date = { year: 2026, month: 8, day: 14 };
+    const picked = composeOffice(date, "morning-rite-two", {
+      ...DEFAULT_PREFS,
+      customization: { canticle1: 8, canticle2: null },
+    });
+    // the second slot still emits its None placeholder
+    expect(numbers(picked)).toEqual([8, null]);
+    const none = composeOffice(date, "morning-rite-two", {
+      ...DEFAULT_PREFS,
+      customization: { canticle1: null, canticle2: null },
+    });
+    expect(numbers(none)).toEqual([null, null]);
   });
 
   test("personal mode is on by default: no speaker labels", () => {
@@ -601,6 +652,109 @@ describe("composeOffice: preferences and other offices", () => {
     expect(speakers.length).toBeGreaterThan(0);
     expect(
       hasText(doc, "Almighty God have mercy on you, forgive you all your sins"),
+    ).toBe(true);
+  });
+});
+
+describe("composeOffice: inline choices", () => {
+  const date = { year: 2026, month: 8, day: 14 };
+  const advent = { year: 2026, month: 11, day: 29 };
+
+  test("an opening sentence override replaces the seasonal pick", () => {
+    const doc = composeOffice(advent, "morning-rite-two", {
+      ...DEFAULT_PREFS,
+      customization: {
+        opening:
+          "In the wilderness prepare the way of the Lord, make straight in the desert a highway for our God.",
+      },
+    });
+    expect(
+      hasText(
+        doc,
+        "In the wilderness prepare the way of the Lord, make straight in the desert a highway for our God.",
+      ),
+    ).toBe(true);
+    expect(
+      hasText(
+        doc,
+        "Watch, for you do not know when the master of the house will come",
+      ),
+    ).toBe(false);
+  });
+
+  test("the invitatory psalm can be swapped", () => {
+    const doc = composeOffice(date, "morning-rite-two", {
+      ...DEFAULT_PREFS,
+      customization: { invitatory: "jubilate" },
+    });
+    expect(
+      hasText(
+        doc,
+        "Be joyful in the Lord, all you lands; serve the Lord with gladness and come before his presence with song.",
+      ),
+    ).toBe(true);
+    expect(
+      hasText(
+        doc,
+        "Come let us sing to the Lord; let us shout for joy to the Rock of our salvation.",
+      ),
+    ).toBe(false);
+  });
+
+  test("the 30-day psalter replaces the office's appointed psalms", () => {
+    const doc = composeOffice(date, "morning-rite-two", {
+      ...DEFAULT_PREFS,
+      customization: { psalmCycle: "psalter30" },
+    });
+    const portion = psalterDay(psalterDayForDate(date));
+    const expected = (portion?.morning ?? []).flatMap((citation) => {
+      const parsed = parsePsalmCitation(citation);
+      return parsed ? [parsed.psalm] : [];
+    });
+    expect(expected.length).toBeGreaterThan(0);
+    expect(psalmNumbers(doc)).toEqual(expected);
+  });
+
+  test("suffrages A and B swap, and B keeps the shared tail", () => {
+    const morning = composeOffice(date, "morning-rite-two");
+    expect(
+      hasText(morning, "Save your people, Lord, and bless your inheritance;"),
+    ).toBe(true);
+    expect(hasText(morning, "Show us your mercy, O Lord;")).toBe(false);
+    const a = composeOffice(date, "morning-rite-two", {
+      ...DEFAULT_PREFS,
+      customization: { suffrages: "a" },
+    });
+    expect(hasText(a, "Show us your mercy, O Lord;")).toBe(true);
+    expect(
+      hasText(a, "Save your people, Lord, and bless your inheritance;"),
+    ).toBe(false);
+    // the collect and prayer tail after Suffrages B still follows A
+    expect(collectOf(a)?.passage.text).toBe(collectOf(morning)?.passage.text);
+  });
+
+  test("Full text prints the whole opening menu and both invitatories", () => {
+    const doc = composeOffice(date, "morning-rite-two", {
+      ...DEFAULT_PREFS,
+      fullText: true,
+    });
+    expect(
+      hasText(
+        doc,
+        "In the wilderness prepare the way of the Lord, make straight in the desert a highway for our God.",
+      ),
+    ).toBe(true);
+    expect(
+      hasText(
+        doc,
+        "Be joyful in the Lord, all you lands; serve the Lord with gladness and come before his presence with song.",
+      ),
+    ).toBe(true);
+    expect(
+      hasText(
+        doc,
+        "Come let us sing to the Lord; let us shout for joy to the Rock of our salvation.",
+      ),
     ).toBe(true);
   });
 });

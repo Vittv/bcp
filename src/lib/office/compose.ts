@@ -10,10 +10,11 @@ import {
   weekday,
 } from "../calendar";
 import type { CalendarDate, DolSlot, Season } from "../calendar/types";
-import { collectPassage, office } from "../content";
+import { canticlePassage, collectPassage, office } from "../content";
 import { entryForDay, entryForEvening } from "../content/lectionary";
 import { parsePsalmCitation } from "../content/psalms";
 import { psalmPassage } from "../content/psalter";
+import { psalterDay, psalterDayForDate } from "../content/psalterDays";
 import type {
   CollectSection,
   DolEntry,
@@ -23,10 +24,13 @@ import type {
   OfficeSection,
   PsalmPassage,
 } from "../content/types";
+import type { OfficeCustomization } from "./customization";
+import { suggestedCanticles } from "./suggestedCanticles";
 import type {
   ComposedLesson,
   ComposedNode,
   ComposedSection,
+  OfficeChoices,
   OfficeDocument,
   OfficePrefs,
 } from "./types";
@@ -143,6 +147,8 @@ export function holyDayCollectTitle(slug: string): string | undefined {
 }
 
 type ComposeContext = {
+  officeId: Office["id"];
+  rite: "One" | "Two";
   date: CalendarDate;
   litDate: CalendarDate;
   litSlot: DolSlot;
@@ -180,6 +186,27 @@ function entryLessonGroup(
   return undefined;
 }
 
+// the psalms for an office: the lectionary's appointed set, or the 30-day
+// psalter's portion for the calendar day. feasts keep their appointed psalms
+// by default; the reader can still swap the cycle explicitly.
+function officePsalmCitations(
+  officeId: Office["id"],
+  date: CalendarDate,
+  entry: DolEntry | undefined,
+  customization: OfficeCustomization | undefined,
+): string[] | undefined {
+  const morning = isMorningOffice(officeId);
+  const evening = isEveningOffice(officeId);
+  if (!(morning || evening)) return undefined;
+  if (customization?.psalmCycle === "psalter30") {
+    const portion = psalterDay(psalterDayForDate(date));
+    const citations = morning ? portion?.morning : portion?.evening;
+    if (citations && citations.length > 0) return citations;
+  }
+  if (!entry) return undefined;
+  return morning ? entry.psalms.morning : entry.psalms.evening;
+}
+
 // compose the daily variable content (psalms, lessons, collect of the day)
 // into the fixed office text. the office itself is chosen by the caller.
 export function composeOffice(
@@ -204,6 +231,8 @@ export function composeOffice(
     eveningSpecial ?? (found.rite === null ? undefined : entryForDay(slot));
 
   const ctx: ComposeContext = {
+    officeId,
+    rite: found.rite ?? prefs.rite,
     date,
     litDate,
     litSlot,
@@ -217,12 +246,12 @@ export function composeOffice(
       const d = toDays(litDate);
       return d >= f.ascension && d < f.pentecost;
     })(),
-    psalmCitations:
-      entry && (isMorningOffice(officeId) || evening)
-        ? isMorningOffice(officeId)
-          ? entry.psalms.morning
-          : entry.psalms.evening
-        : undefined,
+    psalmCitations: officePsalmCitations(
+      officeId,
+      date,
+      entry,
+      prefs.customization,
+    ),
     lessonGroup:
       entry && (isMorningOffice(officeId) || evening)
         ? entryLessonGroup(entry, isMorningOffice(officeId))
@@ -230,12 +259,23 @@ export function composeOffice(
     prefs,
   };
 
+  const choices = officeChoices(found, ctx);
   const sections: ComposedSection[] = [];
   for (const section of found.sections) {
+    // suffrages A and B are alternatives sharing one tail. A is kept only
+    // when picked; B always runs because its second half is the collects,
+    // prayers and closing that follow either set of versicles.
+    if (section.key === "suffrages-a" && suffragesChoice(ctx) !== "a") continue;
     const composed = composeSection(section, ctx);
-    if (composed.nodes.length > 0) sections.push(composed);
+    if (composed.nodes.length === 0) continue;
+    if (section.key === "suffrages-a") {
+      composed.heading = "Suffrages A";
+    }
+    if (section.key === "suffrages-b") {
+      composed.heading = suffragesChoice(ctx) === "b" ? "Suffrages B" : null;
+    }
+    sections.push(composed);
   }
-
   return {
     office: officeId,
     officeName: found.name,
@@ -243,7 +283,33 @@ export function composeOffice(
     date,
     slot,
     entryTitle: entry?.title ?? null,
+    choices,
     sections,
+  };
+}
+
+function suffragesChoice(ctx: ComposeContext): "a" | "b" {
+  const explicit = ctx.prefs.customization?.suffrages;
+  if (explicit === "a" || explicit === "b") return explicit;
+  // the printed books suggest B in the morning and A in the evening
+  return isEveningOffice(ctx.officeId) ? "a" : "b";
+}
+
+// the suggestions and option lists the inline controls need. computed from
+// the same context the sections use, but never from the reader's overrides.
+function officeChoices(found: Office, ctx: ComposeContext): OfficeChoices {
+  const openingSection = found.sections.find(isOpeningSentenceSection);
+  const groups = openingSection ? sentenceGroups(openingSection).groups : [];
+  const readings = new Set(lessonList(ctx).map((lesson) => lesson.number)).size;
+  return {
+    openingSuggested: suggestedOpeningText(groups, ctx),
+    openingGroups: groups,
+    invitatorySuggested: defaultInvitatory(ctx),
+    canticleSuggested: [
+      suggestedCanticleForSlot(ctx, 1, readings),
+      suggestedCanticleForSlot(ctx, 2, readings),
+    ],
+    suffragesSuggested: isEveningOffice(ctx.officeId) ? "a" : "b",
   };
 }
 
@@ -296,6 +362,117 @@ function showRubrics(prefs: OfficePrefs): boolean {
   return prefs.showRubrics && !prefs.personalMode;
 }
 
+// the opening-sentence menu is the only opening section with an "At any
+// Time" season group.
+function isOpeningSentenceSection(section: OfficeSection): boolean {
+  return (
+    section.key === "opening" &&
+    section.items.some(
+      (item) =>
+        item.kind === "rubric" && /sentences of Scripture/i.test(item.text),
+    )
+  );
+}
+
+type SentenceGroup = { season: string; texts: string[] };
+
+function sentenceGroups(section: OfficeSection): {
+  groups: SentenceGroup[];
+  leading: OfficeItem[];
+} {
+  const groups: SentenceGroup[] = [];
+  const leading: OfficeItem[] = [];
+  let current: SentenceGroup | undefined;
+  for (const item of section.items) {
+    if (item.kind === "season") {
+      current = { season: item.text, texts: [] };
+      groups.push(current);
+      continue;
+    }
+    if (current) {
+      if (
+        item.kind === "text" &&
+        !item.text.startsWith("*") &&
+        item.text.trim().length > 0
+      ) {
+        current.texts.push(item.text);
+      }
+    } else {
+      leading.push(item);
+    }
+  }
+  // Evening Prayer prints one flat list with no season headings. It behaves
+  // like a single group, whose first sentence is the default.
+  if (groups.length === 0) {
+    const texts = leading
+      .filter(
+        (item): item is Extract<OfficeItem, { kind: "text" }> =>
+          item.kind === "text" &&
+          !item.text.startsWith("*") &&
+          item.text.trim().length > 0,
+      )
+      .map((item) => item.text);
+    const rubrics = leading.filter((item) => item.kind !== "text");
+    return {
+      groups: [{ season: "At any Time", texts }],
+      leading: rubrics,
+    };
+  }
+  return { groups, leading };
+}
+
+function composeOpeningSentence(
+  section: OfficeSection,
+  ctx: ComposeContext,
+): ComposedNode[] {
+  const nodes: ComposedNode[] = [];
+  const { groups, leading } = sentenceGroups(section);
+  for (const item of leading) {
+    const node = convert(item, ctx.prefs);
+    if (node) nodes.push(node);
+  }
+  const override = ctx.prefs.customization?.opening;
+  let chosen: string[] = [];
+  if (ctx.prefs.fullText) {
+    // the reference page's Full text mode prints the whole menu
+    chosen = groups.flatMap((group) => group.texts);
+  } else if (override === "all") {
+    for (const group of groups) {
+      if (!keepSeasonGroup(group.season, ctx)) continue;
+      chosen.push(...group.texts);
+    }
+  } else if (typeof override === "string") {
+    const match = groups
+      .flatMap((group) => group.texts)
+      .find((text) => text === override);
+    if (match) chosen = [match];
+  }
+  if (chosen.length === 0) {
+    const suggested = suggestedOpeningText(groups, ctx);
+    if (suggested) chosen = [suggested];
+  }
+  for (const text of chosen) {
+    nodes.push({ kind: "text", text, speaker: undefined });
+  }
+  return nodes;
+}
+
+// the sentence that renders with no override: the current season's first
+// sentence, or the first of the "At any Time" list when no season matches.
+function suggestedOpeningText(
+  groups: readonly SentenceGroup[],
+  ctx: ComposeContext,
+): string | undefined {
+  const specific = groups.find(
+    (group) =>
+      group.season !== "At any Time" &&
+      keepSeasonGroup(group.season, ctx) &&
+      group.texts.length > 0,
+  );
+  const anyTime = groups.find((group) => group.season === "At any Time");
+  return (specific ?? anyTime)?.texts[0];
+}
+
 // generalized section composer (opening sentences, confession, creed,
 // suffrages-a, and the single opening section of Noonday and Compline, which
 // carries the whole service):
@@ -307,6 +484,12 @@ function composeOpening(
   section: OfficeSection,
   ctx: ComposeContext,
 ): ComposedNode[] {
+  // Morning and Evening Prayer open with a menu of Scripture sentences. The
+  // generic composer below would print every matching group; the office
+  // wants one sentence by default.
+  if (section.key === "opening" && isOpeningSentenceSection(section)) {
+    return composeOpeningSentence(section, ctx);
+  }
   const nodes: ComposedNode[] = [];
   let keep = true; // season-group state for opening sentences
   let inOption = false;
@@ -538,9 +721,11 @@ function composeInvitatory(
   section: OfficeSection,
   ctx: ComposeContext,
 ): ComposedNode[] {
-  const pascha = ctx.slot.week.kind === "easter-week";
+  const choice = invitatoryChoice(ctx);
   const nodes: ComposedNode[] = [];
   let keep = true;
+  // before the invited psalm: the versicle and antiphon are kept. once a
+  // psalm heading appears, only the chosen psalm's text is kept.
   for (const item of section.items) {
     if (item.kind === "option") {
       // alternative antiphons after "or this": keep only the first.
@@ -555,7 +740,11 @@ function composeInvitatory(
     }
     if (item.kind === "rubric") {
       if (item.text.startsWith("or Psalm 95")) continue;
-      if (item.text.startsWith("In Easter Week")) continue;
+      if (item.text.startsWith("In Easter Week")) {
+        if (showRubrics(ctx.prefs))
+          nodes.push({ kind: "rubric", text: item.text });
+        continue;
+      }
       if (item.text.startsWith("Except in Lent, add")) {
         keep = ctx.season !== "lent" && ctx.season !== "holy-week";
         if (showRubrics(ctx.prefs))
@@ -574,8 +763,16 @@ function composeInvitatory(
       continue;
     }
     if (item.kind === "heading") {
+      const psalm = invitatoryPsalmOf(item.text);
+      if (psalm) {
+        keep = ctx.prefs.fullText || psalm === choice;
+        if (keep) {
+          const node = convert(item, ctx.prefs);
+          if (node) nodes.push(node);
+        }
+        continue;
+      }
       keep = true;
-      if (item.text.startsWith("Christ our Passover") !== pascha) continue;
       const node = convert(item, ctx.prefs);
       if (node) nodes.push(node);
       continue;
@@ -586,6 +783,30 @@ function composeInvitatory(
     }
   }
   return nodes;
+}
+
+function invitatoryChoice(
+  ctx: ComposeContext,
+): "venite" | "jubilate" | "pascha" {
+  const explicit = ctx.prefs.customization?.invitatory;
+  if (explicit) return explicit;
+  return defaultInvitatory(ctx);
+}
+
+// the printed default: Venite, replaced by Pascha nostrum in Easter Week.
+function defaultInvitatory(
+  ctx: ComposeContext,
+): "venite" | "jubilate" | "pascha" {
+  return ctx.slot.week.kind === "easter-week" ? "pascha" : "venite";
+}
+
+function invitatoryPsalmOf(
+  text: string,
+): "venite" | "jubilate" | "pascha" | undefined {
+  if (text.startsWith("Venite")) return "venite";
+  if (text.startsWith("Jubilate")) return "jubilate";
+  if (text.includes("Pascha nostrum")) return "pascha";
+  return undefined;
 }
 
 // the appointed psalms, text inline, followed by the office's conclusion.
@@ -614,49 +835,139 @@ function composePsalms(
 }
 
 // lesson references render as labeled placeholders until Bible text ships.
-// the reading framework is kept, and only as many canticles as there are
-// lessons, so the office does not dump the whole canticle menu.
+// readings and canticles interleave as the book directs: after the first
+// reading, after the second, then (with three lessons) the Gospel. The
+// office JSON's canticle menu is ignored; canticle text comes from the
+// catalog so the suggested table can choose it.
 function composeLessons(
   section: OfficeSection,
   ctx: ComposeContext,
 ): ComposedNode[] {
+  if (ctx.prefs.fullText) return composeLessonsFull(section, ctx);
+  const all = lessonList(ctx);
+  // a lesson's optional alternate belongs to the same reading slot, so it
+  // does not add a canticle.
+  const groups = ([1, 2, 3] as const)
+    .map((number) => all.filter((lesson) => lesson.number === number))
+    .filter((group) => group.length > 0);
+  const maxCanticles = Math.min(2, groups.length);
+
+  const nodes: ComposedNode[] = [];
+  let nextGroup = 0;
+  let canticleIndex = 0;
+  let inCanticleMenu = false;
+  for (const item of section.items) {
+    if (item.kind === "heading") {
+      // the first heading opens the printed canticle menu; from here the
+      // section's own headings and text are replaced by composed nodes.
+      inCanticleMenu = true;
+      canticleIndex += 1;
+      if (canticleIndex <= maxCanticles) {
+        const slot = canticleIndex === 1 ? 1 : 2;
+        const number = canticleNumberForSlot(ctx, slot, groups.length);
+        const passage =
+          number === null ? null : (canticlePassage(number) ?? null);
+        // the slot always emits a node so its control stays reachable even
+        // when the reader chose None
+        nodes.push({
+          kind: "canticle",
+          passage,
+          slot,
+          suggested: canticleIsSuggested(ctx, slot),
+        });
+      }
+      if (nextGroup < groups.length) {
+        for (const lesson of groups[nextGroup]) {
+          nodes.push({ kind: "reading", lesson });
+        }
+        nextGroup += 1;
+      }
+      continue;
+    }
+    if (inCanticleMenu) continue;
+    if (item.kind === "season") continue;
+    if (item.kind === "text" && item.text.includes("A Reading (Lesson) from")) {
+      if (groups.length > 0) {
+        for (const lesson of groups[0]) {
+          nodes.push({ kind: "reading", lesson });
+        }
+        nextGroup = 1;
+      }
+      continue;
+    }
+    const node = convert(item, ctx.prefs);
+    if (node) nodes.push(node);
+  }
+  return nodes;
+}
+
+// full text reference mode: the office as printed, with all lessons at the
+// reading placeholder and the whole canticle menu after them.
+function composeLessonsFull(
+  section: OfficeSection,
+  ctx: ComposeContext,
+): ComposedNode[] {
   const lessons = lessonList(ctx);
-  const maxCanticles = lessons.length;
   const nodes: ComposedNode[] = [];
   let region: "reading" | "canticles" = "reading";
-  let canticlesKept = 0;
-  let inKeptCanticle = false;
   for (const item of section.items) {
-    if (item.kind === "text" && item.text.includes("A Reading (Lesson) from")) {
-      if (lessons.length > 0) {
-        nodes.push({ kind: "lessons", lessons });
-        continue;
-      }
+    if (
+      item.kind === "text" &&
+      item.text.includes("A Reading (Lesson) from") &&
+      lessons.length > 0
+    ) {
+      nodes.push({ kind: "lessons", lessons });
+      continue;
     }
     if (item.kind === "heading") {
       region = "canticles";
-      if (canticlesKept < maxCanticles) {
-        canticlesKept += 1;
-        inKeptCanticle = true;
-        const node = convert(item, ctx.prefs);
-        if (node) nodes.push(node);
-      } else {
-        inKeptCanticle = false;
-      }
-      continue;
-    }
-    if (region === "reading") {
-      if (item.kind === "season") continue;
       const node = convert(item, ctx.prefs);
       if (node) nodes.push(node);
       continue;
     }
-    if (inKeptCanticle) {
-      const node = convert(item, ctx.prefs);
-      if (node) nodes.push(node);
-    }
+    if (region === "reading" && item.kind === "season") continue;
+    const node = convert(item, ctx.prefs);
+    if (node) nodes.push(node);
   }
   return nodes;
+}
+
+// the canticle for a reading slot: the reader's explicit choice (a number or
+// null for "None"), otherwise the p. 144 suggested canticle for the day.
+function canticleNumberForSlot(
+  ctx: ComposeContext,
+  slot: 1 | 2,
+  readingCount: number,
+): number | null {
+  const key = slot === 1 ? "canticle1" : "canticle2";
+  const override = ctx.prefs.customization?.[key];
+  if (override !== undefined) return override;
+  return suggestedCanticleForSlot(ctx, slot, readingCount);
+}
+
+function suggestedCanticleForSlot(
+  ctx: ComposeContext,
+  slot: 1 | 2,
+  readingCount: number,
+): number | null {
+  const [first, second] = suggestedCanticles({
+    office: isMorningOffice(ctx.officeId) ? "morning" : "evening",
+    rite: ctx.rite,
+    weekday: weekday(ctx.date),
+    season: ctx.season,
+    isFeast: ctx.holyDay !== undefined,
+  });
+  // if only one reading is used at Evening Prayer, the table's footnote
+  // directs the Magnificat instead of the weekday's first canticle.
+  if (slot === 1 && readingCount === 1 && isEveningOffice(ctx.officeId)) {
+    return ctx.rite === "One" ? 3 : 15;
+  }
+  return slot === 1 ? first : second;
+}
+
+function canticleIsSuggested(ctx: ComposeContext, slot: 1 | 2): boolean {
+  const key = slot === 1 ? "canticle1" : "canticle2";
+  return ctx.prefs.customization?.[key] === undefined;
 }
 
 function composeSuffragesB(
@@ -665,6 +976,9 @@ function composeSuffragesB(
 ): ComposedNode[] {
   const collect = collectNode(ctx);
   const nodes: ComposedNode[] = [];
+  // when A is the chosen suffrages, B's versicles are skipped and only the
+  // shared tail (collects, mission prayer, thanksgiving, closing) runs.
+  let inTail = suffragesChoice(ctx) === "b";
   // Within each option menu only the first alternative (text + its response)
   // is kept; occasional collects are trimmed to the day-appropriate ones.
   let menu: "prayers" | "mission" | "thanksgiving" | "closing" = "prayers";
@@ -673,6 +987,18 @@ function composeSuffragesB(
   let collectTitle: string | undefined;
   let collectBuf: string[] = [];
   for (const item of section.items) {
+    if (!inTail) {
+      if (
+        item.kind === "rubric" &&
+        /The Officiant then says one or more of the following Collects/i.test(
+          item.text,
+        )
+      ) {
+        inTail = true;
+      } else {
+        continue;
+      }
+    }
     if (item.kind === "rubric") {
       if (menu === "thanksgiving") firstKept = false;
       const text = item.text;

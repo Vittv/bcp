@@ -14,10 +14,12 @@ import {
   Text,
   View,
 } from "react-native";
+import { Segmented } from "../../components/office/OfficeControls";
 import { OfficeHeader } from "../../components/office/OfficeHeader";
 import { OfficeView } from "../../components/office/OfficeView";
 import { Chevron } from "../../components/shell/Chevron";
 import { useSeasonColorMap } from "../../components/shell/SeasonDot";
+import { useOfficeSettings } from "../../context/OfficeSettingsContext";
 import { useTheme } from "../../context/ThemeContext";
 import { addDays, colorFor, daysInMonth, weekday } from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
@@ -522,21 +524,51 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
   base: RefOfficeBase;
 }) {
   const { officeDate, officeRite } = useReference();
+  const { showRubrics, showSpeakers, customizationFor } = useOfficeSettings();
+  const [fullText, setFullText] = useState(false);
   const officeId = refOfficeId(base, officeRite);
+  const customization = customizationFor(officeId);
   const document = useMemo(
     () =>
       composeOffice(officeDate, officeId, {
         ...DEFAULT_PREFS,
+        rite: officeRite,
         personalMode: false,
-        showRubrics: true,
+        showRubrics,
+        fullText,
+        customization,
       }),
-    [officeDate, officeId],
+    [officeDate, officeId, officeRite, showRubrics, fullText, customization],
   );
   return (
     <>
+      {/* the reference page can print the office as the book does, with the
+          whole opening menu and the canticle table rather than one pick */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          marginBottom: 4,
+        }}
+      >
+        <Segmented
+          value={fullText ? "full" : "reading"}
+          options={[
+            { id: "reading", label: "Reading" },
+            { id: "full", label: "Full text" },
+          ]}
+          accessibilityLabel="Office text mode"
+          onChange={(id) => setFullText(id === "full")}
+        />
+      </View>
       {/* same masthead as Today: name, date, feast line */}
       <OfficeHeader document={document} />
-      <OfficeView document={document} showRubrics showSpeakers />
+      <OfficeView
+        document={document}
+        showRubrics={showRubrics}
+        showSpeakers={showSpeakers}
+        fullText={fullText}
+      />
     </>
   );
 });

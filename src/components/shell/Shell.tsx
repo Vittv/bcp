@@ -490,6 +490,7 @@ export function Shell() {
     setDevotions,
     rite,
     setRite,
+    customizationFor,
   } = useOfficeSettings();
   const scrollRef = useRef<HTMLDivElement>(null);
   const hintsRef = useRef<HintHandle>(null);
@@ -1113,16 +1114,14 @@ export function Shell() {
     };
   }, [modal, page, date, goToPage, isMobile]);
 
-  const document = composeOffice(
-    date,
-    devotions ? DEVOTIONS[tab] : dailyOfficeId(tab, rite),
-    {
-      ...DEFAULT_PREFS,
-      rite,
-      personalMode: false,
-      showRubrics,
-    },
-  );
+  const officeId = devotions ? DEVOTIONS[tab] : dailyOfficeId(tab, rite);
+  const document = composeOffice(date, officeId, {
+    ...DEFAULT_PREFS,
+    rite,
+    personalMode: false,
+    showRubrics,
+    customization: customizationFor(officeId),
+  });
   // the app's season context (top bar and status bar) always reflects the
   // real current date, never a date a page happened to be scrolled to; only
   // the Today office body (`document` above) follows the stepped office date

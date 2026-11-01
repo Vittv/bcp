@@ -1,13 +1,22 @@
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Text, View } from "react-native";
+import { useOfficeSettings } from "../../context/OfficeSettingsContext";
 import { useTranslation } from "../../context/TranslationContext";
 import { getScripturePassagesFromDolRef } from "../../lib/content/bible";
-import type { KjvPassage, OfficeSpeaker } from "../../lib/content/types";
+import { canticleTitle } from "../../lib/content/canticles";
+import type {
+  CanticlePassage,
+  KjvPassage,
+  OfficeId,
+  OfficeSpeaker,
+} from "../../lib/content/types";
 import { CHROME_FONT, SERIF_FONT, SERIF_ITALIC_FONT } from "../../lib/fonts";
 import type {
   ComposedLesson,
   ComposedNode,
   ComposedSection,
+  InvitatoryChoice,
+  OfficeChoices,
   OfficeDocument,
 } from "../../lib/office/types";
 import {
@@ -16,6 +25,13 @@ import {
 } from "../../lib/theme/themedStyles";
 import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { MentionedText } from "./MentionedText";
+import {
+  ChoiceMenu,
+  ControlChip,
+  type ControlOption,
+  MenuAnchor,
+  Segmented,
+} from "./OfficeControls";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 
@@ -30,6 +46,10 @@ type NodeViewProps = {
   showRubrics: boolean;
   showSpeakers: boolean;
   todaySlug?: string;
+  officeId: OfficeId;
+  rite: "One" | "Two" | null;
+  choices: OfficeChoices;
+  fullText: boolean;
 };
 
 function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
@@ -71,11 +91,271 @@ function LessonRow({ lesson }: { lesson: ComposedLesson }) {
   );
 }
 
+function truncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
+function canticleOptions(
+  suggestedNumber: number | null,
+  rite: "One" | "Two" | null,
+): ControlOption[] {
+  const options: ControlOption[] = [];
+  const suggestedTitle = suggestedNumber
+    ? `${suggestedNumber}. ${canticleTitle(suggestedNumber) ?? ""}`
+    : "None";
+  options.push({
+    id: "suggested",
+    label: `Suggested · ${suggestedTitle}`,
+    menuLabel: suggestedTitle,
+    group: "Suggested",
+  });
+  const all = Array.from({ length: 21 }, (_, i) => i + 1);
+  // the rite's own set first, then the other set, so the common choices are
+  // at the top without hiding the rest
+  const traditional = all.filter((n) => n <= 7);
+  const contemporary = all.filter((n) => n > 7);
+  const first = rite === "One" ? traditional : contemporary;
+  const second = rite === "One" ? contemporary : traditional;
+  for (const number of first) {
+    options.push({
+      id: String(number),
+      label: `${number}. ${canticleTitle(number) ?? ""}`,
+      group: rite === "One" ? "Rite I" : "Rite II",
+    });
+  }
+  for (const number of second) {
+    options.push({
+      id: String(number),
+      label: `${number}. ${canticleTitle(number) ?? ""}`,
+      group: rite === "One" ? "Rite II" : "Rite I",
+    });
+  }
+  options.push({ id: "none", label: "None", group: "Other" });
+  return options;
+}
+
+function CanticleView({
+  passage,
+  slot,
+  suggestedNumber,
+  officeId,
+  rite,
+  fullText,
+}: {
+  passage: CanticlePassage | null;
+  slot: 1 | 2;
+  suggestedNumber: number | null;
+  officeId: OfficeId;
+  rite: "One" | "Two" | null;
+  fullText: boolean;
+}) {
+  const styles = useThemedStyles(officeViewStyles);
+  const subheading = useSubheading();
+  const { customizationFor, setOfficeChoice } = useOfficeSettings();
+  const customization = customizationFor(officeId);
+  const key = slot === 1 ? "canticle1" : "canticle2";
+  const chosen = customization[key];
+  const value =
+    chosen === undefined
+      ? "suggested"
+      : chosen === null
+        ? "none"
+        : String(chosen);
+  const options = canticleOptions(suggestedNumber, rite);
+  return (
+    <MenuAnchor style={styles.canticleBlock}>
+      {fullText ? null : (
+        <MenuAnchor style={styles.canticleControlRow}>
+          <ChoiceMenu
+            value={value}
+            options={options}
+            label={`Canticle for reading ${slot}`}
+            accessibilityLabel={`Canticle after reading ${slot}`}
+            onChange={(id) =>
+              setOfficeChoice(officeId, {
+                [key]:
+                  id === "suggested"
+                    ? undefined
+                    : id === "none"
+                      ? null
+                      : Number(id),
+              })
+            }
+          />
+        </MenuAnchor>
+      )}
+      {passage ? (
+        <>
+          <Text style={[subheading, styles.canticleHeading]}>
+            {fullText ? `Canticle ${passage.number}. ` : ""}
+            {passage.title}
+          </Text>
+          {passage.latin ? (
+            <Text style={styles.canticleLatin}>{passage.latin}</Text>
+          ) : null}
+          {passage.sections.map((section, i) => (
+            // sections are fixed liturgical text without stable ids
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed liturgical text
+            <View key={`${section.title ?? "section"}-${i}`}>
+              {section.title ? (
+                <Text style={styles.canticleSection}>{section.title}</Text>
+              ) : null}
+              {section.verses.map((verse, j) => (
+                <Text
+                  // verses are fixed text with no stable id; the index is the key
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed liturgical text
+                  key={j}
+                  style={styles.canticleVerse}
+                >
+                  {verse}
+                </Text>
+              ))}
+            </View>
+          ))}
+        </>
+      ) : (
+        <Text style={styles.canticleNone}>No canticle after this reading.</Text>
+      )}
+    </MenuAnchor>
+  );
+}
+
+const INVITATORY_LABEL: Record<InvitatoryChoice, string> = {
+  venite: "Venite (Psalm 95)",
+  jubilate: "Jubilate (Psalm 100)",
+  pascha: "Pascha nostrum",
+};
+
+// the inline control that belongs to one office section. the controls write
+// straight to the reader's per-office customization; the composer recomputes
+// the document on the next render.
+function SectionControl({
+  sectionKey,
+  officeId,
+  choices,
+}: {
+  sectionKey: ComposedSection["key"];
+  officeId: OfficeId;
+  choices: OfficeChoices;
+}) {
+  const { customizationFor, setOfficeChoice } = useOfficeSettings();
+  const customization = customizationFor(officeId);
+
+  switch (sectionKey) {
+    case "opening": {
+      if (choices.openingGroups.length === 0) return null;
+      const options: ControlOption[] = [
+        {
+          id: "suggested",
+          label: choices.openingSuggested
+            ? `Suggested · ${truncate(choices.openingSuggested, 52)}`
+            : "Suggested",
+          group: "Suggested",
+        },
+      ];
+      const seen = new Set<string>();
+      for (const group of choices.openingGroups) {
+        for (const text of group.texts) {
+          if (seen.has(text)) continue;
+          seen.add(text);
+          options.push({
+            id: text,
+            label: truncate(text, 64),
+            group: group.season,
+          });
+        }
+      }
+      options.push({ id: "all", label: "All sentences", group: "Other" });
+      return (
+        <ChoiceMenu
+          value={customization.opening ?? "suggested"}
+          options={options}
+          label="Opening Sentence"
+          accessibilityLabel="Opening Sentence"
+          fullWidth
+          onChange={(id) =>
+            setOfficeChoice(officeId, {
+              opening: id === "suggested" ? undefined : id,
+            })
+          }
+        />
+      );
+    }
+    case "invitatory":
+      return (
+        <ChoiceMenu
+          value={customization.invitatory ?? "suggested"}
+          options={[
+            {
+              id: "suggested",
+              label: `Suggested · ${INVITATORY_LABEL[choices.invitatorySuggested]}`,
+              menuLabel: INVITATORY_LABEL[choices.invitatorySuggested],
+              group: "Suggested",
+            },
+            { id: "venite", label: INVITATORY_LABEL.venite, group: "Psalms" },
+            { id: "jubilate", label: INVITATORY_LABEL.jubilate },
+            { id: "pascha", label: INVITATORY_LABEL.pascha },
+          ]}
+          label="Invitatory"
+          accessibilityLabel="Invitatory Psalm"
+          onChange={(id) =>
+            setOfficeChoice(officeId, {
+              invitatory:
+                id === "venite" || id === "jubilate" || id === "pascha"
+                  ? id
+                  : undefined,
+            })
+          }
+        />
+      );
+    case "psalms":
+      return (
+        <Segmented
+          value={customization.psalmCycle ?? "office"}
+          options={[
+            { id: "office", label: "Office" },
+            { id: "psalter30", label: "30-Day" },
+          ]}
+          accessibilityLabel="Psalm source"
+          onChange={(id) =>
+            setOfficeChoice(officeId, {
+              psalmCycle: id === "psalter30" ? "psalter30" : "office",
+            })
+          }
+        />
+      );
+    case "suffrages-a":
+    case "suffrages-b":
+      return (
+        <Segmented
+          value={customization.suffrages ?? choices.suffragesSuggested}
+          options={[
+            { id: "a", label: "A" },
+            { id: "b", label: "B" },
+          ]}
+          accessibilityLabel="Suffrages"
+          onChange={(id) =>
+            setOfficeChoice(officeId, {
+              suffrages: id === "a" ? "a" : "b",
+            })
+          }
+        />
+      );
+    default:
+      return null;
+  }
+}
+
 function NodeView({
   node,
   showRubrics,
   showSpeakers,
   todaySlug,
+  officeId,
+  rite,
+  choices,
+  fullText,
 }: NodeViewProps) {
   const styles = useThemedStyles(officeViewStyles);
   const subheading = useSubheading();
@@ -118,6 +398,19 @@ function NodeView({
           ))}
         </View>
       );
+    case "reading":
+      return <LessonRow lesson={node.lesson} />;
+    case "canticle":
+      return (
+        <CanticleView
+          passage={node.passage}
+          slot={node.slot}
+          suggestedNumber={choices.canticleSuggested[node.slot - 1]}
+          officeId={officeId}
+          rite={rite}
+          fullText={fullText}
+        />
+      );
     case "collect":
       return (
         <View style={styles.collectBlock}>
@@ -156,19 +449,49 @@ function SectionView({
   showRubrics,
   showSpeakers,
   todaySlug,
+  officeId,
+  rite,
+  choices,
+  fullText,
+  control,
+  fullWidthControl = false,
 }: {
   section: ComposedSection;
   showRubrics: boolean;
   showSpeakers: boolean;
   todaySlug?: string;
+  officeId: OfficeId;
+  rite: "One" | "Two" | null;
+  choices: OfficeChoices;
+  fullText: boolean;
+  control?: ReactNode;
+  /** a heading-less control that should span the reading column */
+  fullWidthControl?: boolean;
 }) {
   const styles = useThemedStyles(officeViewStyles);
   const heading = useSectionHeading();
   if (section.nodes.length === 0) return null;
   const keys = sectionKeys(section.nodes);
   return (
-    <View style={styles.section}>
-      {section.heading ? <Text style={heading}>{section.heading}</Text> : null}
+    <MenuAnchor style={styles.section}>
+      {section.heading ? (
+        control ? (
+          <MenuAnchor style={styles.headingRow}>
+            <Text style={[heading, styles.headingText]}>{section.heading}</Text>
+            {control}
+          </MenuAnchor>
+        ) : (
+          <Text style={heading}>{section.heading}</Text>
+        )
+      ) : control ? (
+        <MenuAnchor
+          style={
+            fullWidthControl ? styles.controlOnlyRowFull : styles.controlOnlyRow
+          }
+        >
+          {control}
+        </MenuAnchor>
+      ) : null}
       {section.nodes.map((node, i) => (
         <NodeView
           key={keys[i]}
@@ -176,9 +499,13 @@ function SectionView({
           showRubrics={showRubrics}
           showSpeakers={showSpeakers}
           todaySlug={todaySlug}
+          officeId={officeId}
+          rite={rite}
+          choices={choices}
+          fullText={fullText}
         />
       ))}
-    </View>
+    </MenuAnchor>
   );
 }
 
@@ -186,11 +513,34 @@ export function OfficeView({
   document,
   showRubrics,
   showSpeakers,
+  fullText = false,
 }: {
   document: OfficeDocument;
   showRubrics: boolean;
   showSpeakers: boolean;
+  fullText?: boolean;
 }) {
+  const styles = useThemedStyles(officeViewStyles);
+  const { customizationFor, resetOffice } = useOfficeSettings();
+  const customization = customizationFor(document.office);
+  const hasSuffragesA = document.sections.some(
+    (section) => section.key === "suffrages-a",
+  );
+
+  const controlFor = (key: ComposedSection["key"]) => {
+    // full text prints the book's own menus, so the pickers would have
+    // nothing to act on
+    if (fullText && (key === "opening" || key === "invitatory")) return null;
+    if (key === "suffrages-b" && hasSuffragesA) return null;
+    return (
+      <SectionControl
+        sectionKey={key}
+        officeId={document.office}
+        choices={document.choices}
+      />
+    );
+  };
+
   return (
     <View>
       {document.sections.map((section) => (
@@ -200,8 +550,23 @@ export function OfficeView({
           showRubrics={showRubrics}
           showSpeakers={showSpeakers}
           todaySlug={document.slot.holyDay}
+          officeId={document.office}
+          rite={document.rite}
+          choices={document.choices}
+          fullText={fullText}
+          control={controlFor(section.key)}
+          fullWidthControl={section.key === "opening"}
         />
       ))}
+      {Object.keys(customization).length > 0 ? (
+        <View style={styles.resetRow}>
+          <ControlChip
+            label="Reset this office"
+            accessibilityLabel="Reset this office"
+            onPress={() => resetOffice(document.office)}
+          />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -218,6 +583,10 @@ function nodeKey(node: ComposedNode): string {
       return `p:${node.citation}`;
     case "lessons":
       return `l:${node.lessons.map((l) => l.ref).join("|")}`;
+    case "reading":
+      return `rd:${node.lesson.label}:${node.lesson.ref}`;
+    case "canticle":
+      return `cn:${node.slot}:${node.passage?.number ?? "none"}`;
     case "collect":
       return `c:${node.passage.text}`;
     case "fixed-collect":
@@ -228,6 +597,39 @@ function nodeKey(node: ComposedNode): string {
 const officeViewStyles = defineThemedStyles({
   section: {
     marginBottom: 20,
+  },
+  headingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginTop: 18,
+    marginBottom: 8,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border-content)",
+  },
+  headingText: {
+    flexShrink: 1,
+    marginTop: 0,
+    marginBottom: 0,
+    paddingBottom: 0,
+    borderBottomWidth: 0,
+  },
+  controlOnlyRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  controlOnlyRowFull: {
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  resetRow: {
+    marginTop: 4,
+    marginBottom: 24,
+    alignItems: "flex-start",
   },
   rubric: {
     fontFamily: SERIF_ITALIC_FONT,
@@ -282,6 +684,52 @@ const officeViewStyles = defineThemedStyles({
     lineHeight: 20,
     color: "var(--text-secondary)",
     marginTop: 4,
+  },
+  canticleBlock: {
+    marginTop: 26,
+    marginBottom: 12,
+    paddingLeft: 4,
+  },
+  // the title takes the shared subheading voice (the same one Venite and
+  // Jubilate use); the block's own top margin opens it, so the subheading's
+  // default leading space is dropped
+  canticleHeading: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  canticleLatin: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 14,
+    color: "var(--text-secondary)",
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  canticleSection: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "600",
+    fontSize: 11,
+    letterSpacing: 0.4,
+    color: "var(--text-secondary)",
+    marginTop: 10,
+    marginBottom: 2,
+  },
+  canticleVerse: {
+    fontFamily: SERIF_FONT,
+    fontSize: 17,
+    lineHeight: 28,
+    color: "var(--text)",
+    marginTop: 6,
+  },
+  canticleControlRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginBottom: 2,
+  },
+  canticleNone: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 15,
+    lineHeight: 24,
+    color: "var(--text-secondary)",
   },
   collectBlock: {
     marginTop: 10,
