@@ -1,16 +1,10 @@
 // the UI scale axis: one multiplier drives a whole-app zoom. the scale is
 // stored as the actual multiplier (1 = the original app size), while the
-// settings UI talks in percentages of that size. desktops open at 100%,
-// small screens open a step larger (see MOBILE_DEFAULT_UI_SCALE_PERCENT)
-// because they benefit from more legible chrome.
+// settings UI talks in percentages of that size. every device opens at 100%.
 //
 // kept as plain numbers, no asset imports, so it stays importable under bun test.
 
 export const DEFAULT_UI_SCALE = 1;
-
-// small screens default to a larger step than desktops, for readability;
-// the settings slider lets anyone tune it from there
-export const MOBILE_DEFAULT_UI_SCALE_PERCENT = 120;
 
 // the one UI-scale ladder, mirrored on the settings slider: a short set of
 // breakpoints rather than a continuous drag, the way the font-size ladder
@@ -28,14 +22,6 @@ export const MAX_UI_SCALE = percentToUiScale(
 // actual multiplier -> the percentage the setting shows (1 -> 100)
 export function uiScaleToPercent(scale: number): number {
   return Math.round((scale / DEFAULT_UI_SCALE) * 100);
-}
-
-// the out-of-box percentage for a device: small screens open a step larger,
-// desktops at the original size. used both for the first run and for Reset.
-export function defaultUiScalePercent(isSmallScreen: boolean): number {
-  return isSmallScreen
-    ? MOBILE_DEFAULT_UI_SCALE_PERCENT
-    : uiScaleToPercent(DEFAULT_UI_SCALE);
 }
 
 // the percentage the setting shows -> the actual multiplier (100 -> 1)

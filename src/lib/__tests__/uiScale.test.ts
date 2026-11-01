@@ -2,10 +2,8 @@ import { describe, expect, it } from "bun:test";
 import {
   clampUiScale,
   DEFAULT_UI_SCALE,
-  defaultUiScalePercent,
   MAX_UI_SCALE,
   MIN_UI_SCALE,
-  MOBILE_DEFAULT_UI_SCALE_PERCENT,
   nearestUiScalePercent,
   percentToUiScale,
   snapUiScale,
@@ -18,7 +16,6 @@ describe("UI scale ladder", () => {
     const sorted = [...UI_SCALE_PERCENTAGES].sort((a, b) => a - b);
     expect(UI_SCALE_PERCENTAGES).toEqual(sorted);
     expect(UI_SCALE_PERCENTAGES).toContain(100);
-    expect(UI_SCALE_PERCENTAGES).toContain(MOBILE_DEFAULT_UI_SCALE_PERCENT);
     expect(uiScaleToPercent(DEFAULT_UI_SCALE)).toBe(100);
   });
 
@@ -41,11 +38,6 @@ describe("UI scale conversions", () => {
 
   it("maps 100% to the default multiplier", () => {
     expect(percentToUiScale(100)).toBe(DEFAULT_UI_SCALE);
-  });
-
-  it("offers the first-run default for each screen size", () => {
-    expect(defaultUiScalePercent(false)).toBe(100);
-    expect(defaultUiScalePercent(true)).toBe(MOBILE_DEFAULT_UI_SCALE_PERCENT);
   });
 });
 

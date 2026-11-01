@@ -39,13 +39,7 @@ import {
   fontPxToScale,
   scaleToFontPx,
 } from "../lib/typography/sizes";
-import {
-  clampUiScale,
-  DEFAULT_UI_SCALE,
-  defaultUiScalePercent,
-  percentToUiScale,
-  snapUiScale,
-} from "../lib/uiScale";
+import { clampUiScale, DEFAULT_UI_SCALE, snapUiScale } from "../lib/uiScale";
 
 export type { ResolvedTheme, ThemeMode };
 
@@ -131,13 +125,6 @@ function getSystemTheme(): ResolvedTheme {
     : "light";
 }
 
-// the app's 740px small-screen breakpoint, used to pick the first-run ui scale
-function isMobileViewport(): boolean {
-  if (Platform.OS !== "web") return true;
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(max-width: 740px)").matches;
-}
-
 function webStorage(): Storage | null {
   if (Platform.OS !== "web") return null;
   if (typeof localStorage === "undefined") return null;
@@ -178,8 +165,8 @@ function loadUiScale(): number {
       if (!Number.isNaN(n)) return snapUiScale(clampUiScale(n));
     }
   }
-  // first run: desktops at 100%, small screens a step larger for legibility
-  return percentToUiScale(defaultUiScalePercent(isMobileViewport()));
+  // first run: the original size
+  return DEFAULT_UI_SCALE;
 }
 
 function persistThemeMode(mode: ThemeMode) {

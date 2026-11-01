@@ -6,7 +6,6 @@ import {
   type StyleProp,
   Text,
   TextInput,
-  useWindowDimensions,
   View,
   type ViewStyle,
 } from "react-native";
@@ -65,14 +64,12 @@ import {
   MIN_FONT_PX,
 } from "../lib/typography/sizes";
 import {
-  defaultUiScalePercent,
-  MOBILE_DEFAULT_UI_SCALE_PERCENT,
+  DEFAULT_UI_SCALE,
   percentToUiScale,
   UI_SCALE_PERCENTAGES,
   uiScaleToPercent,
 } from "../lib/uiScale";
 import { useUpdateStatus } from "../lib/updater";
-import { WIDTH_MOBILE } from "../lib/viewport";
 import {
   WINDOW_CONTROL_OPTIONS,
   type WindowControlStyleId,
@@ -679,9 +676,6 @@ function AppearanceSettings({
   setUiScale,
 }: AppearanceSettingsProps) {
   const styles = useThemedStyles(styleDef);
-  // reset to the first-run default: 120% on small screens, 100% elsewhere
-  const { width } = useWindowDimensions();
-  const smallScreen = Platform.OS !== "web" || width < WIDTH_MOBILE;
   return (
     <>
       <View style={styles.section}>
@@ -714,9 +708,7 @@ function AppearanceSettings({
               >{`${uiScaleToPercent(uiScale)}%`}</Text>
             </View>
             <Pressable
-              onPress={() =>
-                setUiScale(percentToUiScale(defaultUiScalePercent(smallScreen)))
-              }
+              onPress={() => setUiScale(DEFAULT_UI_SCALE)}
               style={({ hovered }) => [
                 styles.reset,
                 hovered && styles.resetHover,
@@ -736,7 +728,7 @@ function AppearanceSettings({
             />
           </View>
           <Text style={styles.settingDescription}>
-            {`Scales the whole interface. 100% as default; mobile at ${MOBILE_DEFAULT_UI_SCALE_PERCENT}% for readability.`}
+            Scales the whole interface. 100% is the default.
           </Text>
         </View>
       ) : null}
