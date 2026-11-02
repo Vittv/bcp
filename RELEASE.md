@@ -1,11 +1,14 @@
 ## Features
 
-- desktop: choose the window-control style (System, macOS, Windows, Linux, or Hidden); the old Show/Hide preference migrates automatically.
+- office: customize each office inline: pick the opening sentence, invitatory psalm, psalm cycle, suffrages set, and both canticle slots, and reset one office without touching the others.
+- offices: share those same choices on the reference page and read between Reading and Full text modes.
 
 ## Bug Fixes
 
-- changelog: tighten bullet spacing.
-- shell: keep the font-size readout visible on mobile.
-- shell: shrink the middle-click autoscroll indicator.
+- office: link collect titles to their holy day, so All Saints' Day opens the right feast even when the printed title differs from the lectionary's.
+- office: give the collect of the day, the General Thanksgiving, and the Chrysostom prayer their own heading voice instead of reading as rubrics.
+- office: narrow the invitatory dropdown to fit its short psalm names.
+- theme: use a fainter border on dropdown popup windows.
+- settings: start every device at a 100% UI scale.
 
-**Full Changelog**: <https://github.com/Vittv/bcp/compare/v0.6.0...v0.6.1>
+**Full Changelog**: <https://github.com/Vittv/bcp/compare/v0.6.1...v0.6.2>
