@@ -123,6 +123,7 @@ export function ChoiceMenu({
   label,
   accessibilityLabel,
   fullWidth = false,
+  narrow = false,
 }: {
   value: string;
   options: readonly ControlOption[];
@@ -132,6 +133,8 @@ export function ChoiceMenu({
   accessibilityLabel: string;
   /** stretch the trigger, and its menu, to the whole column */
   fullWidth?: boolean;
+  /** a short-menu control (invitatory) that needs nowhere near the full width */
+  narrow?: boolean;
 }) {
   const styles = useThemedStyles(officeControlStyles);
   const { compact } = useViewport();
@@ -163,9 +166,13 @@ export function ChoiceMenu({
         styles.menuWrap,
         fullWidth
           ? styles.menuWrapFull
-          : compact
-            ? styles.menuWrapCompact
-            : styles.menuWrapWide,
+          : narrow
+            ? compact
+              ? styles.menuWrapNarrowCompact
+              : styles.menuWrapNarrow
+            : compact
+              ? styles.menuWrapCompact
+              : styles.menuWrapWide,
       ]}
     >
       <Pressable
@@ -305,6 +312,13 @@ const officeControlStyles = defineThemedStyles({
   },
   menuWrapCompact: {
     width: 210,
+  },
+  // the invitatory's psalm names need nowhere near the others' room
+  menuWrapNarrow: {
+    width: 150,
+  },
+  menuWrapNarrowCompact: {
+    width: 130,
   },
   trigger: {
     flexDirection: "row",

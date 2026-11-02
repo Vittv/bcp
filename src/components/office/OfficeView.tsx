@@ -285,12 +285,12 @@ function SectionControl({
     case "invitatory":
       return (
         <ChoiceMenu
+          narrow
           value={customization.invitatory ?? "suggested"}
           options={[
             {
               id: "suggested",
-              label: `Suggested · ${INVITATORY_LABEL[choices.invitatorySuggested]}`,
-              menuLabel: INVITATORY_LABEL[choices.invitatorySuggested],
+              label: INVITATORY_LABEL[choices.invitatorySuggested],
               group: "Suggested",
             },
             { id: "venite", label: INVITATORY_LABEL.venite, group: "Psalms" },
