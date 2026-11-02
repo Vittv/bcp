@@ -47,6 +47,20 @@ function psalmCitations(doc: OfficeDocument): string[] {
   );
 }
 
+function rubricTexts(doc: OfficeDocument): string[] {
+  // SAFETY: nodesOf filters by kind, so every element has kind "rubric".
+  return nodesOf(doc, "rubric").map(
+    (n) => (n as Extract<ComposedNode, { kind: "rubric" }>).text,
+  );
+}
+
+function headingTexts(doc: OfficeDocument): string[] {
+  // SAFETY: nodesOf filters by kind, so every element has kind "heading".
+  return nodesOf(doc, "heading").map(
+    (n) => (n as Extract<ComposedNode, { kind: "heading" }>).text,
+  );
+}
+
 function lessonRefsOf(doc: OfficeDocument): string[] {
   return doc.sections.flatMap((s) =>
     s.nodes.flatMap((n) =>
@@ -300,6 +314,45 @@ describe("composeOffice: the evening boundary", () => {
     );
     expect(collectOf(sunday)?.passage.title).toBe("Proper 24");
     expect(collectOf(sunday)?.slug).toBeUndefined();
+  });
+
+  test("the collect slot and closing prayers rank as headings", () => {
+    const doc = composeOffice(
+      { year: 2026, month: 11, day: 1 },
+      "morning-rite-two",
+    );
+
+    // the collect slot heading sits directly above the day collect
+    const suffrages = section(doc, "suffrages-b");
+    expect(suffrages).toBeDefined();
+    const tail = suffrages?.nodes ?? [];
+    const collectIdx = tail.findIndex((n) => n.kind === "collect");
+    expect(collectIdx).toBeGreaterThan(0);
+    expect(tail[collectIdx - 1]).toMatchObject({
+      kind: "heading",
+      text: "The Collect of the Day",
+    });
+
+    // the book prints these as rubrics, but they are block titles
+    const headings = headingTexts(doc);
+    expect(headings).toContain("The General Thanksgiving");
+    expect(headings).toContain("A Prayer of St. Chrysostom");
+    const rubrics = rubricTexts(doc);
+    expect(rubrics).not.toContain("The General Thanksgiving");
+    expect(rubrics).not.toContain("A Prayer of St. Chrysostom");
+  });
+
+  test("headings keep their titles when rubrics are hidden", () => {
+    const doc = composeOffice(
+      { year: 2026, month: 11, day: 1 },
+      "morning-rite-two",
+      { ...DEFAULT_PREFS, showRubrics: false },
+    );
+    const headings = headingTexts(doc);
+    expect(headings).toContain("The Collect of the Day");
+    expect(headings).toContain("The General Thanksgiving");
+    expect(headings).toContain("A Prayer of St. Chrysostom");
+    expect(rubricTexts(doc)).toHaveLength(0);
   });
 
   test("Morning Prayer on an eve date stays an ordinary weekday", () => {

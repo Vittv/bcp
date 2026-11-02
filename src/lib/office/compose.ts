@@ -350,6 +350,12 @@ function dayCollectTitle(weekdayOfDate: number): string | undefined {
 
 const OCCASIONAL_COLLECTS = new Set(["A Collect for Peace"]);
 
+// the closing prayers the book titles with a rubric
+const PRAYER_TITLES = new Set([
+  "The General Thanksgiving",
+  "A Prayer of St. Chrysostom",
+]);
+
 function keepOccasionalCollect(title: string, weekdayOfDate: number): boolean {
   return (
     OCCASIONAL_COLLECTS.has(title) || title === dayCollectTitle(weekdayOfDate)
@@ -1002,13 +1008,23 @@ function composeSuffragesB(
     if (item.kind === "rubric") {
       if (menu === "thanksgiving") firstKept = false;
       const text = item.text;
+      // block titles the book prints as rubrics: the collect slot and the
+      // closing prayers rank as headings, never hidden as personal-mode rubrics
+      if (PRAYER_TITLES.has(text)) {
+        flushCollectBuf(nodes, collectBuf, collectTitle);
+        collectBuf = [];
+        collectTitle = undefined;
+        nodes.push({ kind: "heading", text });
+        continue;
+      }
       if (text === "The Collect of the Day") {
         flushCollectBuf(nodes, collectBuf, collectTitle);
         collectBuf = [];
         collectTitle = undefined;
-        if (showRubrics(ctx.prefs))
-          nodes.push({ kind: "rubric", text: item.text });
-        if (collect) nodes.push(collect);
+        if (collect) {
+          nodes.push({ kind: "heading", text: item.text });
+          nodes.push(collect);
+        }
         continue;
       }
       if (text.startsWith("Then, unless the Eucharist")) {

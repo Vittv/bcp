@@ -414,7 +414,7 @@ function NodeView({
     case "collect":
       return (
         <View style={styles.collectBlock}>
-          <Text style={styles.collectTitle}>
+          <Text style={styles.collectLabel}>
             <MentionedText
               text={node.passage.title}
               todaySlug={todaySlug}
@@ -428,7 +428,7 @@ function NodeView({
       return (
         <View style={styles.fixedCollectBlock}>
           {node.title ? (
-            <Text style={styles.fixedCollectTitle}>
+            <Text style={subheading}>
               <MentionedText text={node.title} todaySlug={todaySlug} />
             </Text>
           ) : null}
@@ -735,16 +735,19 @@ const officeViewStyles = defineThemedStyles({
     lineHeight: 24,
     color: "var(--text-secondary)",
   },
+  // the day collect's block follows its subheading node ("The Collect of the
+  // Day"), so the block carries no top margin of its own; the proper title
+  // rides under the heading as the label voice
   collectBlock: {
-    marginTop: 10,
     marginBottom: 10,
     paddingLeft: 4,
   },
-  collectTitle: {
+  collectLabel: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 14,
-    color: "var(--accent)",
-    marginBottom: 4,
+    fontSize: 15,
+    lineHeight: 23,
+    color: "var(--text-secondary)",
+    marginBottom: 2,
   },
   collectText: {
     fontFamily: SERIF_FONT,
@@ -752,16 +755,10 @@ const officeViewStyles = defineThemedStyles({
     lineHeight: 28,
     color: "var(--text)",
   },
+  // the subheading on the title opens the block, so the wrapper stays margin-free
   fixedCollectBlock: {
-    marginTop: 10,
     marginBottom: 10,
     paddingLeft: 4,
-  },
-  fixedCollectTitle: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 14,
-    color: "var(--accent)",
-    marginBottom: 4,
   },
   fixedCollectText: {
     fontFamily: SERIF_FONT,
