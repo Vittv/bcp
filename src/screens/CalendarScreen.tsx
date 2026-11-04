@@ -112,9 +112,8 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
   const cellLabelSize = narrowCells ? 9 : compactCells ? 10 : 12;
   const cellLabelLineHeight = narrowCells ? 12 : compactCells ? 13 : 15;
   const cellTextSize = narrowCells ? 11 : compactCells ? 12 : 13;
-  const chipPadH = narrowCells ? 2 : compactCells ? 3 : 4;
   const chipPadV = narrowCells ? 0 : 1;
-  const cellLabelGap = narrowCells ? 2 : 3;
+  const chipSlot = cellLabelLineHeight + chipPadV * 2 + 1;
   const cellLabelsMarginTop = narrowCells ? 2 : 4;
   const cellMoreSize = narrowCells ? 8 : 9;
   const todayDate: CalendarDate = {
@@ -325,46 +324,49 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
                               styles.cellLabels,
                               {
                                 marginTop: cellLabelsMarginTop,
-                                gap: cellLabelGap,
+                                marginHorizontal: -cellPad,
                               },
                             ]}
                           >
-                            {visibleLabels.map((l) => (
-                              <View
-                                key={l.text}
-                                style={[
-                                  styles.cellChip,
-                                  {
-                                    paddingHorizontal: chipPadH,
-                                    paddingVertical: chipPadV,
-                                  },
-                                  !l.quiet &&
-                                    !l.season && { borderColor: colorMap.gold },
-                                  l.season && seasonColor
-                                    ? { borderColor: seasonColor }
-                                    : null,
-                                ]}
-                              >
-                                <Text
-                                  numberOfLines={1}
+                            {visibleLabels.map((l, idx) => {
+                              const isLast = idx === visibleLabels.length - 1;
+                              const closes = isLast && hiddenLabels === 0;
+                              return (
+                                <View
+                                  key={l.text}
                                   style={[
-                                    styles.cellLabel,
+                                    styles.cellChip,
                                     {
-                                      fontSize: cellLabelSize,
-                                      lineHeight: cellLabelLineHeight,
+                                      height: closes ? chipSlot + 1 : chipSlot,
+                                      paddingHorizontal: cellPad,
+                                      paddingVertical: chipPadV,
                                     },
-                                    !l.quiet && styles.cellLabelFeast,
-                                    l.season ? styles.cellLabelSeason : null,
-                                    l.quiet ? styles.cellLabelQuiet : null,
-                                    l.season && seasonColor
-                                      ? { color: seasonColor }
-                                      : null,
+                                    closes ? styles.cellChipLast : null,
                                   ]}
                                 >
-                                  {l.text}
-                                </Text>
-                              </View>
-                            ))}
+                                  <Text
+                                    numberOfLines={1}
+                                    style={[
+                                      styles.cellLabel,
+                                      {
+                                        fontSize: cellLabelSize,
+                                        lineHeight: cellLabelLineHeight,
+                                      },
+                                      !l.quiet && styles.cellLabelFeast,
+                                      l.season ? styles.cellLabelSeason : null,
+                                      l.quiet ? styles.cellLabelQuiet : null,
+                                      l.season && seasonColor
+                                        ? { color: seasonColor }
+                                        : null,
+                                      !l.quiet &&
+                                        !l.season && { color: colorMap.gold },
+                                    ]}
+                                  >
+                                    {l.text}
+                                  </Text>
+                                </View>
+                              );
+                            })}
                             {hiddenLabels > 0 ? (
                               <Text
                                 style={[
@@ -678,10 +680,9 @@ const styleDef = defineThemedStyles({
     fontWeight: "600",
     color: "var(--text-secondary)",
   },
-  // principal feasts and holy days read at full ink; the Sunday name and
-  // lesser feasts stay quiet
+  // principal feasts and holy days read in liturgical gold; the Sunday name
+  // and lesser feasts stay quiet
   cellLabelFeast: {
-    color: "var(--text)",
     fontWeight: "700",
   },
   cellLabelQuiet: {
@@ -690,16 +691,18 @@ const styleDef = defineThemedStyles({
   },
   cellLabels: {
     marginTop: 4,
-    gap: 3,
-    width: "100%",
+    alignSelf: "stretch",
   },
   cellChip: {
     alignSelf: "stretch",
-    borderWidth: 1,
-    borderColor: "var(--border)",
-    borderRadius: 3,
+    borderTopWidth: 1,
+    borderTopColor: "var(--border)",
     paddingHorizontal: 4,
     paddingVertical: 1,
+  },
+  cellChipLast: {
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border)",
   },
   cellLabelSeason: {
     color: "var(--accent)",
