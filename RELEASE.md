@@ -2,6 +2,7 @@
 
 - office: customize each office inline: pick the opening sentence, invitatory psalm, psalm cycle, suffrages set, and both canticle slots, and reset one office without touching the others.
 - offices: share those same choices on the reference page and read between Reading and Full text modes.
+- office: pick the psalm, reading, and collect of Noonday and Compline from inline menus under each printed rubric, with the Collect of the Day in Noonday's menu, and keep the printed psalm set as the suggestion.
 
 ## Bug Fixes
 
