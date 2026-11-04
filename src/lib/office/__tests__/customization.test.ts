@@ -15,6 +15,9 @@ describe("customization storage", () => {
         canticle1: 8,
         canticle2: null,
         suffrages: "a",
+        psalmMenu: "121",
+        readingMenu: "Romans 5:5",
+        collectMenu: "2",
       }),
     ).toEqual({
       opening: "O God, come to my assistance.",
@@ -23,6 +26,9 @@ describe("customization storage", () => {
       canticle1: 8,
       canticle2: null,
       suffrages: "a",
+      psalmMenu: "121",
+      readingMenu: "Romans 5:5",
+      collectMenu: "2",
     });
   });
 
@@ -35,6 +41,9 @@ describe("customization storage", () => {
         canticle1: 22,
         canticle2: 1.5,
         suffrages: "c",
+        psalmMenu: "",
+        readingMenu: 5,
+        collectMenu: [],
       }),
     ).toEqual({});
     expect(sanitizeCustomization(null)).toEqual({});

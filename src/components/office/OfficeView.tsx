@@ -16,6 +16,8 @@ import type {
   ComposedNode,
   ComposedSection,
   InvitatoryChoice,
+  MenuChoices,
+  MenuKey,
   OfficeChoices,
   OfficeDocument,
 } from "../../lib/office/types";
@@ -347,6 +349,61 @@ function SectionControl({
   }
 }
 
+// the inline control belonging to one printed menu node; noonday and compline
+// have no heading rows, so the picker takes the full column
+const MENU_META: Record<
+  MenuKey,
+  {
+    key: "psalmMenu" | "readingMenu" | "collectMenu";
+    label: string;
+    a11y: string;
+  }
+> = {
+  psalm: { key: "psalmMenu", label: "Psalm", a11y: "Psalm" },
+  reading: { key: "readingMenu", label: "Reading", a11y: "Reading" },
+  collect: { key: "collectMenu", label: "Collect", a11y: "Collect" },
+};
+
+function MenuView({
+  menu,
+  set,
+  officeId,
+}: {
+  menu: MenuKey;
+  set: MenuChoices;
+  officeId: OfficeId;
+}) {
+  const styles = useThemedStyles(officeViewStyles);
+  const { customizationFor, setOfficeChoice } = useOfficeSettings();
+  const customization = customizationFor(officeId);
+  const meta = MENU_META[menu];
+  const stored = customization[meta.key];
+  return (
+    <MenuAnchor style={styles.menuControlRow}>
+      <ChoiceMenu
+        fullWidth
+        value={stored ?? "suggested"}
+        options={set.options}
+        label={meta.label}
+        accessibilityLabel={meta.a11y}
+        onChange={(id) => {
+          if (id === "suggested") {
+            setOfficeChoice(officeId, { [meta.key]: undefined });
+            return;
+          }
+          const patch =
+            menu === "psalm"
+              ? { psalmMenu: id }
+              : menu === "reading"
+                ? { readingMenu: id }
+                : { collectMenu: id };
+          setOfficeChoice(officeId, patch);
+        }}
+      />
+    </MenuAnchor>
+  );
+}
+
 function NodeView({
   node,
   showRubrics,
@@ -365,14 +422,24 @@ function NodeView({
     case "rubric":
       if (!showRubrics) return null;
       return <Text style={styles.rubric}>{node.text}</Text>;
+    case "menu": {
+      const set = choices.menus?.[node.menu];
+      if (!set || fullText) return null;
+      return <MenuView menu={node.menu} set={set} officeId={officeId} />;
+    }
     case "text":
       return (
-        <Text style={styles.text}>
-          {node.speaker && showSpeakers ? (
-            <SpeakerLabel speaker={node.speaker} />
+        <View>
+          <Text style={styles.text}>
+            {node.speaker && showSpeakers ? (
+              <SpeakerLabel speaker={node.speaker} />
+            ) : null}
+            <MentionedText text={node.text} todaySlug={todaySlug} />
+          </Text>
+          {node.citation ? (
+            <Text style={styles.textCitation}>{node.citation}</Text>
           ) : null}
-          <MentionedText text={node.text} todaySlug={todaySlug} />
-        </Text>
+        </View>
       );
     case "psalm": {
       const parts = node.citation.split(":");
@@ -581,8 +648,10 @@ function nodeKey(node: ComposedNode): string {
       return `h:${node.text}`;
     case "rubric":
       return `r:${node.text}`;
+    case "menu":
+      return `m:${node.menu}`;
     case "text":
-      return `t:${node.speaker ?? ""}:${node.text}`;
+      return `t:${node.citation ?? ""}:${node.speaker ?? ""}:${node.text}`;
     case "psalm":
       return `p:${node.citation}`;
     case "lessons":
@@ -630,6 +699,11 @@ const officeViewStyles = defineThemedStyles({
     marginTop: 4,
     marginBottom: 2,
   },
+  // a menu node sits under its rubric, taking the full column
+  menuControlRow: {
+    marginTop: 4,
+    marginBottom: 2,
+  },
   resetRow: {
     marginTop: 4,
     marginBottom: 24,
@@ -649,6 +723,15 @@ const officeViewStyles = defineThemedStyles({
     lineHeight: 30,
     color: "var(--text)",
     marginTop: 8,
+  },
+  // the printed citation a menu reading names after its passage
+  textCitation: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 15,
+    lineHeight: 24,
+    color: "var(--text-secondary)",
+    marginTop: 2,
+    marginBottom: 4,
   },
   speaker: {
     fontFamily: CHROME_FONT,

@@ -570,14 +570,17 @@ describe("composeOffice: preferences and other offices", () => {
     ]);
   });
 
-  test("Compline shows all collects and prayers from its menus", () => {
+  test("Compline trims its menus to the suggestions and prays one collect", () => {
     const doc = composeOffice({ year: 2026, month: 8, day: 14 }, "compline");
+    // the suggested collect is the first printed one; the other three
+    // collects and the Saturday collect stay in the menu
     expect(hasText(doc, "Be our light in the darkness, O Lord")).toBe(true);
-    expect(hasText(doc, "Be present, O merciful God")).toBe(true);
+    expect(hasText(doc, "Be present, O merciful God")).toBe(false);
     expect(hasText(doc, "Look down, O Lord, from your heavenly throne")).toBe(
-      true,
+      false,
     );
-    expect(hasText(doc, "Visit this place, O Lord")).toBe(true);
+    expect(hasText(doc, "Visit this place, O Lord")).toBe(false);
+    // the optional prayer keeps its printed first line
     expect(
       hasText(
         doc,
@@ -586,7 +589,7 @@ describe("composeOffice: preferences and other offices", () => {
     ).toBe(true);
     expect(
       hasText(doc, "O God, your unfailing providence sustains the world"),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   test("only one invitatory antiphon is kept", () => {
@@ -984,5 +987,188 @@ describe("composeOffice: Suffrages B closing menus", () => {
       true,
     );
     expect(has("Keep watch, dear Lord, with those who work")).toBe(true);
+  });
+});
+
+describe("composeOffice: Noonday and Compline menus", () => {
+  const monday = { year: 2026, month: 8, day: 17 };
+
+  test("the choices list every printed alternative", () => {
+    const noonday = composeOffice(monday, "noonday").choices.menus;
+    expect(noonday?.psalm?.options.map((o) => o.id)).toEqual([
+      "suggested",
+      "119",
+      "121",
+      "126",
+    ]);
+    expect(noonday?.reading?.options.map((o) => o.id)).toEqual([
+      "suggested",
+      "2 Corinthians 5:17-18",
+      "Malachi 1:11",
+    ]);
+    expect(noonday?.collect?.options.map((o) => o.id)).toEqual([
+      "suggested",
+      "2",
+      "3",
+      "4",
+      "day",
+    ]);
+    const compline = composeOffice(monday, "compline").choices.menus;
+    expect(compline?.psalm?.options.map((o) => o.id)).toEqual([
+      "suggested",
+      "4",
+      "31",
+      "91",
+      "134",
+    ]);
+    expect(compline?.reading?.options.map((o) => o.id)).toEqual([
+      "suggested",
+      "Matthew 11:28-30",
+      "Hebrews 13:20-21",
+      "1 Peter 5:8-9a",
+    ]);
+    expect(compline?.collect?.options.map((o) => o.id)).toEqual([
+      "suggested",
+      "2",
+      "3",
+      "4",
+      "A Collect for Saturdays",
+    ]);
+  });
+
+  test("Noonday follows the printed suggestions", () => {
+    const doc = composeOffice(monday, "noonday");
+    expect(psalmCitations(doc)).toEqual(["119", "121", "126"]);
+    expect(
+      hasText(doc, "The love of God has been poured into our hearts"),
+    ).toBe(true);
+    expect(hasText(doc, "If anyone is in Christ")).toBe(false);
+    expect(hasText(doc, "Heavenly Father, send your Holy Spirit")).toBe(true);
+    expect(hasText(doc, "Blessed Savior, at this hour")).toBe(false);
+  });
+
+  test("Compline follows the printed suggestions", () => {
+    const doc = composeOffice(monday, "compline");
+    expect(psalmCitations(doc)).toEqual(["4", "31", "91", "134"]);
+    expect(hasText(doc, "Lord, you are in the midst of us")).toBe(true);
+    expect(hasText(doc, "Come to me, all who labor")).toBe(false);
+    expect(hasText(doc, "Be our light in the darkness, O Lord")).toBe(true);
+    expect(hasText(doc, "We give thanks, O God, for revealing")).toBe(false);
+  });
+
+  test("the picked reading carries its printed citation", () => {
+    const doc = composeOffice(monday, "noonday", {
+      ...DEFAULT_PREFS,
+      customization: { readingMenu: "Malachi 1:11" },
+    });
+    // SAFETY: nodesOf filters by kind, so every element is a text node
+    const rows = nodesOf(doc, "text") as Extract<
+      ComposedNode,
+      { kind: "text" }
+    >[];
+    const cited = rows.filter((r) => r.citation);
+    expect(cited.map((r) => r.citation)).toEqual(["Malachi 1:11"]);
+    expect(cited[0]?.text.startsWith("From the rising of the sun")).toBe(true);
+    // the people's response names no citation
+    expect(
+      rows.find((r) => r.text === "Thanks be to God.")?.citation,
+    ).toBeUndefined();
+  });
+
+  test("full text prints a citation under every passage", () => {
+    const doc = composeOffice(monday, "compline", {
+      ...DEFAULT_PREFS,
+      fullText: true,
+    });
+    // SAFETY: nodesOf filters by kind, so every element is a text node
+    const rows = nodesOf(doc, "text") as Extract<
+      ComposedNode,
+      { kind: "text" }
+    >[];
+    expect(rows.flatMap((r) => (r.citation ? [r.citation] : []))).toEqual([
+      "Jeremiah 14:9,22",
+      "Matthew 11:28-30",
+      "Hebrews 13:20-21",
+      "1 Peter 5:8-9a",
+    ]);
+  });
+
+  test("a picked psalm prays alone", () => {
+    const doc = composeOffice(monday, "noonday", {
+      ...DEFAULT_PREFS,
+      customization: { psalmMenu: "126" },
+    });
+    expect(psalmCitations(doc)).toEqual(["126"]);
+  });
+
+  test("a picked reading and collect replace the suggestions", () => {
+    const doc = composeOffice(monday, "compline", {
+      ...DEFAULT_PREFS,
+      customization: { readingMenu: "1 Peter 5:8-9a", psalmMenu: "91" },
+    });
+    expect(psalmCitations(doc)).toEqual(["91"]);
+    expect(hasText(doc, "Be sober, be watchful")).toBe(true);
+    expect(hasText(doc, "Come to me, all who labor")).toBe(false);
+    const collect = composeOffice(monday, "noonday", {
+      ...DEFAULT_PREFS,
+      customization: { collectMenu: "3" },
+    });
+    expect(hasText(collect, "Almighty Savior, who at noonday")).toBe(true);
+    expect(hasText(collect, "Heavenly Father, send your Holy Spirit")).toBe(
+      false,
+    );
+  });
+
+  test("the Saturday collect is a plain alternative with its title", () => {
+    const doc = composeOffice({ year: 2026, month: 8, day: 15 }, "compline", {
+      ...DEFAULT_PREFS,
+      customization: { collectMenu: "A Collect for Saturdays" },
+    });
+    // the title rides on the collect block, in the heading voice
+    // SAFETY: nodesOf filters by kind, so every element is a fixed-collect
+    const blocks = nodesOf(doc, "fixed-collect") as Extract<
+      ComposedNode,
+      { kind: "fixed-collect" }
+    >[];
+    expect(blocks.map((b) => b.title)).toContain("A Collect for Saturdays");
+    expect(hasText(doc, "We give thanks, O God, for revealing")).toBe(true);
+    expect(hasText(doc, "Be our light in the darkness")).toBe(false);
+  });
+
+  test("Noonday may use the Collect of the Day", () => {
+    // Holy Cross Day, Monday Sep 14 2026
+    const doc = composeOffice({ year: 2026, month: 9, day: 14 }, "noonday", {
+      ...DEFAULT_PREFS,
+      customization: { collectMenu: "day" },
+    });
+    expect(headingTexts(doc)).toContain("The Collect of the Day");
+    expect(collectOf(doc)?.passage.title).toBe("Holy Cross Day");
+    expect(collectOf(doc)?.slug).toBe("holy-cross");
+    expect(hasText(doc, "Heavenly Father, send your Holy Spirit")).toBe(false);
+  });
+
+  test("stale stored ids degrade to the printed default", () => {
+    const doc = composeOffice(monday, "noonday", {
+      ...DEFAULT_PREFS,
+      customization: { psalmMenu: "999", collectMenu: "999" },
+    });
+    expect(psalmCitations(doc)).toEqual(["119", "121", "126"]);
+    expect(hasText(doc, "Heavenly Father, send your Holy Spirit")).toBe(true);
+  });
+
+  test("full text prints the whole page and ignores the picks", () => {
+    const doc = composeOffice(monday, "compline", {
+      ...DEFAULT_PREFS,
+      fullText: true,
+      customization: { psalmMenu: "4", collectMenu: "A Collect for Saturdays" },
+    });
+    expect(psalmCitations(doc)).toEqual(["4", "31", "91", "134"]);
+    // every reading and every collect, as the book prints them
+    expect(hasText(doc, "Come to me, all who labor")).toBe(true);
+    expect(hasText(doc, "Be present, O merciful God")).toBe(true);
+    expect(hasText(doc, "We give thanks, O God, for revealing")).toBe(true);
+    // no picker nodes, and a stored Collect-of-the-Day pick does not run
+    expect(nodesOf(doc, "menu")).toHaveLength(0);
+    expect(collectOf(doc)).toBeUndefined();
   });
 });

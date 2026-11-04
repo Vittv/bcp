@@ -30,8 +30,10 @@ import type {
   ComposedLesson,
   ComposedNode,
   ComposedSection,
+  MenuChoiceOption,
   OfficeChoices,
   OfficeDocument,
+  OfficeMenus,
   OfficePrefs,
 } from "./types";
 import { DEFAULT_PREFS } from "./types";
@@ -161,6 +163,8 @@ type ComposeContext = {
   psalmCitations: string[] | undefined;
   lessonGroup: DolEntry["lessons"] | undefined;
   prefs: OfficePrefs;
+  // the printed inline menus of noonday and compline, parsed once
+  menuRegions?: MenuRegions;
 };
 
 function isMorningOffice(id: string): boolean {
@@ -259,6 +263,12 @@ export function composeOffice(
     prefs,
   };
 
+  // noonday and compline carry their alternative menus inside their single
+  // section; parse the ranges once and share them with choices and composer
+  if (MENU_OFFICES.has(officeId) && found.sections.length === 1) {
+    ctx.menuRegions = menuRegions(found.sections[0]);
+  }
+
   const choices = officeChoices(found, ctx);
   const sections: ComposedSection[] = [];
   for (const section of found.sections) {
@@ -310,6 +320,7 @@ function officeChoices(found: Office, ctx: ComposeContext): OfficeChoices {
       suggestedCanticleForSlot(ctx, 2, readings),
     ],
     suffragesSuggested: isEveningOffice(ctx.officeId) ? "a" : "b",
+    menus: officeMenus(ctx),
   };
 }
 
@@ -320,6 +331,11 @@ function composeSection(
   const base = { key: section.key, heading: section.heading ?? null };
   switch (section.key) {
     case "opening":
+      // noonday and compline keep their whole service in one section with
+      // printed menus for psalms, readings and collects
+      if (ctx.menuRegions) {
+        return { ...base, nodes: composeMenuSection(section, ctx) };
+      }
       return { ...base, nodes: composeOpening(section, ctx) };
     case "invitatory":
       return { ...base, nodes: composeInvitatory(section, ctx) };
@@ -687,7 +703,476 @@ function composeOpening(
   return nodes;
 }
 
-// the seasonal Invitatory Antiphon groups, selected by the current season.
+// noonday and compline print alternative psalms, readings and collects inside
+// their single section
+const MENU_OFFICES = new Set<Office["id"]>(["noonday", "compline"]);
+
+// the printed rubrics that open each menu
+const PSALM_MENU_RUBRIC = /one or more of the following Psalms/i;
+const READING_MENU_RUBRIC =
+  /one of the following, or some other suitable passage/i;
+const COLLECT_MENU_RUBRIC = /says one of the following Collect/;
+const PSALM_HEAD = /^(?:From )?Psalm (\d+)\s*(.*)/;
+
+// one appointed psalm printed as a menu alternative
+type PsalmBlock = {
+  // item index of the block's "Psalm N ..." heading
+  heading: number;
+  from: number;
+  to: number;
+  psalm: number;
+  id: string;
+  incipit?: string;
+};
+
+// one reading or collect printed as a menu alternative
+type MenuBlock = {
+  // first and last item indices, inclusive
+  from: number;
+  to: number;
+  id: string;
+  label: string;
+  menuLabel: string;
+  group: string;
+  title?: string;
+};
+
+// the item ranges of the three printed menus. every marker is an index into
+// the section's items; `readingEnd` and `collectEnd` name the first item
+// outside the menu, where the office's tail resumes
+type MenuRegions = {
+  psalmRubric?: number;
+  psalms: PsalmBlock[];
+  gloriaRubric?: number;
+  readingRubric?: number;
+  readings: MenuBlock[];
+  readingEnd?: number;
+  collectRubric?: number;
+  collects: MenuBlock[];
+  collectEnd?: number;
+};
+
+function truncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
+// walk the section once and record where each printed menu begins, the
+// alternatives it carries, and where it ends
+function menuRegions(section: OfficeSection): MenuRegions {
+  const items = section.items;
+  const regions: MenuRegions = { psalms: [], readings: [], collects: [] };
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.kind !== "rubric") continue;
+    if (
+      regions.psalmRubric === undefined &&
+      PSALM_MENU_RUBRIC.test(item.text)
+    ) {
+      regions.psalmRubric = i;
+      for (let j = i + 1; j < items.length; j++) {
+        const probe = items[j];
+        if (
+          probe.kind === "rubric" &&
+          /At the end of the Psalms/i.test(probe.text)
+        ) {
+          regions.gloriaRubric = j;
+          break;
+        }
+        if (probe.kind !== "heading") continue;
+        const match = probe.text.match(PSALM_HEAD);
+        if (!match) continue;
+        const psalm = Number(match[1]);
+        let to = j;
+        while (items[to + 1]?.kind === "text") to++;
+        regions.psalms.push({
+          heading: j,
+          from: j + 1,
+          to,
+          psalm,
+          id: String(psalm),
+          incipit: match[2]?.trim() || undefined,
+        });
+        j = to;
+      }
+      i = regions.gloriaRubric ?? i;
+      continue;
+    }
+    if (
+      regions.readingRubric === undefined &&
+      READING_MENU_RUBRIC.test(item.text)
+    ) {
+      regions.readingRubric = i;
+      // the alternatives follow the rubric, "or this" items between them, and
+      // each group reads its printed citation as row label
+      const menu: MenuBlock[] = [];
+      let j = i + 1;
+      while (j < items.length) {
+        const probe = items[j];
+        if (probe.kind === "option") {
+          j++;
+          continue;
+        }
+        if (probe.kind !== "text") break;
+        const from = j;
+        const citation = probe.citation;
+        while (j < items.length && items[j].kind === "text") j++;
+        const fallback = `Reading ${menu.length + 1}`;
+        const label = citation && citation.length > 0 ? citation : fallback;
+        menu.push({
+          from,
+          to: j - 1,
+          id: label,
+          label,
+          menuLabel: label,
+          group: "Appointed",
+        });
+      }
+      regions.readings = menu;
+      regions.readingEnd = j;
+      i = j - 1;
+      continue;
+    }
+    if (
+      regions.collectRubric === undefined &&
+      COLLECT_MENU_RUBRIC.test(item.text)
+    ) {
+      regions.collectRubric = i;
+      // collect groups may carry a title rubric such as "A Collect for
+      // Saturdays", which prints as the block's heading when chosen
+      const menu: MenuBlock[] = [];
+      let j = i + 1;
+      while (j < items.length) {
+        const probe = items[j];
+        if (
+          probe.kind === "rubric" &&
+          probe.text.startsWith("A Collect for ")
+        ) {
+          const from = j;
+          j++;
+          while (items[j]?.kind === "text") j++;
+          menu.push({
+            from,
+            to: j - 1,
+            id: probe.text,
+            label: probe.text,
+            menuLabel: probe.text,
+            group: "Appointed",
+            title: probe.text,
+          });
+          continue;
+        }
+        if (probe.kind !== "text") break;
+        // each printed collect ends with the people's "Amen.", which bounds
+        // the group; the alternatives otherwise run together unmarked
+        const from = j;
+        const body = probe.text;
+        let amen = false;
+        while (j < items.length && items[j].kind === "text") {
+          amen = items[j].text === "Amen.";
+          j++;
+          if (amen) break;
+        }
+        menu.push({
+          from,
+          to: j - 1,
+          id: String(menu.length + 1),
+          label: truncate(body, 34),
+          menuLabel: truncate(body, 64),
+          group: "Appointed",
+        });
+      }
+      regions.collects = menu;
+      regions.collectEnd = j;
+      i = j - 1;
+    }
+  }
+  return regions;
+}
+
+// an override that names no printed option degrades to the fallback id
+function chosenOf(
+  blocks: readonly { id: string }[],
+  override: string | undefined,
+  fallback: string,
+): string {
+  if (override && blocks.some((block) => block.id === override))
+    return override;
+  return fallback;
+}
+
+// the menu rows the inline controls show. the suggested option leads and the
+// remaining rows follow the printed order
+function officeMenus(ctx: ComposeContext): OfficeMenus | undefined {
+  const regions = ctx.menuRegions;
+  if (!regions) return undefined;
+  const menus: OfficeMenus = {};
+  if (regions.psalmRubric !== undefined && regions.psalms.length > 0) {
+    const options: MenuChoiceOption[] = [
+      {
+        id: "suggested",
+        label: `Suggested · All ${regions.psalms.length} psalms`,
+        menuLabel: "All psalms",
+        group: "Suggested",
+      },
+      ...regions.psalms.map((block) => ({
+        id: block.id,
+        label: `Psalm ${block.psalm}`,
+        menuLabel: block.incipit
+          ? `Psalm ${block.psalm} · ${block.incipit}`
+          : `Psalm ${block.psalm} (section)`,
+        group: "Appointed",
+      })),
+    ];
+    menus.psalm = { options };
+  }
+  if (regions.readingRubric !== undefined && regions.readings.length > 1) {
+    const [first, ...rest] = regions.readings;
+    menus.reading = {
+      options: [
+        {
+          id: "suggested",
+          label: `Suggested · ${first.label}`,
+          menuLabel: first.label,
+          group: "Suggested",
+        },
+        ...rest.map((block) => ({
+          id: block.id,
+          label: block.label,
+          menuLabel: block.menuLabel,
+          group: block.group,
+        })),
+      ],
+    };
+  }
+  if (regions.collectRubric !== undefined && regions.collects.length > 1) {
+    const [first, ...rest] = regions.collects;
+    const options: MenuChoiceOption[] = [
+      {
+        id: "suggested",
+        label: `Suggested · ${first.label}`,
+        menuLabel: first.menuLabel,
+        group: "Suggested",
+      },
+      ...rest.map((block) => ({
+        id: block.id,
+        label: block.label,
+        menuLabel: block.menuLabel,
+        group: block.group,
+      })),
+    ];
+    // noonday's rubric itself offers the collect of the day as an alternative
+    if (ctx.officeId === "noonday" && collectNode(ctx)) {
+      options.push({
+        id: "day",
+        label: "Collect of the Day",
+        menuLabel: "The Collect of the Day",
+        group: "Seasonal",
+      });
+    }
+    menus.collect = { options };
+  }
+  if (Object.keys(menus).length === 0) return undefined;
+  return menus;
+}
+
+// noonday and compline: the single section carries the whole service, and the
+// three printed menus recompose around the reader's choices; full text prints
+// the entire book page instead, with no pickers
+function composeMenuSection(
+  section: OfficeSection,
+  ctx: ComposeContext,
+): ComposedNode[] {
+  const regions = ctx.menuRegions ?? { psalms: [], readings: [], collects: [] };
+  const prefs = ctx.prefs;
+  const customization: OfficeCustomization | undefined = prefs.customization;
+  const fullText = prefs.fullText === true;
+
+  const chosenPsalm = fullText
+    ? ""
+    : chosenOf(regions.psalms, customization?.psalmMenu, "suggested");
+  const chosenReading = fullText
+    ? ""
+    : chosenOf(
+        regions.readings,
+        customization?.readingMenu,
+        regions.readings[0]?.id ?? "",
+      );
+  const dayCollect =
+    !fullText &&
+    regions.collectRubric !== undefined &&
+    ctx.officeId === "noonday"
+      ? collectNode(ctx)
+      : undefined;
+  const chosenCollect = fullText
+    ? ""
+    : customization?.collectMenu === "day" && dayCollect
+      ? "day"
+      : chosenOf(
+          regions.collects,
+          customization?.collectMenu,
+          regions.collects[0]?.id ?? "",
+        );
+
+  const nodes: ComposedNode[] = [];
+  const items = section.items;
+  let inPrayerMenu = false;
+  let skipOptionText = false;
+  let region: "main" | "psalms" | "readings" | "collects" = "main";
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+
+    // a menu ends at its first item outside the alternatives. the terminating
+    // rubric returns to the main flow and is handled there
+    if (region === "readings" && i >= (regions.readingEnd ?? items.length)) {
+      region = "main";
+    }
+    if (region === "collects" && i >= (regions.collectEnd ?? items.length)) {
+      region = "main";
+    }
+
+    if (region === "main") {
+      if (item.kind === "rubric") {
+        skipOptionText = false;
+        if (i === regions.psalmRubric) {
+          region = "psalms";
+          const node = convert(item, prefs);
+          if (node) nodes.push(node);
+          if (!fullText) nodes.push({ kind: "menu", menu: "psalm" });
+          continue;
+        }
+        if (i === regions.readingRubric) {
+          region = "readings";
+          const node = convert(item, prefs);
+          if (node) nodes.push(node);
+          if (!fullText) nodes.push({ kind: "menu", menu: "reading" });
+          continue;
+        }
+        if (i === regions.collectRubric) {
+          region = "collects";
+          const node = convert(item, prefs);
+          if (node) nodes.push(node);
+          if (!fullText) nodes.push({ kind: "menu", menu: "collect" });
+          if (chosenCollect === "day" && dayCollect !== undefined) {
+            nodes.push({ kind: "heading", text: "The Collect of the Day" });
+            nodes.push(dayCollect);
+          }
+          continue;
+        }
+        if (/one of the following prayers?/i.test(item.text)) {
+          inPrayerMenu = true;
+        } else {
+          inPrayerMenu = false;
+        }
+        const node = convert(item, prefs);
+        if (node) nodes.push(node);
+        continue;
+      }
+      if (item.kind === "option") {
+        // full text prints the whole page, so the compline prayer pair keeps
+        // both alternatives
+        if (inPrayerMenu && !fullText) skipOptionText = true;
+        continue;
+      }
+      if (skipOptionText) continue;
+      const node = convert(item, prefs);
+      if (node) nodes.push(node);
+      continue;
+    }
+
+    if (region === "psalms") {
+      if (item.kind === "rubric") {
+        // the Glory rubric ends the psalm menu; the Glory text follows in main
+        region = "main";
+        const node = convert(item, prefs);
+        if (node) nodes.push(node);
+        continue;
+      }
+      if (item.kind === "heading") {
+        const block = regions.psalms.find((b) => b.heading === i);
+        if (block) {
+          const keep =
+            fullText || chosenPsalm === "suggested" || chosenPsalm === block.id;
+          if (keep) {
+            const verseItems = items
+              .slice(block.from, block.to + 1)
+              .filter((it): it is Extract<OfficeItem, { kind: "text" }> => {
+                return it.kind === "text";
+              });
+            const verses: PsalmPassage["verses"] = verseItems.map(
+              (it, index) => ({ number: index + 1, text: it.text }),
+            );
+            nodes.push({
+              kind: "psalm",
+              passage: { psalm: block.psalm, verses },
+              citation: block.id,
+              incipit: block.incipit,
+            });
+          }
+          i = block.to;
+        }
+        continue;
+      }
+      const node = convert(item, prefs);
+      if (node) nodes.push(node);
+      continue;
+    }
+
+    if (region === "readings") {
+      const block = regions.readings.find((b) => b.from === i);
+      if (block) {
+        if (fullText || block.id === chosenReading) {
+          const kept: ComposedNode[] = [];
+          for (let j = block.from; j <= block.to; j++) {
+            const node = convert(items[j], prefs);
+            if (node) kept.push(node);
+          }
+          // the book prints the citation at the end of the passage, before
+          // the people's response
+          const responses = new Set([
+            "Thanks be to God.",
+            "The Word of the Lord.",
+          ]);
+          for (let k = kept.length - 1; k >= 0; k--) {
+            const node = kept[k];
+            if (node.kind === "text" && !responses.has(node.text)) {
+              node.citation = block.id;
+              break;
+            }
+          }
+          nodes.push(...kept);
+        }
+        i = block.to;
+      }
+      continue;
+    }
+
+    if (region === "collects") {
+      const block = regions.collects.find((b) => b.from === i);
+      if (block) {
+        if (fullText || block.id === chosenCollect) {
+          // a collect prints in the fixed-collect voice, as the closing
+          // prayers of morning and evening do; its title rides on the node
+          // rather than a separate heading
+          const lines: string[] = [];
+          const from = block.title ? block.from + 1 : block.from;
+          for (let j = from; j <= block.to; j++) {
+            const probe = items[j];
+            if (probe.kind === "text") lines.push(probe.text);
+          }
+          nodes.push({
+            kind: "fixed-collect",
+            text: lines.join("\n"),
+            title: block.title,
+          });
+        }
+        i = block.to;
+      }
+    }
+  }
+  return nodes;
+}
+
 const ANTIPHON_GROUPS: Record<string, (ctx: ComposeContext) => boolean> = {
   "In Advent": (c) => c.season === "advent",
   "On the Twelve Days of Christmas": (c) => c.season === "christmas",

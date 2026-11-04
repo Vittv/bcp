@@ -54,10 +54,37 @@ export type ComposedLesson = {
 };
 
 // one rendered unit of a composed office.
+// the printed menus noonday and compline keep inside their single section
+export type MenuKey = "psalm" | "reading" | "collect";
+
+export type MenuChoiceOption = {
+  id: string;
+  /** the trigger's text when this option is selected */
+  label: string;
+  /** the popover row's text when it should differ from the trigger's */
+  menuLabel?: string;
+  /** rows sharing a group are preceded once by this heading */
+  group?: string;
+};
+
+export type MenuChoices = {
+  options: MenuChoiceOption[];
+};
+
+export type OfficeMenus = Partial<Record<MenuKey, MenuChoices>>;
+
 export type ComposedNode =
   | { kind: "heading"; text: string; citation?: string }
   | { kind: "rubric"; text: string }
-  | { kind: "text"; text: string; speaker?: OfficeSpeaker }
+  /** a printed menu the reader picks from; options come from choices.menus */
+  | { kind: "menu"; menu: MenuKey }
+  | {
+      kind: "text";
+      text: string;
+      speaker?: OfficeSpeaker;
+      /** the printed citation a trailing line names, on the menu readings */
+      citation?: string;
+    }
   | {
       kind: "psalm";
       passage: PsalmPassage;
@@ -97,6 +124,7 @@ export type OfficeChoices = {
   invitatorySuggested: InvitatoryChoice;
   canticleSuggested: [number | null, number | null];
   suffragesSuggested: "a" | "b";
+  menus?: OfficeMenus;
 };
 
 // the full office for a date, ready to render.

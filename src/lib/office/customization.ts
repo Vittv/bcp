@@ -12,6 +12,11 @@ export type OfficeCustomization = {
   canticle1?: number | null;
   canticle2?: number | null;
   suffrages?: "a" | "b";
+  /** the psalm, reading and collect menus of noonday and compline; a stored
+   * id names one of the office's printed alternatives */
+  psalmMenu?: string;
+  readingMenu?: string;
+  collectMenu?: string;
 };
 
 export type OfficeCustomizations = Partial<
@@ -41,6 +46,9 @@ const CUSTOMIZATION_KEYS: readonly (keyof OfficeCustomization)[] = [
   "canticle1",
   "canticle2",
   "suffrages",
+  "psalmMenu",
+  "readingMenu",
+  "collectMenu",
 ];
 
 function isRecord(value: JsonValue): value is { [key: string]: JsonValue } {
@@ -116,6 +124,17 @@ export function sanitizeCustomization(raw: JsonValue): OfficeCustomization {
   if (two !== undefined) out.canticle2 = two;
   const suffrages = suffragesOf(raw.suffrages);
   if (suffrages) out.suffrages = suffrages;
+  // menu ids are strings the composer checks against the printed options; a
+  // stale id degrades to the suggestion rather than breaking the office
+  if (typeof raw.psalmMenu === "string" && raw.psalmMenu.length > 0) {
+    out.psalmMenu = raw.psalmMenu;
+  }
+  if (typeof raw.readingMenu === "string" && raw.readingMenu.length > 0) {
+    out.readingMenu = raw.readingMenu;
+  }
+  if (typeof raw.collectMenu === "string" && raw.collectMenu.length > 0) {
+    out.collectMenu = raw.collectMenu;
+  }
   return out;
 }
 
