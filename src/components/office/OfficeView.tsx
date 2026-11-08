@@ -857,7 +857,7 @@ const officeViewStyles = defineThemedStyles({
     marginTop: 8,
   },
   textPeople: {
-    fontWeight: "600",
+    fontWeight: "700",
   },
   // the printed citation a menu reading names after its passage
   textCitation: {
