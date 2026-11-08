@@ -644,12 +644,28 @@ function SectionView({
     <MenuAnchor style={styles.section}>
       {section.heading ? (
         control ? (
-          <MenuAnchor style={[styles.headingRow, styles.stickyHeader]}>
+          <MenuAnchor
+            style={[
+              styles.headingRow,
+              section.key !== "suffrages-a" && section.key !== "suffrages-b"
+                ? styles.stickyHeader
+                : null,
+            ]}
+          >
             <Text style={[heading, styles.headingText]}>{section.heading}</Text>
             {control}
           </MenuAnchor>
         ) : (
-          <Text style={[heading, styles.stickyHeader]}>{section.heading}</Text>
+          <Text
+            style={[
+              heading,
+              section.key !== "suffrages-a" && section.key !== "suffrages-b"
+                ? styles.stickyHeader
+                : null,
+            ]}
+          >
+            {section.heading}
+          </Text>
         )
       ) : control ? (
         <MenuAnchor
