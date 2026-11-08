@@ -653,7 +653,7 @@ function SectionView({
             style={[
               styles.headingRow,
               section.key !== "suffrages-a" && section.key !== "suffrages-b"
-                ? styles.stickyHeader
+                ? [styles.stickyHeader, styles.stickyBlock]
                 : null,
             ]}
           >
@@ -661,16 +661,15 @@ function SectionView({
             {control}
           </MenuAnchor>
         ) : (
-          <Text
+          <View
             style={[
-              heading,
               section.key !== "suffrages-a" && section.key !== "suffrages-b"
-                ? styles.stickyHeader
+                ? [styles.stickyHeader, styles.stickyBlock]
                 : null,
             ]}
           >
-            {section.heading}
-          </Text>
+            <Text style={heading}>{section.heading}</Text>
+          </View>
         )
       ) : control ? (
         <MenuAnchor
@@ -809,7 +808,11 @@ const officeViewStyles = defineThemedStyles({
     position: "sticky",
     top: 0,
     backgroundColor: "var(--bg)",
-    zIndex: 10,
+    zIndex: 100,
+    isolation: "isolate",
+  },
+  stickyBlock: {
+    paddingTop: 2,
   },
   headingText: {
     flexShrink: 1,
