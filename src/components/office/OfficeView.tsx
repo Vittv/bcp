@@ -527,7 +527,12 @@ function NodeView({
     case "text":
       return (
         <View>
-          <Text style={styles.text}>
+          <Text
+            style={[
+              styles.text,
+              node.speaker === "people" && showSpeakers && styles.textPeople,
+            ]}
+          >
             {node.speaker && showSpeakers ? (
               <SpeakerLabel speaker={node.speaker} />
             ) : null}
@@ -847,6 +852,9 @@ const officeViewStyles = defineThemedStyles({
     lineHeight: 30,
     color: "var(--text)",
     marginTop: 8,
+  },
+  textPeople: {
+    fontWeight: "600",
   },
   // the printed citation a menu reading names after its passage
   textCitation: {
