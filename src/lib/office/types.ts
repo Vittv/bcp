@@ -124,7 +124,18 @@ export type OfficeChoices = {
   invitatorySuggested: InvitatoryChoice;
   canticleSuggested: [number | null, number | null];
   suffragesSuggested: "a" | "b";
+  /** the day's reading slots for the Readings picker, in print order.
+   * morning and evening only */
+  lessonSlots?: LessonSlot[];
   menus?: OfficeMenus;
+};
+
+export type LessonSlot = {
+  key: "first" | "second" | "third" | "gospel";
+  /** the printed position label ("First Lesson", "Gospel") */
+  label: string;
+  /** the position's corpus on shared year-table days ("Old Testament") */
+  desc?: string;
 };
 
 // the full office for a date, ready to render.

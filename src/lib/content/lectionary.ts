@@ -302,7 +302,8 @@ function findEntry(
 // the entry for a resolved day slot. special days of the year tables (the
 // First/Second Sunday after Christmas, the dated feast days) take precedence
 // over a fixed-date holy day that happens to share the date; holy days win
-// over the ordinary weekday reading.
+// over the ordinary weekday reading. holy days and special occasions carry
+// no year of their own, so there the `year` override has no effect.
 export function entryForDay(slot: DolSlot): DolEntry | undefined {
   if (slot.day.kind === "special") {
     if (HOLY_DAY_SPECIALS.has(slot.day.name)) {
@@ -325,6 +326,21 @@ export function entryForDay(slot: DolSlot): DolEntry | undefined {
   const { season, week } = weekToSeasonWeek(slot);
   return findEntry(
     slot.year,
+    { season, week, day: WEEKDAYS[slot.day.weekday] },
+    undefined,
+  );
+}
+
+// the same day resolved into the other year of the two-year cycle. the
+// alternate year's entry is where Evening Prayer's First Reading comes
+// from when two Readings are kept at both offices (p. 934); it is
+// undefined wherever the day reads a holy day or a special occasion,
+// which have no alternate year.
+export function entryForAlternateYear(slot: DolSlot): DolEntry | undefined {
+  if (slot.day.kind !== "weekday" || slot.holyDay) return undefined;
+  const { season, week } = weekToSeasonWeek(slot);
+  return findEntry(
+    slot.year === 1 ? 2 : 1,
     { season, week, day: WEEKDAYS[slot.day.weekday] },
     undefined,
   );

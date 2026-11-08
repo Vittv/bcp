@@ -11,7 +11,11 @@ import {
 } from "../calendar";
 import type { CalendarDate, DolSlot, Season } from "../calendar/types";
 import { canticlePassage, collectPassage, office } from "../content";
-import { entryForDay, entryForEvening } from "../content/lectionary";
+import {
+  entryForAlternateYear,
+  entryForDay,
+  entryForEvening,
+} from "../content/lectionary";
 import { parsePsalmCitation } from "../content/psalms";
 import { psalmPassage } from "../content/psalter";
 import { psalterDay, psalterDayForDate } from "../content/psalterDays";
@@ -30,6 +34,7 @@ import type {
   ComposedLesson,
   ComposedNode,
   ComposedSection,
+  LessonSlot,
   MenuChoiceOption,
   OfficeChoices,
   OfficeDocument,
@@ -305,12 +310,26 @@ function suffragesChoice(ctx: ComposeContext): "a" | "b" {
   return isEveningOffice(ctx.officeId) ? "a" : "b";
 }
 
+// whether a stored readings choice rules today: digits only where the day
+// shares at least one position with the stored set. the picker shows the
+// whole day on the days the choice degrades
+export function readingsApply(choices: OfficeChoices, stored: string): boolean {
+  if (!choices.lessonSlots) return false;
+  const present = new Set<number>(
+    choices.lessonSlots.map((slot) => READING_NUMBERS[slot.key]),
+  );
+  return [...stored].some((digit) => present.has(Number(digit)));
+}
+
 // the suggestions and option lists the inline controls need. computed from
 // the same context the sections use, but never from the reader's overrides.
 function officeChoices(found: Office, ctx: ComposeContext): OfficeChoices {
   const openingSection = found.sections.find(isOpeningSentenceSection);
   const groups = openingSection ? sentenceGroups(openingSection).groups : [];
   const readings = new Set(lessonList(ctx).map((lesson) => lesson.number)).size;
+  const lessonOffice =
+    (isMorningOffice(ctx.officeId) || isEveningOffice(ctx.officeId)) &&
+    ctx.lessonGroup !== undefined;
   return {
     openingSuggested: suggestedOpeningText(groups, ctx),
     openingGroups: groups,
@@ -320,9 +339,33 @@ function officeChoices(found: Office, ctx: ComposeContext): OfficeChoices {
       suggestedCanticleForSlot(ctx, 2, readings),
     ],
     suffragesSuggested: isEveningOffice(ctx.officeId) ? "a" : "b",
+    lessonSlots: lessonOffice ? lessonSlotsOf(ctx) : undefined,
     menus: officeMenus(ctx),
   };
 }
+
+// the day's reading slots for the Readings picker, in print order. the
+// corpus descriptors are spelled out on shared year-table days, where the
+// book's own arrangement says them; split-set days keep position-only
+// labels because the book does not assign their readings that way (a holy
+// day's second reading may be the gospel)
+function lessonSlotsOf(ctx: ComposeContext): LessonSlot[] {
+  const group = ctx.lessonGroup;
+  const shared = sharedLessonSet(ctx.entry);
+  const slots: LessonSlot[] = [];
+  for (const { key, label, desc } of SHORT_READING_SLOTS) {
+    if (!group || typeof group[key] !== "string") continue;
+    slots.push(desc && shared ? { key, label, desc } : { key, label });
+  }
+  return slots;
+}
+
+const SHORT_READING_SLOTS: LessonSlot[] = [
+  { key: "first", label: "First Lesson", desc: "OT" },
+  { key: "second", label: "Second Lesson", desc: "NT" },
+  { key: "third", label: "Third Lesson", desc: undefined },
+  { key: "gospel", label: "Gospel", desc: undefined },
+];
 
 function composeSection(
   section: OfficeSection,
@@ -1615,6 +1658,62 @@ function flushCollectBuf(
   nodes.push({ kind: "fixed-collect", text: buf.join("\n"), title });
 }
 
+// the reading positions an office keeps, resolved from the reader's stored
+// choice, plus whether Evening's First Reading belongs to the alternate
+// year (p. 934, two Readings at both offices). a missing key keeps the
+// whole day, and a stored set with nothing in common with the day degrades
+// to keeping the whole day, the way stale choices fall back to the printed
+// default.
+type ReadingsSpec = {
+  keep: Set<LessonSlot["key"]>;
+  swapFirst: boolean;
+};
+
+const READING_KEYS: LessonSlot["key"][] = [
+  "first",
+  "second",
+  "third",
+  "gospel",
+];
+
+const READING_NUMBERS: Record<LessonSlot["key"], 1 | 2 | 3> = {
+  first: 1,
+  second: 2,
+  third: 3,
+  gospel: 3,
+};
+
+// whether the day's entry is one shared set for both offices (the year
+// tables) rather than a morning/evening split (holy days, special
+// occasions, appointed eves, Palm Sunday's own day)
+function sharedLessonSet(entry: DolEntry | undefined): boolean {
+  return (
+    entry !== undefined &&
+    entry.lessons.morning === undefined &&
+    entry.lessons.evening === undefined
+  );
+}
+
+function resolveReadings(ctx: ComposeContext): ReadingsSpec {
+  const group = ctx.lessonGroup;
+  if (!group) return { keep: new Set(), swapFirst: false };
+  const present = READING_KEYS.filter((key) => typeof group[key] === "string");
+  const keepAll = new Set(present);
+  const stored = ctx.prefs.customization?.readings;
+  if (stored === undefined) return { keep: keepAll, swapFirst: false };
+  const wanted = new Set<number>([...stored].map(Number));
+  const keep = new Set(
+    present.filter((key) => wanted.has(READING_NUMBERS[key])),
+  );
+  const swapFirst =
+    keep.size > 0 &&
+    stored === "12" &&
+    isEveningOffice(ctx.officeId) &&
+    sharedLessonSet(ctx.entry);
+  if (keep.size === 0) return { keep: keepAll, swapFirst: false };
+  return { keep, swapFirst };
+}
+
 function lessonList(ctx: ComposeContext): ComposedLesson[] {
   const group = ctx.lessonGroup;
   if (!group) return [];
@@ -1630,12 +1729,35 @@ function lessonList(ctx: ComposeContext): ComposedLesson[] {
     { key: "third", alt: null, label: "Third Lesson", number: 3 },
     { key: "gospel", alt: "altGospel", label: "Gospel", number: 3 },
   ];
+  // full text prints the book as it is, so the reader's readings choice
+  // never filters or swaps there
+  const spec = ctx.prefs.fullText ? undefined : resolveReadings(ctx);
+  // p. 934: two Readings at both offices put the alternate year's Old
+  // Testament First Reading at Evening Prayer
+  let alternateFirst: { first?: string; altFirst?: string } | undefined;
+  if (spec?.swapFirst) {
+    const swapped = entryForAlternateYear(ctx.slot);
+    if (typeof swapped?.lessons.first === "string") {
+      alternateFirst = {
+        first: swapped.lessons.first,
+        altFirst: swapped.lessons.altFirst,
+      };
+    }
+  }
   for (const { key, alt, label, number } of fields) {
-    const ref = group[key];
+    if (spec && !spec.keep.has(key)) continue;
+    let ref = group[key];
     if (typeof ref !== "string") continue;
+    if (key === "first" && typeof alternateFirst?.first === "string") {
+      ref = alternateFirst.first;
+    }
     lessons.push({ number, label, ref });
     if (alt === null || !ctx.prefs.showAlternates) continue;
-    const alternate = group[alt];
+    const swappedAlt = key === "first" ? alternateFirst?.altFirst : undefined;
+    const alternate =
+      key === "first" && typeof swappedAlt === "string"
+        ? swappedAlt
+        : group[alt];
     if (typeof alternate === "string") {
       lessons.push({
         number,

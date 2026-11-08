@@ -12,6 +12,10 @@ export type OfficeCustomization = {
   canticle1?: number | null;
   canticle2?: number | null;
   suffrages?: "a" | "b";
+  /** the reading positions a morning or evening office keeps: sorted
+   * digits ("13" keeps the First Lesson and the Gospel). a missing key
+   * keeps every reading the day provides */
+  readings?: string;
   /** the psalm, reading and collect menus of noonday and compline; a stored
    * id names one of the office's printed alternatives */
   psalmMenu?: string;
@@ -46,6 +50,7 @@ const CUSTOMIZATION_KEYS: readonly (keyof OfficeCustomization)[] = [
   "canticle1",
   "canticle2",
   "suffrages",
+  "readings",
   "psalmMenu",
   "readingMenu",
   "collectMenu",
@@ -105,6 +110,22 @@ function suffragesOf(
   }
 }
 
+// kept reading positions, in print order. one to three distinct digits
+// from 1 to 3, sorted
+function readingsOf(
+  value: JsonValue | undefined,
+): OfficeCustomization["readings"] {
+  if (typeof value !== "string" || !/^[123]{1,3}$/.test(value)) {
+    return undefined;
+  }
+  const digits = [...value];
+  if (new Set(digits).size !== digits.length) return undefined;
+  if ([...digits].some((d, i) => i > 0 && d <= digits[i - 1])) {
+    return undefined;
+  }
+  return value;
+}
+
 // accept only the shapes the composer understands. a stale or hand-edited
 // storage entry degrades to the printed default rather than breaking the
 // office.
@@ -124,6 +145,8 @@ export function sanitizeCustomization(raw: JsonValue): OfficeCustomization {
   if (two !== undefined) out.canticle2 = two;
   const suffrages = suffragesOf(raw.suffrages);
   if (suffrages) out.suffrages = suffrages;
+  const readings = readingsOf(raw.readings);
+  if (readings) out.readings = readings;
   // menu ids are strings the composer checks against the printed options; a
   // stale id degrades to the suggestion rather than breaking the office
   if (typeof raw.psalmMenu === "string" && raw.psalmMenu.length > 0) {

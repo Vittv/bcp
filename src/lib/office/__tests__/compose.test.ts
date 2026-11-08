@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { resolve } from "../../calendar/dol";
+import type { CalendarDate } from "../../calendar/types";
+import { entryForAlternateYear, entryForDay } from "../../content/lectionary";
 import { parsePsalmCitation } from "../../content/psalms";
 import { psalterDay, psalterDayForDate } from "../../content/psalterDays";
 import { composeOffice, dayLabel } from "../compose";
@@ -8,7 +11,7 @@ import type {
   ComposedSection,
   OfficeDocument,
 } from "../types";
-import { DEFAULT_PREFS } from "../types";
+import { DEFAULT_PREFS, type OfficePrefs } from "../types";
 
 function section(
   doc: OfficeDocument,
@@ -1170,5 +1173,212 @@ describe("composeOffice: Noonday and Compline menus", () => {
     // no picker nodes, and a stored Collect-of-the-Day pick does not run
     expect(nodesOf(doc, "menu")).toHaveLength(0);
     expect(collectOf(doc)).toBeUndefined();
+  });
+});
+
+describe("composeOffice: readings", () => {
+  // an ordinary Year Two weekday: three shared readings, no holy day
+  const friday: CalendarDate = { year: 2026, month: 8, day: 14 };
+  // an ordinary Year One weekday
+  const withReadings = (
+    readings: string,
+    extra: Partial<OfficePrefs> = {},
+  ): OfficePrefs => ({
+    ...DEFAULT_PREFS,
+    customization: { readings },
+    ...extra,
+  });
+
+  const canticleNumbers = (doc: OfficeDocument): (number | null)[] =>
+    doc.sections
+      .flatMap((s) => s.nodes)
+      .flatMap((n) =>
+        n.kind === "canticle" ? [n.passage?.number ?? null] : [],
+      );
+
+  const sequence = (doc: OfficeDocument): string[] =>
+    (section(doc, "lessons")?.nodes ?? [])
+      .filter((n) => n.kind === "reading" || n.kind === "canticle")
+      .map((n) => n.kind);
+
+  const choices = (doc: OfficeDocument) => doc.choices;
+
+  // refs from the lectionary, so the compose assertions pin against data
+  const slotOf = (date: CalendarDate) => resolve(date);
+  const firstRef = (date: CalendarDate): string =>
+    entryForDay(slotOf(date))?.lessons.first ?? "";
+  const secondRef = (date: CalendarDate): string =>
+    entryForDay(slotOf(date))?.lessons.second ?? "";
+  const alternateFirstRef = (date: CalendarDate): string =>
+    entryForAlternateYear(slotOf(date))?.lessons.first ?? "";
+
+  test("without a stored choice both offices keep every reading", () => {
+    expect(lessonsOf(composeOffice(friday, "morning-rite-two"))).toHaveLength(
+      3,
+    );
+    expect(lessonsOf(composeOffice(friday, "evening-rite-two"))).toHaveLength(
+      3,
+    );
+    for (const id of ["morning-rite-one", "morning-rite-two"] as const) {
+      expect(
+        choices(composeOffice(friday, id)).lessonSlots?.map((s) => s.key),
+      ).toEqual(["first", "second", "gospel"]);
+      expect(choices(composeOffice(friday, id)).lessonSlots?.[0].desc).toBe(
+        "OT",
+      );
+    }
+  });
+
+  test("gospel only in the evening prints one reading with the Magnificat", () => {
+    const evening = composeOffice(
+      friday,
+      "evening-rite-two",
+      withReadings("3"),
+    );
+    expect(lessonsOf(evening).map((l) => l.label)).toEqual(["Gospel"]);
+    expect(sequence(evening)).toEqual(["reading", "canticle"]);
+    expect(canticleNumbers(evening)).toEqual([15]);
+    expect(choices(evening).canticleSuggested[0]).toBe(15);
+    const riteOne = composeOffice(
+      friday,
+      "evening-rite-one",
+      withReadings("3"),
+    );
+    expect(canticleNumbers(riteOne)).toEqual([3]);
+  });
+
+  test("first and gospel in the morning prints both canticles", () => {
+    const morning = composeOffice(
+      friday,
+      "morning-rite-one",
+      withReadings("13"),
+    );
+    expect(lessonsOf(morning).map((l) => l.label)).toEqual([
+      "First Lesson",
+      "Gospel",
+    ]);
+    expect(sequence(morning)).toEqual([
+      "reading",
+      "canticle",
+      "reading",
+      "canticle",
+    ]);
+    expect(canticleNumbers(morning)).toEqual([10, 18]);
+  });
+
+  test("second and gospel applies where both are kept", () => {
+    const evening = composeOffice(
+      friday,
+      "evening-rite-two",
+      withReadings("23"),
+    );
+    expect(lessonsOf(evening).map((l) => l.label)).toEqual([
+      "Second Lesson",
+      "Gospel",
+    ]);
+    expect(sequence(evening)).toEqual([
+      "reading",
+      "canticle",
+      "reading",
+      "canticle",
+    ]);
+  });
+
+  test("evening first and second reads the alternate year's Old Testament", () => {
+    // p. 934: when two Readings are kept at Evening Prayer, its First
+    // Reading comes from the alternate year's entry. the Year Two Friday
+    // reads Judges here, the Year One entry reads 2 Samuel
+    const evening = composeOffice(
+      friday,
+      "evening-rite-one",
+      withReadings("12"),
+    );
+    const refs = lessonsOf(evening).map((l) => l.ref);
+    expect(refs[0]).toBe(alternateFirstRef(friday));
+    expect(refs[0]).not.toBe(firstRef(friday));
+    expect(refs[1]).toBe(secondRef(friday));
+    // morning keeps its own year's Old Testament
+    const morning = composeOffice(
+      friday,
+      "morning-rite-one",
+      withReadings("12"),
+    );
+    expect(lessonsOf(morning).map((l) => l.ref)[0]).toBe(firstRef(friday));
+  });
+
+  test("a stored set the day cannot honor degrades to the whole day", () => {
+    // Saint Bartholomew's two readings carry no gospel, so an evening kept
+    // gospel-only from a weekday prints both readings today
+    const feast: CalendarDate = { year: 2026, month: 8, day: 24 };
+    const evening = composeOffice(feast, "evening-rite-one", withReadings("3"));
+    expect(lessonsOf(evening).map((l) => l.label)).toEqual([
+      "First Lesson",
+      "Second Lesson",
+    ]);
+    expect(choices(evening).lessonSlots?.map((s) => s.key)).toEqual([
+      "first",
+      "second",
+    ]);
+    // and the corpus descriptors stay off the split days, where the book
+    // does not assign the positions that way
+    expect(
+      choices(evening).lessonSlots?.every((s) => s.desc === undefined),
+    ).toBe(true);
+  });
+
+  test("a feast keeps first and second under a stored two-reading set", () => {
+    const feast: CalendarDate = { year: 2026, month: 8, day: 24 };
+    const evening = composeOffice(
+      feast,
+      "evening-rite-two",
+      withReadings("12"),
+    );
+    expect(lessonsOf(evening).map((l) => l.label)).toEqual([
+      "First Lesson",
+      "Second Lesson",
+    ]);
+  });
+
+  test("full text mode ignores the readings choice entirely", () => {
+    const doc = composeOffice(friday, "evening-rite-two", {
+      ...withReadings("3"),
+      fullText: true,
+    });
+    expect(lessonsOf(doc)).toHaveLength(3);
+    expect(lessonsOf(doc).map((l) => l.label)).toEqual([
+      "First Lesson",
+      "Second Lesson",
+      "Gospel",
+    ]);
+  });
+
+  test("Palm Sunday keeps its own morning and evening lesson sets", () => {
+    const palm: CalendarDate = { year: 2026, month: 3, day: 29 };
+    const morning = composeOffice(palm, "morning-rite-one");
+    const refs = lessonsOf(morning).map((l) => l.label);
+    expect(refs).toEqual(["First Lesson", "Second Lesson"]);
+    // no gospel at Morning
+    const picker = choices(morning);
+    expect(picker.lessonSlots?.map((s) => s.key)).toEqual(["first", "second"]);
+    // the evening carries first and gospel
+    const evening = composeOffice(palm, "evening-rite-one");
+    expect(lessonsOf(evening).map((l) => l.label)).toEqual([
+      "First Lesson",
+      "Gospel",
+    ]);
+  });
+
+  test("Holy Saturday keeps third-reading subsets in the picker", () => {
+    const saturday: CalendarDate = { year: 2026, month: 4, day: 4 };
+    const doc = composeOffice(saturday, "evening-rite-two", withReadings("13"));
+    expect(lessonsOf(doc).map((l) => l.label)).toEqual([
+      "First Lesson",
+      "Third Lesson",
+    ]);
+    expect(choices(doc).lessonSlots?.map((s) => s.key)).toEqual([
+      "first",
+      "second",
+      "third",
+    ]);
   });
 });

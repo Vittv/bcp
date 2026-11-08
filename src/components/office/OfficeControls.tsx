@@ -35,6 +35,9 @@ export type ControlOption = {
   menuLabel?: string;
   /** rows sharing a group are preceded once by this heading */
   group?: string;
+  /** unusable today; shown dimmed and unselectable, where the choice
+   * would sit if the day provided it */
+  disabled?: boolean;
 };
 
 // react-native-web gives every View z-index 0, so a popover cannot paint over
@@ -214,31 +217,55 @@ export function ChoiceMenu({
                   option.group && option.group !== lastGroup
                     ? option.group
                     : undefined;
+                // later group headings separate from the group above
+                const afterGroup =
+                  header !== undefined && lastGroup !== undefined;
                 lastGroup = option.group;
                 return (
                   <View key={option.id}>
                     {header ? (
-                      <Text style={styles.menuGroup}>{header}</Text>
-                    ) : null}
-                    <Pressable
-                      style={({ hovered }) => [
-                        styles.menuItem,
-                        (hovered || selected) && styles.menuItemActive,
-                      ]}
-                      onPress={() => pick(option.id)}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                    >
                       <Text
                         style={[
-                          styles.menuItemText,
-                          selected && styles.menuItemTextActive,
+                          styles.menuGroup,
+                          afterGroup && styles.menuGroupAfter,
                         ]}
-                        numberOfLines={1}
                       >
-                        {option.menuLabel ?? option.label}
+                        {header}
                       </Text>
-                    </Pressable>
+                    ) : null}
+                    {option.disabled ? (
+                      <View style={styles.menuItem}>
+                        <Text
+                          style={[
+                            styles.menuItemText,
+                            styles.menuItemTextDisabled,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {option.menuLabel ?? option.label}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Pressable
+                        style={({ hovered }) => [
+                          styles.menuItem,
+                          (hovered || selected) && styles.menuItemActive,
+                        ]}
+                        onPress={() => pick(option.id)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected, disabled: false }}
+                      >
+                        <Text
+                          style={[
+                            styles.menuItemText,
+                            selected && styles.menuItemTextActive,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {option.menuLabel ?? option.label}
+                        </Text>
+                      </Pressable>
+                    )}
                   </View>
                 );
               })}
@@ -382,13 +409,14 @@ const officeControlStyles = defineThemedStyles({
   menuGroup: {
     fontFamily: CHROME_FONT,
     fontWeight: "600",
-    fontSize: 9,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
+    fontSize: 10,
     color: "var(--text-secondary)",
     paddingTop: 7,
     paddingBottom: 3,
     paddingHorizontal: 8,
+  },
+  menuGroupAfter: {
+    marginTop: 5,
   },
   menuItem: {
     paddingVertical: 6,
@@ -407,5 +435,8 @@ const officeControlStyles = defineThemedStyles({
   menuItemTextActive: {
     color: "var(--accent)",
     fontWeight: "700",
+  },
+  menuItemTextDisabled: {
+    color: "var(--text-secondary)",
   },
 });

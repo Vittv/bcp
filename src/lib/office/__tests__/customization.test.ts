@@ -32,6 +32,29 @@ describe("customization storage", () => {
     });
   });
 
+  test("keeps the readings forms", () => {
+    for (const readings of ["1", "2", "3", "12", "13", "23", "123"]) {
+      expect(sanitizeCustomization({ readings })).toEqual({ readings });
+    }
+  });
+
+  test("drops invalid readings forms", () => {
+    for (const readings of [
+      "21",
+      "113",
+      "4",
+      "0",
+      "1.5",
+      "",
+      " ",
+      3,
+      true,
+      "split",
+    ]) {
+      expect(sanitizeCustomization({ readings })).toEqual({});
+    }
+  });
+
   test("drops invalid values instead of breaking the office", () => {
     expect(
       sanitizeCustomization({

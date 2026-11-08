@@ -11,11 +11,13 @@ import type {
   OfficeSpeaker,
 } from "../../lib/content/types";
 import { CHROME_FONT, SERIF_FONT, SERIF_ITALIC_FONT } from "../../lib/fonts";
+import { readingsApply } from "../../lib/office/compose";
 import type {
   ComposedLesson,
   ComposedNode,
   ComposedSection,
   InvitatoryChoice,
+  LessonSlot,
   MenuChoices,
   MenuKey,
   OfficeChoices,
@@ -245,6 +247,28 @@ function SectionControl({
   const customization = customizationFor(officeId);
 
   switch (sectionKey) {
+    case "lessons": {
+      if (!choices.lessonSlots || choices.lessonSlots.length === 0) return null;
+      // a stored choice the day cannot honor (a feast's two readings under
+      // an evening "Gospel only") shows as Suggested; the stored key
+      // survives and rules again tomorrow
+      const stored = customization.readings;
+      const value =
+        stored !== undefined && readingsApply(choices, stored)
+          ? stored
+          : "suggested";
+      return (
+        <ReadingsControl
+          choices={choices}
+          value={value}
+          onChange={(id) =>
+            setOfficeChoice(officeId, {
+              readings: id === "suggested" ? undefined : id,
+            })
+          }
+        />
+      );
+    }
     case "opening": {
       if (choices.openingGroups.length === 0) return null;
       const options: ControlOption[] = [
@@ -347,6 +371,79 @@ function SectionControl({
     default:
       return null;
   }
+}
+
+// short position names for the Readings picker; the corpus descriptors
+// appear on shared year-table days, where the book assigns the positions
+const READING_NAME: Record<LessonSlot["key"], string> = {
+  first: "First",
+  second: "Second",
+  third: "Third",
+  gospel: "Gospel",
+};
+
+// digits to positions to composition and the picker alike; third and
+// gospel share position 3 and never carry refs on the same day
+const READING_NO: Record<LessonSlot["key"], 1 | 2 | 3> = {
+  first: 1,
+  second: 2,
+  third: 3,
+  gospel: 3,
+};
+
+function slotName(slot: LessonSlot): string {
+  // the corpus reads as the name where the book assigns it (OT, NT,
+  // Gospel); split-set days fall back to the position
+  return slot.desc ?? READING_NAME[slot.key];
+}
+
+// the Readings picker: the day's full set restores the default (a missing
+// stored key), then the one- and two-reading subsets. a day without a
+// gospel shows a disabled row where the gospel choices would sit
+function ReadingsControl({
+  choices,
+  value,
+  onChange,
+}: {
+  choices: OfficeChoices;
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const slots = choices.lessonSlots ?? [];
+  const options: ControlOption[] = [{ id: "suggested", label: "All readings" }];
+  options.push(
+    ...slots.map((slot) => ({
+      id: String(READING_NO[slot.key]),
+      group: "One reading",
+      label: `${slotName(slot)} only`,
+    })),
+  );
+  if (!slots.some((slot) => slot.key === "gospel")) {
+    options.push({
+      id: "disabled",
+      group: "One reading",
+      label: "No gospel appointed today",
+      disabled: true,
+    });
+  }
+  for (let i = 0; i < slots.length; i++) {
+    for (let j = i + 1; j < slots.length; j++) {
+      options.push({
+        id: `${READING_NO[slots[i].key]}${READING_NO[slots[j].key]}`,
+        group: "Two readings",
+        label: `${slotName(slots[i])} & ${slotName(slots[j])}`,
+      });
+    }
+  }
+  return (
+    <ChoiceMenu
+      value={value}
+      options={options}
+      label="Readings"
+      accessibilityLabel="Readings"
+      onChange={onChange}
+    />
+  );
 }
 
 // the inline control belonging to one printed menu node; noonday and compline
@@ -601,7 +698,12 @@ export function OfficeView({
   const controlFor = (key: ComposedSection["key"]) => {
     // full text prints the book's own menus, so the pickers would have
     // nothing to act on
-    if (fullText && (key === "opening" || key === "invitatory")) return null;
+    if (
+      fullText &&
+      (key === "opening" || key === "invitatory" || key === "lessons")
+    ) {
+      return null;
+    }
     if (key === "suffrages-b" && hasSuffragesA) return null;
     return (
       <SectionControl
