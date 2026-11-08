@@ -1,5 +1,10 @@
-## Bug Fixes
+## Features
 
-- calendar: separate the pills inside a day cell with hairlines that touch the cell's edges, color each pill's text instead of outlining it, and give every pill one fixed height so side-by-side days line up rule for rule.
+- offices: add a readings picker for Morning and Evening Prayer to choose how many readings to include, with options for OT, NT, and Gospel readings on shared lectionary days.
 
-**Full Changelog**: <https://github.com/Vittv/bcp/compare/v0.6.2...v0.6.3>
+## Improvements
+
+- offices: make section headings sticky while scrolling for easier navigation through long offices.
+- offices: keep suffrages headings in flow so they scroll away naturally at the end of the section.
+
+**Full Changelog**: https://github.com/Vittv/bcp/compare/v0.6.3...v0.6.4
