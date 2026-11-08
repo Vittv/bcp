@@ -644,12 +644,12 @@ function SectionView({
     <MenuAnchor style={styles.section}>
       {section.heading ? (
         control ? (
-          <MenuAnchor style={styles.headingRow}>
+          <MenuAnchor style={[styles.headingRow, styles.stickyHeader]}>
             <Text style={[heading, styles.headingText]}>{section.heading}</Text>
             {control}
           </MenuAnchor>
         ) : (
-          <Text style={heading}>{section.heading}</Text>
+          <Text style={[heading, styles.stickyHeader]}>{section.heading}</Text>
         )
       ) : control ? (
         <MenuAnchor
@@ -783,6 +783,12 @@ const officeViewStyles = defineThemedStyles({
     paddingBottom: 6,
     borderBottomWidth: 1,
     borderBottomColor: "var(--border-content)",
+  },
+  stickyHeader: {
+    position: "sticky",
+    top: 0,
+    backgroundColor: "var(--bg)",
+    zIndex: 10,
   },
   headingText: {
     flexShrink: 1,
