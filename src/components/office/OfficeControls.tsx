@@ -320,7 +320,7 @@ const officeControlStyles = defineThemedStyles({
   segText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
-    fontSize: 10,
+    fontSize: 12,
     letterSpacing: 0.2,
     color: "var(--text-secondary)",
   },
@@ -371,7 +371,7 @@ const officeControlStyles = defineThemedStyles({
   triggerText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
-    fontSize: 10,
+    fontSize: 12,
     color: "var(--text-secondary)",
     flexShrink: 1,
     minWidth: 0,
@@ -409,7 +409,7 @@ const officeControlStyles = defineThemedStyles({
   menuGroup: {
     fontFamily: CHROME_FONT,
     fontWeight: "600",
-    fontSize: 10,
+    fontSize: 11,
     color: "var(--text-secondary)",
     paddingTop: 7,
     paddingBottom: 3,
@@ -428,7 +428,7 @@ const officeControlStyles = defineThemedStyles({
   },
   menuItemText: {
     fontFamily: CHROME_FONT,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "500",
     color: "var(--text)",
   },

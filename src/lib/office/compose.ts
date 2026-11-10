@@ -955,7 +955,7 @@ function officeMenus(ctx: ComposeContext): OfficeMenus | undefined {
     const options: MenuChoiceOption[] = [
       {
         id: "suggested",
-        label: `Suggested · All ${regions.psalms.length} psalms`,
+        label: `All ${regions.psalms.length} psalms`,
         menuLabel: "All psalms",
         group: "Suggested",
       },
@@ -976,7 +976,7 @@ function officeMenus(ctx: ComposeContext): OfficeMenus | undefined {
       options: [
         {
           id: "suggested",
-          label: `Suggested · ${first.label}`,
+          label: first.label,
           menuLabel: first.label,
           group: "Suggested",
         },
@@ -994,7 +994,7 @@ function officeMenus(ctx: ComposeContext): OfficeMenus | undefined {
     const options: MenuChoiceOption[] = [
       {
         id: "suggested",
-        label: `Suggested · ${first.label}`,
+        label: first.label,
         menuLabel: first.menuLabel,
         group: "Suggested",
       },

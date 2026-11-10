@@ -110,7 +110,7 @@ function canticleOptions(
     : "None";
   options.push({
     id: "suggested",
-    label: `Suggested · ${suggestedTitle}`,
+    label: suggestedTitle,
     menuLabel: suggestedTitle,
     group: "Suggested",
   });
@@ -275,7 +275,7 @@ function SectionControl({
         {
           id: "suggested",
           label: choices.openingSuggested
-            ? `Suggested · ${truncate(choices.openingSuggested, 52)}`
+            ? truncate(choices.openingSuggested, 52)
             : "Suggested",
           group: "Suggested",
         },
@@ -319,10 +319,10 @@ function SectionControl({
                 id: "suggested",
                 label:
                   choices.invitatorySuggested === "pascha"
-                    ? "Suggested · Pascha nostrum"
+                    ? INVITATORY_LABEL.pascha
                     : choices.invitatorySuggested === "phos"
-                      ? "Suggested · O Gracious Light"
-                      : `Suggested · ${INVITATORY_LABEL[choices.invitatorySuggested as "venite" | "jubilate" | "pascha"]}`,
+                      ? "O Gracious Light"
+                      : INVITATORY_LABEL[choices.invitatorySuggested as "venite" | "jubilate" | "pascha"],
                 group: "Suggested",
               },
               { id: "venite", label: INVITATORY_LABEL.venite, group: "Psalms" },
@@ -349,7 +349,7 @@ function SectionControl({
           options={[
             {
               id: "suggested",
-              label: "Suggested · O Gracious Light",
+              label: "O Gracious Light",
               group: "Suggested",
             },
             { id: "venite", label: INVITATORY_LABEL.venite, group: "Psalms" },
