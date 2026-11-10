@@ -1,6 +1,6 @@
 [package]
 name = "bcp"
-version = "0.6.4"
+version = "0.6.5"
 description = "Daily Office reader for the 1979 Book of Common Prayer"
 edition = "2021"
 

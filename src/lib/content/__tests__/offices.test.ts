@@ -76,7 +76,7 @@ describe("offices", () => {
       noonday: 69,
       owe: 71,
       "evening-rite-two": 151,
-      compline: 117,
+      compline: 118,
     };
     for (const id of OFFICE_IDS) {
       const total = officeSections(id).reduce((n, s) => n + s.items.length, 0);

@@ -16,7 +16,6 @@ import type {
   ComposedLesson,
   ComposedNode,
   ComposedSection,
-  InvitatoryChoice,
   LessonSlot,
   MenuChoices,
   MenuKey,
@@ -322,7 +321,13 @@ function SectionControl({
                     ? INVITATORY_LABEL.pascha
                     : choices.invitatorySuggested === "phos"
                       ? "O Gracious Light"
-                      : INVITATORY_LABEL[choices.invitatorySuggested as "venite" | "jubilate" | "pascha"],
+                      : // SAFETY: morning invitatory suggestions are venite, jubilate, or pascha
+                        INVITATORY_LABEL[
+                          choices.invitatorySuggested as
+                            | "venite"
+                            | "jubilate"
+                            | "pascha"
+                        ],
                 group: "Suggested",
               },
               { id: "venite", label: INVITATORY_LABEL.venite, group: "Psalms" },
@@ -359,8 +364,7 @@ function SectionControl({
           accessibilityLabel="Invitatory"
           onChange={(id) =>
             setOfficeChoice(officeId, {
-              invitatory:
-                id === "venite" || id === "jubilate" ? id : undefined,
+              invitatory: id === "venite" || id === "jubilate" ? id : undefined,
             })
           }
         />
