@@ -137,6 +137,9 @@ export function sanitizeCustomization(raw: JsonValue): OfficeCustomization {
   }
   const invitatory = invitatoryOf(raw.invitatory);
   if (invitatory) out.invitatory = invitatory;
+  if (raw.pascha === true && !out.invitatory) {
+    out.invitatory = "pascha";
+  }
   const psalmCycle = psalmCycleOf(raw.psalmCycle);
   if (psalmCycle) out.psalmCycle = psalmCycle;
   const one = canticleSlot(raw.canticle1);

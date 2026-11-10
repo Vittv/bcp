@@ -14,7 +14,7 @@ import type { OfficeCustomization } from "./customization";
 // personalMode strips speaker labels and the priestly absolution for solo prayer.
 export type OfficeRite = "One" | "Two";
 
-export type InvitatoryChoice = "venite" | "jubilate" | "pascha";
+export type InvitatoryChoice = "venite" | "jubilate" | "pascha" | "phos";
 
 export type OfficePrefs = {
   rite: OfficeRite;

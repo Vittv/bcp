@@ -40,6 +40,7 @@ import type {
   OfficeDocument,
   OfficeMenus,
   OfficePrefs,
+  OfficeRite,
 } from "./types";
 import { DEFAULT_PREFS } from "./types";
 
@@ -1107,6 +1108,16 @@ function composeMenuSection(
         } else {
           inPrayerMenu = false;
         }
+        // compline closes with the Song of Simeon and its antiphon; the rubric
+        // names the antiphon and canticle, so label the canticle before its verses
+        if (
+          ctx.officeId === "compline" &&
+          /service concludes with the Song of Simeon/i.test(item.text)
+        ) {
+          const node = convert(item, prefs);
+          if (node) nodes.push(node);
+          continue;
+        }
         const node = convert(item, prefs);
         if (node) nodes.push(node);
         continue;
@@ -1118,6 +1129,14 @@ function composeMenuSection(
         continue;
       }
       if (skipOptionText) continue;
+      // label the Nunc dimittis canticle itself before its verses
+      if (
+        ctx.officeId === "compline" &&
+        item.kind === "text" &&
+        item.text.startsWith("Lord, you now have set your servant free")
+      ) {
+        nodes.push({ kind: "heading", text: "Nunc dimittis" });
+      }
       const node = convert(item, prefs);
       if (node) nodes.push(node);
       continue;
@@ -1258,9 +1277,19 @@ function composeInvitatory(
   const choice = invitatoryChoice(ctx);
   const nodes: ComposedNode[] = [];
   let keep = true;
+  let skipPhosBlock = false;
+  const evening = !ctx.officeId.startsWith("morning");
   // before the invited psalm: the versicle and antiphon are kept. once a
   // psalm heading appears, only the chosen psalm's text is kept.
   for (const item of section.items) {
+    if (skipPhosBlock) {
+      if (item.kind === "rubric" && item.text.startsWith("Then follows")) {
+        skipPhosBlock = false;
+        const node = convert(item, ctx.prefs);
+        if (node) nodes.push(node);
+      }
+      continue;
+    }
     if (item.kind === "option") {
       // alternative antiphons after "or this": keep only the first.
       keep = false;
@@ -1306,6 +1335,19 @@ function composeInvitatory(
         }
         continue;
       }
+      if (
+        evening &&
+        item.text.startsWith("O Gracious Light") &&
+        !ctx.prefs.fullText &&
+        (choice === "venite" || choice === "jubilate")
+      ) {
+        for (const invitatoryItem of invitatoryPsalmItems(choice, ctx.rite)) {
+          const node = convert(invitatoryItem, ctx.prefs);
+          if (node) nodes.push(node);
+        }
+        skipPhosBlock = true;
+        continue;
+      }
       keep = true;
       const node = convert(item, ctx.prefs);
       if (node) nodes.push(node);
@@ -1321,16 +1363,22 @@ function composeInvitatory(
 
 function invitatoryChoice(
   ctx: ComposeContext,
-): "venite" | "jubilate" | "pascha" {
+): "venite" | "jubilate" | "pascha" | "phos" {
+  if (ctx.officeId.startsWith("morning")) {
+    const explicit = ctx.prefs.customization?.invitatory;
+    if (explicit) return explicit;
+    return ctx.slot.week.kind === "easter-week" ? "pascha" : "venite";
+  }
   const explicit = ctx.prefs.customization?.invitatory;
-  if (explicit) return explicit;
-  return defaultInvitatory(ctx);
+  if (explicit === "venite" || explicit === "jubilate") return explicit;
+  return "phos";
 }
 
 // the printed default: Venite, replaced by Pascha nostrum in Easter Week.
 function defaultInvitatory(
   ctx: ComposeContext,
-): "venite" | "jubilate" | "pascha" {
+): "venite" | "jubilate" | "pascha" | "phos" {
+  if (!ctx.officeId.startsWith("morning")) return "phos";
   return ctx.slot.week.kind === "easter-week" ? "pascha" : "venite";
 }
 
@@ -1341,6 +1389,126 @@ function invitatoryPsalmOf(
   if (text.startsWith("Jubilate")) return "jubilate";
   if (text.includes("Pascha nostrum")) return "pascha";
   return undefined;
+}
+
+function invitatoryPsalmItems(
+  choice: "venite" | "jubilate",
+  rite: OfficeRite,
+): OfficeItem[] {
+  if (choice === "venite") {
+    if (rite === "One") {
+      return [
+        { kind: "heading", text: "Venite", citation: "Psalm 95:1-7" },
+        {
+          kind: "text",
+          text: "O come, let us sing unto the Lord; let us heartily rejoice in the strength of our salvation.",
+        },
+        {
+          kind: "text",
+          text: "Let us come before his presence with thanksgiving and show ourselves glad in him with psalms.",
+        },
+        {
+          kind: "text",
+          text: "For the Lord is a great God, and a great King above all gods.",
+        },
+        {
+          kind: "text",
+          text: "In his hand are the corners of the earth, and the strength of the hills is his also.",
+        },
+        {
+          kind: "text",
+          text: "The sea is his, and he made it, and his hands prepared the dry land.",
+        },
+        {
+          kind: "text",
+          text: "O come, let us worship and fall down, and kneel before the Lord our Maker.",
+        },
+        {
+          kind: "text",
+          text: "For he is the Lord our God, and we are the people of his pasture and the sheep of his hand.",
+        },
+        {
+          kind: "text",
+          text: "O worship the Lord in the beauty of holiness; let the whole earth stand in awe of him.",
+        },
+        {
+          kind: "text",
+          text: "For he cometh, for he cometh to judge the world and with righteousness to judge the world and the peoples with his truth.",
+        },
+      ];
+    }
+    return [
+      { kind: "heading", text: "Venite", citation: "Psalm 95:1-7" },
+      {
+        kind: "text",
+        text: "Come let us sing to the Lord; let us shout for joy to the Rock of our salvation.",
+      },
+      {
+        kind: "text",
+        text: "Let us come before his presence with thanksgiving and raise a loud shout to him with psalms.",
+      },
+      {
+        kind: "text",
+        text: "For the Lord is a great God, and a great King above all gods.",
+      },
+      {
+        kind: "text",
+        text: "In his hand are the caverns of the earth, and the heights of the hills are his also.",
+      },
+      {
+        kind: "text",
+        text: "The sea is his, for he made it, and his hands have molded the dry land.",
+      },
+      {
+        kind: "text",
+        text: "Come, let us bow down, and bend the knee, and kneel before the Lord our Maker.",
+      },
+      {
+        kind: "text",
+        text: "For he is our God, and we are the people of his pasture and the sheep of his hand. Oh, that today you would hearken to his voice!",
+      },
+    ];
+  }
+  if (rite === "One") {
+    return [
+      { kind: "heading", text: "Jubilate", citation: "Psalm 100" },
+      {
+        kind: "text",
+        text: "Be joyful in the Lord, all ye lands; serve the Lord with gladness and come before his presence with a song.",
+      },
+      {
+        kind: "text",
+        text: "Be ye sure that the Lord he is God; it is he that hath made us and we ourselves; we are his people and the sheep of his pasture.",
+      },
+      {
+        kind: "text",
+        text: "O go your way into his gates with thanksgiving and into his courts with praise; be thankful unto him and speak good of his Name.",
+      },
+      {
+        kind: "text",
+        text: "For the Lord is gracious; his mercy is everlasting; and his truth endureth from generation to generation.",
+      },
+    ];
+  }
+  return [
+    { kind: "heading", text: "Jubilate", citation: "Psalm 100" },
+    {
+      kind: "text",
+      text: "Be joyful in the Lord, all you lands; serve the Lord with gladness and come before his presence with song.",
+    },
+    {
+      kind: "text",
+      text: "Know this: The Lord himself is God; he himself has made us, and we are his; we are his people and the sheep of his pasture.",
+    },
+    {
+      kind: "text",
+      text: "Enter his gates with thanksgiving; go into his courts with praise; give thanks to him and call upon his Name.",
+    },
+    {
+      kind: "text",
+      text: "For the Lord is good; his mercy is everlasting; and his faithfulness endures from age to age.",
+    },
+  ];
 }
 
 // the appointed psalms, text inline, followed by the office's conclusion.

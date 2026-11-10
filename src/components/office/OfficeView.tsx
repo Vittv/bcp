@@ -225,7 +225,7 @@ function CanticleView({
   );
 }
 
-const INVITATORY_LABEL: Record<InvitatoryChoice, string> = {
+const INVITATORY_LABEL: Record<"venite" | "jubilate" | "pascha", string> = {
   venite: "Venite (Psalm 95)",
   jubilate: "Jubilate (Psalm 100)",
   pascha: "Pascha nostrum",
@@ -309,6 +309,39 @@ function SectionControl({
       );
     }
     case "invitatory":
+      if (officeId.startsWith("morning")) {
+        return (
+          <ChoiceMenu
+            narrow
+            value={customization.invitatory ?? "suggested"}
+            options={[
+              {
+                id: "suggested",
+                label:
+                  choices.invitatorySuggested === "pascha"
+                    ? "Suggested · Pascha nostrum"
+                    : choices.invitatorySuggested === "phos"
+                      ? "Suggested · O Gracious Light"
+                      : `Suggested · ${INVITATORY_LABEL[choices.invitatorySuggested as "venite" | "jubilate" | "pascha"]}`,
+                group: "Suggested",
+              },
+              { id: "venite", label: INVITATORY_LABEL.venite, group: "Psalms" },
+              { id: "jubilate", label: INVITATORY_LABEL.jubilate },
+              { id: "pascha", label: INVITATORY_LABEL.pascha },
+            ]}
+            label="Invitatory"
+            accessibilityLabel="Invitatory Psalm"
+            onChange={(id) =>
+              setOfficeChoice(officeId, {
+                invitatory:
+                  id === "venite" || id === "jubilate" || id === "pascha"
+                    ? id
+                    : undefined,
+              })
+            }
+          />
+        );
+      }
       return (
         <ChoiceMenu
           narrow
@@ -316,21 +349,18 @@ function SectionControl({
           options={[
             {
               id: "suggested",
-              label: INVITATORY_LABEL[choices.invitatorySuggested],
+              label: "Suggested · O Gracious Light",
               group: "Suggested",
             },
             { id: "venite", label: INVITATORY_LABEL.venite, group: "Psalms" },
             { id: "jubilate", label: INVITATORY_LABEL.jubilate },
-            { id: "pascha", label: INVITATORY_LABEL.pascha },
           ]}
           label="Invitatory"
-          accessibilityLabel="Invitatory Psalm"
+          accessibilityLabel="Invitatory"
           onChange={(id) =>
             setOfficeChoice(officeId, {
               invitatory:
-                id === "venite" || id === "jubilate" || id === "pascha"
-                  ? id
-                  : undefined,
+                id === "venite" || id === "jubilate" ? id : undefined,
             })
           }
         />
@@ -518,13 +548,25 @@ function NodeView({
       return <Text style={subheading}>{node.text}</Text>;
     case "rubric":
       if (!showRubrics) return null;
-      return <Text style={styles.rubric}>{node.text}</Text>;
+      return (
+        <Text
+          style={[
+            styles.rubric,
+            node.text === "All repeat the Antiphon" &&
+              styles.rubricRepeatAntiphon,
+          ]}
+        >
+          {node.text}
+        </Text>
+      );
     case "menu": {
       const set = choices.menus?.[node.menu];
       if (!set || fullText) return null;
       return <MenuView menu={node.menu} set={set} officeId={officeId} />;
     }
-    case "text":
+    case "text": {
+      const asterisk = node.text.indexOf(" * ");
+      const hasHalfVerse = asterisk !== -1;
       return (
         <View>
           <Text
@@ -536,13 +578,30 @@ function NodeView({
             {node.speaker && showSpeakers ? (
               <SpeakerLabel speaker={node.speaker} />
             ) : null}
-            <MentionedText text={node.text} todaySlug={todaySlug} />
+            {hasHalfVerse ? (
+              <>
+                <MentionedText
+                  text={node.text.slice(0, asterisk + 2).trimEnd()}
+                  todaySlug={todaySlug}
+                />
+                {"\n"}
+                <Text style={styles.halfVerse}>
+                  <MentionedText
+                    text={node.text.slice(asterisk + 3).trimStart()}
+                    todaySlug={todaySlug}
+                  />
+                </Text>
+              </>
+            ) : (
+              <MentionedText text={node.text} todaySlug={todaySlug} />
+            )}
           </Text>
           {node.citation ? (
             <Text style={styles.textCitation}>{node.citation}</Text>
           ) : null}
         </View>
       );
+    }
     case "psalm": {
       const parts = node.citation.split(":");
       const title =
@@ -806,13 +865,13 @@ const officeViewStyles = defineThemedStyles({
   },
   stickyHeader: {
     position: "sticky",
-    top: 0,
+    top: -1,
     backgroundColor: "var(--bg)",
     zIndex: 100,
     isolation: "isolate",
   },
   stickyBlock: {
-    paddingTop: 2,
+    paddingTop: 3,
   },
   headingText: {
     flexShrink: 1,
@@ -849,6 +908,9 @@ const officeViewStyles = defineThemedStyles({
     marginTop: 4,
     marginBottom: 4,
   },
+  rubricRepeatAntiphon: {
+    marginTop: 16,
+  },
   text: {
     fontFamily: SERIF_FONT,
     fontSize: 18,
@@ -858,6 +920,9 @@ const officeViewStyles = defineThemedStyles({
   },
   textPeople: {
     fontWeight: "700",
+  },
+  halfVerse: {
+    paddingLeft: 20,
   },
   // the printed citation a menu reading names after its passage
   textCitation: {
