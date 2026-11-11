@@ -88,10 +88,9 @@ const helpStyles = defineThemedStyles({
   },
   group: {
     fontFamily: CHROME_FONT,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
+    letterSpacing: 0.2,
     color: "var(--accent)",
     marginBottom: 10,
   },

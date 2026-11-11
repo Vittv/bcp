@@ -1238,9 +1238,8 @@ const styleDef = defineThemedStyles({
   eyebrow: {
     fontFamily: CHROME_FONT,
     fontWeight: "600",
-    fontSize: 11,
-    letterSpacing: 2.2,
-    textTransform: "uppercase",
+    fontSize: 13,
+    letterSpacing: 0.2,
     color: "var(--text-secondary)",
   },
   railScroll: {
@@ -1326,9 +1325,8 @@ const styleDef = defineThemedStyles({
     minWidth: 0,
     fontFamily: CHROME_FONT,
     fontWeight: "600",
-    fontSize: 11,
-    letterSpacing: 2.2,
-    textTransform: "uppercase",
+    fontSize: 13,
+    letterSpacing: 0.2,
     color: "var(--text-secondary)",
     textAlign: "center",
   },
