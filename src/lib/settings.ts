@@ -71,7 +71,8 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "bible",
     title: "Bible",
-    description: "Which Bible translation the daily readings use.",
+    description:
+      "Choose the Bible translation for the Bible, Lectionary, and other scripture readings. Office lessons follow the office rite (Rite I: KJV, Rite II: WEB).",
     keywords: ["translation", "kjv", "web", "readings"],
   },
   {
