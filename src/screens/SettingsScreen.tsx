@@ -34,6 +34,7 @@ import {
   useBible,
 } from "../context/BibleContext";
 import { useOfficeSettings } from "../context/OfficeSettingsContext";
+import type { OfficeRite } from "../lib/office/types";
 import { type ThemeMode, useTheme } from "../context/ThemeContext";
 import { useTranslation } from "../context/TranslationContext";
 import { clearProgress, getAllProgress } from "../lib/content/bibleProgress";
@@ -269,6 +270,8 @@ export function SettingsScreen({
             setShowSpeakers={office.setShowSpeakers}
             devotions={office.devotions}
             setDevotions={office.setDevotions}
+            rite={office.rite}
+            setRite={office.setRite}
           />
         );
       case "bible":
@@ -957,7 +960,14 @@ type OfficeSettingsProps = {
   setShowSpeakers: (update: boolean | ((prev: boolean) => boolean)) => void;
   devotions: boolean;
   setDevotions: (v: boolean) => void;
+  rite: OfficeRite;
+  setRite: (r: OfficeRite) => void;
 };
+
+const RITE_OPTIONS = [
+  { id: "One" as const, label: "Rite I" },
+  { id: "Two" as const, label: "Rite II" },
+];
 
 function OfficeSettings({
   showRubrics,
@@ -966,9 +976,20 @@ function OfficeSettings({
   setShowSpeakers,
   devotions,
   setDevotions,
+  rite,
+  setRite,
 }: OfficeSettingsProps) {
+  const styles = useThemedStyles(styleDef);
   return (
     <>
+      <View style={styles.section}>
+        <Text style={styles.label}>Default Rite</Text>
+        <OptionChips options={RITE_OPTIONS} value={rite} onSelect={setRite} />
+        <Text style={styles.settingDescription}>
+          The default rite for Morning and Evening Prayer. Office lessons follow
+          the selected rite.
+        </Text>
+      </View>
       <ToggleRow
         label="Rubrics"
         value={showRubrics}
