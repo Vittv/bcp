@@ -8,6 +8,7 @@ import {
 } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ScriptureView } from "../../components/office/ScriptureView";
+import { BarDropdown } from "../../components/shell/BarDropdown";
 import { Chevron } from "../../components/shell/Chevron";
 import { usePalette } from "../../context/PaletteContext";
 import { useTranslation } from "../../context/TranslationContext";
@@ -15,6 +16,7 @@ import { loadScriptureBook } from "../../lib/content/bible";
 import { sliceKjvPassage } from "../../lib/content/kjv";
 import type { KjvBook, KjvPassage } from "../../lib/content/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
+import { TRANSLATION_OPTIONS } from "../../lib/translations";
 import {
   DetailPage,
   EmptyMessage,
@@ -103,6 +105,7 @@ export function ProverbsScreen({
 // arrows clamped to 1-31 across the book's linear sequence
 export function ProverbsBar({ leading }: { leading?: ReactNode }) {
   const { openProvChapter, setOpenProvChapter } = useReference();
+  const { translation, setTranslation } = useTranslation();
   const palette = usePalette();
   const chapters = useProvChapterMeta();
   const styles = useThemedStyles(styleDef);
@@ -114,6 +117,15 @@ export function ProverbsBar({ leading }: { leading?: ReactNode }) {
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
+        <BarDropdown
+          value={translation}
+          options={TRANSLATION_OPTIONS}
+          onChange={setTranslation}
+          mono
+          accent
+          align="start"
+          accessibilityLabel="Bible translation"
+        />
         <PickerButton
           label={`Proverbs ${n}`}
           meta={`${n} / ${PROVERS_CHAPTERS} · ${verses} verse${
