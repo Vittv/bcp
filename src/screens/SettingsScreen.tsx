@@ -34,7 +34,6 @@ import {
   useBible,
 } from "../context/BibleContext";
 import { useOfficeSettings } from "../context/OfficeSettingsContext";
-import type { OfficeRite } from "../lib/office/types";
 import { type ThemeMode, useTheme } from "../context/ThemeContext";
 import { useTranslation } from "../context/TranslationContext";
 import { clearProgress, getAllProgress } from "../lib/content/bibleProgress";
@@ -46,6 +45,7 @@ import {
   SERIF_ITALIC_FONT,
   SUBHEADING_FONT,
 } from "../lib/fonts";
+import type { OfficeRite } from "../lib/office/types";
 import { filterSearch } from "../lib/search";
 import { type SettingsSectionId, visibleSettings } from "../lib/settings";
 import {

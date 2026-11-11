@@ -1,11 +1,15 @@
 ## Fixes
 
-- offices: improve Compline rendering and parity, including Nunc dimittis labeling, repeated antiphon rubric, half-verse line breaks, and spacing fixes.
-- offices: fix Evening Prayer invitatory behavior so Phos hilaron remains the default and Venite/Jubilate selections replace it with properly styled invitatory text.
+- office: use KJV (and KJVA for apocrypha) for Rite I office lessons and WEB for Rite II, instead of applying the global Bible translation to office readings.
+- reader: preserve reading measure when increasing font size on desktop in Daily Office/Lectionary, the reference Offices page, and split-pane reference views, so large text no longer collapses into a thin column (mobile reflow unchanged).
 
 ## Improvements
 
-- offices: enlarge dropdown and control text in office pickers for better readability.
-- offices: simplify suggested picker labels now that suggested options are already grouped.
+- proverbs: add a Bible translation picker to the Proverbs bar.
+- office: show rite selection as a chip-styled dropdown in the Daily Office and Offices bars, displayed for Morning and Evening Prayer.
+- settings: add a default Rite I/Rite II preference to Office settings (default remains Rite II).
+- settings/help: clarify that the Bible translation setting applies to the Bible, Lectionary, and other scripture readings while office lessons follow the office rite.
+- help: reorganize shortcuts (including a Picker section), show `gg` for top of page, and add compact picker navigation hints (`C-j`/`C-k`, arrows, Enter).
+- ui: use normal capitalization for Help and Settings section titles.
 
-**Full Changelog**: https://github.com/Vittv/bcp/compare/v0.6.4...v0.6.5
+**Full Changelog**: https://github.com/Vittv/bcp/compare/v0.6.5...v0.6.6
