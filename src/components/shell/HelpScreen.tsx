@@ -28,8 +28,9 @@ export const SHORTCUTS: {
     group: "Picker",
     rows: [
       { keys: ["/"], label: "Open this page's picker" },
-      { keys: ["Ctrl+j"], label: "Move down a list picker" },
-      { keys: ["Ctrl+k"], label: "Move up a list picker" },
+      { keys: ["C-j", "↓"], label: "Move down a list picker" },
+      { keys: ["C-k", "↑"], label: "Move up a list picker" },
+      { keys: ["Enter"], label: "Open selected item" },
     ],
   },
   {
