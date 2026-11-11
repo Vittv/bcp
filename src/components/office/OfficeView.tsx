@@ -1,8 +1,11 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { useOfficeSettings } from "../../context/OfficeSettingsContext";
-import { useTranslation } from "../../context/TranslationContext";
-import { getScripturePassagesFromDolRef } from "../../lib/content/bible";
+import {
+  type ApocryphaCorpus,
+  getScripturePassagesFromDolRef,
+  type Translation,
+} from "../../lib/content/bible";
 import { canticleTitle } from "../../lib/content/canticles";
 import type {
   CanticlePassage,
@@ -44,6 +47,18 @@ const SPEAKER_LABEL: Record<OfficeSpeaker, string> = {
   all: "All",
 };
 
+type ScriptureConfig = {
+  translation: Translation;
+  apocrypha: ApocryphaCorpus;
+};
+
+function scriptureForRite(rite: "One" | "Two" | null): ScriptureConfig {
+  // rite I keeps the traditional language; other offices/readings follow
+  // the contemporary rite II text
+  if (rite === "One") return { translation: "kjv", apocrypha: "kjva" };
+  return { translation: "web", apocrypha: "web" };
+}
+
 type NodeViewProps = {
   node: ComposedNode;
   showRubrics: boolean;
@@ -53,6 +68,7 @@ type NodeViewProps = {
   rite: "One" | "Two" | null;
   choices: OfficeChoices;
   fullText: boolean;
+  scripture: ScriptureConfig;
 };
 
 function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
@@ -60,22 +76,25 @@ function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
   return <Text style={styles.speaker}>{SPEAKER_LABEL[speaker]} </Text>;
 }
 
-function LessonRow({ lesson }: { lesson: ComposedLesson }) {
+function LessonRow({
+  lesson,
+  scripture,
+}: {
+  lesson: ComposedLesson;
+  scripture: ScriptureConfig;
+}) {
   const styles = useThemedStyles(officeViewStyles);
-  const { translation, apocrypha } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    getScripturePassagesFromDolRef({ translation, apocrypha }, lesson.ref).then(
-      (ps) => {
-        if (!cancelled) setPassages(ps);
-      },
-    );
+    getScripturePassagesFromDolRef(scripture, lesson.ref).then((ps) => {
+      if (!cancelled) setPassages(ps);
+    });
     return () => {
       cancelled = true;
     };
-  }, [lesson.ref, translation, apocrypha]);
+  }, [lesson.ref, scripture]);
 
   return (
     <View style={styles.lessonRow}>
@@ -544,6 +563,7 @@ function NodeView({
   rite,
   choices,
   fullText,
+  scripture,
 }: NodeViewProps) {
   const styles = useThemedStyles(officeViewStyles);
   const subheading = useSubheading();
@@ -626,12 +646,12 @@ function NodeView({
       return (
         <View style={styles.lessonBlock}>
           {node.lessons.map((l) => (
-            <LessonRow key={l.ref} lesson={l} />
+            <LessonRow key={l.ref} lesson={l} scripture={scripture} />
           ))}
         </View>
       );
     case "reading":
-      return <LessonRow lesson={node.lesson} />;
+      return <LessonRow lesson={node.lesson} scripture={scripture} />;
     case "canticle":
       return (
         <CanticleView
@@ -689,6 +709,7 @@ function SectionView({
   rite,
   choices,
   fullText,
+  scripture,
   control,
   fullWidthControl = false,
 }: {
@@ -700,6 +721,7 @@ function SectionView({
   rite: "One" | "Two" | null;
   choices: OfficeChoices;
   fullText: boolean;
+  scripture: ScriptureConfig;
   control?: ReactNode;
   /** a heading-less control that should span the reading column */
   fullWidthControl?: boolean;
@@ -754,6 +776,7 @@ function SectionView({
           rite={rite}
           choices={choices}
           fullText={fullText}
+          scripture={scripture}
         />
       ))}
     </MenuAnchor>
@@ -776,6 +799,10 @@ export function OfficeView({
   const customization = customizationFor(document.office);
   const hasSuffragesA = document.sections.some(
     (section) => section.key === "suffrages-a",
+  );
+  const scripture = useMemo(
+    () => scriptureForRite(document.rite),
+    [document.rite],
   );
 
   const controlFor = (key: ComposedSection["key"]) => {
@@ -810,6 +837,7 @@ export function OfficeView({
           rite={document.rite}
           choices={document.choices}
           fullText={fullText}
+          scripture={scripture}
           control={controlFor(section.key)}
           fullWidthControl={section.key === "opening"}
         />
