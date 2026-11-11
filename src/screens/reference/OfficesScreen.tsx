@@ -9,6 +9,7 @@ import {
 import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -29,6 +30,7 @@ import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { useViewport } from "../../lib/viewport";
 import {
   BASE_OFFICES,
+  DetailPage,
   noSelect,
   type OfficeRite,
   type RefOfficeBase,
@@ -36,7 +38,9 @@ import {
   today,
   useReference,
 } from "./shared";
-import { sharedStyles as styleDef } from "./styles";
+import { detailPageScale, sharedStyles as styleDef } from "./styles";
+
+const IS_WEB = Platform.OS === "web";
 
 // SAFETY: the literals are exactly the OfficeRite union members
 const RITES: OfficeRite[] = ["One", "Two"];
@@ -53,12 +57,14 @@ function sameDate(a: CalendarDate, b: CalendarDate): boolean {
 export function OfficesScreen({
   onScrollProgress,
   isMobile,
+  fontScale = 1,
 }: {
   // the page scrolls in its own ScrollView (the shell's outer scroller
   // is hidden on reference pages), so it reports progress up to the
   // status bar itself
   onScrollProgress?: (pct: number) => void;
   isMobile: boolean;
+  fontScale?: number;
 }) {
   const { openOffice, officeRite } = useReference();
   // the bar picks the office; the page just renders it full-width.
@@ -87,6 +93,49 @@ export function OfficesScreen({
     onScrollProgress?.(max > 0 ? Math.round((contentOffset.y / max) * 100) : 0);
   };
 
+  if (isMobile) {
+    return (
+      <View style={[styles.container, { height: "100%" }]}>
+        <DetailPage compact>
+          <OfficeDetailBody base={current} />
+        </DetailPage>
+      </View>
+    );
+  }
+
+  if (IS_WEB) {
+    return (
+      <View style={[styles.container, { height: "100%" }]}>
+        <div
+          key={current}
+          style={{
+            boxSizing: "border-box",
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            zoom: fontScale !== 1 ? String(fontScale) : undefined,
+          }}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            const max = el.scrollHeight - el.clientHeight;
+            onScrollProgress?.(
+              max > 0 ? Math.round((el.scrollTop / max) * 100) : 0,
+            );
+          }}
+        >
+          <View
+            style={[
+              styles.detailPage,
+              detailPageScale(fontScale, { preserveMeasure: true }),
+            ]}
+          >
+            <OfficeDetailBody base={current} />
+          </View>
+        </div>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { height: "100%" }]}>
       {/* key resets scroll when switching offices */}
@@ -97,7 +146,7 @@ export function OfficesScreen({
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        <View style={[styles.detailPage, isMobile && styles.detailPageMobile]}>
+        <View style={[styles.detailPage, detailPageScale(fontScale)]}>
           <OfficeDetailBody base={current} />
         </View>
       </ScrollView>

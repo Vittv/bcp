@@ -1337,7 +1337,11 @@ export function Shell() {
         );
       case "offices":
         return (
-          <OfficesScreen isMobile={isMobile} onScrollProgress={reportScroll} />
+          <OfficesScreen
+            isMobile={isMobile}
+            fontScale={fontScale}
+            onScrollProgress={reportScroll}
+          />
         );
       case "saints":
         return (
@@ -1597,15 +1601,20 @@ export function Shell() {
                             style={{
                               boxSizing: "border-box",
                               width: "100%",
-                              // divide by the zoom with the padding below, so
-                              // the column keeps its width as the type scales
+                              // on desktop the zoom keeps its reading measure so
+                              // larger text doesn't collapse into a thin strip;
+                              // mobile keeps reflow within the available width
                               maxWidth:
                                 page === "today" || page === "lectionary"
-                                  ? `${u(46 / fontScale)}rem`
+                                  ? isMobile
+                                    ? `${u(46 / fontScale)}rem`
+                                    : "46rem"
                                   : "100%",
                               padding:
                                 page === "today" || page === "lectionary"
-                                  ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
+                                  ? isMobile
+                                    ? `clamp(${u(1 / fontScale)}rem, ${u(4 / fontScale)}vw, ${u(32 / fontScale)}px) clamp(${u(1 / fontScale)}rem, ${u(5 / fontScale)}vw, ${u(40 / fontScale)}px)`
+                                    : "clamp(1rem, 4vw, 32px) clamp(1rem, 5vw, 40px)"
                                   : "0",
                               height:
                                 page === "calendar" ||

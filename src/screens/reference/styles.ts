@@ -18,9 +18,15 @@ const DETAIL_COLUMN_PAD_TOP = 32;
 const DETAIL_COLUMN_PAD_BOTTOM = 64;
 
 // inverse-zoom overrides applied beside sharedStyles.detailPage when a pane is
-// zoomed, so a font-size change reflows the text without shrinking the column
-export function detailPageScale(fontScale: number): ViewStyle | undefined {
+// zoomed. by default a font-size change reflows the text without shrinking the
+// column; on desktop we keep the measure so larger text reads like a zoom
+// instead of collapsing into a thin strip
+export function detailPageScale(
+  fontScale: number,
+  opts?: { preserveMeasure?: boolean },
+): ViewStyle | undefined {
   if (fontScale === 1) return undefined;
+  if (opts?.preserveMeasure) return undefined;
   return {
     maxWidth: DETAIL_COLUMN_WIDTH / fontScale,
     paddingHorizontal: DETAIL_COLUMN_PAD_X / fontScale,

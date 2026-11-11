@@ -627,7 +627,12 @@ export function SplitPane({
         data-split-detail
         onScroll={handleDetailScroll}
       >
-        <View style={[styles.detailPage, detailPageScale(fontScale)]}>
+        <View
+          style={[
+            styles.detailPage,
+            detailPageScale(fontScale, { preserveMeasure: true }),
+          ]}
+        >
           {detail}
         </View>
       </div>
