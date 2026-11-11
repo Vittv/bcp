@@ -18,6 +18,10 @@ import {
 import { Segmented } from "../../components/office/OfficeControls";
 import { OfficeHeader } from "../../components/office/OfficeHeader";
 import { OfficeView } from "../../components/office/OfficeView";
+import {
+  BarDropdown,
+  type DropdownOption,
+} from "../../components/shell/BarDropdown";
 import { Chevron } from "../../components/shell/Chevron";
 import { useSeasonColorMap } from "../../components/shell/SeasonDot";
 import { useOfficeSettings } from "../../context/OfficeSettingsContext";
@@ -42,13 +46,10 @@ import { detailPageScale, sharedStyles as styleDef } from "./styles";
 
 const IS_WEB = Platform.OS === "web";
 
-// SAFETY: the literals are exactly the OfficeRite union members
-const RITES: OfficeRite[] = ["One", "Two"];
-
-const RITE_LABELS: Record<OfficeRite, string> = {
-  One: "Rite I",
-  Two: "Rite II",
-};
+const RITE_OPTIONS: readonly DropdownOption<OfficeRite>[] = [
+  { id: "One", label: "Rite I" },
+  { id: "Two", label: "Rite II" },
+];
 
 function sameDate(a: CalendarDate, b: CalendarDate): boolean {
   return a.year === b.year && a.month === b.month && a.day === b.day;
@@ -202,34 +203,7 @@ export function OfficesBar({
     setMenuOpen(false);
   };
 
-  // rite I/II segment; the rite only applies to morning and evening
-  const riteToggle = (
-    <View style={[styles.riteSeg, compact && styles.riteSegCompact]}>
-      {RITES.map((r) => (
-        <Pressable
-          key={r}
-          style={({ hovered }) => [
-            styles.riteChip,
-            compact && styles.riteChipCompact,
-            hovered && styles.offTabActive,
-          ]}
-          onPress={() => setOfficeRite(r)}
-          accessibilityRole="button"
-          accessibilityState={{ selected: r === officeRite }}
-          accessibilityLabel={RITE_LABELS[r]}
-        >
-          <Text
-            style={[
-              styles.riteChipText,
-              r === officeRite && styles.riteChipTextOn,
-            ]}
-          >
-            {RITE_LABELS[r]}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
+  const showRite = current === "morning" || current === "evening";
 
   const controls = (
     <View style={[styles.barRight, compact && styles.barRightCompact]}>
@@ -281,7 +255,16 @@ export function OfficesBar({
           </Text>
         </Pressable>
       ) : null}
-      {riteToggle}
+      {showRite ? (
+        <BarDropdown
+          value={officeRite}
+          options={RITE_OPTIONS}
+          onChange={setOfficeRite}
+          accent
+          steadyWidth
+          accessibilityLabel="Office rite"
+        />
+      ) : null}
     </View>
   );
 

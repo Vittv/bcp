@@ -184,7 +184,6 @@ export function OfficeTabs({
             options={RITE_OPTIONS}
             onChange={onRiteChange}
             accent
-            plain
             steadyWidth
             accessibilityLabel="Office rite"
           />
