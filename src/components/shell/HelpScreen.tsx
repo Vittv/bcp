@@ -18,13 +18,18 @@ export const SHORTCUTS: {
       { keys: ["l", "→"], label: "Next page" },
       { keys: ["d"], label: "Scroll half page down" },
       { keys: ["u"], label: "Scroll half page up" },
-      { keys: ["g", "g"], label: "Top of page" },
+      { keys: ["gg"], label: "Top of page" },
       { keys: ["G"], label: "Bottom of page" },
       { keys: ["f"], label: "Open link hints" },
+      { keys: ["Ctrl+K"], label: "Search the whole prayer book" },
+    ],
+  },
+  {
+    group: "Picker",
+    rows: [
+      { keys: ["/"], label: "Open this page's picker" },
       { keys: ["Ctrl+j"], label: "Move down a list picker" },
       { keys: ["Ctrl+k"], label: "Move up a list picker" },
-      { keys: ["/"], label: "Open this page's picker" },
-      { keys: ["Ctrl+K"], label: "Search the whole prayer book" },
     ],
   },
   {
