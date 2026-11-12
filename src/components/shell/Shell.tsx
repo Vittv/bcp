@@ -134,6 +134,7 @@ import { TodayScreen } from "../../screens/TodayScreen";
 import { DEVOTIONS, OfficeTabs } from "./OfficeTabs";
 import { StatusBar } from "./StatusBar";
 import { TopBar } from "./TopBar";
+import { UpdateBanner } from "./UpdateBanner";
 import { useWindowDecorations } from "./useWindowDecorations";
 
 // a transient history step carries its layer name, so the drawer and modal
@@ -1633,6 +1634,7 @@ export function Shell() {
                           </div>
                         </div>
 
+                        <UpdateBanner />
                         <StatusBar
                           season={season}
                           seasonColor={seasonColor}

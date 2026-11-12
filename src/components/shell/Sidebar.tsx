@@ -36,8 +36,6 @@ import {
   StarIcon,
   SunIcon,
 } from "./Icon";
-import { UpdateBanner } from "./UpdateBanner";
-
 export const REPO_URL = "https://github.com/Vittv/bcp";
 
 export type PageId =
@@ -341,7 +339,6 @@ export function Sidebar({
           ))}
         </View>
       </View>
-      <UpdateBanner />
       <View style={styles.footer}>
         <Text style={styles.footerText} numberOfLines={1}>
           {`BCP · v${version}`}

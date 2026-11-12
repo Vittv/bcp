@@ -8,29 +8,31 @@ import {
 } from "../../lib/theme/themedStyles";
 import { useUpdateStatus } from "../../lib/updater";
 
-// launch-time notice that a newer desktop build exists, drawn as a thin
-// band at the bottom of the sidebar, just above the footer. runs the
-// shared updater flow on press and relaunches on success.
+// notice that a newer build exists, drawn as a thin band above the status bar.
+// tauri installs and relaunches; the web build reloads into the new deploy.
 export function UpdateBanner() {
   const styles = useThemedStyles(updateBannerStyles);
   const { status, version, body, install } = useUpdateStatus(true);
 
-  if (!IS_TAURI) return null;
   if (status !== "available" && status !== "installing") return null;
 
   const installing = status === "installing";
-  // the pending version is always set when a build is available; the fallback
-  // keeps this branch's strict string props honest for the typechecker
-  const nextVersion = version ?? "";
+  const label = version
+    ? `BCP ${version} available`
+    : IS_TAURI
+      ? "A new version of BCP is available"
+      : "New version available";
 
   return (
     <View style={styles.banner}>
       {installing ? (
-        <Text style={styles.text}>Downloading and installing…</Text>
+        <Text style={styles.text}>
+          {IS_TAURI ? "Downloading and installing…" : "Refreshing…"}
+        </Text>
       ) : (
         <>
           <Text style={styles.text} numberOfLines={1}>
-            version {nextVersion} available
+            {label}
           </Text>
           {body ? (
             <Pressable
@@ -39,7 +41,7 @@ export function UpdateBanner() {
                 hovered && styles.changelogBtnHover,
               ]}
               onPress={() =>
-                requestOpenChangelog({ markdown: body, version: nextVersion })
+                requestOpenChangelog({ markdown: body, version: version ?? "" })
               }
               accessibilityRole="button"
               accessibilityLabel="Read what changed in this version"
@@ -54,9 +56,15 @@ export function UpdateBanner() {
             ]}
             onPress={install}
             accessibilityRole="button"
-            accessibilityLabel={`Update to version ${nextVersion}`}
+            accessibilityLabel={
+              IS_TAURI
+                ? `Update BCP to ${version ?? "the latest version"}`
+                : "Refresh to load the latest version of BCP"
+            }
           >
-            <Text style={styles.updateText}>Update</Text>
+            <Text style={styles.updateText}>
+              {IS_TAURI ? "Update" : "Refresh"}
+            </Text>
           </Pressable>
         </>
       )}

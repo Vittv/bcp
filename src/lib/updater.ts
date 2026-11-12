@@ -13,20 +13,36 @@ export type UpdateStatus =
   | "installing"
   | "error";
 
-// shared state for the launch banner and the settings section, so the
-// tauri updater flow (check, download, relaunch) lives in one place.
-// inert on the web and pwa builds, where there is no updater backend.
+// shared state for the launch banner and the settings section, so update
+// detection and install live in one place. tauri uses the updater plugin;
+// the web build watches the service worker for a newly deployed version.
 export function useUpdateStatus(auto = false) {
   const [status, setStatus] = useState<UpdateStatus>("idle");
   const [version, setVersion] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  // the release notes the remote release carries (the same RELEASE.md that
-  // feeds the in-app changelog), shown before the update is installed
+  // release notes for a pending tauri update, shown before install
   const [body, setBody] = useState<string | null>(null);
   const hasChecked = useRef(false);
 
   const check = useCallback(async () => {
-    if (!IS_TAURI) return;
+    if (!IS_TAURI) {
+      if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
+        return;
+      }
+      setStatus("checking");
+      setMessage("");
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        await reg?.update();
+        setStatus((current) =>
+          current === "available" ? current : "upToDate",
+        );
+      } catch (error) {
+        setStatus("error");
+        setMessage(error instanceof Error ? error.message : String(error));
+      }
+      return;
+    }
     setStatus("checking");
     setMessage("");
     try {
@@ -46,7 +62,13 @@ export function useUpdateStatus(auto = false) {
   }, []);
 
   const install = useCallback(async () => {
-    if (!IS_TAURI) return;
+    if (!IS_TAURI) {
+      if (typeof window !== "undefined") {
+        setStatus("installing");
+        window.location.reload();
+      }
+      return;
+    }
     setStatus("installing");
     setMessage("");
     try {
@@ -76,16 +98,65 @@ export function useUpdateStatus(auto = false) {
     }
   }, [version]);
 
-  // one auto-check per mount: the timer keeps a slow release lookup off the
-  // first paint, and hasChecked keeps navigation from re-running it
+  // tauri: one auto-check per mount. web: watch the service worker so a new
+  // deployment surfaces a prompt without a manual check.
   useEffect(() => {
     if (!auto || hasChecked.current) return;
-    const timer = setTimeout(() => {
-      if (hasChecked.current) return;
-      hasChecked.current = true;
-      void check();
-    }, LAUNCH_CHECK_DELAY_MS);
-    return () => clearTimeout(timer);
+    if (IS_TAURI) {
+      const timer = setTimeout(() => {
+        if (hasChecked.current) return;
+        hasChecked.current = true;
+        void check();
+      }, LAUNCH_CHECK_DELAY_MS);
+      return () => clearTimeout(timer);
+    }
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
+      return;
+    }
+    hasChecked.current = true;
+    let cancelled = false;
+    const refreshOnChange = !!navigator.serviceWorker.controller;
+    const onControllerChange = () => {
+      if (refreshOnChange && !cancelled) setStatus("available");
+    };
+    navigator.serviceWorker.addEventListener(
+      "controllerchange",
+      onControllerChange,
+    );
+    void (async () => {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (!reg || cancelled) return;
+        const markAvailable = () => {
+          if (!cancelled) setStatus("available");
+        };
+        const watchInstalling = (worker: ServiceWorker | null) => {
+          if (!worker) return;
+          worker.addEventListener("statechange", () => {
+            if (
+              worker.state === "installed" &&
+              navigator.serviceWorker.controller
+            ) {
+              markAvailable();
+            }
+          });
+        };
+        if (reg.waiting && navigator.serviceWorker.controller) markAvailable();
+        watchInstalling(reg.installing);
+        reg.addEventListener("updatefound", () => {
+          watchInstalling(reg.installing);
+        });
+      } catch {
+        // update detection is best-effort on the web
+      }
+    })();
+    return () => {
+      cancelled = true;
+      navigator.serviceWorker.removeEventListener(
+        "controllerchange",
+        onControllerChange,
+      );
+    };
   }, [auto, check]);
 
   return { status, version, message, body, check, install };
