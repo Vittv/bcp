@@ -8,8 +8,6 @@ import {
   slicePassage,
 } from "./scripture";
 import type { KjvBook, KjvPassage } from "./types";
-import * as kjvBooks from "./vendor/kjv/index";
-import { kjvBookImports } from "./vendor/kjv/index";
 
 export type { KjvBook, KjvPassage };
 
@@ -503,6 +501,14 @@ function filenameForBook(abbrevOrName: string): string | null {
 
 const bookCache = new Map<string, KjvBook>();
 
+const isWebBrowser =
+  typeof document !== "undefined" &&
+  typeof window !== "undefined" &&
+  !("__TAURI_INTERNALS__" in window) &&
+  // SAFETY: React Native sets navigator.product to "ReactNative"
+  (navigator as { product?: string } | undefined)?.product !== "ReactNative";
+const useBundledScripture = !isWebBrowser;
+
 export async function loadKjvBook(
   abbrevOrName: string,
 ): Promise<KjvBook | null> {
@@ -514,13 +520,23 @@ export async function loadKjvBook(
   }
 
   try {
-    // SAFETY: filename is validated by filenameForBook against known books,
-    // so kjvBookImports is guaranteed to have a typed key for it
-    const bookKey = kjvBookImports[filename];
-    // biome-ignore lint/performance/noDynamicNamespaceImportAccess: the validated key selects from the whole-book namespace, which exists to be indexed
-    const bookModule = bookKey ? kjvBooks[bookKey] : undefined;
+    let bookModule: unknown;
+    if (useBundledScripture) {
+      const { books } = await import("./vendor/kjv/bundled");
+      bookModule = books[filename];
+    } else {
+      const { loaders } = await import("./vendor/kjv/loaders");
+      const loader = loaders[filename];
+      if (!loader) {
+        console.error(`KJV book ${filename} not found in loaders`);
+        return null;
+      }
+      const mod = await loader();
+      // SAFETY: JSON modules may be exposed as a default export or as the module itself
+      bookModule = (mod as { default?: unknown }).default ?? mod;
+    }
     if (!bookModule) {
-      console.error(`KJV book ${filename} not found in static imports`);
+      console.error(`KJV book ${filename} not found`);
       return null;
     }
     const parsed = kjvBookSchema.safeParse(bookModule);

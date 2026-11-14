@@ -7,7 +7,7 @@
 // (public/index.html skips registration there), because a stale worker
 // inside the webview would keep serving an old embedded bundle after an
 // app update on windows, where tauri serves http://tauri.localhost.
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = `bcp-${VERSION}`;
 
 self.addEventListener("install", (event) => {

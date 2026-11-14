@@ -199,6 +199,33 @@ describe("searchPalette", () => {
     }
   });
 
+  test("finds a Bible book and chapter reference", () => {
+    const hits = palette("john 4");
+    expect(hits[0]).toEqual({
+      id: "bible:John:4",
+      section: "bible",
+      label: "John 4",
+      detail: "New Testament · 21 chapters",
+      run: { kind: "bible", book: "John", chapter: 4 },
+    });
+  });
+
+  test("finds abbreviated Bible chapter references", () => {
+    const hits = palette("Jn 4");
+    expect(hits[0]?.id).toBe("bible:John:4");
+  });
+
+  test("finds apocrypha chapter references in the selected corpus", () => {
+    const hits = palette("tobit 2");
+    expect(hits[0]).toEqual({
+      id: "apocrypha:Tob:2",
+      section: "apocrypha",
+      label: "Tobit 2",
+      detail: "Apocrypha · 14 chapters",
+      run: { kind: "bible", book: "Tob", chapter: 2 },
+    });
+  });
+
   test("matches psalms by number and by verse text", () => {
     const byNum = palette("119");
     expect(

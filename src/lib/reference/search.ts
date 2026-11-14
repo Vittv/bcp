@@ -6,7 +6,12 @@ import {
   sanctoraleDateLabel,
   sanctoraleNameVariants,
 } from "../calendar/sanctorale";
-import { type ApocryphaCorpus, dcBooks } from "../content/bible";
+import {
+  ALL_SCRIPTURE_BOOKS,
+  type ApocryphaCorpus,
+  dcBooks,
+  getScriptureBookMeta,
+} from "../content/bible";
 import {
   canticleExists,
   canticlePassage,
@@ -22,6 +27,7 @@ import {
   psalmVerseCount,
 } from "../content/psalter";
 import { PSALTER_DAYS, psalterDaySummary } from "../content/psalterDays";
+import { parseDolRef } from "../content/scripture";
 import type { CollectSection, PsalterDay } from "../content/types";
 import { filterSearch } from "../search";
 import { type SettingsSectionId, visibleSettings } from "../settings";
@@ -516,6 +522,44 @@ function expandApocrypha(corpus: ApocryphaCorpus): PaletteEntry[] {
   return out;
 }
 
+// a book + chapter (and optional verse) reference like "John 4" or "Jn 4:16"
+function scriptureRefEntries(
+  query: string,
+  corpus: ApocryphaCorpus,
+): PaletteEntry[] {
+  const parsed = parseDolRef(ALL_SCRIPTURE_BOOKS, query);
+  if (!parsed) return [];
+  const meta = getScriptureBookMeta(parsed.book);
+  if (!meta) return [];
+  if (parsed.chapter < 1 || parsed.chapter > meta.chapters) return [];
+  const chapterLabel =
+    parsed.verseStart !== undefined ? `${meta.book} ${parsed.chapter}` : null;
+  if (meta.testament === "DC") {
+    // show it when the selected corpus contains this book
+    if (!dcBooks(corpus).some((b) => b.abbrev === meta.abbrev)) return [];
+    return [
+      {
+        id: `apocrypha:${meta.abbrev}:${parsed.chapter}`,
+        section: "apocrypha",
+        label: `${meta.book} ${parsed.chapter}`,
+        detail: chapterLabel
+          ? "Apocrypha"
+          : `Apocrypha · ${meta.chapters} chapters`,
+        run: { kind: "bible", book: meta.abbrev, chapter: parsed.chapter },
+      },
+    ];
+  }
+  return [
+    {
+      id: `bible:${meta.abbrev}:${parsed.chapter}`,
+      section: "bible",
+      label: `${meta.book} ${parsed.chapter}`,
+      detail: `${meta.testament === "OT" ? "Old Testament" : "New Testament"} · ${meta.chapters} chapters`,
+      run: { kind: "bible", book: meta.abbrev, chapter: parsed.chapter },
+    },
+  ];
+}
+
 // one merged result list across every picker section, in printed order.
 // an empty query stays blank; an exact section name expands to its full
 // listing, otherwise each section returns capped content matches. the
@@ -536,6 +580,11 @@ export function searchPalette(
   const section = sectionKeyword(lower);
   if (section) return expandSection(section);
 
+  // a direct scripture reference like "John 4" or "Wis 1:1"
+  const refHits = scriptureRefEntries(q, corpus);
+  pushEntries(out, refHits);
+  const refIds = new Set(refHits.map((h) => h.id));
+
   pushEntries(out, psalmEntries(q, PER_SECTION_CAP));
   pushEntries(out, psalterEntries(q, PER_SECTION_CAP));
   pushEntries(out, proverbEntries(lower, PER_SECTION_CAP));
@@ -549,19 +598,27 @@ export function searchPalette(
   const bibleHits = getAllKjvBooks()
     .filter(
       (b) =>
-        b.book.toLowerCase().includes(lower) ||
-        b.abbrev.toLowerCase().includes(lower),
+        (b.book.toLowerCase().includes(lower) ||
+          b.abbrev.toLowerCase().includes(lower)) &&
+        !refIds.has(`bible:${b.abbrev}`),
     )
     .slice(0, PER_SECTION_CAP);
   pushEntries(
     out,
-    bibleHits.map((b) => ({
-      id: `bible:${b.abbrev}`,
-      section: "bible",
-      label: b.book,
-      detail: `${b.testament === "OT" ? "Old Testament" : "New Testament"} · ${b.chapters} chapters`,
-      run: { kind: "bible", book: b.abbrev, chapter: 1 },
-    })),
+    bibleHits
+      .filter(
+        (b) =>
+          !refHits.some(
+            (r) => r.run.kind === "bible" && r.run.book === b.abbrev,
+          ),
+      )
+      .map((b) => ({
+        id: `bible:${b.abbrev}`,
+        section: "bible",
+        label: b.book,
+        detail: `${b.testament === "OT" ? "Old Testament" : "New Testament"} · ${b.chapters} chapters`,
+        run: { kind: "bible", book: b.abbrev, chapter: 1 },
+      })),
   );
 
   // apocrypha: its own section, so "sirach" or "wis" lands here rather than
@@ -571,9 +628,12 @@ export function searchPalette(
   const apocryphaHits = dcBooks(corpus)
     .filter(
       (b) =>
-        b.book.toLowerCase().includes(lower) ||
-        b.abbrev.toLowerCase().includes(lower) ||
-        (b.citationNames ?? []).some((n) => n.toLowerCase().includes(lower)),
+        (b.book.toLowerCase().includes(lower) ||
+          b.abbrev.toLowerCase().includes(lower) ||
+          (b.citationNames ?? []).some((n) =>
+            n.toLowerCase().includes(lower),
+          )) &&
+        !refHits.some((r) => r.run.kind === "bible" && r.run.book === b.abbrev),
     )
     .slice(0, PER_SECTION_CAP);
   pushEntries(
