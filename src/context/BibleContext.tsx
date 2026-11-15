@@ -129,11 +129,33 @@ export function BibleProvider({
   // sync testament + restore position when page changes to a bible page
   const prevPage = useRef(page);
   useEffect(() => {
-    if (prevPage.current === page) return;
+    const pageChanged = prevPage.current !== page;
     prevPage.current = page;
     const entry = pageEntryRestore(page, restoredTestament.current);
     restoredTestament.current = null;
-    if (!entry || entry.keepRestored) return;
+    if (!entry) return;
+    if (!pageChanged) {
+      // a deep link can target the bible page that is already open; the
+      // pending ref must still be applied even without a page transition
+      if (entry.keepRestored) return;
+      const pendingRef = consumePendingBibleRef();
+      if (!pendingRef) return;
+      const t = entry.testament;
+      const ref = pendingRef;
+      const found =
+        booksFor(apocrypha)[t].find((b) => b.abbrev === ref.abbrev) ??
+        booksFor(apocrypha)[t][0];
+      if (!found) return;
+      const ch = Math.min(Math.max(1, ref.chapter), found.chapters);
+      setTestament(t);
+      setBook(found);
+      setChapter(ch);
+      history?.replace({
+        bible: { abbrev: found.abbrev, chapter: ch },
+      });
+      return;
+    }
+    if (entry.keepRestored) return;
     const t = entry.testament;
     const pendingRef = consumePendingBibleRef();
     if (pendingRef) {
@@ -141,6 +163,7 @@ export function BibleProvider({
       const found =
         booksFor(apocrypha)[t].find((b) => b.abbrev === ref.abbrev) ??
         booksFor(apocrypha)[t][0];
+      if (!found) return;
       const ch = Math.min(Math.max(1, ref.chapter), found.chapters);
       setTestament(t);
       setBook(found);
