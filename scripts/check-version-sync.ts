@@ -10,10 +10,7 @@
  *
  * usage: bun scripts/check-version-sync.ts
  */
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-
-const ROOT = join(import.meta.dir, "..");
+import { readPackageVersion, readProjectJson, readProjectText } from "./shared";
 
 const versionInVersionTs = (source: string): string | null => {
   const match = source.match(/export const VERSION = "([\d.]+)";/);
@@ -21,12 +18,7 @@ const versionInVersionTs = (source: string): string | null => {
 };
 
 async function main() {
-  // SAFETY: package.json always carries a string version field; parsed only to
-  // read the current value, never re-serialized.
-  const pkg = JSON.parse(
-    await readFile(join(ROOT, "package.json"), "utf8"),
-  ) as { version: string };
-  const pkgVersion = pkg.version;
+  const pkgVersion = await readPackageVersion();
 
   const failures: string[] = [];
   const same = (label: string, found: string | null | undefined): void => {
@@ -37,21 +29,18 @@ async function main() {
     }
   };
 
-  const cargo = await readFile(join(ROOT, "src-tauri/Cargo.toml"), "utf8");
+  const cargo = await readProjectText("src-tauri", "Cargo.toml");
   same("src-tauri/Cargo.toml", cargo.match(/^version = "([\d.]+)"$/m)?.[1]);
 
-  // SAFETY: tauri.conf.json always carries a string version field under
-  // {"version": "..."}.
-  const tauri = JSON.parse(
-    await readFile(join(ROOT, "src-tauri/tauri.conf.json"), "utf8"),
-  ) as { version?: string };
+  const tauri = await readProjectJson<{ version?: string }>(
+    "src-tauri",
+    "tauri.conf.json",
+  );
   same("src-tauri/tauri.conf.json", tauri.version);
 
   same(
     "src/lib/version.ts",
-    versionInVersionTs(
-      await readFile(join(ROOT, "src/lib/version.ts"), "utf8"),
-    ),
+    versionInVersionTs(await readProjectText("src", "lib", "version.ts")),
   );
 
   if (failures.length) {

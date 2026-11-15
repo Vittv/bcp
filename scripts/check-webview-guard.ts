@@ -12,9 +12,7 @@
  */
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-
-const ROOT = join(import.meta.dir, "..");
+import { projectPath } from "./shared";
 
 const SCRIPT_BLOCKS = /<script[\s\S]*?<\/script>/g;
 
@@ -38,8 +36,8 @@ async function check(file: string): Promise<string | null> {
 
 async function main() {
   const reported: string[] = [];
-  const files = [join(ROOT, "public/index.html")];
-  const dist = join(ROOT, "dist/index.html");
+  const files = [projectPath("public", "index.html")];
+  const dist = projectPath("dist", "index.html");
   if (existsSync(dist)) files.push(dist);
 
   for (const file of files) {

@@ -20,15 +20,14 @@
  */
 
 import { readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import { buildChangelog } from "./build-changelog";
+import { projectPath } from "./shared";
 
-const ROOT = join(import.meta.dir, "..");
-const PKG_PATH = join(ROOT, "package.json");
-const CARGO_PATH = join(ROOT, "src-tauri/Cargo.toml");
-const CARGO_LOCK_PATH = join(ROOT, "src-tauri/Cargo.lock");
-const TAURI_PATH = join(ROOT, "src-tauri/tauri.conf.json");
-const VERSION_PATH = join(ROOT, "src/lib/version.ts");
+const PKG_PATH = projectPath("package.json");
+const CARGO_PATH = projectPath("src-tauri", "Cargo.toml");
+const CARGO_LOCK_PATH = projectPath("src-tauri", "Cargo.lock");
+const TAURI_PATH = projectPath("src-tauri", "tauri.conf.json");
+const VERSION_PATH = projectPath("src", "lib", "version.ts");
 
 const requested = process.argv[2];
 
