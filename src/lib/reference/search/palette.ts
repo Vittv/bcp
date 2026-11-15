@@ -21,6 +21,7 @@ import {
   searchSaints,
 } from "./individual";
 import {
+  PALETTE_SECTION_ORDER,
   type PaletteEntry,
   type PaletteSection,
   PER_SECTION_CAP,
@@ -70,21 +71,11 @@ function psalterEntries(query: string, cap = Infinity): PaletteEntry[] {
 }
 
 function proverbEntries(lower: string, cap = Infinity): PaletteEntry[] {
+  if (!lower.includes("prov")) return [];
   const provNum = lower.match(/(?:chapter\D*)?(\d+)/)?.[1];
-  if (
-    provNum === undefined &&
-    !lower.includes("prov") &&
-    !lower.includes("chapter")
-  ) {
-    return [];
-  }
   const out: PaletteEntry[] = [];
   for (let n = 1; n <= 31 && out.length < cap; n++) {
-    const matched =
-      provNum !== undefined
-        ? String(n).includes(provNum)
-        : lower.includes("prov");
-    if (!matched) continue;
+    if (provNum !== undefined && !String(n).includes(provNum)) continue;
     out.push({
       id: `proverb:${n}`,
       section: "proverbs",
@@ -403,5 +394,16 @@ export function searchPalette(
     })),
   );
 
-  return out;
+  // keep keyboard cursor order aligned with the grouped visual order
+  const sectionRank = new Map(
+    PALETTE_SECTION_ORDER.map((section, i) => [section, i]),
+  );
+  return out
+    .map((entry, i) => ({ entry, i }))
+    .sort((a, b) => {
+      const sa = sectionRank.get(a.entry.section) ?? 999;
+      const sb = sectionRank.get(b.entry.section) ?? 999;
+      return sa !== sb ? sa - sb : a.i - b.i;
+    })
+    .map(({ entry }) => entry);
 }
