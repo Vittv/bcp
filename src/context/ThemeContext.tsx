@@ -7,32 +7,46 @@ import {
   useState,
 } from "react";
 import { Platform } from "react-native";
+
+import { applyFonts, applyTokens, fontVarsFor } from "../lib/theme/themeDom";
+import {
+  getSystemTheme,
+  loadFontScale,
+  loadHeadingFont,
+  loadInterfaceFont,
+  loadReadingFont,
+  loadSubheadingFont,
+  loadThemeFamily,
+  loadThemeMode,
+  loadUiScale,
+  persistFont,
+  persistFontScale,
+  persistThemeFamily,
+  persistThemeMode,
+  persistUiScale,
+  STORAGE_KEY_HEADING_FONT,
+  STORAGE_KEY_INTERFACE_FONT,
+  STORAGE_KEY_READING_FONT,
+  STORAGE_KEY_SUBHEADING_FONT,
+} from "../lib/theme/themePreferences";
 import type { ThemeId } from "../lib/theme/themes";
-import { DEFAULT_THEME, THEMES, themeTokens } from "../lib/theme/themes";
+import { DEFAULT_THEME, themeTokens } from "../lib/theme/themes";
 import type {
   ResolvedTheme,
   ThemeMode,
   ThemeTokens,
 } from "../lib/theme/tokens";
-import { tokenVars } from "../lib/theme/tokens";
 import {
   DEFAULT_HEADING_FONT,
   DEFAULT_INTERFACE_FONT,
   DEFAULT_READING_FONT,
   DEFAULT_SUBHEADING_FONT,
-  FACES,
   type FaceDef,
-  type FaceRole,
-  faceById,
-  faceHasRole,
-  faceStack,
   HEADING_FACES,
   INTERFACE_FACES,
   READING_FACES,
-  readingStack,
   SUBHEADING_FACES,
 } from "../lib/typography/faces";
-import { ensureFace, ensureReadingFace } from "../lib/typography/loader";
 import {
   BASE_FONT_PX,
   DEFAULT_FONT_PX,
@@ -105,321 +119,10 @@ type ThemeContextValue = {
   resetReadingFont: () => void;
 };
 
-const STORAGE_KEY_THEME = "bcp-theme-mode";
-const STORAGE_KEY_THEME_FAMILY = "bcp-theme-family";
-const STORAGE_KEY_FONT = "bcp-font-scale";
-const STORAGE_KEY_UI_SCALE = "bcp-ui-scale";
-const STORAGE_KEY_INTERFACE_FONT = "bcp-font-interface";
-const STORAGE_KEY_HEADING_FONT = "bcp-font-heading";
-const STORAGE_KEY_SUBHEADING_FONT = "bcp-font-subheading";
-const STORAGE_KEY_READING_FONT = "bcp-font-reading";
-// the retired single font-mode key, read once so an existing chrome-face
-// choice carries over to the interface-font key
-const LEGACY_STORAGE_KEY_FONT_MODE = "bcp-font-mode";
-
-function getSystemTheme(): ResolvedTheme {
-  if (Platform.OS !== "web") return "light";
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-}
-
-function webStorage(): Storage | null {
-  if (Platform.OS !== "web") return null;
-  if (typeof localStorage === "undefined") return null;
-  return localStorage;
-}
-
-function loadThemeMode(): ThemeMode {
-  const storage = webStorage();
-  if (storage) {
-    const v = storage.getItem(STORAGE_KEY_THEME);
-    if (v === "light" || v === "dark" || v === "system") return v;
-  }
-  return "system";
-}
-
-function loadFontScale(): number {
-  const storage = webStorage();
-  if (storage) {
-    const v = storage.getItem(STORAGE_KEY_FONT);
-    if (v) {
-      const n = Number.parseFloat(v);
-      // snap a stored value onto the ladder, so an arbitrary scale from an
-      // older build still lands on a real size
-      if (!Number.isNaN(n)) return fontPxToScale(n * BASE_FONT_PX);
-    }
-  }
-  return fontPxToScale(DEFAULT_FONT_PX);
-}
-
-function loadUiScale(): number {
-  // CSS zoom has no native equivalent, so native keeps the original size
-  if (Platform.OS !== "web") return DEFAULT_UI_SCALE;
-  const storage = webStorage();
-  if (storage) {
-    const v = storage.getItem(STORAGE_KEY_UI_SCALE);
-    if (v) {
-      const n = Number.parseFloat(v);
-      if (!Number.isNaN(n)) return snapUiScale(clampUiScale(n));
-    }
-  }
-  // first run: the original size
-  return DEFAULT_UI_SCALE;
-}
-
-function persistThemeMode(mode: ThemeMode) {
-  try {
-    webStorage()?.setItem(STORAGE_KEY_THEME, mode);
-  } catch {}
-}
-
-function loadThemeFamily(): ThemeId {
-  const storage = webStorage();
-  if (storage) {
-    const v = storage.getItem(STORAGE_KEY_THEME_FAMILY);
-    if (v && v in THEMES) {
-      // SAFETY: the `in` guard proves the stored string names a family.
-      return v as ThemeId;
-    }
-  }
-  return DEFAULT_THEME;
-}
-
-function persistThemeFamily(theme: ThemeId) {
-  try {
-    webStorage()?.setItem(STORAGE_KEY_THEME_FAMILY, theme);
-  } catch {}
-}
-
-function persistFontScale(scale: number) {
-  try {
-    webStorage()?.setItem(STORAGE_KEY_FONT, String(scale));
-  } catch {}
-}
-
-function persistUiScale(scale: number) {
-  try {
-    webStorage()?.setItem(STORAGE_KEY_UI_SCALE, String(scale));
-  } catch {}
-}
-
-// a selection is stored as-is, so a system id keeps working across reloads.
-// the resolver falls back to the role's default when the id no longer names a
-// face, so a stale or hand-edited value cannot break rendering.
-function loadInterfaceFont(): string {
-  const storage = webStorage();
-  if (storage) {
-    const stored = storage.getItem(STORAGE_KEY_INTERFACE_FONT);
-    if (stored) return stored;
-    // seed the interface-font key from the retired font-mode value, once
-    const legacy = storage.getItem(LEGACY_STORAGE_KEY_FONT_MODE);
-    if (legacy === "inter" || legacy === "system") {
-      persistFont(STORAGE_KEY_INTERFACE_FONT, legacy);
-      return legacy;
-    }
-  }
-  return DEFAULT_INTERFACE_FONT;
-}
-
-function loadReadingFont(): string {
-  const stored = webStorage()?.getItem(STORAGE_KEY_READING_FONT);
-  return stored && stored.length > 0 ? stored : DEFAULT_READING_FONT;
-}
-
-function loadHeadingFont(): string {
-  const stored = webStorage()?.getItem(STORAGE_KEY_HEADING_FONT);
-  return stored && stored.length > 0 ? stored : DEFAULT_HEADING_FONT;
-}
-
-function loadSubheadingFont(): string {
-  const stored = webStorage()?.getItem(STORAGE_KEY_SUBHEADING_FONT);
-  return stored && stored.length > 0 ? stored : DEFAULT_SUBHEADING_FONT;
-}
-
-function persistFont(key: string, id: string) {
-  try {
-    webStorage()?.setItem(key, id);
-  } catch {}
-}
-
-// paint the current theme into the document. every token becomes a css
-// custom property on the root (--bg, --text-secondary, ...), so component
-// styles that write var(--token) and the chrome-only rules below all resolve
-// against the same vocabulary, and the tokens object stays the single source
-// of truth for a theme.
-function applyTokens(tokens: ThemeTokens, resolved: ResolvedTheme) {
-  if (Platform.OS !== "web" || typeof document === "undefined") return;
-  const r = document.documentElement.style;
-  for (const [name, value] of Object.entries(tokenVars(tokens))) {
-    r.setProperty(name, value);
-  }
-  // trust the color-scheme for native chrome we do not paint: the wco
-  // window-controls overlay glyphs, scrollbars, and form controls. without
-  // it chromium keeps the overlay light even while the app runs dark
-  r.setProperty("color-scheme", resolved === "dark" ? "dark" : "light");
-
-  // drive the installed pwa's window chrome from the app palette instead of
-  // the static light value in public/index.html. chromium re-reads this meta
-  // at runtime and repaints the app window title bar
-  const themeMeta = document.querySelector<HTMLMetaElement>(
-    'meta[name="theme-color"][id="theme-color"]',
-  );
-  if (themeMeta) themeMeta.content = tokens.bg;
-
-  const id = "scrollbar-style";
-  // SAFETY: we only create <style> elements with this id in applyTokens.
-  let el = document.getElementById(id) as HTMLStyleElement | null;
-  if (!el) {
-    el = document.createElement("style");
-    el.id = id;
-    document.head.appendChild(el);
-  }
-  // the chrome rules read --vars off the root rather than interpolating a
-  // color, so the injected stylesheet and the theme can never drift
-  el.textContent = `
-    * { scrollbar-width: thin; scrollbar-color: var(--scrollbar) transparent; }
-    /* webkitgtk smooths subpixel fonts poorly; force grayscale antialiasing */
-    html, body {
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
-    }
-    *::-webkit-scrollbar { width: 4px; height: 4px; }
-    *::-webkit-scrollbar-track { background: transparent; }
-    *::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
-    *::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
-    ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--text); }
-    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    [data-picker-search]:focus-visible { outline: none; }
-    /* the settings search lights up as one block: the focusing input pulls
-       the accent ring around the whole pill (mag glass, field, clear), like
-       the desktop chat's search, instead of ringing the input in isolation */
-    [data-settings-search]:focus-within {
-      outline: 2px solid var(--accent);
-      outline-offset: 1px;
-    }
-    [data-settings-search] :focus-visible { outline: none; }
-    /* installed pwa in window-controls-overlay: the top bar becomes the
-       draggable titlebar, padded clear of the overlaid window buttons.
-       env() is only defined while the overlay is genuinely active, so every
-       declaration carries a no-overlay fallback and nothing shifts in a
-       plain tab or non-wco pwa */
-    [data-bcp-wco] {
-      -webkit-app-region: drag;
-      app-region: drag;
-      height: env(titlebar-area-height, 40px) !important;
-      padding-left: calc(env(titlebar-area-x, 0px) + 12px) !important;
-      padding-right: calc(100% - env(titlebar-area-width) + 12px) !important;
-    }
-    [data-bcp-wco] [data-wco-no-drag] {
-      -webkit-app-region: no-drag;
-      app-region: no-drag;
-    }
-    /* the slider drags horizontally: the nib overhangs the thin track, so the
-       hit layer owns the horizontal-resize cursor for the whole control */
-    [data-bcp-slider] { cursor: ew-resize; }
-  `;
-}
-
-// resolve a face id against the bundled registry, keeping the role honest: a
-// reading face selected as the interface falls back rather than silently
-// changing what the chrome face means
-function resolveFace(id: string, role: FaceRole, fallback: FaceDef): FaceDef {
-  const base = faceById(id);
-  if (base && faceHasRole(base, role)) return base;
-  return fallback;
-}
-
-// the font vars a style may reference: the interface face, the heading face, the
-// subheading face, and the reading face's three registers, each a full font-family
-// stack. one source for both the css custom properties (applyFonts) and the js
-// resolver, so the two cannot drift.
-function fontVarsFor(
-  interfaceFont: string,
-  headingFont: string,
-  subheadingFont: string,
-  readingFont: string,
-): Record<string, string> {
-  const iface = resolveFace(
-    interfaceFont,
-    "interface",
-    FACES[DEFAULT_INTERFACE_FONT],
-  );
-  const heading = resolveFace(
-    headingFont,
-    "heading",
-    FACES[DEFAULT_HEADING_FONT],
-  );
-  const subheading = resolveFace(
-    subheadingFont,
-    "subheading",
-    FACES[DEFAULT_SUBHEADING_FONT],
-  );
-  const reading = resolveFace(
-    readingFont,
-    "reading",
-    FACES[DEFAULT_READING_FONT],
-  );
-  return {
-    "--chrome-font": faceStack(iface, "body"),
-    "--heading-font": faceStack(heading, "body"),
-    "--subheading-font": faceStack(subheading, "semibold"),
-    "--reading-font": readingStack(reading, "body"),
-    "--reading-font-semibold": readingStack(reading, "semibold"),
-    "--reading-font-italic": readingStack(reading, "italic"),
-  };
-}
-
-// paint the font vars on the root and register the injected faces: the bundled
-// interface face, the heading and subheading faces, and the reading face under
-// its scaled alias. useFonts registers the same files at startup but declares no
-// weight, so a variable heading face is registered here too to expose its weight
-// axis.
-function applyFonts(
-  interfaceFont: string,
-  headingFont: string,
-  subheadingFont: string,
-  readingFont: string,
-) {
-  if (Platform.OS !== "web" || typeof document === "undefined") return;
-  const iface = resolveFace(
-    interfaceFont,
-    "interface",
-    FACES[DEFAULT_INTERFACE_FONT],
-  );
-  if (!iface.system) ensureFace(iface);
-  const heading = resolveFace(
-    headingFont,
-    "heading",
-    FACES[DEFAULT_HEADING_FONT],
-  );
-  if (!heading.system) ensureFace(heading);
-  const subheading = resolveFace(
-    subheadingFont,
-    "subheading",
-    FACES[DEFAULT_SUBHEADING_FONT],
-  );
-  if (!subheading.system) ensureFace(subheading);
-  const reading = resolveFace(
-    readingFont,
-    "reading",
-    FACES[DEFAULT_READING_FONT],
-  );
-  if (!reading.system) ensureReadingFace(reading);
-  const r = document.documentElement.style;
-  for (const [name, value] of Object.entries(
-    fontVarsFor(interfaceFont, headingFont, subheadingFont, readingFont),
-  )) {
-    r.setProperty(name, value);
-  }
-}
-
 const ThemeContext = createContext<ThemeContextValue>({
   mode: "system",
   resolved: "light",
-  tokens: THEMES[DEFAULT_THEME].light,
+  tokens: themeTokens(DEFAULT_THEME, "light"),
   theme: DEFAULT_THEME,
   fontVars: fontVarsFor(
     DEFAULT_INTERFACE_FONT,
