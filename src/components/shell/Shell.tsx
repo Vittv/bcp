@@ -1,31 +1,12 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import { BackHandler, Platform, Pressable, Text, View } from "react-native";
-import { ChangelogScreen } from "../../components/changelog/ChangelogScreen";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Platform, Pressable, View } from "react-native";
 import { SaintPopoverProvider } from "../../components/office/SaintPopover";
-import {
-  AppModal,
-  dismissEscapeConsumers,
-} from "../../components/shell/AppModal";
 import { PullChevron } from "../../components/shell/Chevron";
 import { type HintHandle, HintLayer } from "../../components/shell/HintLayer";
 import { SidebarIcon } from "../../components/shell/Icon";
-import type {
-  ModalType,
-  PageId,
-  SidebarDetail,
-} from "../../components/shell/Sidebar";
+import type { PageId, SidebarDetail } from "../../components/shell/Sidebar";
 import { Sidebar } from "../../components/shell/Sidebar";
-import {
-  type AutoscrollIndicator,
-  useAutoscroll,
-} from "../../components/shell/useAutoscroll";
-import { useDrawerSwipe } from "../../components/shell/useDrawerSwipe";
+import { useAutoscroll } from "../../components/shell/useAutoscroll";
 import {
   BibleProvider,
   openingRef,
@@ -43,32 +24,20 @@ import {
   NavigationContext,
 } from "../../context/NavigationContext";
 import { useOfficeSettings } from "../../context/OfficeSettingsContext";
-import {
-  isPaletteActive,
-  PaletteProvider,
-  type PaletteScope,
-  requestPalette,
-} from "../../context/PaletteContext";
+import { PaletteProvider } from "../../context/PaletteContext";
 import { useTheme } from "../../context/ThemeContext";
 import { useTranslation } from "../../context/TranslationContext";
 import {
   addDays,
   colorFor,
   daysUntilNextSeason,
-  diffDays,
   resolve,
   seasonFor,
   upcomingLesserFeast,
   upcomingSanctoraleEntry,
 } from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
-import { CHANGELOG_MARKDOWN } from "../../lib/changelog";
-import {
-  type ChangelogSource,
-  readChangelogPrefs,
-  registerOpenChangelog,
-  writeChangelogPrefs,
-} from "../../lib/changelogPrefs";
+import { prefetchAllScripture } from "../../lib/content/prefetchScripture";
 import { psalterDayForDate } from "../../lib/content/psalterDays";
 import {
   IS_LINUX_CHROMIUM,
@@ -76,20 +45,9 @@ import {
   IS_WINDOWS_TAURI,
 } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
-import { AUTOSCROLL_INDICATOR_SIZE } from "../../lib/input/autoscroll";
-import { stepPageSequence } from "../../lib/input/sequenceNav";
-import { activeScrollTarget } from "../../lib/input/vim";
-import {
-  createHistoryController,
-  type HistoryController,
-} from "../../lib/navigation/history";
 import { composeOffice } from "../../lib/office";
 import { dailyOfficeId } from "../../lib/office/daily";
 import { DEFAULT_PREFS } from "../../lib/office/types";
-import {
-  registerOpenSettingsSection,
-  type SettingsSectionId,
-} from "../../lib/settings";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -97,215 +55,31 @@ import {
 } from "../../lib/theme/themedStyles";
 import { useAppVersion } from "../../lib/version";
 import { useViewport, WIDTH_MOBILE } from "../../lib/viewport";
-import {
-  loadWindowControlStyle,
-  resolveWindowControlStyle,
-  saveWindowControlStyle,
-  type WindowControlStyleId,
-} from "../../lib/windowDecorations";
-import { BibleBar, BibleReaderScreen } from "../../screens/BibleReaderScreen";
-import { CalendarScreen } from "../../screens/CalendarScreen";
-import {
-  LectionaryBar,
-  LectionaryScreen,
-} from "../../screens/LectionaryScreen";
-import {
-  CanticlesBar,
-  CanticlesScreen,
-  CollectsBar,
-  CollectsScreen,
-  LesserFeastsBar,
-  LesserFeastsScreen,
-  OfficesBar,
-  OfficesScreen,
-  ProverbsBar,
-  ProverbsScreen,
-  PsalmsBar,
-  PsalmsScreen,
-  PsalterBar,
-  PsalterScreen,
-  ReferenceProvider,
-  SaintsBar,
-  SaintsScreen,
-} from "../../screens/reference";
+import { ReferenceProvider } from "../../screens/reference";
 import { PaletteHost } from "../../screens/reference/PaletteHost";
-import { SettingsScreen } from "../../screens/SettingsScreen";
-import { TodayScreen } from "../../screens/TodayScreen";
-import { DEVOTIONS, OfficeTabs } from "./OfficeTabs";
+import { AutoscrollGlyph } from "./components/AutoscrollGlyph";
+import { useDrawerLayer } from "./hooks/useDrawerLayer";
+import { useScrollTracking } from "./hooks/useScrollTracking";
+import { useShellHistoryIntegration } from "./hooks/useShellHistoryIntegration";
+import { useShellKeyboard } from "./hooks/useShellKeyboard";
+import { useShellModalFlow } from "./hooks/useShellModalFlow";
+import { useWindowControlPrefs } from "./hooks/useWindowControlPrefs";
+import { renderAuxRow, renderContent } from "./model/pageChrome";
+import {
+  ensureSidebarAnimStyle,
+  holyDayCountdown,
+  IS_WEB,
+  isReferencePage,
+  OFFICE_LABEL,
+  officeForHour,
+  type TabId,
+  today,
+  u,
+} from "./model/shellUtils";
+import { DEVOTIONS } from "./OfficeTabs";
 import { StatusBar } from "./StatusBar";
 import { TopBar } from "./TopBar";
 import { UpdateBanner } from "./UpdateBanner";
-import { useWindowDecorations } from "./useWindowDecorations";
-
-// a transient history step carries its layer name, so the drawer and modal
-// steps can be told apart even though they snapshot the same app state
-const LAYER_STEP = "__bcpLayerStep";
-
-function markHistoryStep(kind: "drawer" | "modal"): string {
-  const state = window.history.state;
-  if (!state || typeof state !== "object") {
-    return JSON.stringify(state ?? null);
-  }
-  const marked = { ...state, [LAYER_STEP]: kind };
-  window.history.replaceState(marked, "");
-  return JSON.stringify(marked);
-}
-
-function historyLayer(): string | null {
-  const state = window.history.state;
-  if (!state || typeof state !== "object") return null;
-  const layer = state[LAYER_STEP];
-  return typeof layer === "string" ? layer : null;
-}
-
-type TabId = "morning" | "noonday" | "evening" | "compline";
-
-// the sidebar's trailing info for the Today row mirrors the office tabs
-const OFFICE_LABEL: Record<TabId, string> = {
-  morning: "Morning",
-  noonday: "Noonday",
-  evening: "Evening",
-  compline: "Compline",
-};
-
-function officeForHour(hour: number): TabId {
-  if (hour < 12) return "morning";
-  if (hour < 17) return "noonday";
-  if (hour < 21) return "evening";
-  return "compline";
-}
-
-// sidebar observance detail: the days until the next fixed feast ("today" on
-// a feast day), wrapping to the start of the table when the year ends
-function holyDayCountdown(
-  entry: { month: number; day: number },
-  from: CalendarDate,
-): string {
-  const sameYear =
-    entry.month > from.month ||
-    (entry.month === from.month && entry.day >= from.day);
-  const target = {
-    year: sameYear ? from.year : from.year + 1,
-    month: entry.month,
-    day: entry.day,
-  };
-  const days = diffDays(target, from);
-  return days === 0 ? "today" : `in ${days}d`;
-}
-
-function today(): CalendarDate {
-  const now = new Date();
-  return {
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
-    day: now.getDate(),
-  };
-}
-
-const IS_WEB = Platform.OS === "web";
-
-// format a computed unit value without float noise
-function u(n: number): string {
-  return n.toFixed(4);
-}
-
-function isReferencePage(p: PageId): boolean {
-  return (
-    p === "psalms" ||
-    p === "psalter" ||
-    p === "collects" ||
-    p === "offices" ||
-    p === "saints" ||
-    p === "lesser-feasts" ||
-    p === "proverbs" ||
-    p === "canticles" ||
-    p === "old-testament" ||
-    p === "new-testament" ||
-    p === "apocrypha"
-  );
-}
-
-const SIDEBAR_ANIM_STYLE_ID = "sidebar-anim-style";
-// entrance animations: desktop fades-and-drifts in from the left edge,
-// the mobile drawer slides in from off-screen for a native drawer feel
-function ensureSidebarAnimStyle() {
-  if (document.getElementById(SIDEBAR_ANIM_STYLE_ID)) return;
-  const el = document.createElement("style");
-  el.id = SIDEBAR_ANIM_STYLE_ID;
-  el.textContent = `
-@keyframes bcp-sidebar-in {
-  from { opacity: 0; transform: var(--bcp-from, translateY(-8px)); }
-}
-.bcp-sidebar-in {
-  animation: bcp-sidebar-in 150ms cubic-bezier(0.2, 0.9, 0.3, 1);
-}
-.bcp-sidebar-in-left { --bcp-from: translateX(-8px); }
-.bcp-drawer {
-  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
-  will-change: transform;
-}
-.bcp-nav:focus-visible, .bcp-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-  border-radius: 6px;
-}
-@media (prefers-reduced-motion: reduce) {
-  .bcp-sidebar-in, .bcp-drawer {
-    animation: none; transition: none;
-  }
-}`;
-  document.head.appendChild(el);
-}
-
-// the scroll-click autoscroll glyph, drawn to match the browser's own: a
-// small white circle with a black border, two chevrons (up and down), and a
-// dot in the center. parked where the middle-click landed.
-function AutoscrollGlyph({ indicator }: { indicator: AutoscrollIndicator }) {
-  const styles = useThemedStyles(shellStyles);
-  return (
-    <View
-      pointerEvents="none"
-      style={[
-        styles.autoscrollIndicator,
-        { left: indicator.x, top: indicator.y },
-      ]}
-    >
-      <svg
-        width={AUTOSCROLL_INDICATOR_SIZE}
-        height={AUTOSCROLL_INDICATOR_SIZE}
-        viewBox="0 0 40 40"
-        role="img"
-        aria-label="Autoscroll"
-      >
-        <circle
-          cx="20"
-          cy="20"
-          r="18.5"
-          fill="#ffffff"
-          stroke="#000000"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M12.4 15.8 L20 7.9 L27.6 15.8"
-          fill="none"
-          stroke="#000000"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <circle cx="20" cy="20" r="2" fill="#000000" />
-        <path
-          d="M12.4 24.2 L20 32.1 L27.6 24.2"
-          fill="none"
-          stroke="#000000"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </View>
-  );
-}
 
 export function Shell() {
   const { fontScale, uiScale, tokens } = useTheme();
@@ -314,6 +88,22 @@ export function Shell() {
 
   useEffect(() => {
     if (Platform.OS === "web") ensureSidebarAnimStyle();
+  }, []);
+
+  // keep all scripture chunks cached for full offline use, without blocking startup
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window)
+      return;
+    const run = () => {
+      void prefetchAllScripture();
+    };
+    if (typeof requestIdleCallback === "function") {
+      const id = requestIdleCallback(run, { timeout: 5000 });
+      return () => cancelIdleCallback(id);
+    }
+    const id = setTimeout(run, 1500);
+    return () => clearTimeout(id);
   }, []);
 
   const [date, setDate] = useState<CalendarDate>(today);
@@ -327,22 +117,10 @@ export function Shell() {
   // increments on every navigation (including re-entering the same
   // page), so reference searches reset each time a page is entered
   const [navKey, setNavKey] = useState(0);
-  const [modal, setModal] = useState<ModalType | null>(null);
-  // a specific settings section the global palette requested (e.g. landed
-  // on Typography); null means the modal opens on its entry-point section
-  const [settingsSection, setSettingsSection] =
-    useState<SettingsSectionId | null>(null);
   // desktop reports the binary version (web the bundled one); it drives both
   // the notes shown and the after-update trigger below
   const appVersion = useAppVersion();
-  // the changelog's source: null shows the vendored RELEASE.md notes, and an
-  // object carries the desktop updater's pending-release body until it lands
-  const [changelogSource, setChangelogSource] =
-    useState<ChangelogSource | null>(null);
-  // the changelog footer's don't-show-again flag, loaded with the marker
-  const [changelogSuppress, setChangelogSuppress] = useState(false);
   const [reading, setReading] = useState<string | null>(null);
-  const [scrollPct, setScrollPct] = useState(0);
 
   // breakpoints follow the space inside the zoom, not the raw window: a large
   // UI scale is equivalent to a narrower screen. native does not zoom.
@@ -354,125 +132,39 @@ export function Shell() {
   const settingsMobile =
     Platform.OS !== "web" || viewport.rawWidth < WIDTH_MOBILE;
 
-  // Persistent sidebar visibility on desktop, deliberately toggled by the
-  // user. The mobile drawer is a separate, transient state (mobileOpen) so a
-  // shrink-to-mobile / auto-hide can never overwrite a deliberate desktop
-  // choice.
-  const [desktopVisible, setDesktopVisibleRaw] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem("sidebarVisible") !== "false";
-  });
-  const setDesktopVisible = useCallback((v: boolean) => {
-    setDesktopVisibleRaw(v);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("sidebarVisible", String(v));
-    }
-  }, []);
-
-  // Transient mobile drawer open/close state; deliberately not persisted.
-  const [mobileOpen, setMobileOpen] = useState(false);
-  // entering mobile closes the transient drawer (no persistence); the derived
-  // sidebarVisible restores the desktop choice on the way back up
-  useEffect(() => {
-    if (isMobile) setMobileOpen(false);
-  }, [isMobile]);
-  // true only while a drag tracks the finger. the live position is written
-  // straight to the drawer node (a CSS variable) so a move never re-renders the
-  // shell; only the start and end of a gesture touch React, and mobileOpen flips
-  // once per commit, so history still records one step per open, not per move.
-  const [draggingDrawer, setDraggingDrawer] = useState(false);
-  const drawerRef = useRef<HTMLDivElement | null>(null);
-
-  // Effective visibility: on mobile the drawer rides its transient state; on
-  // desktop it follows the persisted preference. Resizing back to desktop
-  // therefore restores the user's deliberate desktop choice, while a hidden
-  // choice stays hidden.
-  const sidebarVisible = isMobile ? mobileOpen : desktopVisible;
-
-  // web only: the mobile drawer rides a translate transform on a CSS variable,
-  // so a drag can drive it without a React render. it settles to its rest edge
-  // (closed = fully off-screen, open = flush left) here, and a drag suspends the
-  // spring meanwhile. the reduce-motion media query above disables the spring.
-  useLayoutEffect(() => {
-    if (!IS_WEB || !isMobile) return;
-    const el = drawerRef.current;
-    if (!el || draggingDrawer) return;
-    el.style.transition = "";
-    el.style.setProperty("--bcp-drawer-x", mobileOpen ? "0%" : "-100%");
-  }, [mobileOpen, draggingDrawer, isMobile]);
-
-  // live drag position from the swipe glue: track the finger through the CSS
-  // variable and suspend the spring; null hands the drawer back to its
-  // committed state (the layout effect above then springs it home)
-  const handleDrawerProgress = useCallback((progress: number | null) => {
-    if (progress === null) {
-      setDraggingDrawer(false);
-      return;
-    }
-    const el = drawerRef.current;
-    if (el) {
-      el.style.transition = "none";
-      el.style.setProperty("--bcp-drawer-x", `${(progress - 1) * 100}%`);
-    }
-    setDraggingDrawer(true);
-  }, []);
-
-  // labeled toolbar pills only where the pane has room: the desktop column
-  // clamps to 200-340px, so at 25% width labels fit from ~1088px up; the
-  // mobile drawer is full-width and native always labels
-  const toolbarLabels =
-    Platform.OS !== "web" ||
-    isMobile ||
-    Math.min(340, Math.max(200, viewportWidth * 0.25)) >= 272;
-
-  const openSidebar = useCallback(() => {
-    if (isMobile) setMobileOpen(true);
-    else setDesktopVisible(true);
-  }, [isMobile, setDesktopVisible]);
-
-  const hideSidebar = useCallback(() => {
-    if (isMobile) setMobileOpen(false);
-    else setDesktopVisible(false);
-  }, [isMobile, setDesktopVisible]);
-
-  // stored window-control choice; "system" resolves to the host convention
-  const [windowControlStyle, setWindowControlStyleRaw] = useState(
-    loadWindowControlStyle,
-  );
-  const setWindowControlStyle = useCallback((style: WindowControlStyleId) => {
-    setWindowControlStyleRaw(style);
-    saveWindowControlStyle(style);
-  }, []);
-  const resolvedWindowControlStyle =
-    resolveWindowControlStyle(windowControlStyle);
-  useWindowDecorations(resolvedWindowControlStyle);
-
-  // mobile drawer drag: any horizontal drag opens or closes the drawer with
-  // the edge following the finger, full-screen. a modal takes precedence over
-  // the sheltered drawer, so a swipe over modal content never opens it.
-  const swipeHandlers = useDrawerSwipe({
-    enabled: isMobile && modal === null,
-    open: mobileOpen,
-    onOpen: () => setMobileOpen(true),
-    onClose: () => setMobileOpen(false),
-    onProgress: handleDrawerProgress,
-  });
-
-  // Android hardware back hides the mobile drawer before the OS ever gets a
-  // chance to leave the app; modals claim their own handler (registered
-  // later, so LIFO dispatch runs theirs first) and nothing here runs on the
-  // desktop/web builds
-  useEffect(() => {
-    if (Platform.OS === "web") return;
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (mobileOpen) {
-        setMobileOpen(false);
-        return true;
-      }
-      return false;
+  const {
+    windowControlStyle,
+    setWindowControlStyle,
+    resolvedWindowControlStyle,
+  } = useWindowControlPrefs();
+  const { modal, setModal, setSettingsSection, handleOpenModal, modalContent } =
+    useShellModalFlow({
+      appVersion,
+      settingsMobile,
+      windowControlStyle,
+      setWindowControlStyle,
+      changelogVersionStyle: styles.changelogVersion,
     });
-    return () => sub.remove();
-  }, [mobileOpen]);
+
+  const modalRef = useRef(modal);
+  modalRef.current = modal;
+
+  const {
+    mobileOpen,
+    setMobileOpen,
+    mobileOpenRef,
+    draggingDrawer,
+    drawerRef,
+    sidebarVisible,
+    toolbarLabels,
+    openSidebar,
+    hideSidebar,
+    swipeHandlers,
+  } = useDrawerLayer({
+    isMobile,
+    modal,
+    viewportWidth,
+  });
 
   // scroll-click (middle button) autoscroll, custom where no native gesture
   // is dependable: the Linux and macOS desktop shells (WebKitGTK, WKWebView
@@ -493,292 +185,28 @@ export function Shell() {
     setRite,
     customizationFor,
   } = useOfficeSettings();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { scrollRef, scrollPct, reportScroll, handleScroll, scrollToTop } =
+    useScrollTracking();
   const hintsRef = useRef<HintHandle>(null);
 
-  // browser history integration: one controller for the whole shell. only
-  // web has a history to drive; native builds get a null (no-op) provider.
-  const [historyController] =
-    useState<HistoryController<HistorySnapshot> | null>(() => {
-      if (Platform.OS !== "web") return null;
-      return createHistoryController<HistorySnapshot>({
-        addEventListener: (type, cb) => window.addEventListener(type, cb),
-        removeEventListener: (type, cb) => window.removeEventListener(type, cb),
-        history: window.history,
-        seedUrl: window.location.href,
-      });
-    });
-
-  // the controller's getters must read the latest committed value, not a
-  // closure captured at registration time; these refs update each render
-  const pageRef = useRef(page);
-  pageRef.current = page;
-  const dateRef = useRef(date);
-  dateRef.current = date;
-  const tabRef = useRef(tab);
-  tabRef.current = tab;
-  const modalRef = useRef(modal);
-  modalRef.current = modal;
-  const mobileOpenRef = useRef(mobileOpen);
-  mobileOpenRef.current = mobileOpen;
-  const changelogSuppressRef = useRef(changelogSuppress);
-  changelogSuppressRef.current = changelogSuppress;
-  const changelogSourceRef = useRef<ChangelogSource | null>(changelogSource);
-  changelogSourceRef.current = changelogSource;
-
-  // opening the notes counts them as seen for the shown version (the write
-  // happens here, at open, so Esc/back/system paths cannot skip the notes):
-  // once the running bundle carries that version the auto-open below stays
-  // quiet, which is exactly what a web deploy or the desktop updater lands
-  const openChangelog = useCallback(
-    (source: ChangelogSource | null) => {
-      changelogSourceRef.current = source;
-      setChangelogSource(source);
-      setModal("changelog");
-      void writeChangelogPrefs({
-        seen: source?.version ?? appVersion,
-        suppress: changelogSuppressRef.current,
-      });
-    },
-    [appVersion],
-  );
-
-  // the changelog footer wrangles don't-show-again and persists it against
-  // the version whose notes are on screen
-  const setChangelogSuppressPref = useCallback(
-    (suppress: boolean) => {
-      changelogSuppressRef.current = suppress;
-      setChangelogSuppress(suppress);
-      void writeChangelogPrefs({
-        seen: changelogSourceRef.current?.version ?? appVersion,
-        suppress,
-      });
-    },
-    [appVersion],
-  );
-
-  // the sidebar's changelog button opens the vendored notes through the same
-  // path as the auto-popup (source reset, seen recorded), never the raw modal
-  const handleOpenModal = useCallback(
-    (type: ModalType) => {
-      if (type === "changelog") {
-        openChangelog(null);
-        return;
-      }
-      setModal(type);
-    },
-    [openChangelog],
-  );
-
-  // web only: the JSON of the current top-of-history entry when it is the
-  // drawer's own record (see the record effect below). kept so re-opening
-  // the drawer without navigating in between never stacks another entry.
-  const drawerRecord = useRef<string | null>(null);
-  // web only: the modal's own recorded step, mirroring drawerRecord. the
-  // modal records on open so Back pops an entry that closes just it, and a
-  // UI dismiss (X, Esc, backdrop) consumes that step like the drawer does.
-  const modalRecord = useRef<string | null>(null);
-  // web only: true while our own history.back() consumes a closed layer's
-  // phantom step, so that pop does not re-close the drawer kept open beneath
-  // a dismissed modal
-  const consumingStep = useRef(false);
-
-  // web only: reify the drawer-opening as its own history step, so the
-  // system back button has an entry to pop even at the app root (where back
-  // would otherwise leave the PWA instead of hiding the drawer). the
-  // existing onRestored handler closes the drawer as soon as that entry is
-  // popped, and resets drawerRecord so a later open records again.
-  useEffect(() => {
-    if (!historyController || !mobileOpen) return;
-    const top = JSON.stringify(window.history.state ?? null) ?? null;
-    if (top === drawerRecord.current) return;
-    historyController.record();
-    drawerRecord.current = markHistoryStep("drawer");
-  }, [mobileOpen, historyController]);
-
-  // reify the modal-open as its own history step, exactly like the drawer:
-  // it records on top of the drawer's step when both are open, so Back pops
-  // the modal's step first and close-the-modal takes priority over
-  // close-the-drawer instead of leaving the PWA or stepping the page
-  useEffect(() => {
-    if (!historyController || !modal) return;
-    const top = JSON.stringify(window.history.state ?? null) ?? null;
-    if (top === modalRecord.current) return;
-    historyController.record();
-    modalRecord.current = markHistoryStep("modal");
-  }, [modal, historyController]);
-
-  // the global palette hands the settings modal a section to land on through
-  // a module bridge (same pattern as the palette's own request route), since
-  // the modal lives above the palette host in the provider tree
-  useEffect(() => {
-    registerOpenSettingsSection((section) => {
-      setSettingsSection(section);
-      setModal("settings");
-    });
-    return () => registerOpenSettingsSection(null);
-  }, []);
-
-  // the update banner and sidebar sit below the modal, so opening the notes
-  // goes through a module bridge exactly like the settings section; the shell
-  // chose the source and owns the after-update popup
-  useEffect(() => {
-    registerOpenChangelog((source) => {
-      openChangelog(source);
-    });
-    return () => registerOpenChangelog(null);
-  }, [openChangelog]);
-
-  // open the changelog by itself after an update: a marker naming an older
-  // version than the one now running means the running release's notes are
-  // new to the user. a missing marker is a first launch, which records the
-  // version silently instead, so a fresh install never pops up. web builds
-  // read the deployed bundle's version, desktop the binary's; both keep the
-  // marker where the platform does not wipe it per release (localStorage on
-  // web, a data-dir file on desktop).
-  useEffect(() => {
-    let cancelled = false;
-    void readChangelogPrefs().then((prefs) => {
-      if (cancelled) return;
-      changelogSuppressRef.current = prefs.suppress;
-      setChangelogSuppress(prefs.suppress);
-      if (prefs.seen === null) {
-        void writeChangelogPrefs({
-          seen: appVersion,
-          suppress: prefs.suppress,
-        });
-        return;
-      }
-      if (prefs.seen !== appVersion && !prefs.suppress) {
-        openChangelog(null);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [appVersion, openChangelog]);
-
-  // whenever the drawer closes while its recorded step is still the top of
-  // history, consume that step via history.back() so Back behaves exactly as
-  // if the drawer never opened. a dismiss (swipe, backdrop, hide button) only
-  // hides the drawer, leaving its step behind the phantom entry: popping it
-  // here keeps Back from stopping on a phantom drawer step. a system Back
-  // that already popped the step clears drawerRecord in onRestored first, so
-  // this never double-consumes.
-  useEffect(() => {
-    if (mobileOpen) return;
-    // a modal records its own step on top of the drawer's; both snapshot the
-    // same app state, so popping here while the modal is open would consume
-    // the modal's step and dismiss it. leave the drawer step for after it
-    if (modal || modalRecord.current) return;
-    if (!historyController || !drawerRecord.current) return;
-    const top = JSON.stringify(window.history.state ?? null) ?? null;
-    if (top !== drawerRecord.current) return;
-    drawerRecord.current = null;
-    window.history.back();
-  }, [mobileOpen, modal, historyController]);
-
-  // a UI dismiss of the modal (X, Esc, backdrop) consumes its recorded step
-  // via history.back() the way the drawer-close path does, so Back never
-  // stops on a phantom modal entry. consumingStep tells the resulting pop
-  // that this is our own consumption, so the drawer below stays open.
-  useEffect(() => {
-    if (modal) return;
-    if (!historyController || !modalRecord.current) return;
-    const top = JSON.stringify(window.history.state ?? null) ?? null;
-    if (top !== modalRecord.current) return;
-    modalRecord.current = null;
-    consumingStep.current = true;
-    window.history.back();
-  }, [modal, historyController]);
-
-  const scrollToTop = useCallback(() => {
-    const el = scrollRef.current;
-    if (el) {
-      el.scrollTop = 0;
-      el.focus({ preventScroll: true });
-    }
-    setScrollPct(0);
-    // also reset the SplitPane detail pane scroll (desktop reference pages)
-    requestAnimationFrame(() => {
-      // SAFETY: querySelector returns Element, we need HTMLElement for scrollTop
-      const detail = window.document.querySelector(
-        "[data-split-detail]",
-      ) as HTMLElement | null;
-      if (detail) detail.scrollTop = 0;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!historyController) return;
-    historyController.start();
-    return () => historyController.stop();
-  }, [historyController]);
-
-  useEffect(() => {
-    if (!historyController) return;
-    const offPage = historyController.register(
-      "page",
-      () => pageRef.current,
-      (v) => setPage(v),
-    );
-    const offDate = historyController.register(
-      "date",
-      () => dateRef.current,
-      (v) => setDate(v),
-    );
-    const offTab = historyController.register(
-      "tab",
-      () => tabRef.current,
-      (v) => setTab(v),
-    );
-    const offRestored = historyController.onRestored((_entry, changed) => {
-      // a history navigation must never leave transient chrome open over a
-      // different page: the mobile drawer closes, and any modal and office
-      // reading clear. a pop that changes no snapshot field undoes a
-      // transient step instead, so the reading and scroll stay put
-      const consumed = consumingStep.current;
-      consumingStep.current = false;
-      if (!changed) {
-        // the open modal owns the topmost transient step, so its pop closes
-        // just the modal and leaves the drawer's step for the next Back,
-        // which is the priority a phone Back grants the modal over the
-        // sidebar. without a modal, a user Back closes the drawer; our own
-        // consumption of a dismissed modal's phantom step changes nothing
-        if (modalRef.current) {
-          modalRecord.current = null;
-          setModal(null);
-          setSettingsSection(null);
-          return;
-        }
-        if (consumed) {
-          // a drawer auto-closed behind the modal can leave its step on top;
-          // consume that too so one Back does not stop on the closed drawer
-          if (!mobileOpenRef.current && historyLayer() === "drawer") {
-            drawerRecord.current = null;
-            window.history.back();
-          }
-          return;
-        }
-        if (mobileOpenRef.current) setMobileOpen(false);
-        drawerRecord.current = null;
-        return;
-      }
-      drawerRecord.current = null;
-      modalRecord.current = null;
-      setMobileOpen(false);
-      setModal(null);
-      setSettingsSection(null);
-      setReading(null);
-      scrollToTop();
-    });
-    return () => {
-      offPage();
-      offDate();
-      offTab();
-      offRestored();
-    };
-  }, [historyController, scrollToTop]);
+  const historyController = useShellHistoryIntegration({
+    page,
+    setPage,
+    date,
+    setDate,
+    tab,
+    setTab,
+    modal,
+    modalRef,
+    setModal,
+    setSettingsSection,
+    mobileOpen,
+    mobileOpenRef,
+    setMobileOpen,
+    isMobile,
+    setReading,
+    scrollToTop,
+  });
 
   const handleTabChange = (t: TabId) => {
     setTab(t);
@@ -812,7 +240,7 @@ export function Shell() {
       if (isMobile) setMobileOpen(false);
       scrollToTop();
     },
-    [historyController, isMobile, scrollToTop],
+    [historyController, isMobile, scrollToTop, setMobileOpen],
   );
 
   const handlePageSelect = (p: PageId) => {
@@ -844,276 +272,21 @@ export function Shell() {
     [goToPage],
   );
 
-  // park keyboard focus on the scroller so native arrow/space
-  // navigation works from first load without a click
-  useEffect(() => {
-    if (!IS_WEB) return;
-    scrollRef.current?.focus({ preventScroll: true });
-  }, []);
-
-  // global keyboard shortcuts (vim-style). attached in the capture phase
-  // so handled keys are stopped before browser extensions like Vimium can
-  // grab them; unhandled keys pass through untouched.
-  useEffect(() => {
-    if (!IS_WEB) return;
-    let goPending = false;
-    let goTimer: ReturnType<typeof setTimeout> | null = null;
-    // the page-to-picker map for Ctrl+/: opens the same scope the visible
-    // bar would, so the hotkey lands on whichever section the user is on
-    const SCOPE_FOR_PAGE: Partial<Record<PageId, PaletteScope>> = {
-      psalms: "psalms",
-      psalter: "psalter",
-      canticles: "canticles",
-      collects: "collects",
-      saints: "saints",
-      "lesser-feasts": "lesser-feasts",
-      proverbs: "proverbs",
-      "old-testament": "bible",
-      "new-testament": "bible",
-      apocrypha: "bible",
-    };
-    const isEditable = (el: EventTarget | null): boolean => {
-      // SAFETY: DOM keydown targets are Elements or text nodes; a missing
-      // tagName is treated as non-editable by the guard below
-      const t = el as HTMLElement | null;
-      if (!t?.tagName) return false;
-      const tag = t.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
-        return true;
-      }
-      return t.isContentEditable === true;
-    };
-    // scroll the currently-focused scroller by a fraction of its height. a
-    // negative factor scrolls up. j/k and d/u share this, differ only in step.
-    const scrollByFraction = (factor: number) => {
-      const el = activeScrollTarget(scrollRef.current);
-      if (!el) return;
-      // sign-preserving step: never stall at 0, and never flip direction
-      const raw = Math.round(el.clientHeight * factor);
-      const top = raw === 0 ? (factor > 0 ? 1 : -1) : raw;
-      el.scrollBy({ top, behavior: "auto" });
-    };
-    const scrollActiveTop = () => {
-      const el = activeScrollTarget(scrollRef.current);
-      if (el) el.scrollTop = 0;
-    };
-    const scrollActiveBottom = () => {
-      const el = activeScrollTarget(scrollRef.current);
-      if (el) el.scrollTop = el.scrollHeight;
-    };
-    const stepDay = (delta: number) => {
-      // on the lectionary, n/p steps its own date without touching the
-      // office date; everywhere else n/p steps the office date and jumps
-      // to Today
-      if (page === "lectionary") {
-        setLectionaryDate((d) => addDays(d, delta));
-        return;
-      }
-      const next = addDays(date, delta);
-      setDate(next);
-      goToPage("today", { date: next });
-    };
-    const clearGo = () => {
-      if (goTimer) clearTimeout(goTimer);
-      goPending = false;
-      goTimer = null;
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (isEditable(e.target)) {
-        if (e.key === "Escape") {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          // escaping a text field (e.g. a picker search) closes any
-          // AppModal-registered modal (the picker itself) and returns focus
-          // to the page so keyboard users can step out without a mouse.
-          // SAFETY: editable targets are DOM elements with a blur(), verified
-          // by the same tagName check that drove isEditable
-          const t = e.target as HTMLElement;
-          if (typeof t.blur === "function") {
-            dismissEscapeConsumers();
-            t.blur();
-          }
-        }
-        return;
-      }
-      // a floating picker is open: swallow everything but Escape so letters,
-      // go-chords and j/k/p never navigate behind the modal window
-      if (isPaletteActive()) {
-        if (e.key === "Escape") {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          dismissEscapeConsumers();
-        }
-        return;
-      }
-      if (modal) {
-        if (e.key === "Escape") {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          setModal(null);
-          setSettingsSection(null);
-        }
-        return;
-      }
-      // "/" opens this page's own picker ("?" is shift+"/" and keeps its
-      // help meaning); Ctrl+K / Cmd+K opens the global search palette.
-      // both are guarded by the editable check above, so keys typed into
-      // any search field still type
-      if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        const scope = SCOPE_FOR_PAGE[page];
-        if (scope) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          requestPalette(scope);
-        }
-        return;
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        requestPalette("search");
-        return;
-      }
-      // while hint mode is open every key drives the hint layer
-      const hint = hintsRef.current;
-      if (hint?.isActive()) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        hint.handleKey(e);
-        return;
-      }
-      if (goPending) {
-        const k = e.key.toLowerCase();
-        if (k === "g") {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          clearGo();
-          scrollActiveTop();
-          return;
-        }
-        clearGo();
-        return;
-      }
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-      const key = e.key;
-      switch (key) {
-        case "ArrowLeft":
-        case "ArrowRight":
-        case "h":
-        case "l": {
-          // left/right and h/l walk the active page's sequence, not browser
-          // history: right and l step forward, left and h backward. the
-          // scripture pages step their index (psalm number or chapter list)
-          // and the calendar steps its month; each page registers a stepper.
-          const forward = key === "ArrowRight" || key === "l";
-          if (stepPageSequence(page, forward ? 1 : -1)) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            // the swap can leave focus parked somewhere non-scrollable (a
-            // bible chapter step re-parks it on the outer scroller, which
-            // stays hidden on reference pages); re-focus the real scroller
-            // so the next down/up scrolls the new page without a click
-            requestAnimationFrame(() => {
-              activeScrollTarget(scrollRef.current)?.focus({
-                preventScroll: true,
-              });
-            });
-          }
-          return;
-        }
-        // "/" is consumed by the picker chord above; "?" (US shift+"/")
-        // alone opens help
-        case "?":
-          if (e.shiftKey) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            setModal("help");
-          }
-          clearGo();
-          return;
-        case "Escape":
-          e.preventDefault();
-          // any open modal (AppModal-registered, e.g. the saint lookup)
-          // closes first; then the full-screen mobile drawer; the go-chord
-          // state clears either way
-          dismissEscapeConsumers();
-          if (isMobile && mobileOpenRef.current) setMobileOpen(false);
-          e.stopImmediatePropagation();
-          clearGo();
-          return;
-        case "g":
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          clearGo();
-          // the only latched chord left is "gg" for the top of the page; the
-          // page-jump letters that shared this latch are gone, so any other
-          // second key just cancels it
-          goPending = true;
-          goTimer = setTimeout(clearGo, 900);
-          return;
-        case "n":
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          stepDay(1);
-          return;
-        case "p":
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          stepDay(-1);
-          return;
-        case "j":
-          // j/k always scroll the main content pane; the index pickers move
-          // their cursor with ctrl+j/ctrl+k instead (see useIndexKeyboard)
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          scrollByFraction(0.14);
-          return;
-        case "k":
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          scrollByFraction(-0.14);
-          return;
-        case "d":
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          scrollByFraction(0.5);
-          return;
-        case "u":
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          scrollByFraction(-0.5);
-          return;
-        case "G":
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          scrollActiveBottom();
-          return;
-        case "f":
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          clearGo();
-          hintsRef.current?.start();
-          return;
-        case "Home":
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          scrollActiveTop();
-          return;
-        case "End":
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          scrollActiveBottom();
-          return;
-        default:
-          return;
-      }
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown, true);
-      if (goTimer) clearTimeout(goTimer);
-    };
-  }, [modal, page, date, goToPage, isMobile]);
+  useShellKeyboard({
+    modal,
+    setModal,
+    setSettingsSection,
+    page,
+    date,
+    setDate,
+    setLectionaryDate,
+    goToPage,
+    isMobile,
+    mobileOpenRef,
+    setMobileOpen,
+    scrollRef,
+    hintsRef,
+  });
 
   const officeId = devotions ? DEVOTIONS[tab] : dailyOfficeId(tab, rite);
   const document = composeOffice(date, officeId, {
@@ -1178,28 +351,6 @@ export function Shell() {
     psalter: { text: `Day ${psalterDayForDate(now)}` },
   };
 
-  const scrollRafRef = useRef<number | null>(null);
-  // shared sink for scroll progress: the outer document scroller reports
-  // through handleScroll; the offices page's inner ScrollView reports
-  // straight here, since its scrolling never touches the outer element
-  const reportScroll = useCallback((pct: number) => {
-    if (scrollRafRef.current !== null) return;
-    scrollRafRef.current = requestAnimationFrame(() => {
-      scrollRafRef.current = null;
-      setScrollPct(pct);
-    });
-  }, []);
-  const handleScroll = useCallback(() => {
-    if (scrollRafRef.current !== null) return;
-    scrollRafRef.current = requestAnimationFrame(() => {
-      scrollRafRef.current = null;
-      const el = scrollRef.current;
-      if (!el) return;
-      const max = el.scrollHeight - el.clientHeight;
-      setScrollPct(max > 0 ? Math.round((el.scrollTop / max) * 100) : 0);
-    });
-  }, []);
-
   const sidebarShowButton =
     !sidebarVisible && !(IS_WEB && isMobile) ? (
       <Pressable
@@ -1226,228 +377,40 @@ export function Shell() {
 
   // every page gets the auxiliary 30px row under the TopBar: the
   // page's own bar where one exists, otherwise a bare strip
-  const getAuxRow = () => {
-    switch (page) {
-      case "psalms":
-        return <PsalmsBar leading={sidebarShowButton} />;
-      case "psalter":
-        return <PsalterBar leading={sidebarShowButton} />;
-      case "canticles":
-        return <CanticlesBar leading={sidebarShowButton} />;
-      case "collects":
-        return <CollectsBar leading={sidebarShowButton} />;
-      case "offices":
-        return <OfficesBar leading={sidebarShowButton} isMobile={isMobile} />;
-      case "saints":
-        return <SaintsBar leading={sidebarShowButton} />;
-      case "lesser-feasts":
-        return <LesserFeastsBar leading={sidebarShowButton} />;
-      case "proverbs":
-        return <ProverbsBar leading={sidebarShowButton} />;
-      case "old-testament":
-      case "new-testament":
-      case "apocrypha":
-        return <BibleBar leading={sidebarShowButton} />;
-      case "today":
-        return (
-          <OfficeTabs
-            leading={sidebarShowButton}
-            active={tab}
-            onSelect={handleTabChange}
-            showRubrics={showRubrics}
-            onToggleRubrics={() => setShowRubrics((v) => !v)}
-            showSpeakers={showSpeakers}
-            onToggleSpeakers={() => setShowSpeakers((v) => !v)}
-            devotions={devotions}
-            onToggleDevotions={() => setDevotions(!devotions)}
-            rite={rite}
-            onRiteChange={setRite}
-          />
-        );
-      case "lectionary":
-        return (
-          <LectionaryBar
-            leading={sidebarShowButton}
-            isToday={(() => {
-              const n = today();
-              return (
-                n.year === lectionaryDate.year &&
-                n.month === lectionaryDate.month &&
-                n.day === lectionaryDate.day
-              );
-            })()}
-            onPrevDate={() => stepLectionary(-1)}
-            onNextDate={() => stepLectionary(1)}
-            onToday={resetLectionaryDate}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  const getContent = () => {
-    switch (page) {
-      case "today":
-        return (
-          <TodayScreen
-            key={`${date.year}-${date.month}-${date.day}-${tab}-${rite}-${devotions ? "dev" : "full"}`}
-            date={date}
-            tab={tab}
-            onTabChange={handleTabChange}
-            document={document}
-            showRubrics={showRubrics}
-            showSpeakers={showSpeakers}
-          />
-        );
-      case "calendar":
-        return <CalendarScreen leading={sidebarShowButton} />;
-      case "lectionary":
-        return <LectionaryScreen date={lectionaryDate} />;
-      case "psalms":
-        return (
-          <PsalmsScreen
-            isMobile={isMobile}
-            fontScale={fontScale}
-            onScrollProgress={reportScroll}
-          />
-        );
-      case "psalter":
-        return (
-          <PsalterScreen
-            isMobile={isMobile}
-            fontScale={fontScale}
-            onScrollProgress={reportScroll}
-          />
-        );
-      case "canticles":
-        return (
-          <CanticlesScreen
-            isMobile={isMobile}
-            fontScale={fontScale}
-            onScrollProgress={reportScroll}
-          />
-        );
-      case "collects":
-        return (
-          <CollectsScreen
-            isMobile={isMobile}
-            fontScale={fontScale}
-            onScrollProgress={reportScroll}
-          />
-        );
-      case "offices":
-        return (
-          <OfficesScreen
-            isMobile={isMobile}
-            fontScale={fontScale}
-            onScrollProgress={reportScroll}
-          />
-        );
-      case "saints":
-        return (
-          <SaintsScreen
-            isMobile={isMobile}
-            fontScale={fontScale}
-            onScrollProgress={reportScroll}
-          />
-        );
-      case "lesser-feasts":
-        return (
-          <LesserFeastsScreen
-            isMobile={isMobile}
-            fontScale={fontScale}
-            onScrollProgress={reportScroll}
-          />
-        );
-      case "proverbs":
-        return (
-          <ProverbsScreen
-            isMobile={isMobile}
-            fontScale={fontScale}
-            onScrollProgress={reportScroll}
-          />
-        );
-      case "old-testament":
-      case "new-testament":
-      case "apocrypha":
-        return (
-          <BibleReaderScreen
-            isMobile={isMobile}
-            fontScale={fontScale}
-            onScrollProgress={reportScroll}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  const auxRow = getAuxRow();
-  const content = getContent();
-
-  const closeModal = () => {
-    setModal(null);
-    setSettingsSection(null);
-    setChangelogSource(null);
-  };
-
-  const modalContent = (() => {
-    switch (modal) {
-      // install, settings, about, and help all open the same settings modal;
-      // the sidebar button sets which section the modal starts on
-      case "settings":
-      case "install":
-      case "about":
-      case "help":
-        return (
-          <AppModal
-            title="Settings"
-            onClose={closeModal}
-            width={1040}
-            height={900}
-            stretchBody
-            titleBar={false}
-          >
-            <SettingsScreen
-              mobile={settingsMobile}
-              onClose={closeModal}
-              initialSection={settingsSection ?? modal}
-              showWindowControls={IS_TAURI}
-              windowControlStyle={windowControlStyle}
-              onWindowControlStyleChange={setWindowControlStyle}
-            />
-          </AppModal>
-        );
-      case "changelog": {
-        const changelogVersion = changelogSource?.version ?? appVersion;
-        return (
-          <AppModal
-            title={
-              <>
-                BCP
-                <Text style={styles.changelogVersion}> {changelogVersion}</Text>
-              </>
-            }
-            titleLabel={`BCP ${changelogVersion}`}
-            onClose={closeModal}
-            width={640}
-            height={640}
-            stretchBody
-          >
-            <ChangelogScreen
-              markdown={changelogSource?.markdown ?? CHANGELOG_MARKDOWN}
-              suppress={changelogSuppress}
-              onToggleSuppress={setChangelogSuppressPref}
-              onDone={closeModal}
-            />
-          </AppModal>
-        );
-      }
-      default:
-        return null;
-    }
-  })();
+  const auxRow = renderAuxRow({
+    page,
+    sidebarShowButton,
+    tab,
+    handleTabChange,
+    showRubrics,
+    setShowRubrics,
+    showSpeakers,
+    setShowSpeakers,
+    devotions,
+    setDevotions,
+    rite,
+    setRite,
+    isMobile,
+    lectionaryDate,
+    stepLectionary,
+    resetLectionaryDate,
+  });
+  const content = renderContent({
+    page,
+    date,
+    tab,
+    rite,
+    devotions,
+    handleTabChange,
+    document,
+    showRubrics,
+    showSpeakers,
+    sidebarShowButton,
+    lectionaryDate,
+    isMobile,
+    fontScale,
+    reportScroll,
+  });
 
   if (IS_WEB) {
     return (
@@ -1890,14 +853,6 @@ const shellStyles = defineThemedStyles({
     bottom: 0,
     zIndex: 20,
     cursor: "pointer",
-  },
-  autoscrollIndicator: {
-    position: "absolute",
-    zIndex: 100,
-    width: AUTOSCROLL_INDICATOR_SIZE,
-    height: AUTOSCROLL_INDICATOR_SIZE,
-    marginLeft: -AUTOSCROLL_INDICATOR_SIZE / 2,
-    marginTop: -AUTOSCROLL_INDICATOR_SIZE / 2,
   },
   content: {
     flex: 1,

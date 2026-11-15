@@ -21,9 +21,7 @@ function idle(): Promise<void> {
   });
 }
 
-export async function prefetchAllScripture(
-  concurrency = 2,
-): Promise<void> {
+export async function prefetchAllScripture(concurrency = 2): Promise<void> {
   let i = 0;
   const run = async () => {
     while (i < ALL_LOADERS.length) {
