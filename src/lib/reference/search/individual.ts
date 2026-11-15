@@ -155,7 +155,11 @@ export function searchLesserFeasts(query: string): LesserFeastHit[] {
 export function searchPsalterDays(query: string): PsalterDay[] {
   const q = query.trim().toLowerCase();
   if (!q) return PSALTER_DAYS;
+  const dayNum = q.match(/^(?:day\s*)?(\d{1,2})$/)?.[1];
   return PSALTER_DAYS.filter((day) => {
+    if (dayNum) {
+      return String(day.day).startsWith(dayNum);
+    }
     if (String(day.day).startsWith(q)) return true;
     return [...day.morning, ...day.evening].some((citation) => {
       const parsed = parsePsalmCitation(citation);

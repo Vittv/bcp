@@ -256,6 +256,17 @@ function sectionKeyword(lower: string): PaletteSection | null {
   for (const [section, names] of keywords) {
     if (names.includes(lower)) return section;
   }
+  // flexible matches for common partial queries
+  if (lower === "30-day" || lower === "30 day" || lower === "30day psalter") {
+    return "psalter";
+  }
+  if (
+    lower === "lesser" ||
+    lower === "feasts" ||
+    lower === "lesser feast and fast"
+  ) {
+    return "lesser-feasts";
+  }
   return null;
 }
 
