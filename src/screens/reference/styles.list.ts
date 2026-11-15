@@ -151,10 +151,8 @@ export const listStyles = defineThemedStyles({
   compareCol: {},
   compareRite: {
     fontFamily: CHROME_FONT,
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
     color: "var(--accent)",
     marginBottom: 10,
   },
