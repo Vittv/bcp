@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
+
 import { useTranslation } from "../../context/TranslationContext";
 import {
   sanctoraleBySlug,
@@ -10,25 +11,12 @@ import { collectPassage } from "../../lib/content/collects";
 import { parsePsalmCitation } from "../../lib/content/psalms";
 import { psalmPassage } from "../../lib/content/psalter";
 import type { KjvPassage } from "../../lib/content/types";
-import {
-  CHROME_FONT,
-  HEADING_FONT,
-  SERIF_FONT,
-  SERIF_ITALIC_FONT,
-} from "../../lib/fonts";
 import { holyDayCollectTitle } from "../../lib/office/compose";
-import {
-  defineThemedStyles,
-  useThemedStyles,
-} from "../../lib/theme/themedStyles";
+import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { PsalmText } from "./PsalmText";
+import { RITE_LABELS, sanctoraleCardStyles } from "./SanctoraleCard.styles";
 import { ScriptureView } from "./ScriptureView";
-
-const RITE_LABELS: Record<string, string> = {
-  traditional: "Traditional (Rite I)",
-  contemporary: "Contemporary (Rite II)",
-};
 
 // a lesson citation. the card expands the passage inline with
 // ScriptureView's own reference heading; refs that resolve across the
@@ -211,105 +199,3 @@ export function SanctoraleCard({
     </View>
   );
 }
-
-const sanctoraleCardStyles = defineThemedStyles({
-  group: {
-    marginBottom: 22,
-  },
-  // the time labels drop the shared subheading's top margin: the section rule
-  // already closes over the first one, and the gap between morning and evening
-  // belongs to the group break, not to the label
-  timeGroups: {
-    gap: 30,
-  },
-  timeLabel: {
-    marginTop: 0,
-  },
-  // consecutive psalms sit apart; the leading one after a time marker adds no
-  // top margin of its own, so the shared subheading above keeps its small gap
-  // below and hugs the psalm it introduces
-  psalmBlock: {
-    marginTop: 16,
-  },
-  blockFirst: {
-    marginTop: 0,
-  },
-  psalmRef: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
-    lineHeight: 22,
-    color: "var(--text-secondary)",
-    marginBottom: 6,
-  },
-  lessonRow: {
-    marginTop: 16,
-  },
-  lessonRef: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 16,
-    lineHeight: 24,
-    color: "var(--text-secondary)",
-  },
-  // a citation that resolves to no text stays put, in quiet italic, rather
-  // than leaving a dangling label over empty space
-  lessonMissing: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 13,
-    lineHeight: 20,
-    color: "var(--text-secondary)",
-    marginTop: 2,
-  },
-  collect: {
-    marginBottom: 20,
-  },
-  // the collect's own title leads the block as a serif heading; ink
-  // stays in the paper colour so it reads as text, not a link
-  collectTitle: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 16,
-    lineHeight: 24,
-    color: "var(--text)",
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  // the rite markers stay small and muted so "Collect of the Day" leads
-  // the block; the red belongs to the section heading
-  collectRite: {
-    fontFamily: CHROME_FONT,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-    color: "var(--text-secondary)",
-    marginBottom: 4,
-  },
-  collectText: {
-    fontFamily: SERIF_FONT,
-    fontSize: 17,
-    lineHeight: 28,
-    color: "var(--text)",
-  },
-  detailTitle: {
-    fontFamily: HEADING_FONT,
-    fontWeight: "500",
-    fontSize: 30,
-    lineHeight: 38,
-    color: "var(--text)",
-    marginBottom: 4,
-  },
-  detailSubtitle: {
-    fontFamily: "var(--ui-font, system-ui)",
-    fontWeight: "500",
-    fontSize: 13,
-    color: "var(--text-secondary)",
-    marginBottom: 22,
-  },
-  // the biographical note leads the card, set in the same serif voice as
-  // the collect so it reads as a printed life, not machine metadata
-  bioText: {
-    fontFamily: SERIF_FONT,
-    fontSize: 17,
-    lineHeight: 28,
-    color: "var(--text)",
-  },
-});

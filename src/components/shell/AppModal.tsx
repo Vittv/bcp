@@ -11,13 +11,13 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-import { HEADING_FONT } from "../../lib/fonts";
-import {
-  defineThemedStyles,
-  useThemedStyles,
-  useThemeVar,
-} from "../../lib/theme/themedStyles";
+
+import { useThemedStyles, useThemeVar } from "../../lib/theme/themedStyles";
+import { registerEsc } from "./AppModal.esc";
+import { appModalStyles } from "./AppModal.styles";
 import { CloseIcon } from "./Icon";
+
+export { dismissEscapeConsumers, registerEsc } from "./AppModal.esc";
 
 // a reusable floating-window modal: a centered card with a title bar and
 // close button, a scrollable body, an optional pinned footer bar, and a
@@ -48,30 +48,6 @@ type AppModalProps = {
    *  clamped to the viewport so short windows still fit */
   height?: number;
 };
-
-type EscEntry = { run: () => void };
-const escRegistry: EscEntry[] = [];
-
-// the shell calls this from its global Escape handling. Escape dismisses one
-// layer at a time: only the most recently registered consumer runs, so a picker
-// opened inside a modal collapses on the first Escape and the modal survives
-// until the next (a picker registers after the modal it sits in).
-export function dismissEscapeConsumers(): void {
-  escRegistry[escRegistry.length - 1]?.run();
-}
-
-// exported for chrome that shares the modal's Escape and Android-back
-// behavior without its title-bar frame (the floating pickers): registered
-// closers are invoked by the shell's Escape path, so Esc closes them the
-// same way it closes an AppModal
-export function registerEsc(run: () => void): () => void {
-  const entry = { run };
-  escRegistry.push(entry);
-  return () => {
-    const i = escRegistry.indexOf(entry);
-    if (i >= 0) escRegistry.splice(i, 1);
-  };
-}
 
 export function AppModal({
   title,
@@ -173,96 +149,3 @@ export function AppModal({
     </View>
   );
 }
-
-const appModalStyles = defineThemedStyles({
-  backdrop: {
-    // fixed rather than absolute: the modal is often opened from a nested
-    // pane (the calendar, the saint popover), whose position context would
-    // otherwise clip the dim to that pane instead of the whole app
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 100,
-    backgroundColor: "var(--scrim)",
-    // a slight blur keeps the page readable behind the dim instead of
-    // flattening it into noise; subtle enough to stay an accent
-    backdropFilter: "blur(3px)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  card: {
-    width: 760,
-    maxWidth: "100%",
-    minHeight: 260,
-    backgroundColor: "var(--bg)",
-    borderWidth: 1,
-    borderColor: "var(--border)",
-    borderRadius: 10,
-    display: "flex",
-    flexDirection: "column",
-    maxHeight: "90%",
-    overflow: "hidden",
-  },
-  titleBar: {
-    height: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 20,
-    paddingRight: 10,
-    flexShrink: 0,
-    backgroundColor: "var(--bg)",
-    userSelect: "none",
-  },
-  title: {
-    fontFamily: HEADING_FONT,
-    fontWeight: "500",
-    fontSize: 28,
-    letterSpacing: 0.2,
-    color: "var(--text)",
-    flex: 1,
-    minWidth: 0,
-    marginRight: 12,
-  },
-  closeBtn: {
-    width: 34,
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 8,
-  },
-  closeBtnHover: {
-    backgroundColor: "var(--control-hover)",
-  },
-  body: {
-    flexShrink: 1,
-    minHeight: 0,
-    overflowY: "auto",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: "var(--bg)",
-  },
-  // two-pane bodies (settings rail + content) scroll inside their own panes;
-  // the frame itself just stretches to the card and clips
-  bodyStretch: {
-    flexGrow: 1,
-    flexShrink: 1,
-    minHeight: 0,
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-    padding: 0,
-    backgroundColor: "var(--bg)",
-  },
-  footer: {
-    flexShrink: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderTopWidth: 1,
-    borderTopColor: "var(--border)",
-    backgroundColor: "var(--bg)",
-  },
-});
