@@ -94,11 +94,13 @@ export function useBible(): BibleState {
 export function BibleProvider({
   children,
   page,
+  navKey,
   onReadingChange,
   onChapterChange,
 }: {
   children: ReactNode;
   page: PageId;
+  navKey?: number;
   onReadingChange?: (label: string | null) => void;
   onChapterChange?: () => void;
 }) {
@@ -128,6 +130,7 @@ export function BibleProvider({
 
   // sync testament + restore position when page changes to a bible page
   const prevPage = useRef(page);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: navKey re-runs on same-page navigations carrying a pending ref
   useEffect(() => {
     const pageChanged = prevPage.current !== page;
     prevPage.current = page;
@@ -188,7 +191,7 @@ export function BibleProvider({
         });
       }
     }
-  }, [page, history?.replace, apocrypha]);
+  }, [page, navKey, history?.replace, apocrypha]);
 
   // persist position + report to status bar (only while on a bible page)
   useEffect(() => {

@@ -431,6 +431,7 @@ export function Shell() {
         >
           <BibleProvider
             page={page}
+            navKey={navKey}
             onReadingChange={setReading}
             onChapterChange={scrollToTop}
           >
@@ -668,7 +669,7 @@ export function Shell() {
         page={page}
         navKey={navKey}
       >
-        <BibleProvider page={page}>
+        <BibleProvider page={page} navKey={navKey}>
           <NavigationContext.Provider value={{ navigateTo: handleNavigateTo }}>
             <PaletteProvider>
               <SaintPopoverProvider>
