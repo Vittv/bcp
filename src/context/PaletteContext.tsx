@@ -7,6 +7,8 @@ import {
   useState,
 } from "react";
 
+import { registerOpenPalette } from "../lib/modalBridge";
+
 // the floating picker modal. exactly one scope is open at a time (or
 // none); the bars open by scope and the single PaletteHost at the shell
 // root renders the matching index. closing clears the scope so the next
@@ -43,15 +45,6 @@ export function isPaletteActive(): boolean {
   return paletteActive;
 }
 
-// same module pattern as the open flag: the shell's keydown handler (and
-// anything above the provider tree) hands a scope to whatever bar would
-// have been clicked, routing Ctrl+/ to the page's own picker and Ctrl+K /
-// Cmd+K to the global search palette
-let openScope: ((scope: PaletteScope) => void) | null = null;
-export function requestPalette(scope: PaletteScope): void {
-  openScope?.(scope);
-}
-
 export function PaletteProvider({ children }: { children: ReactNode }) {
   const [scope, setScope] = useState<PaletteScope | null>(null);
   const open = useCallback((s: PaletteScope) => setScope(s), []);
@@ -62,12 +55,12 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
     return () => setPaletteActive(false);
   }, [scope]);
 
-  // hand the module-level hotkey bridge the live open() so the shell's
-  // keydown handler has somewhere to route Ctrl+/
+  // hand the hotkey bridge the live open() so shell keydown has somewhere
+  // to route Ctrl+/ and Cmd+K
   useEffect(() => {
-    openScope = open;
+    registerOpenPalette(open);
     return () => {
-      openScope = null;
+      registerOpenPalette(null);
     };
   }, [open]);
 

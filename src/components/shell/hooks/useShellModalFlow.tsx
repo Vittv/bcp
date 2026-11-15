@@ -4,14 +4,14 @@ import { CHANGELOG_MARKDOWN } from "../../../lib/changelog";
 import {
   type ChangelogSource,
   readChangelogPrefs,
-  registerOpenChangelog,
   writeChangelogPrefs,
 } from "../../../lib/changelogPrefs";
 import { IS_TAURI } from "../../../lib/desktop";
 import {
+  registerOpenChangelog,
   registerOpenSettingsSection,
-  type SettingsSectionId,
-} from "../../../lib/settings";
+} from "../../../lib/modalBridge";
+import type { SettingsSectionId } from "../../../lib/settings";
 import type { WindowControlStyleId } from "../../../lib/windowDecorations";
 import { SettingsScreen } from "../../../screens/SettingsScreen";
 import { ChangelogScreen } from "../../changelog/ChangelogScreen";

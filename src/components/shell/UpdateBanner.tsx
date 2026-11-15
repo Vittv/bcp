@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
-import { requestOpenChangelog } from "../../lib/changelogPrefs";
 import { IS_TAURI } from "../../lib/desktop";
 import { CHROME_FONT } from "../../lib/fonts";
+import { requestOpenChangelog } from "../../lib/modalBridge";
 import {
   defineThemedStyles,
   useThemedStyles,

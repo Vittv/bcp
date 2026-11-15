@@ -123,16 +123,3 @@ export function visibleSettings(): SettingsSection[] {
       (s.id !== "install" || (!IS_TAURI && !IS_STANDALONE)),
   );
 }
-
-// module-level bridge mirroring PaletteContext's requestPalette: the global
-// palette opens a section by telling the shell which one to land on, since
-// the modal lives above the palette's provider tree
-let openSectionHandler: ((section: SettingsSectionId) => void) | null = null;
-export function requestOpenSettingsSection(section: SettingsSectionId): void {
-  openSectionHandler?.(section);
-}
-export function registerOpenSettingsSection(
-  handler: ((section: SettingsSectionId) => void) | null,
-): void {
-  openSectionHandler = handler;
-}

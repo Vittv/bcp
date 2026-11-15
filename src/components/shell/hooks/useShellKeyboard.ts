@@ -3,12 +3,12 @@ import type { HistorySnapshot } from "../../../context/HistoryContext";
 import {
   isPaletteActive,
   type PaletteScope,
-  requestPalette,
 } from "../../../context/PaletteContext";
 import { addDays } from "../../../lib/calendar";
 import type { CalendarDate } from "../../../lib/calendar/types";
 import { stepPageSequence } from "../../../lib/input/sequenceNav";
 import { activeScrollTarget } from "../../../lib/input/vim";
+import { requestPalette } from "../../../lib/modalBridge";
 import type { SettingsSectionId } from "../../../lib/settings";
 import { dismissEscapeConsumers } from "../AppModal";
 import type { HintHandle } from "../HintLayer";

@@ -66,18 +66,3 @@ export async function writeChangelogPrefs(
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(WEB_KEY, raw);
 }
-
-// module bridge mirroring requestOpenSettingsSection: the update banner and
-// the sidebar live below the shell's modal state, so opening the changelog
-// (and which notes to show) goes through the shell
-let openHandler: ((source: ChangelogSource | null) => void) | null = null;
-
-export function requestOpenChangelog(source: ChangelogSource | null): void {
-  openHandler?.(source);
-}
-
-export function registerOpenChangelog(
-  handler: ((source: ChangelogSource | null) => void) | null,
-): void {
-  openHandler = handler;
-}
