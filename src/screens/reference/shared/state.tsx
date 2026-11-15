@@ -17,6 +17,7 @@ import {
   type RefOfficeBase,
   today,
 } from "./model";
+import { consumePendingReferencePick } from "./pending";
 import { useIndexPicker } from "./pickers";
 import { readingLabelFor, registerScriptureStepper } from "./state.helpers";
 
@@ -109,27 +110,22 @@ export function ReferenceProvider({
     history,
     queryRef,
   );
-  const [selectedCollect, setSelectedCollect] = useIndexPicker(
+  const [selectedCollect, setSelectedCollect, setCollectRaw] = useIndexPicker(
     "collect",
     "collects",
     page,
     history,
     queryRef,
   );
-  const [openSaint, setOpenSaint] = useIndexPicker(
+  const [openSaint, setOpenSaint, setSaintRaw] = useIndexPicker(
     "saint",
     "saints",
     page,
     history,
     queryRef,
   );
-  const [openLesserFeast, setOpenLesserFeast] = useIndexPicker(
-    "lesserFeast",
-    "lesser-feasts",
-    page,
-    history,
-    queryRef,
-  );
+  const [openLesserFeast, setOpenLesserFeast, setLesserFeastRaw] =
+    useIndexPicker("lesserFeast", "lesser-feasts", page, history, queryRef);
   const [openProvChapter, setOpenProvChapter, setProverbRaw] = useIndexPicker(
     "proverb",
     "proverbs",
@@ -137,7 +133,7 @@ export function ReferenceProvider({
     history,
     queryRef,
   );
-  const [openCanticle, setOpenCanticle] = useIndexPicker(
+  const [openCanticle, setOpenCanticle, setCanticleRaw] = useIndexPicker(
     "canticle",
     "canticles",
     page,
@@ -252,6 +248,72 @@ export function ReferenceProvider({
   useEffect(() => {
     setQuery("");
   }, [navKey, setQuery]);
+
+  // apply a pending global-search selection for the page being entered, so
+  // cross-page jumps land on the picked item in one history step (the
+  // navigation already carried the selection in its snapshot extras)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-run on navKey so each navigation can apply its pending pick
+  useEffect(() => {
+    const pending = consumePendingReferencePick();
+    if (!pending) return;
+    switch (page) {
+      case "psalms":
+        if (pending.psalm != null) {
+          setPsalmRaw(pending.psalm);
+          history?.replace({ psalm: pending.psalm });
+        }
+        break;
+      case "psalter":
+        if (pending.psalterDay != null) {
+          setPsalterDayRaw(pending.psalterDay);
+          history?.replace({ psalterDay: pending.psalterDay });
+        }
+        break;
+      case "collects":
+        if (pending.collect != null) {
+          setCollectRaw(pending.collect);
+          history?.replace({ collect: pending.collect });
+        }
+        break;
+      case "saints":
+        if (pending.saint != null) {
+          setSaintRaw(pending.saint);
+          history?.replace({ saint: pending.saint });
+        }
+        break;
+      case "lesser-feasts":
+        if (pending.lesserFeast != null) {
+          setLesserFeastRaw(pending.lesserFeast);
+          history?.replace({ lesserFeast: pending.lesserFeast });
+        }
+        break;
+      case "proverbs":
+        if (pending.proverb != null) {
+          setProverbRaw(pending.proverb);
+          history?.replace({ proverb: pending.proverb });
+        }
+        break;
+      case "canticles":
+        if (pending.canticle != null) {
+          setCanticleRaw(pending.canticle);
+          history?.replace({ canticle: pending.canticle });
+        }
+        break;
+      default:
+        break;
+    }
+  }, [
+    page,
+    navKey,
+    history,
+    setPsalmRaw,
+    setPsalterDayRaw,
+    setCollectRaw,
+    setSaintRaw,
+    setLesserFeastRaw,
+    setProverbRaw,
+    setCanticleRaw,
+  ]);
 
   const state: ReferenceState = {
     query,

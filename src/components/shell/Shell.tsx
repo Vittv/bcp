@@ -265,9 +265,18 @@ export function Shell() {
         goToPage(page, {
           bible: { abbrev: target.bookAbbrev, chapter: target.chapter },
         });
-      } else {
-        goToPage(target.page);
+        return;
       }
+      const extra: Partial<HistorySnapshot> = {};
+      if (target.psalm !== undefined) extra.psalm = target.psalm;
+      if (target.psalterDay !== undefined) extra.psalterDay = target.psalterDay;
+      if (target.collect !== undefined) extra.collect = target.collect;
+      if (target.saint !== undefined) extra.saint = target.saint;
+      if (target.lesserFeast !== undefined)
+        extra.lesserFeast = target.lesserFeast;
+      if (target.proverb !== undefined) extra.proverb = target.proverb;
+      if (target.canticle !== undefined) extra.canticle = target.canticle;
+      goToPage(target.page, extra);
     },
     [goToPage],
   );
