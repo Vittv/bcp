@@ -10,32 +10,15 @@ import {
 
 import type { PageId } from "../../../components/shell/Sidebar";
 import { useHistory, useHistoryField } from "../../../context/HistoryContext";
-import { lesserFeastBySlug } from "../../../lib/calendar/lesserFeasts";
-import { sanctoraleBySlug } from "../../../lib/calendar/sanctorale";
 import type { CalendarDate } from "../../../lib/calendar/types";
-import { canticleTitle } from "../../../lib/content/canticles";
-import { psalmNumbers } from "../../../lib/content/psalter";
-import {
-  PSALTER_DAY_COUNT,
-  psalterDayForDate,
-} from "../../../lib/content/psalterDays";
-import type { PageStepper } from "../../../lib/input/sequenceNav";
-import {
-  registerPageStepper,
-  stepLinear,
-} from "../../../lib/input/sequenceNav";
 import {
   type CollectSel,
-  defaultLesserFeast,
-  defaultSaint,
-  FIRST_COLLECT,
-  OFFICE_NAMES,
   type OfficeRite,
   type RefOfficeBase,
-  refOfficeId,
   today,
 } from "./model";
 import { useIndexPicker } from "./pickers";
+import { readingLabelFor, registerScriptureStepper } from "./state.helpers";
 
 export type ReferenceState = {
   query: string;
@@ -204,49 +187,21 @@ export function ReferenceProvider({
     [history],
   );
 
-  // build the stepper for one scripture page: a +1/-1 walk through that
-  // page's index, mirroring its bar arrows (psalms and proverbs clamp the
-  // same 1..n run the arrows do). the raw setters skip the push the UI
-  // arrows make, so arrow strides never leave their own back/forward steps
-  const sequenceStepFor = useCallback(
-    (p: PageId): PageStepper | null => {
-      switch (p) {
-        case "psalms": {
-          const max = psalmNumbers().length;
-          return (delta) => {
-            const n = stepLinear(openPsalm ?? 1, 1, max, delta);
-            if (n === null) return false;
-            setPsalmRaw(n);
-            return true;
-          };
-        }
-        case "psalter": {
-          return (delta) => {
-            const n = stepLinear(
-              openPsalterDay ?? psalterDayForDate(today()),
-              1,
-              PSALTER_DAY_COUNT,
-              delta,
-            );
-            if (n === null) return false;
-            setPsalterDayRaw(n);
-            return true;
-          };
-        }
-        case "proverbs": {
-          // 31 chapters, the same count the proverbs screen hard-codes
-          return (delta) => {
-            const n = stepLinear(openProvChapter ?? 1, 1, 31, delta);
-            if (n === null) return false;
-            setProverbRaw(n);
-            return true;
-          };
-        }
-        default:
-          return null;
-      }
-    },
+  // register the active scripture page's stepper for the shell's arrow
+  // keys; unregistering on leave keeps the registry current
+  useEffect(
+    () =>
+      registerScriptureStepper({
+        page,
+        openPsalm,
+        setPsalmRaw,
+        openPsalterDay,
+        setPsalterDayRaw,
+        openProvChapter,
+        setProverbRaw,
+      }),
     [
+      page,
       openPsalm,
       setPsalmRaw,
       openPsalterDay,
@@ -255,15 +210,6 @@ export function ReferenceProvider({
       setProverbRaw,
     ],
   );
-
-  // register the active scripture page's stepper for the shell's arrow
-  // keys; unregistering on leave keeps the registry current
-  useEffect(() => {
-    const step = sequenceStepFor(page);
-    if (!step) return;
-    registerPageStepper(page, step);
-    return () => registerPageStepper(page, null);
-  }, [page, sequenceStepFor]);
 
   // register the fields restore replays. raw setters only: a restore
   // must re-create the state, never push a follow-up entry. the query is
@@ -281,25 +227,18 @@ export function ReferenceProvider({
 
   // the status bar mirrors what the active page shows, including the
   // default-open first item; other pages' selections never leak in
-  const readingLabel =
-    page === "psalms"
-      ? `Psalm ${openPsalm ?? 1}`
-      : page === "psalter"
-        ? `Day ${openPsalterDay ?? psalterDayForDate(today())}`
-        : page === "offices"
-          ? OFFICE_NAMES[refOfficeId(openOffice ?? "morning", officeRite)]
-          : page === "collects"
-            ? (selectedCollect ?? FIRST_COLLECT).title
-            : page === "saints"
-              ? (sanctoraleBySlug(openSaint ?? defaultSaint())?.title ?? null)
-              : page === "lesser-feasts"
-                ? (lesserFeastBySlug(openLesserFeast ?? defaultLesserFeast())
-                    ?.name ?? null)
-                : page === "proverbs"
-                  ? `Proverbs ${openProvChapter ?? 1}`
-                  : page === "canticles"
-                    ? (canticleTitle(openCanticle ?? 1) ?? null)
-                    : null;
+  const readingLabel = readingLabelFor({
+    page,
+    openPsalm,
+    openPsalterDay,
+    openOffice,
+    officeRite,
+    selectedCollect,
+    openSaint,
+    openLesserFeast,
+    openProvChapter,
+    openCanticle,
+  });
 
   useEffect(() => {
     onReadingChange(readingLabel);

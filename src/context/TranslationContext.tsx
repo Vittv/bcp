@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import type { ApocryphaCorpus, Translation } from "../lib/content/bible";
+import { readStorageString, writeStorageString } from "../lib/storage";
 
 type TranslationContextValue = {
   translation: Translation;
@@ -18,43 +19,27 @@ const STORAGE_KEY = "bcp-translation";
 const APOCRYPHA_STORAGE_KEY = "bcp-apocrypha";
 
 function loadTranslation(): Translation {
-  try {
-    const v = localStorage.getItem(STORAGE_KEY);
-    if (v === "kjv" || v === "web") return v;
-  } catch {
-    // ignore
-  }
+  const v = readStorageString(STORAGE_KEY);
+  if (v === "kjv" || v === "web") return v;
   // WEB is the default: the World English Bible is the most widely used
   // modern translation, and KJV remains one click away
   return "web";
 }
 
 function loadApocrypha(): ApocryphaCorpus {
-  try {
-    const v = localStorage.getItem(APOCRYPHA_STORAGE_KEY);
-    if (v === "kjva" || v === "web") return v;
-  } catch {
-    // ignore
-  }
+  const v = readStorageString(APOCRYPHA_STORAGE_KEY);
+  if (v === "kjva" || v === "web") return v;
   // WEB is the default here too, so a reader's experience does not change
   // until they choose the 1611 apocrypha
   return "web";
 }
 
 function persistTranslation(t: Translation) {
-  try {
-    localStorage.setItem(STORAGE_KEY, t);
-  } catch {
-    // ignore
-  }
+  writeStorageString(STORAGE_KEY, t);
 }
 
 function persistApocrypha(a: ApocryphaCorpus) {
-  try {
-    localStorage.setItem(APOCRYPHA_STORAGE_KEY, a);
-  } catch {
-    // ignore
-  }
+  writeStorageString(APOCRYPHA_STORAGE_KEY, a);
 }
 
 const Ctx = createContext<TranslationContextValue>({

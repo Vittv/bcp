@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { getLocalStorage } from "../storage";
 import {
   DEFAULT_HEADING_FONT,
   DEFAULT_INTERFACE_FONT,
@@ -37,8 +38,7 @@ export function getSystemTheme(): ResolvedTheme {
 
 export function webStorage(): Storage | null {
   if (Platform.OS !== "web") return null;
-  if (typeof localStorage === "undefined") return null;
-  return localStorage;
+  return getLocalStorage();
 }
 
 export function loadThemeMode(): ThemeMode {

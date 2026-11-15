@@ -8,6 +8,12 @@ import {
 } from "../lib/content/bible";
 import type { ScriptureBookMeta } from "../lib/content/scripture";
 import type { Testament } from "../lib/content/types";
+import {
+  readStorageJson,
+  readStorageString,
+  removeStorageItem,
+  writeStorageJson,
+} from "../lib/storage";
 
 export type { Testament };
 
@@ -74,9 +80,9 @@ function storageKey(t: Testament, corpus: ApocryphaCorpus): string {
 }
 
 function loadPos(t: Testament, corpus: ApocryphaCorpus): SavedPos | null {
+  const raw = readStorageString(storageKey(t, corpus));
+  if (!raw) return null;
   try {
-    const raw = localStorage.getItem(storageKey(t, corpus));
-    if (!raw) return null;
     // SAFETY: fields validated by the type guard below
     const parsed = JSON.parse(raw) as SavedPos;
     if (
@@ -101,25 +107,17 @@ export function savePos(
   corpus: ApocryphaCorpus,
   pos: SavedPos,
 ): void {
-  try {
-    localStorage.setItem(storageKey(t, corpus), JSON.stringify(pos));
-  } catch {
-    // ignore
-  }
+  writeStorageJson(storageKey(t, corpus), pos);
 }
 
 /** drop every saved position, so the next open starts at a book's first chapter */
 export function clearSavedPositions(): void {
-  try {
-    for (const t of TESTAMENTS) {
-      for (const corpus of CORPORA) {
-        localStorage.removeItem(storageKey(t, corpus));
-      }
+  for (const t of TESTAMENTS) {
+    for (const corpus of CORPORA) {
+      removeStorageItem(storageKey(t, corpus));
     }
-    localStorage.removeItem(BOOK_STORAGE_KEY);
-  } catch {
-    // ignore
   }
+  removeStorageItem(BOOK_STORAGE_KEY);
 }
 
 // per-book place for the picker; the corpus position names only one book,
@@ -129,29 +127,19 @@ export function clearSavedPositions(): void {
 const BOOK_STORAGE_KEY = "bcp-bible-books";
 
 function loadBookPositions(): Record<string, number> {
-  try {
-    const raw = localStorage.getItem(BOOK_STORAGE_KEY);
-    if (!raw) return {};
-    // SAFETY: entries are validated by the guard below
-    const parsed = JSON.parse(raw) as Record<string, number>;
-    const positions: Record<string, number> = {};
-    for (const [abbrev, chapter] of Object.entries(parsed)) {
-      if (typeof chapter === "number") positions[abbrev] = chapter;
-    }
-    return positions;
-  } catch {
-    return {};
+  const parsed = readStorageJson<unknown>(BOOK_STORAGE_KEY);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+  const positions: Record<string, number> = {};
+  for (const [abbrev, chapter] of Object.entries(parsed)) {
+    if (typeof chapter === "number") positions[abbrev] = chapter;
   }
+  return positions;
 }
 
 export function saveBookPos(abbrev: string, chapter: number): void {
-  try {
-    const positions = loadBookPositions();
-    positions[abbrev] = chapter;
-    localStorage.setItem(BOOK_STORAGE_KEY, JSON.stringify(positions));
-  } catch {
-    // ignore
-  }
+  const positions = loadBookPositions();
+  positions[abbrev] = chapter;
+  writeStorageJson(BOOK_STORAGE_KEY, positions);
 }
 
 /** where a book pick opens: the reader's last place, clamped, 1 if never opened */

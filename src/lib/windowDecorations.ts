@@ -1,5 +1,6 @@
 // window-control appearance; "system" follows the host, explicit ids keep their look.
 import { IS_LINUX_TAURI, IS_MACOS_TAURI, IS_WINDOWS_TAURI } from "./desktop";
+import { getLocalStorage } from "./storage";
 
 export type WindowControlStyleId =
   | "system"
@@ -103,8 +104,7 @@ const STYLE_IDS = new Set<string>([
 ]);
 
 function webStorage(): Storage | null {
-  if (typeof localStorage === "undefined") return null;
-  return localStorage;
+  return getLocalStorage();
 }
 
 export function loadWindowControlStyle(): WindowControlStyleId {

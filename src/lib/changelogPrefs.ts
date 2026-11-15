@@ -5,6 +5,7 @@
 // sweep clears all browsing data once per released version and would reset
 // a localStorage marker on every update.
 import { IS_TAURI } from "./desktop";
+import { getLocalStorage } from "./storage";
 
 export type ChangelogPrefs = {
   /** the last version whose notes the user saw; null means never seen */
@@ -45,9 +46,9 @@ export async function readChangelogPrefs(): Promise<ChangelogPrefs> {
       return { seen: null, suppress: false };
     }
   }
-  if (typeof localStorage === "undefined")
-    return { seen: null, suppress: false };
-  return parsePrefs(localStorage.getItem(WEB_KEY));
+  const storage = getLocalStorage();
+  if (!storage) return { seen: null, suppress: false };
+  return parsePrefs(storage.getItem(WEB_KEY));
 }
 
 export async function writeChangelogPrefs(
@@ -63,6 +64,5 @@ export async function writeChangelogPrefs(
     }
     return;
   }
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(WEB_KEY, raw);
+  getLocalStorage()?.setItem(WEB_KEY, raw);
 }
