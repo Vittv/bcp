@@ -7,7 +7,9 @@ import {
 } from "react";
 import { Pressable, Text, View } from "react-native";
 import { PsalmText } from "../../components/office/PsalmText";
+import { MONO } from "../../components/shell/BarDropdown.styles";
 import { Chevron } from "../../components/shell/Chevron";
+import { officeBarStyles } from "../../components/shell/officeBarStyles";
 import { usePalette } from "../../context/PaletteContext";
 import { psalmPassage } from "../../lib/content/psalter";
 import { type PsalmHit, searchPsalms } from "../../lib/reference/search";
@@ -65,6 +67,7 @@ export function PsalmsBar({ leading }: { leading?: ReactNode }) {
   const { openPsalm, setOpenPsalm } = useReference();
   const palette = usePalette();
   const styles = useThemedStyles(styleDef);
+  const barStyles = useThemedStyles(officeBarStyles);
   const n = openPsalm ?? 1;
   const verses = psalmPassage({ psalm: n })?.verses.length ?? 0;
   const atStart = n <= 1;
@@ -73,6 +76,23 @@ export function PsalmsBar({ leading }: { leading?: ReactNode }) {
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
+        <View
+          style={[
+            barStyles.toggle,
+            barStyles.modeToggle,
+            { paddingHorizontal: 7 },
+          ]}
+          accessibilityLabel="1979 BCP Psalter"
+        >
+          <Text
+            style={[
+              barStyles.toggleText,
+              { fontFamily: MONO, color: "var(--accent)" },
+            ]}
+          >
+            1979 BCP
+          </Text>
+        </View>
         <PickerButton
           label={`Psalm ${n}`}
           meta={`${n} / ${PSALM_COUNT} · ${verses} verse${
