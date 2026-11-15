@@ -135,7 +135,23 @@ function buildBookPattern(books: readonly ScriptureBookMeta[]): RegExp {
   return new RegExp(`^(${escaped})\\s+`, "i");
 }
 
-export function parseDolRef(
+function normalizeDolRefInput(ref: string): string {
+  return ref
+    .trim()
+    .replace(/^III\s+/i, "3 ")
+    .replace(/^II\s+/i, "2 ")
+    .replace(/^I\s+/i, "1 ")
+    .replace(/^Third\s+/i, "3 ")
+    .replace(/^Second\s+/i, "2 ")
+    .replace(/^First\s+/i, "1 ")
+    .replace(/^3rd\s+/i, "3 ")
+    .replace(/^2nd\s+/i, "2 ")
+    .replace(/^1st\s+/i, "1 ")
+    .replace(/^([123])(?=[A-Za-z])/, "$1 ")
+    .replace(/\.(?=\s*\d)/g, "");
+}
+
+function parseDolRefInner(
   books: readonly ScriptureBookMeta[],
   ref: string,
 ): ParseResult | null {
@@ -246,6 +262,17 @@ export function parseDolRef(
   }
 
   return null;
+}
+
+export function parseDolRef(
+  books: readonly ScriptureBookMeta[],
+  ref: string,
+): ParseResult | null {
+  const direct = parseDolRefInner(books, ref);
+  if (direct) return direct;
+  const normalized = normalizeDolRefInput(ref);
+  if (normalized === ref) return null;
+  return parseDolRefInner(books, normalized);
 }
 
 export async function getPassageFromDolRef(
