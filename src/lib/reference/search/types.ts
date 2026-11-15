@@ -1,3 +1,4 @@
+import type { PageId } from "../../../components/shell/Sidebar";
 import type { ApocryphaCorpus } from "../../content/bible";
 import type { CollectSection, PsalterDay } from "../../content/types";
 import type { SettingsSectionId } from "../../settings";
@@ -39,6 +40,7 @@ export type LesserFeastHit = {
 // carries the run that reopens that reading on its own page, so the
 // picker only needs switch + navigate once a result is chosen.
 export type PaletteSection =
+  | "pages"
   | "psalms"
   | "psalter"
   | "proverbs"
@@ -51,6 +53,7 @@ export type PaletteSection =
   | "settings";
 
 export type PaletteRun =
+  | { kind: "page"; page: PageId }
   | { kind: "psalm"; psalm: number }
   | { kind: "psalterDay"; day: number }
   | { kind: "proverb"; chapter: number }
@@ -74,6 +77,7 @@ export type PaletteEntry = {
 // and its own text, so a result's provenance stays obvious in the heading
 // alone
 export const PALETTE_SECTION_ORDER: PaletteSection[] = [
+  "pages",
   "psalms",
   "psalter",
   "proverbs",

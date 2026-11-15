@@ -149,6 +149,55 @@ function lesserFeastEntries(query: string, cap = Infinity): PaletteEntry[] {
     }));
 }
 
+// top-level pages reachable from the global palette (simple navigation)
+const PAGE_ENTRIES: Array<{
+  page: "today" | "calendar" | "lectionary" | "offices";
+  label: string;
+  detail: string;
+  keywords: string[];
+}> = [
+  {
+    page: "today",
+    label: "Daily Office",
+    detail: "Page",
+    keywords: ["today", "daily office", "daily", "office of the day"],
+  },
+  {
+    page: "calendar",
+    label: "Calendar",
+    detail: "Page",
+    keywords: ["calendar"],
+  },
+  {
+    page: "lectionary",
+    label: "Lectionary",
+    detail: "Page",
+    keywords: ["lectionary", "readings", "daily readings"],
+  },
+  {
+    page: "offices",
+    label: "Offices",
+    detail: "Page",
+    keywords: ["offices", "office"],
+  },
+];
+
+function pageEntries(query: string, cap = Infinity): PaletteEntry[] {
+  const q = query.trim().toLowerCase();
+  const hits = PAGE_ENTRIES.filter(
+    (p) =>
+      p.label.toLowerCase().includes(q) ||
+      p.keywords.some((k) => k.includes(q) || q.includes(k)),
+  ).slice(0, cap);
+  return hits.map((p) => ({
+    id: `page:${p.page}`,
+    section: "pages",
+    label: p.label,
+    detail: p.detail,
+    run: { kind: "page", page: p.page },
+  }));
+}
+
 // settings sections fold into the same palette using the shared rail-search
 // matcher, so "theme" or "shortcuts" reaches the matching settings pane
 function settingsEntries(query: string, cap = Infinity): PaletteEntry[] {
@@ -332,6 +381,7 @@ export function searchPalette(
   pushEntries(out, refHits);
   const refIds = new Set(refHits.map((h) => h.id));
 
+  pushEntries(out, pageEntries(q, PER_SECTION_CAP));
   pushEntries(out, psalmEntries(q, PER_SECTION_CAP));
   pushEntries(out, psalterEntries(q, PER_SECTION_CAP));
   pushEntries(out, proverbEntries(lower, PER_SECTION_CAP));

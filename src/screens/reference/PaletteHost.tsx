@@ -21,6 +21,9 @@ export function PaletteHost() {
   const handleGlobalPick = (entry: PaletteEntry) => {
     const run = entry.run;
     switch (run.kind) {
+      case "page":
+        navigateTo(run.page);
+        break;
       case "psalm":
         setPendingReferencePick({ psalm: run.psalm });
         navigateTo({ page: "psalms", psalm: run.psalm });

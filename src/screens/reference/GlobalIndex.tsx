@@ -13,6 +13,7 @@ import { sharedStyles as styleDef } from "./styles";
 import { useIndexKeyboard } from "./useIndexKeyboard";
 
 const SECTION_HEADINGS: Record<PaletteSection, string> = {
+  pages: "Pages",
   psalms: "Psalms",
   psalter: "30-Day Psalter",
   proverbs: "Proverbs",
