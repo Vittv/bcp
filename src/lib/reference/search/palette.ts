@@ -151,7 +151,13 @@ function lesserFeastEntries(query: string, cap = Infinity): PaletteEntry[] {
 
 // top-level pages reachable from the global palette (simple navigation)
 const PAGE_ENTRIES: Array<{
-  page: "today" | "calendar" | "lectionary" | "offices";
+  page:
+    | "today"
+    | "calendar"
+    | "lectionary"
+    | "offices"
+    | "saints"
+    | "lesser-feasts";
   label: string;
   detail: string;
   keywords: string[];
@@ -179,6 +185,26 @@ const PAGE_ENTRIES: Array<{
     label: "Offices",
     detail: "Page",
     keywords: ["offices", "office"],
+  },
+  {
+    page: "saints",
+    label: "Holy Days",
+    detail: "Page",
+    keywords: ["holy days", "holy day"],
+  },
+  {
+    page: "lesser-feasts",
+    label: "Lesser Feasts",
+    detail: "Page",
+    keywords: [
+      "lesser feasts",
+      "lesser feast",
+      "lesser feasts and fasts",
+      "lesser feast and fasts",
+      "lesser",
+      "feasts",
+      "lff",
+    ],
   },
 ];
 
@@ -239,18 +265,7 @@ function sectionKeyword(lower: string): PaletteSection | null {
     ["canticles", ["canticle", "canticles"]],
     ["collects", ["collect", "collects"]],
     ["saints", ["saint", "saints"]],
-    [
-      "lesser-feasts",
-      [
-        "lesser feast",
-        "lesser feasts",
-        "lesser feast and fasts",
-        "lesser feasts and fasts",
-        "lff",
-        "commemoration",
-        "commemorations",
-      ],
-    ],
+    ["lesser-feasts", ["commemoration", "commemorations"]],
     ["settings", ["settings", "preferences"]],
   ];
   for (const [section, names] of keywords) {
@@ -259,13 +274,6 @@ function sectionKeyword(lower: string): PaletteSection | null {
   // flexible matches for common partial queries
   if (lower === "30-day" || lower === "30 day" || lower === "30day psalter") {
     return "psalter";
-  }
-  if (
-    lower === "lesser" ||
-    lower === "feasts" ||
-    lower === "lesser feast and fast"
-  ) {
-    return "lesser-feasts";
   }
   return null;
 }
@@ -384,6 +392,30 @@ export function searchPalette(
   const bibleExpansion = bibleKeyword(lower);
   if (bibleExpansion) return expandBible(bibleExpansion);
   if (apocryphaKeyword(lower)) return expandApocrypha(corpus);
+  if (lower === "holy days" || lower === "holy day") {
+    return [
+      {
+        id: "page:saints",
+        section: "pages",
+        label: "Holy Days",
+        detail: "Page",
+        run: { kind: "page", page: "saints" },
+      },
+      ...expandSection("saints"),
+    ];
+  }
+  if (lower === "lesser feasts" || lower === "lesser feast") {
+    return [
+      {
+        id: "page:lesser-feasts",
+        section: "pages",
+        label: "Lesser Feasts",
+        detail: "Page",
+        run: { kind: "page", page: "lesser-feasts" },
+      },
+      ...expandSection("lesser-feasts"),
+    ];
+  }
   const section = sectionKeyword(lower);
   if (section) return expandSection(section);
 

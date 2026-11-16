@@ -332,7 +332,13 @@ describe("searchPalette", () => {
 
     expect(palette("collects")).toHaveLength(142);
     expect(palette("saints")).toHaveLength(36);
-    expect(palette("lesser feasts")).toHaveLength(247);
+    const lesser = palette("lesser feasts");
+    expect(lesser[0]).toMatchObject({
+      section: "pages",
+      label: "Lesser Feasts",
+      run: { kind: "page", page: "lesser-feasts" },
+    });
+    expect(lesser).toHaveLength(248);
     expect(palette("commemorations")).toHaveLength(247);
     expect(palette("proverbs")).toHaveLength(31);
   });
