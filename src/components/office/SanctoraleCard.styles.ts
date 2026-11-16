@@ -110,5 +110,19 @@ export const sanctoraleCardStyles = defineThemedStyles({
     fontSize: 17,
     lineHeight: 28,
     color: "var(--text)",
+    marginBottom: 22,
+  },
+  linkRow: {
+    alignSelf: "flex-start",
+    borderRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    marginLeft: -6,
+  },
+  link: {
+    fontFamily: CHROME_FONT,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "var(--accent)",
   },
 });

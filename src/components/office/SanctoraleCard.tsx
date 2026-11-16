@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { useTranslation } from "../../context/TranslationContext";
 import {
   sanctoraleBySlug,
   sanctoraleDateLabel,
 } from "../../lib/calendar/sanctorale";
+import { SANCTORALE_WIKI } from "../../lib/calendar/sanctoraleWiki";
+import {
+  wikipediaArticleUrl,
+  wikipediaSearchUrl,
+} from "../../lib/calendar/lesserFeastWiki";
 import { getScripturePassagesFromDolRef } from "../../lib/content/bible";
 import { collectPassage } from "../../lib/content/collects";
 import { parsePsalmCitation } from "../../lib/content/psalms";
@@ -78,6 +83,7 @@ export function SanctoraleCard({
   const entry = sanctoraleBySlug(slug);
   if (!entry) return null;
   const feast = entry.eveOf ? sanctoraleBySlug(entry.eveOf) : undefined;
+  const wikiLinks = SANCTORALE_WIKI[slug] ?? [];
   const collectTitle = holyDayCollectTitle(slug);
   const traditional = collectTitle
     ? collectPassage("traditional", "holy-days", collectTitle)
@@ -124,6 +130,48 @@ export function SanctoraleCard({
       {showBio && entry.bio ? (
         <View style={styles.group}>
           <Text style={styles.bioText}>{entry.bio}</Text>
+          {wikiLinks.length > 0 ? (
+            wikiLinks.map((link) => (
+              <Pressable
+                key={link.title}
+                style={({ hovered }) => [
+                  styles.linkRow,
+                  hovered && { backgroundColor: "var(--control-hover)" },
+                ]}
+                onPress={() =>
+                  window.open(
+                    wikipediaArticleUrl(link.title),
+                    "_blank",
+                    "noreferrer",
+                  )
+                }
+                accessibilityRole="link"
+                accessibilityLabel={`Read ${link.label ?? link.title} on Wikipedia`}
+              >
+                <Text style={styles.link}>
+                  {`${link.label ?? link.title} on Wikipedia ›`}
+                </Text>
+              </Pressable>
+            ))
+          ) : (
+            <Pressable
+              style={({ hovered }) => [
+                styles.linkRow,
+                hovered && { backgroundColor: "var(--control-hover)" },
+              ]}
+              onPress={() =>
+                window.open(
+                  wikipediaSearchUrl(entry.title),
+                  "_blank",
+                  "noreferrer",
+                )
+              }
+              accessibilityRole="link"
+              accessibilityLabel={`Search Wikipedia for ${entry.title}`}
+            >
+              <Text style={styles.link}>{"Search Wikipedia ›"}</Text>
+            </Pressable>
+          )}
         </View>
       ) : null}
 

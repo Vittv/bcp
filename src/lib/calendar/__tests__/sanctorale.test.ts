@@ -2,6 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { collectPassage } from "../../content/collects";
 import { entryForEvening } from "../../content/lectionary";
 import { holyDayCollectTitle } from "../../office/compose";
+import {
+  wikipediaArticleUrl,
+  wikipediaSearchUrl,
+} from "../lesserFeastWiki";
 import { resolve } from "../dol";
 import {
   eveForDate,
@@ -16,6 +20,7 @@ import {
   upcomingSanctoraleEntry,
   validateSanctorale,
 } from "../sanctorale";
+import { SANCTORALE_WIKI } from "../sanctoraleWiki";
 
 const FEASTS = SANCTORALE_ENTRIES.filter((e) => e.eveOf === undefined);
 const EVES = SANCTORALE_ENTRIES.filter((e) => e.eveOf !== undefined);
@@ -296,5 +301,38 @@ describe("labels", () => {
     if (!allSaints || !stAndrew) throw new Error("label fixtures missing");
     expect(sanctoraleDateLabel(allSaints)).toBe("November 1");
     expect(sanctoraleDateLabel(stAndrew)).toBe("November 30");
+  });
+});
+
+describe("holy day wikipedia links", () => {
+  test("every article link belongs to a holy day", () => {
+    for (const slug of Object.keys(SANCTORALE_WIKI)) {
+      expect(sanctoraleBySlug(slug)).toBeDefined();
+    }
+  });
+
+  test("every holy day has a verified article", () => {
+    for (const entry of SANCTORALE_ENTRIES) {
+      expect(SANCTORALE_WIKI[entry.slug]?.length).toBeGreaterThan(0);
+    }
+  });
+
+  test("every article link has a title and a well formed url", () => {
+    for (const links of Object.values(SANCTORALE_WIKI)) {
+      for (const link of links) {
+        expect(link.title.trim().length).toBeGreaterThan(0);
+        expect(
+          wikipediaArticleUrl(link.title).startsWith(
+            "https://en.wikipedia.org/wiki/",
+          ),
+        ).toBe(true);
+      }
+    }
+  });
+
+  test("the search fallback is well formed", () => {
+    expect(wikipediaSearchUrl("The Transfiguration")).toBe(
+      "https://en.wikipedia.org/wiki/Special:Search?search=The%20Transfiguration",
+    );
   });
 });
