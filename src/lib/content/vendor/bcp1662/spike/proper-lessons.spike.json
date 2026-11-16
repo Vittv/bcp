@@ -1,0 +1,79 @@
+{
+  "meta": {
+    "form": "1662-original",
+    "primaryWitness": "ia:bookofcommonpray00chur_14 (1669, Griffiths 1669/1)",
+    "secondaryWitness": "ia:bookofcommonpray00chur_17 (1770, Griffiths 1770/2)",
+    "sourceArtifact": "https://archive.org/download/bookofcommonpray00chur_14/bookofcommonpray00chur_14.pdf (pdftotext -layout extraction used for reading; OCR artifacts severe in table layout)",
+    "sections": "Prefatory rules ('The ORDER how the rest of holy Scripture is appointed to be read') ~lines 1439-1458; 'Proper LESSONS...' tables ~lines 1470+; 'Proper Psalms on certain days' ~lines 1623-1647 in pdftotext output. Page/image ranges not yet pinned.",
+    "status": "spike-partial-best-effort",
+    "notes": [
+      "Best-effort sample from 1669 PD witness OCR/text extraction. Multi-column table layout is heavily garbled; many entries uncertain or incomplete. Requires verification against witness page images.",
+      "Not copied from unlicensed/terms-unclear digital transcriptions. Convenience sources may be used only for verification in future pass; resolve against PD witness.",
+      "Spike sample: prefatory rules excerpt + Proper Psalms on certain days (interpreted) + note that full Proper Lessons tables need careful image-based transcription."
+    ]
+  },
+  "rules": [
+    {
+      "id": "proper-psalms-lessons-override",
+      "textWitnessedSummary": "When Proper Psalms or Lessons are appointed, the Psalms and Lessons of ordinary course appointed in the Psalter and Kalendar (if different) shall be omitted for that time.",
+      "source": "1669 witness, pdftotext ~lines 1453-1456",
+      "notes": ["paraphrased in normalization-friendly form from OCR; verify exact wording against image"]
+    },
+    {
+      "id": "collect-epistle-gospel-sunday-week",
+      "textWitnessedSummary": "The Collect, Epistle, and Gospel appointed for the Sunday shall serve all the week after, where it is not in this Book otherwise ordered.",
+      "source": "1669 witness, pdftotext ~lines 1457-1458",
+      "notes": ["OCR: 'the ColleCt, Epiftle, and Gofpel appointed for the Sunday, shall serve all the week after, where it is not in this Book otherwife ordered.' (normalized for readability)"]
+    }
+  ],
+  "properPsalmsOnCertainDays": {
+    "status": "best-effort-ocr-interpretation",
+    "entries": [
+      {
+        "day": "Christmas-day",
+        "mattins": ["19", "45", "85"],
+        "evensong": ["89", "110", "132"],
+        "notes": ["interpreted from garbled OCR; uncertain (common 1662 form, but must be confirmed against witness image)"]
+      },
+      {
+        "day": "Ash-Wednesday",
+        "mattins": ["6", "32", "38"],
+        "evensong": ["102", "130", "143"],
+        "notes": ["partly visible in OCR; uncertain"]
+      },
+      {
+        "day": "Good-Friday",
+        "mattins": ["22", "40", "54"],
+        "evensong": ["69", "88"],
+        "notes": ["evensong count/values uncertain in OCR; verify"]
+      },
+      {
+        "day": "Easter-day",
+        "mattins": ["2", "57", "111"],
+        "evensong": ["113", "114", "118"],
+        "notes": ["uncertain OCR interpretation; verify"]
+      },
+      {
+        "day": "Ascension-day",
+        "mattins": ["8", "15", "21"],
+        "evensong": ["24", "47", "108"],
+        "notes": ["uncertain; verify"]
+      },
+      {
+        "day": "Whitsunday",
+        "mattins": ["48", "68"],
+        "evensong": ["104", "145"],
+        "notes": ["partly visible; uncertain"]
+      }
+    ]
+  },
+  "fixed": [],
+  "moveable": [],
+  "properLessons": {
+    "status": "not-transcribed",
+    "notes": [
+      "Tables for Sundays and Holy-days throughout the year are present in 1669 witness (~pdftotext lines 1470 onward) but OCR column layout is too garbled for reliable automated transcription in this pass.",
+      "Requires image-based/manual transcription from pinned page ranges in the primary PD witness (and cross-check against secondary witness)."
+    ]
+  }
+}

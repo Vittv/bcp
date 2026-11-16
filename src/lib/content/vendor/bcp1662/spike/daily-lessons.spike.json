@@ -1,0 +1,209 @@
+{
+  "meta": {
+    "form": "1662-original",
+    "primaryWitness": "ia:bookofcommonpray00chur_14 (1669, Griffiths 1669/1)",
+    "secondaryWitness": "ia:bookofcommonpray00chur_17 (1770, Griffiths 1770/2)",
+    "sourceArtifact": "https://archive.org/download/bookofcommonpray00chur_14/bookofcommonpray00chur_14.pdf (pdftotext -layout extraction used for reading; OCR artifacts present)",
+    "sections": "Daily Calendar with the Table of Lessons: 'The Kalendar' (January) observed in pdftotext output around lines ~1650-1708 (PDF page/image range not yet pinned). Prefatory rules around ~1439-1458. Proper tables around ~1470+.",
+    "status": "spike-partial-best-effort",
+    "notes": [
+      "Best-effort transcription from 1669 PD witness OCR/text extraction. Row alignment in OCR is garbled; values interpreted from visible chapter/verse markers in sequence. Entries marked uncertain require re-check against witness page images.",
+      "Holy days in the 1662 calendar commonly have blank daily lesson columns when Proper Lessons are appointed; feast names recorded where visible in OCR.",
+      "Not copied from unlicensed/terms-unclear digital transcriptions. Convenience sources may be consulted only for verification in future pass; discrepancies must resolve against PD witness.",
+      "Spike slice: January only."
+    ]
+  },
+  "months": {
+    "january": {
+      "1": {
+        "feast": "Circumcision of our Lord",
+        "morning": { "first": null, "second": null },
+        "evening": { "first": null, "second": null },
+        "notes": ["daily calendar columns blank in OCR (likely proper lessons appointed)", "uncertain: verify against witness image"]
+      },
+      "2": {
+        "feast": null,
+        "morning": { "first": "Gen. 1", "second": "Matt. 1" },
+        "evening": { "first": "Gen. 2", "second": "Rom. 1" },
+        "notes": ["OCR-aligned best effort"]
+      },
+      "3": {
+        "feast": null,
+        "morning": { "first": "Gen. 3", "second": "Matt. 2" },
+        "evening": { "first": "Gen. 4", "second": "Rom. 2" },
+        "notes": []
+      },
+      "4": {
+        "feast": null,
+        "morning": { "first": "Gen. 5", "second": "Matt. 3" },
+        "evening": { "first": "Gen. 6", "second": "Rom. 3" },
+        "notes": ["evening first appears as '9' in OCR, likely Gen. 6/9 ambiguity; uncertain, verify"]
+      },
+      "5": {
+        "feast": null,
+        "morning": { "first": "Gen. 7", "second": "Matt. 4" },
+        "evening": { "first": "Gen. 8", "second": "Rom. 4" },
+        "notes": []
+      },
+      "6": {
+        "feast": "Epiphany of our Lord",
+        "morning": { "first": null, "second": null },
+        "evening": { "first": null, "second": null },
+        "notes": ["daily calendar columns blank in OCR (likely proper lessons appointed)", "uncertain: verify"]
+      },
+      "7": {
+        "feast": null,
+        "morning": { "first": "Gen. 9", "second": "Matt. 5" },
+        "evening": { "first": "Gen. 12", "second": "Rom. 5" },
+        "notes": ["evening first read as 'ia' (12) in OCR; uncertain"]
+      },
+      "8": {
+        "feast": "Lucian, Priest and Martyr",
+        "morning": { "first": "Gen. 13", "second": "Matt. 6" },
+        "evening": { "first": "Gen. 14", "second": "Rom. 6" },
+        "notes": ["morning first read as 'n' (11/13) in OCR; uncertain"]
+      },
+      "9": {
+        "feast": null,
+        "morning": { "first": "Gen. 15", "second": "Matt. 7" },
+        "evening": { "first": "Gen. 16", "second": "Rom. 7" },
+        "notes": ["values partly inferred from OCR sequence; uncertain"]
+      },
+      "10": {
+        "feast": null,
+        "morning": { "first": "Gen. 17", "second": "Matt. 8" },
+        "evening": { "first": "Gen. 18", "second": "Rom. 8" },
+        "notes": ["evening second shown as 'T' in OCR fragment; uncertain"]
+      },
+      "11": {
+        "feast": null,
+        "morning": { "first": "Gen. 19", "second": "Matt. 9" },
+        "evening": { "first": "Gen. 20", "second": "Rom. 9" },
+        "notes": []
+      },
+      "12": {
+        "feast": null,
+        "morning": { "first": "Gen. 21", "second": "Matt. 10" },
+        "evening": { "first": "Gen. 22", "second": "Rom. 10" },
+        "notes": []
+      },
+      "13": {
+        "feast": "Hilary, Bishop and Confessor",
+        "morning": { "first": "Gen. 23", "second": "Matt. 11" },
+        "evening": { "first": "Gen. 24", "second": "Rom. 11" },
+        "notes": ["evening first read as '^4' in OCR; uncertain"]
+      },
+      "14": {
+        "feast": null,
+        "morning": { "first": "Gen. 25", "second": "Matt. 12" },
+        "evening": { "first": "Gen. 26", "second": "Rom. 12" },
+        "notes": ["evening first read as '2d' in OCR; uncertain"]
+      },
+      "15": {
+        "feast": null,
+        "morning": { "first": "Gen. 27", "second": "Matt. 13" },
+        "evening": { "first": "Gen. 28", "second": "Rom. 13" },
+        "notes": ["morning first read as 'V' in OCR; uncertain"]
+      },
+      "16": {
+        "feast": null,
+        "morning": { "first": "Gen. 29", "second": "Matt. 14" },
+        "evening": { "first": "Gen. 30", "second": "Rom. 14" },
+        "notes": []
+      },
+      "17": {
+        "feast": null,
+        "morning": { "first": "Gen. 31", "second": "Matt. 15" },
+        "evening": { "first": "Gen. 32", "second": "Rom. 15" },
+        "notes": ["evening first read as '3a' in OCR; uncertain"]
+      },
+      "18": {
+        "feast": "Prisca, Roman Virgin and Martyr",
+        "morning": { "first": "Gen. 33", "second": "Matt. 16" },
+        "evening": { "first": "Gen. 34", "second": "Rom. 16" },
+        "notes": ["NT book transition in OCR around here; uncertain"]
+      },
+      "19": {
+        "feast": null,
+        "morning": { "first": "Gen. 35", "second": "Matt. 17" },
+        "evening": { "first": "Gen. 37", "second": "1 Cor. 1" },
+        "notes": ["evening shows '37 li Cor. 1.' in OCR; OT sequence skip/reading uncertain"]
+      },
+      "20": {
+        "feast": "Fabian, Bishop of Rome, and Martyr",
+        "morning": { "first": "Gen. 38", "second": "Matt. 18" },
+        "evening": { "first": "Gen. 39", "second": "1 Cor. 2" },
+        "notes": []
+      },
+      "21": {
+        "feast": "Agnes, Roman Virgin and Martyr",
+        "morning": { "first": "Gen. 40", "second": "Matt. 19" },
+        "evening": { "first": "Gen. 41", "second": "1 Cor. 3" },
+        "notes": []
+      },
+      "22": {
+        "feast": "Vincent, Spanish Deacon and Martyr",
+        "morning": { "first": "Gen. 42", "second": "Matt. 20" },
+        "evening": { "first": "Gen. 43", "second": "1 Cor. 4" },
+        "notes": []
+      },
+      "23": {
+        "feast": null,
+        "morning": { "first": "Gen. 44", "second": "Matt. 21" },
+        "evening": { "first": "Gen. 45", "second": "1 Cor. 5" },
+        "notes": []
+      },
+      "24": {
+        "feast": null,
+        "morning": { "first": "Gen. 46", "second": "Matt. 22" },
+        "evening": { "first": "Gen. 47", "second": "1 Cor. 6" },
+        "notes": ["evening second read as 'd' in OCR; uncertain"]
+      },
+      "25": {
+        "feast": "Conversion of St. Paul",
+        "morning": { "first": null, "second": null },
+        "evening": { "first": null, "second": null },
+        "notes": ["daily calendar columns blank in OCR (likely proper lessons appointed)", "uncertain: verify"]
+      },
+      "26": {
+        "feast": null,
+        "morning": { "first": "Gen. 48", "second": "Matt. 23" },
+        "evening": { "first": "Gen. 49", "second": "1 Cor. 7" },
+        "notes": ["morning second read as '^3' in OCR; uncertain"]
+      },
+      "27": {
+        "feast": null,
+        "morning": { "first": "Gen. 50", "second": "Matt. 24" },
+        "evening": { "first": "Exod. 1", "second": "1 Cor. 8" },
+        "notes": ["evening first shows 'Exod. 1.' in OCR"]
+      },
+      "28": {
+        "feast": null,
+        "morning": { "first": "Exod. 2", "second": "Matt. 25" },
+        "evening": { "first": "Exod. 3", "second": "1 Cor. 9" },
+        "notes": ["morning second read as '*5 L.' in OCR; uncertain"]
+      },
+      "29": {
+        "feast": null,
+        "morning": { "first": "Exod. 4", "second": "Matt. 26" },
+        "evening": { "first": "Exod. 5", "second": "1 Cor. 10" },
+        "notes": ["morning second read as '2d' in OCR; uncertain"]
+      },
+      "30": {
+        "feast": "King Charles Martyr",
+        "morning": { "first": "Exod. 6", "second": "Matt. 27" },
+        "evening": { "first": "Exod. 7", "second": "1 Cor. 11" },
+        "notes": ["witness calendar includes 'K. Charles Martyr' (later commemoration present in this 1669 printing); evening first marked '*6' in OCR with note 'Exodus vj. is to be read onely to Verf. 14' at month end"]
+      },
+      "31": {
+        "feast": null,
+        "morning": { "first": "Exod. 8", "second": "Matt. 28" },
+        "evening": { "first": "Exod. 9", "second": "1 Cor. 12" },
+        "notes": []
+      }
+    },
+    "witnessNotes": [
+      "End-of-month note in OCR: 'Note, that * Exodus vj. is to be read onely to Verf. 14.' (attached to day 30/Exod 6 in this witness; exact scope to be confirmed from page image)."
+    ]
+  }
+}
