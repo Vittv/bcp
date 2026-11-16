@@ -122,3 +122,9 @@ enough detail to audit a normalized entry back to the witnessed form.
 - Modern 1662-based adaptations (for example the International Edition) and
   scholarly editions (for example Cummings/OUP) are copyrighted and are not
   sources for historical 1662 table data.
+
+## Actionable verification follow-ups (point 5)
+- Spot-check representative daily entries against PD witness images (IA 1669/1770): e.g. Jan 1/6, Feb 29, Mar 25, Easter-related fixed refs as applicable, Dec 25/28, and a sample month per quarter.
+- Verify proper lessons/psalms tables (Sundays/holy days, Mattins/Evensong splits, ranges like "to v." conversions) against witness page images and record page/image references.
+- Confirm feast/black-letter labels and all-null/proper-day slots in the daily calendar.
+- Record outcomes and any corrections in this file with witness/page citations.

@@ -105,16 +105,79 @@ export function isBcp1662DailyAllNull(entry: Bcp1662DailyEntry): boolean {
   return !m.first && !m.second && !e.first && !e.second;
 }
 
-/** Find proper psalms by exact appointed-day name (e.g. "Christmas Day"). */
+function normalizeFeastKey(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[.:,]/g, "")
+    .replace(/\bye\b/g, "the")
+    .replace(/\bbl\b/g, "blessed")
+    .replace(/\bvirg\b/g, "virgin")
+    .replace(/\bmart\b/g, "martyr")
+    .replace(/\bapost\b/g, "apostle")
+    .replace(/\bevangel?\b/g, "evangelist")
+    .replace(/\barch\s*b\b/g, "archbishop")
+    .replace(/\bb\b(?=\s+of|\s+and)/g, "bishop")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Daily-calendar feast labels (abbreviated 1662/print forms) -> proper-table names.
+const FEAST_ALIASES: Record<string, string> = {
+  [normalizeFeastKey("Circumc. of our Ld.")]: "Circumcision of our Lord",
+  [normalizeFeastKey("Christmas day.")]: "Nativity of Christ (Christmas Day)",
+  [normalizeFeastKey("Epiphanie of our Ld.")]: "Epiphany",
+  [normalizeFeastKey("Convers: of S. Paul")]: "Conversion of St. Paul",
+  [normalizeFeastKey("Purif. of Marie ye. B. Virg.")]:
+    "Purification of the Virgin Mary",
+  [normalizeFeastKey("Matthias Apost. & M.")]: "St. Matthias",
+  [normalizeFeastKey("Annunc. of Mary")]: "Annunciation of our Lady",
+  [normalizeFeastKey("S. Mark Evang. & Mart.")]: "St. Mark",
+  [normalizeFeastKey("S. Phil & S. Jac Ap. & M.")]: "St. Philip and St. James",
+  [normalizeFeastKey("S. Andr. Apost. & M.")]: "St. Andrew",
+  [normalizeFeastKey("S Thomas Apost. & M.")]: "St. Thomas the Apostle",
+  [normalizeFeastKey("S. Steph. ye. first Mart.")]: "St. Stephen",
+  [normalizeFeastKey("S. John Apost. & Evang.")]: "St. John the Evangelist",
+  [normalizeFeastKey("Innocents day.")]: "Innocents' Day",
+  [normalizeFeastKey("S. Barnab, Apost. & M.")]: "St. Barnabas",
+  [normalizeFeastKey("Nativ. of S. John Bapt:")]: "St. John Baptist",
+  [normalizeFeastKey("S. Pet. Apost. & M.")]: "St. Peter",
+  [normalizeFeastKey("S. Iames Apost. & M.")]: "St. James",
+  [normalizeFeastKey("S. Barth. Apost. & M.")]: "St. Bartholomew",
+  [normalizeFeastKey("S. Mat. Ap. Evang. & M.")]: "St. Matthew",
+  [normalizeFeastKey("S. Mich. & all Angels")]: "St. Michael and All Angels",
+  [normalizeFeastKey("S. Luke Evang.")]: "St. Luke",
+  [normalizeFeastKey("S. Sim. & S. Jud. Ap. & M.")]: "St. Simon and St. Jude",
+  [normalizeFeastKey("All Saints day.")]: "All Saints",
+};
+
+function resolveProperName(name: string): string {
+  const key = normalizeFeastKey(name);
+  return FEAST_ALIASES[key] ?? name;
+}
+
+/** Find proper psalms by appointed-day name (accepts common daily-calendar feast aliases). */
 export function getBcp1662ProperPsalms(
   name: string,
 ): Bcp1662ProperPsalmDay | undefined {
-  return BCP1662_PROPER_PSALMS.days.find((d) => d.name === name);
+  const resolved = resolveProperName(name);
+  return (
+    BCP1662_PROPER_PSALMS.days.find((d) => d.name === resolved) ??
+    BCP1662_PROPER_PSALMS.days.find(
+      (d) => normalizeFeastKey(d.name) === normalizeFeastKey(name),
+    )
+  );
 }
 
-/** Find a holy-day proper-lessons entry by exact name. */
+/** Find a holy-day proper-lessons entry by name (accepts common daily-calendar feast aliases). */
 export function getBcp1662HolyDayProperLessons(name: string) {
-  return BCP1662_PROPER_LESSONS.holyDays.find((d) => d.name === name);
+  const resolved = resolveProperName(name);
+  return (
+    BCP1662_PROPER_LESSONS.holyDays.find((d) => d.name === resolved) ??
+    BCP1662_PROPER_LESSONS.holyDays.find(
+      (d) => normalizeFeastKey(d.name) === normalizeFeastKey(name),
+    )
+  );
 }
 
 /** Compose a simple daily-office view for a month/day from the daily calendar table only. */
@@ -134,4 +197,118 @@ export function composeBcp1662DailyOffice(
       ? "No daily-calendar lessons appointed (proper/holy-day lessons may apply)."
       : undefined,
   };
+}
+
+export type Bcp1662DayComposition = {
+  month: Bcp1662DailyMonth;
+  day: number;
+  entry: Bcp1662DailyEntry;
+  morning: { lessons: Bcp1662LessonPair; psalms?: Bcp1662ProperPsalmDay };
+  evening: { lessons: Bcp1662LessonPair; psalms?: Bcp1662ProperPsalmDay };
+  feast?: string;
+  resolvedFeastName?: string;
+  properLessons?: ReturnType<typeof getBcp1662HolyDayProperLessons>;
+  notes: string[];
+};
+
+/**
+ * Compose both offices for a civil month/day using the daily calendar table and,
+ * when a feast/name is known (from the entry or passed explicitly), attach
+ * matching proper psalms/holy-day proper lessons. Sunday/movable proper
+ * resolution requires a 1662 calendar and is not handled here.
+ */
+export function composeBcp1662Day(
+  month: Bcp1662DailyMonth,
+  day: number,
+  feastName?: string,
+): Bcp1662DayComposition | undefined {
+  const entry = getBcp1662DailyLessons(month, day);
+  if (!entry) return undefined;
+  const feast = feastName ?? entry.feast;
+  const resolvedFeastName = feast ? resolveProperName(feast) : undefined;
+  const properPsalms = feast ? getBcp1662ProperPsalms(feast) : undefined;
+  const properLessons = feast ? getBcp1662HolyDayProperLessons(feast) : undefined;
+  const notes: string[] = [];
+  if (isBcp1662DailyAllNull(entry)) {
+    notes.push(
+      "No daily-calendar lessons appointed (proper/holy-day lessons may apply).",
+    );
+  }
+  if (feast && properLessons) {
+    notes.push(`Proper lessons are appointed for ${resolvedFeastName ?? feast}.`);
+  }
+  if (feast && properPsalms) {
+    notes.push(`Proper psalms are appointed for ${resolvedFeastName ?? feast}.`);
+  }
+  return {
+    month,
+    day,
+    entry,
+    morning: { lessons: entry.morning, psalms: properPsalms },
+    evening: { lessons: entry.evening, psalms: properPsalms },
+    feast,
+    resolvedFeastName,
+    properLessons,
+    notes,
+  };
+}
+
+const BCP1662_MONTHS: Bcp1662DailyMonth[] = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+];
+
+export function bcp1662MonthFromNumber(month: number): Bcp1662DailyMonth | undefined {
+  return BCP1662_MONTHS[month - 1];
+}
+
+/**
+ * Best-effort normalization of 1662 lesson strings toward "Book chapter:verse"
+ * style used by scripture/lesson parsers (e.g. "Prov. 3. to v. 28" ->
+ * "Prov 3:1-28", "Joel 2. to v. 16" -> "Joel 2:1-16").
+ * This is not exhaustive; unresolved strings should be treated as display-only.
+ */
+export function normalizeBcp1662LessonRef(ref: string): string {
+  let s = ref.trim();
+  // Common 1662/Apocrypha book-name aliases to forms recognized by scripture parsing.
+  const bookAliases: Array<[RegExp, string]> = [
+    [/^Ecclesiasticus\b/i, "Sirach"],
+    [/^Ecclus\.?\b/i, "Sirach"],
+    [/^Wisdom of Solomon\b/i, "Wisdom"],
+    [/^Wisdom\b(?! of)/i, "Wisdom"],
+    [/^Canticles\b/i, "Song"],
+    [/^Solomon'?s Song\b/i, "Song"],
+    [/^Revelations?\b/i, "Rev"],
+    [/^Psalm\b/i, "Ps"],
+  ];
+  for (const [re, rep] of bookAliases) {
+    if (re.test(s)) {
+      s = s.replace(re, rep);
+      break;
+    }
+  }
+  // "to v. N" / "to verse N" / "unto v. N" meaning from start of chapter to verse N
+  s = s.replace(/\bto\s+v\.?\s*(\d+)/gi, "1-$1");
+  s = s.replace(/\bunto\s+v\.?\s*(\d+)/gi, "1-$1");
+  // "v. N to v. M" / "v. N to M"
+  s = s.replace(/\bv\.?\s*(\d+)\s+to\s+v\.?\s*(\d+)/gi, "$1-$2");
+  s = s.replace(/\bv\.?\s*(\d+)\s*[–-]\s*v\.?\s*(\d+)/gi, "$1-$2");
+  s = s.replace(/\bv\.?\s*(\d+)/gi, "$1");
+  // chapter dot "3." -> "3" (before verse/range context)
+  s = s.replace(/(\d+)\.(?=\s|$)/g, "$1");
+  // "Book 3 1-28" style after replacements -> "Book 3:1-28" when second number looks like verse range start
+  s = s.replace(/^((?:\d\s+)?[A-Za-z.]+)\s+(\d+)\s+(\d)/, "$1 $2:$3");
+  // normalize whitespace
+  s = s.replace(/\s+/g, " ").trim();
+  return s;
 }
