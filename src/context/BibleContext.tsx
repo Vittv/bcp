@@ -350,7 +350,7 @@ export function BibleProvider({
         const prevBook = idx > 0 ? books[idx - 1] : null;
         if (prevBook) {
           setBook(prevBook);
-          setChapter(1);
+          setChapter(prevBook.chapters);
           return true;
         }
         return false;
