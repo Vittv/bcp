@@ -21,13 +21,17 @@ import {
 import { getBookMeta, getPassageFromDolRef, parseDolRef } from "./scripture";
 import type { KjvPassage } from "./types";
 import {
+  BCP1662_OFFICE_TEXT,
   BCP1662_PROPER_LESSONS,
   type Bcp1662DayComposition,
   type Bcp1662LessonPair,
   type Bcp1662Office,
   bcp1662MonthFromNumber,
   composeBcp1662Day,
+  getBcp1662Canticle,
+  getBcp1662FixedCollects,
   getBcp1662HolyDayProperLessons,
+  getBcp1662OfficeText,
   getBcp1662ProperPsalms,
   normalizeBcp1662LessonRef,
 } from "./vendor/bcp1662";
@@ -227,6 +231,53 @@ export type Bcp1662ResolvedOffice = {
   notes: string[];
 };
 
+export type Bcp1662OfficeSectionKey =
+  | "opening"
+  | "psalms"
+  | "lessons"
+  | "canticles"
+  | "creed"
+  | "prayers"
+  | "collects"
+  | "closing";
+
+export type Bcp1662OfficeNode =
+  | { kind: "heading"; text: string }
+  | { kind: "rubric"; text: string }
+  | { kind: "text"; text: string }
+  | {
+      kind: "psalm";
+      refs: string[];
+      source: "proper" | "monthly";
+    }
+  | {
+      kind: "lesson";
+      slot: "first" | "second";
+      label: string;
+      ref?: string;
+      normalized?: string;
+      passages: KjvPassage[];
+      error?: string;
+    }
+  | { kind: "placeholder"; key: string; text: string };
+
+export type Bcp1662ComposedSection = {
+  key: Bcp1662OfficeSectionKey;
+  heading: string;
+  nodes: Bcp1662OfficeNode[];
+};
+
+export type Bcp1662ComposedOffice = {
+  edition: "1662";
+  office: Bcp1662Office;
+  officeName: string;
+  date: CalendarDate;
+  observance: Bcp1662Observance;
+  title?: string;
+  sections: Bcp1662ComposedSection[];
+  notes: string[];
+};
+
 /**
  * Resolve lesson strings to scripture passages (best-effort).
  * `parse` should parse a (possibly normalized) reference into lookup params and
@@ -403,6 +454,242 @@ export async function resolveBcp1662OfficeForDate(
     psalmsSource: proper ? "proper" : "monthly",
     notes: composed.notes,
   };
+}
+
+function bcp1662OfficeName(office: Bcp1662Office): string {
+  return office === "morning" ? "Morning Prayer" : "Evening Prayer";
+}
+
+function psalmRefsForResolved(resolved: Bcp1662ResolvedOffice): string[] {
+  if (resolved.psalms && resolved.psalms.length > 0) {
+    return resolved.psalms.map((n) => `Psalm ${n}`);
+  }
+  return (resolved.monthlyPsalms ?? []).map((r) =>
+    /^\d/.test(r) ? `Psalm ${r}` : r,
+  );
+}
+
+/** Build a sectioned 1662 office composition from resolved appointments/text-ready data. */
+export function composeBcp1662Office(
+  date: CalendarDate,
+  office: Bcp1662Office,
+  resolved: Bcp1662ResolvedOffice,
+  composed?: Bcp1662ComposedDate,
+): Bcp1662ComposedOffice {
+  const source = composed ?? composeBcp1662ForDate(date);
+  const officeDef = getBcp1662OfficeText(office);
+  const officeName = officeDef?.name ?? bcp1662OfficeName(office);
+  const title =
+    resolved.name ??
+    source.observance.holyDay ??
+    source.observance.properSundayName;
+  const psalmRefs = psalmRefsForResolved(resolved);
+
+  const openingNodes: Bcp1662OfficeNode[] = [
+    {
+      kind: "rubric",
+      text: "Opening Sentences and Exhortation (full text to be vendored/expanded).",
+    },
+  ];
+  if (officeDef?.openingVersicles?.length) {
+    for (const v of officeDef.openingVersicles) {
+      openingNodes.push({ kind: "text", text: `${v.speaker}: ${v.text}` });
+    }
+  }
+  if (officeDef?.invitatory?.rubric) {
+    openingNodes.push({ kind: "rubric", text: officeDef.invitatory.rubric });
+  }
+  openingNodes.push({
+    kind: "placeholder",
+    key: "invitatory",
+    text: "Venite, exultemus Domino (Psalm 95) / appointed invitatory text to be vendored.",
+  });
+  openingNodes.push({ kind: "rubric", text: "Then shall follow the Psalms." });
+
+  const psalmNodes: Bcp1662OfficeNode[] =
+    psalmRefs.length > 0
+      ? [
+          {
+            kind: "psalm",
+            refs: psalmRefs,
+            source: resolved.psalmsSource,
+          },
+          {
+            kind: "rubric",
+            text:
+              resolved.psalmsSource === "proper"
+                ? "Proper Psalms are appointed for this day."
+                : "Psalms appointed by the Thirty Day Psalm Cycle.",
+          },
+          {
+            kind: "placeholder",
+            key: "psalm-text",
+            text: "Psalm text (Coverdale, 1662) to be vendored from PD witness.",
+          },
+        ]
+      : [
+          {
+            kind: "placeholder",
+            key: "psalm-text",
+            text: "No psalms resolved; vendored psalter text/appointments required.",
+          },
+        ];
+
+  const lessonsAndCanticles: Bcp1662OfficeNode[] = [];
+  const lessonSlots: Array<["first" | "second", string, string]> = [
+    ["first", "First Lesson", "afterFirst"],
+    ["second", "Second Lesson", "afterSecond"],
+  ];
+  for (let i = 0; i < lessonSlots.length; i++) {
+    const [slot, label, canticleKey] = lessonSlots[i];
+    const l = resolved.lessons[i];
+    if (l) {
+      lessonsAndCanticles.push({
+        kind: "lesson",
+        slot,
+        label,
+        ref: l.ref ?? undefined,
+        normalized: l.normalized,
+        passages: l.passages,
+        error: l.error,
+      });
+    } else {
+      lessonsAndCanticles.push({
+        kind: "rubric",
+        text: `${label}: no lesson appointed or resolved.`,
+      });
+    }
+    const canticleIds =
+      canticleKey === "afterFirst"
+        ? (officeDef?.canticles?.afterFirst ?? [])
+        : (officeDef?.canticles?.afterSecond ?? []);
+    const canticleId = canticleIds[0];
+    const canticle = canticleId ? getBcp1662Canticle(canticleId) : undefined;
+    if (canticle) {
+      if (canticle.rubric) {
+        lessonsAndCanticles.push({ kind: "rubric", text: canticle.rubric });
+      }
+      lessonsAndCanticles.push({ kind: "heading", text: canticle.title });
+      lessonsAndCanticles.push({ kind: "text", text: canticle.text });
+    } else {
+      lessonsAndCanticles.push({
+        kind: "placeholder",
+        key: `canticle-${slot}`,
+        text: "Canticle text to be vendored/selected.",
+      });
+    }
+  }
+
+  const creedNodes: Bcp1662OfficeNode[] = [
+    { kind: "rubric", text: "Then shall be said the Apostles' Creed." },
+    { kind: "text", text: BCP1662_OFFICE_TEXT.common.apostles_creed },
+  ];
+
+  const prayersNodes: Bcp1662OfficeNode[] = [];
+  if (officeDef?.preces?.length) {
+    for (const v of officeDef.preces) {
+      prayersNodes.push({ kind: "text", text: `${v.speaker}: ${v.text}` });
+    }
+  }
+  prayersNodes.push({
+    kind: "heading",
+    text: "The Lord's Prayer",
+  });
+  prayersNodes.push({
+    kind: "text",
+    text: BCP1662_OFFICE_TEXT.common.lords_prayer,
+  });
+  prayersNodes.push({
+    kind: "placeholder",
+    key: "suffrages",
+    text: "Versicles and responses to be vendored/expanded.",
+  });
+
+  const collectNodes: Bcp1662OfficeNode[] = [
+    {
+      kind: "placeholder",
+      key: "collect-day",
+      text: "Collect of the day (Sunday/holy-day proper) to be resolved from vendored propers.",
+    },
+  ];
+  for (const c of getBcp1662FixedCollects(office)) {
+    collectNodes.push({ kind: "heading", text: c.title });
+    collectNodes.push({ kind: "text", text: c.text });
+  }
+
+  const closingNodes: Bcp1662OfficeNode[] = [
+    {
+      kind: "placeholder",
+      key: "closing-prayers",
+      text: "Additional prayers/anthem as appointed (to be vendored).",
+    },
+    { kind: "heading", text: "The Grace" },
+    { kind: "text", text: BCP1662_OFFICE_TEXT.common.grace },
+  ];
+
+  const sections: Bcp1662ComposedSection[] = [
+    { key: "opening", heading: "Opening", nodes: openingNodes },
+    { key: "psalms", heading: "Psalms", nodes: psalmNodes },
+    {
+      key: "lessons",
+      heading: "Lessons & Canticles",
+      nodes: lessonsAndCanticles,
+    },
+    {
+      key: "canticles",
+      heading: "Canticles",
+      nodes: [
+        {
+          kind: "rubric",
+          text: "Canticles are included with the Lessons in this composition.",
+        },
+      ],
+    },
+    { key: "creed", heading: "Creed", nodes: creedNodes },
+    { key: "prayers", heading: "Prayers", nodes: prayersNodes },
+    { key: "collects", heading: "Collects", nodes: collectNodes },
+    { key: "closing", heading: "Closing", nodes: closingNodes },
+  ];
+
+  return {
+    edition: "1662",
+    office,
+    officeName,
+    date,
+    observance: source.observance,
+    title,
+    sections,
+    notes: [...new Set([...source.notes, ...resolved.notes])],
+  };
+}
+
+/** Resolve and compose a sectioned 1662 office for a date. */
+export async function composeBcp1662OfficeForDate(
+  date: CalendarDate,
+  office: Bcp1662Office,
+  settings: ScriptureSettings = DEFAULT_BCP1662_SCRIPTURE_SETTINGS,
+): Promise<Bcp1662ComposedOffice> {
+  const composed = composeBcp1662ForDate(date);
+  const resolved = await resolveBcp1662OfficeForDate(date, office, settings);
+  return composeBcp1662Office(date, office, resolved, composed);
+}
+
+export const BCP1662_OFFICE_SECTION_ORDER: Bcp1662OfficeSectionKey[] = [
+  "opening",
+  "psalms",
+  "lessons",
+  "canticles",
+  "creed",
+  "prayers",
+  "collects",
+  "closing",
+];
+
+export function getBcp1662OfficeSection(
+  doc: Bcp1662ComposedOffice,
+  key: Bcp1662OfficeSectionKey,
+): Bcp1662ComposedSection | undefined {
+  return doc.sections.find((s) => s.key === key);
 }
 
 export { bcp1662MoveableDays, normalizeBcp1662LessonRef };

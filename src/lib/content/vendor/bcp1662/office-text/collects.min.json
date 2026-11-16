@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "edition": "1662",
+    "title": "1662 Book of Common Prayer  -  Fixed Daily Collects (best-effort, not witness-verified)",
+    "status": "draft-best-effort",
+    "sources": [
+      {
+        "role": "reference-text",
+        "ref": "Standard 1662 BCP fixed collects (public domain)",
+        "note": "Best-effort compilation for composition; not image-verified against a PD witness."
+      }
+    ],
+    "caveats": [
+      "Text not witness-verified; collect-of-the-day/Sunday/holy-day propers to be added separately."
+    ]
+  },
+  "collects": [
+    {
+      "id": "morning-peace",
+      "office": "morning",
+      "title": "The Second Collect, for Peace",
+      "text": "O God, who art the author of peace and lover of concord, in knowledge of whom standeth our eternal life, whose service is perfect freedom; Defend us thy humble servants in all assaults of our enemies; that we, surely trusting in thy defence, may not fear the power of any adversaries; through the might of Jesus Christ our Lord. Amen."
+    },
+    {
+      "id": "morning-grace",
+      "office": "morning",
+      "title": "The Third Collect, for Grace",
+      "text": "O Lord, our heavenly Father, Almighty and everlasting God, who hast safely brought us to the beginning of this day; Defend us in the same with thy mighty power; and grant that this day we fall into no sin, neither run into any kind of danger; but that all our doings may be ordered by thy governance, to do always that is righteous in thy sight; through Jesus Christ our Lord. Amen."
+    },
+    {
+      "id": "evening-peace",
+      "office": "evening",
+      "title": "The Second Collect, for Peace",
+      "text": "O God, from whom all holy desires, all good counsels, and all just works do proceed; Give unto thy servants that peace which the world cannot give; that both our hearts may be set to obey thy commandments, and also that by thee we being defended from the fear of our enemies may pass our time in rest and quietness; through the merits of Jesus Christ our Saviour. Amen."
+    },
+    {
+      "id": "evening-aid",
+      "office": "evening",
+      "title": "The Third Collect, for Aid against all Perils",
+      "text": "Lighten our darkness, we beseech thee, O Lord; and by thy great mercy defend us from all perils and dangers of this night; for the love of thy only Son, our Saviour, Jesus Christ. Amen."
+    }
+  ]
+}
