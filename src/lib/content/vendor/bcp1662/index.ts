@@ -8,6 +8,7 @@
 import dailyData from "./lectionary-daily.json";
 import properData from "./lectionary-proper.json";
 import properPsalmsData from "./proper-psalms.json";
+import psalterCycleData from "./psalter-cycle.json";
 import rulesData from "./lectionary-rules.json";
 
 export type Bcp1662Office = "morning" | "evening";
@@ -48,6 +49,11 @@ export type Bcp1662Rule = {
   summary: string;
 };
 
+export type Bcp1662MonthlyPsalms = {
+  morning: string[];
+  evening: string[];
+};
+
 export const BCP1662_DAILY =
   // SAFETY: vendored static JSON table matching the declared 1662 data shape; validated by scripts/check-bcp1662-vendor.ts and documented in PROVENANCE.md.
   dailyData as {
@@ -82,6 +88,13 @@ export const BCP1662_PROPER_PSALMS =
   properPsalmsData as {
     meta: { edition: string; title: string; compiled: string };
     days: Bcp1662ProperPsalmDay[];
+  };
+
+export const BCP1662_PSALTER_CYCLE =
+  // SAFETY: vendored static JSON table matching the declared 30-day psalter-cycle shape; validated by scripts/check-bcp1662-vendor.ts.
+  psalterCycleData as {
+    meta: { edition: string; title: string; compiled: string };
+    days: Record<string, Bcp1662MonthlyPsalms>;
   };
 
 export const BCP1662_RULES =
@@ -180,6 +193,15 @@ export function getBcp1662HolyDayProperLessons(name: string) {
   );
 }
 
+/** 1662 monthly psalter for a day of month (1–31). Day 31 uses day 30. */
+export function getBcp1662MonthlyPsalms(dayOfMonth: number): Bcp1662MonthlyPsalms {
+  const d = dayOfMonth >= 31 ? 30 : dayOfMonth <= 0 ? 1 : dayOfMonth;
+  return (
+    BCP1662_PSALTER_CYCLE.days[String(d)] ??
+    BCP1662_PSALTER_CYCLE.days["1"]
+  );
+}
+
 /** Compose a simple daily-office view for a month/day from the daily calendar table only. */
 export function composeBcp1662DailyOffice(
   month: Bcp1662DailyMonth,
@@ -208,6 +230,7 @@ export type Bcp1662DayComposition = {
   feast?: string;
   resolvedFeastName?: string;
   properLessons?: ReturnType<typeof getBcp1662HolyDayProperLessons>;
+  monthlyPsalms: Bcp1662MonthlyPsalms;
   notes: string[];
 };
 
@@ -228,6 +251,7 @@ export function composeBcp1662Day(
   const resolvedFeastName = feast ? resolveProperName(feast) : undefined;
   const properPsalms = feast ? getBcp1662ProperPsalms(feast) : undefined;
   const properLessons = feast ? getBcp1662HolyDayProperLessons(feast) : undefined;
+  const monthlyPsalms = getBcp1662MonthlyPsalms(day);
   const notes: string[] = [];
   if (isBcp1662DailyAllNull(entry)) {
     notes.push(
@@ -249,6 +273,7 @@ export function composeBcp1662Day(
     feast,
     resolvedFeastName,
     properLessons,
+    monthlyPsalms,
     notes,
   };
 }
