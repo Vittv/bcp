@@ -58,6 +58,7 @@ export type Bcp1662ComposedDate = {
   };
   holyDayProper?: ReturnType<typeof getBcp1662HolyDayProperLessons>;
   properPsalms?: { name: string; mattins: number[]; evensong: number[] };
+  monthlyPsalms?: { morning: string[]; evening: string[] };
   notes: string[];
 };
 
@@ -145,6 +146,7 @@ export function composeBcp1662ForDate(date: CalendarDate): Bcp1662ComposedDate {
     sundayProper,
     holyDayProper,
     properPsalms,
+    monthlyPsalms: daily?.monthlyPsalms,
     notes,
   };
 }
@@ -217,7 +219,11 @@ export type Bcp1662ResolvedOffice = {
   source: Bcp1662ResolvedLessons["source"] | "unknown";
   name?: string;
   lessons: Bcp1662ResolvedPassage[];
+  /** Proper psalms (psalm numbers) when appointed. */
   psalms?: number[];
+  /** Monthly 30-day cycle psalms (psalm refs/segments) for the office. */
+  monthlyPsalms?: string[];
+  psalmsSource: "proper" | "monthly";
   notes: string[];
 };
 
@@ -373,7 +379,7 @@ export async function resolveBcp1662LessonPassages(
   });
 }
 
-/** Compose and resolve a 1662 office for a date (lessons to passages, psalms from propers when appointed). */
+/** Compose and resolve a 1662 office for a date (lessons to passages, psalms from propers or monthly cycle). */
 export async function resolveBcp1662OfficeForDate(
   date: CalendarDate,
   office: Bcp1662Office,
@@ -382,15 +388,19 @@ export async function resolveBcp1662OfficeForDate(
   const composed = composeBcp1662ForDate(date);
   const picked = getBcp1662LessonsForDate(date, office);
   const lessons = await resolveBcp1662LessonPassages(picked?.lessons, settings);
-  const psalms =
+  const proper =
     composed.properPsalms?.[office === "morning" ? "mattins" : "evensong"];
+  const monthly =
+    composed.monthlyPsalms?.[office === "morning" ? "morning" : "evening"];
   return {
     date,
     office,
     source: picked?.source ?? "unknown",
     name: picked?.name,
     lessons,
-    psalms,
+    psalms: proper,
+    monthlyPsalms: proper ? undefined : monthly,
+    psalmsSource: proper ? "proper" : "monthly",
     notes: composed.notes,
   };
 }

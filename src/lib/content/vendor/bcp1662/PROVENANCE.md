@@ -128,3 +128,7 @@ enough detail to audit a normalized entry back to the witnessed form.
 - Verify proper lessons/psalms tables (Sundays/holy days, Mattins/Evensong splits, ranges like "to v." conversions) against witness page images and record page/image references.
 - Confirm feast/black-letter labels and all-null/proper-day slots in the daily calendar.
 - Record outcomes and any corrections in this file with witness/page citations.
+
+## Monthly psalter cycle (30-day)
+- `psalter-cycle.json` / `.min.json`: best-effort compilation of the 1662 30-day monthly psalter (Morning/Evening by day 1–30; day 31 uses day 30) from widely attested 1662 table form.
+- Pending image-level verification against PD witness page images (IA 1669/1770) and recording of page/image refs, especially Psalm 119 divisions (days 24–26).

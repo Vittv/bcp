@@ -61,6 +61,8 @@ async function main() {
   const properMin = await readJson("lectionary-proper.min.json");
   const psalms = await readJson("proper-psalms.json");
   const psalmsMin = await readJson("proper-psalms.min.json");
+  const cycle = await readJson("psalter-cycle.json");
+  const cycleMin = await readJson("psalter-cycle.min.json");
   const rules = await readJson("lectionary-rules.json");
   const rulesMin = await readJson("lectionary-rules.min.json");
 
@@ -68,6 +70,7 @@ async function main() {
     ["lectionary-daily", daily, dailyMin],
     ["lectionary-proper", proper, properMin],
     ["proper-psalms", psalms, psalmsMin],
+    ["psalter-cycle", cycle, cycleMin],
     ["lectionary-rules", rules, rulesMin],
   ] as const) {
     if (JSON.stringify(a) !== JSON.stringify(b)) {
@@ -149,6 +152,39 @@ async function main() {
     }
   }
 
+  // monthly psalter cycle (30-day)
+  if (cycle?.meta?.edition !== "1662")
+    fail("cycle.meta.edition !== 1662", failures);
+  const cdays = cycle?.days;
+  if (!cdays || typeof cdays !== "object") {
+    fail("cycle.days missing", failures);
+  } else {
+    for (let d = 1; d <= 30; d++) {
+      const e = cdays[String(d)];
+      if (!e || !Array.isArray(e.morning) || !Array.isArray(e.evening)) {
+        fail(`cycle day ${d} missing morning/evening arrays`, failures);
+      } else {
+        for (const x of e.morning) {
+          if (typeof x !== "string") {
+            fail(`cycle day ${d} has non-string psalm refs`, failures);
+            break;
+          }
+        }
+        for (const x of e.evening) {
+          if (typeof x !== "string") {
+            fail(`cycle day ${d} has non-string psalm refs`, failures);
+            break;
+          }
+        }
+      }
+    }
+    const extra = Object.keys(cdays).filter(
+      (k) => Number(k) < 1 || Number(k) > 30,
+    );
+    if (extra.length)
+      fail(`cycle unexpected day keys: ${extra.join(",")}`, failures);
+  }
+
   // rules
   if (rules?.meta?.edition !== "1662")
     fail("rules.meta.edition !== 1662", failures);
@@ -168,7 +204,7 @@ async function main() {
     process.exit(1);
   }
   console.log(
-    `✓ bcp1662 vendor tables OK (daily ${total} days, proper sundays ${proper.sundays.length} seasons, holyDays ${proper.holyDays.length}, proper-psalm days ${psalms.days.length}, rules ${rules.rules.length})`,
+    `✓ bcp1662 vendor tables OK (daily ${total} days, proper sundays ${proper.sundays.length} seasons, holyDays ${proper.holyDays.length}, proper-psalm days ${psalms.days.length}, cycle 30 days, rules ${rules.rules.length})`,
   );
 }
 
