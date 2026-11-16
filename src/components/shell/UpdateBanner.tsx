@@ -21,13 +21,13 @@ export function UpdateBanner() {
     ? `BCP ${version} available`
     : IS_TAURI
       ? "A new version of BCP is available"
-      : "New version available";
+      : "New web version of BCP available";
 
   return (
     <View style={styles.banner}>
       {installing ? (
         <Text style={styles.text}>
-          {IS_TAURI ? "Downloading and installing…" : "Refreshing…"}
+          {IS_TAURI ? "Downloading and installing…" : "Updating…"}
         </Text>
       ) : (
         <>
@@ -59,12 +59,10 @@ export function UpdateBanner() {
             accessibilityLabel={
               IS_TAURI
                 ? `Update BCP to ${version ?? "the latest version"}`
-                : "Refresh to load the latest version of BCP"
+                : "Update to the latest version of BCP"
             }
           >
-            <Text style={styles.updateText}>
-              {IS_TAURI ? "Update" : "Refresh"}
-            </Text>
+            <Text style={styles.updateText}>Update</Text>
           </Pressable>
         </>
       )}

@@ -13,10 +13,16 @@ export const SANCTORALE_WIKI: Record<string, SanctoraleWikiLink[]> = {
   "confession-of-st-peter": [{ title: "Confession of Peter" }],
   "conversion-of-st-paul": [{ title: "Conversion of Paul the Apostle" }],
   "eve-of-presentation": [
-    { title: "Presentation of Jesus at the Temple", label: "Presentation of Jesus" },
+    {
+      title: "Presentation of Jesus at the Temple",
+      label: "Presentation of Jesus",
+    },
   ],
   presentation: [
-    { title: "Presentation of Jesus at the Temple", label: "Presentation of Jesus" },
+    {
+      title: "Presentation of Jesus at the Temple",
+      label: "Presentation of Jesus",
+    },
   ],
   "st-matthias": [{ title: "Saint Matthias", label: "Matthias the Apostle" }],
   "st-joseph": [{ title: "Saint Joseph" }],
@@ -27,30 +33,27 @@ export const SANCTORALE_WIKI: Record<string, SanctoraleWikiLink[]> = {
     { title: "Philip the Apostle" },
     { title: "James, son of Alphaeus" },
   ],
-  "eve-of-visitation": [{ title: "Visitation (Christianity)", label: "Visitation" }],
+  "eve-of-visitation": [
+    { title: "Visitation (Christianity)", label: "Visitation" },
+  ],
   visitation: [{ title: "Visitation (Christianity)", label: "Visitation" }],
   "st-barnabas": [{ title: "Barnabas" }],
-  "eve-of-st-john-the-baptist": [
-    { title: "Nativity of John the Baptist" },
-  ],
+  "eve-of-st-john-the-baptist": [{ title: "Nativity of John the Baptist" }],
   "nativity-of-st-john-the-baptist": [
     { title: "Nativity of John the Baptist" },
   ],
-  "peter-and-paul": [
-    { title: "Saint Peter" },
-    { title: "Paul the Apostle" },
-  ],
+  "peter-and-paul": [{ title: "Saint Peter" }, { title: "Paul the Apostle" }],
   "st-mary-magdalene": [{ title: "Mary Magdalene" }],
   "st-james": [{ title: "James the Great" }],
-  "eve-of-transfiguration": [
-    { title: "Transfiguration of Jesus" },
-  ],
+  "eve-of-transfiguration": [{ title: "Transfiguration of Jesus" }],
   transfiguration: [{ title: "Transfiguration of Jesus" }],
   "st-mary-the-virgin": [
     { title: "Mary, mother of Jesus", label: "Mary, Mother of Jesus" },
   ],
   "st-bartholomew": [{ title: "Bartholomew the Apostle" }],
-  "eve-of-holy-cross": [{ title: "Feast of the Cross", label: "Holy Cross Day" }],
+  "eve-of-holy-cross": [
+    { title: "Feast of the Cross", label: "Holy Cross Day" },
+  ],
   "holy-cross": [{ title: "Feast of the Cross", label: "Holy Cross Day" }],
   "st-matthew": [{ title: "Matthew the Apostle" }],
   "st-michael-and-all-angels": [{ title: "Michaelmas" }],
@@ -68,5 +71,7 @@ export const SANCTORALE_WIKI: Record<string, SanctoraleWikiLink[]> = {
   "st-thomas": [{ title: "Thomas the Apostle" }],
   "st-stephen": [{ title: "Saint Stephen" }],
   "st-john": [{ title: "John the Apostle" }],
-  "holy-innocents": [{ title: "Massacre of the Innocents", label: "Holy Innocents" }],
+  "holy-innocents": [
+    { title: "Massacre of the Innocents", label: "Holy Innocents" },
+  ],
 };

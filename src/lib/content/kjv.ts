@@ -7,6 +7,7 @@ import {
   parseDolRef,
   slicePassage,
 } from "./scripture";
+import { trackScriptureLoad } from "./scriptureLoading";
 import type { KjvBook, KjvPassage } from "./types";
 
 export type { KjvBook, KjvPassage };
@@ -531,7 +532,7 @@ export async function loadKjvBook(
         console.error(`KJV book ${filename} not found in loaders`);
         return null;
       }
-      const mod = await loader();
+      const mod = await trackScriptureLoad(loader());
       // SAFETY: JSON modules may be exposed as a default export or as the module itself
       bookModule = (mod as { default?: unknown }).default ?? mod;
     }

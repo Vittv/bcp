@@ -2,11 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { collectPassage } from "../../content/collects";
 import { entryForEvening } from "../../content/lectionary";
 import { holyDayCollectTitle } from "../../office/compose";
-import {
-  wikipediaArticleUrl,
-  wikipediaSearchUrl,
-} from "../lesserFeastWiki";
 import { resolve } from "../dol";
+import { wikipediaArticleUrl, wikipediaSearchUrl } from "../lesserFeastWiki";
 import {
   eveForDate,
   SANCTORALE_ENTRIES,

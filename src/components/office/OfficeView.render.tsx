@@ -74,9 +74,16 @@ export function LessonRow({
         {lesson.ref}
         {lesson.optional ? "  (optional)" : ""}
       </Text>
-      {passages.map((p, i) => (
-        <ScriptureView key={`${p.book}-${p.chapter}-${i}`} passage={p} />
-      ))}
+      {passages.map((p) => {
+        const first = p.verses[0]?.verse;
+        const last = p.verses[p.verses.length - 1]?.verse;
+        return (
+          <ScriptureView
+            key={`${p.book}-${p.chapter}-${first ?? "x"}-${last ?? "x"}`}
+            passage={p}
+          />
+        );
+      })}
       {passages.length === 0 ? (
         <Text style={styles.lessonMissing}>Reading text not available</Text>
       ) : null}

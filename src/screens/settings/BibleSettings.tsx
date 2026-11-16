@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Chevron } from "../../components/shell/Chevron";
 import {
   booksFor,
   clearSavedPositions,
@@ -7,6 +8,14 @@ import {
   useBible,
 } from "../../context/BibleContext";
 import { clearProgress, getAllProgress } from "../../lib/content/bibleProgress";
+import {
+  formatBytes,
+  KJV_BOOK_SIZES,
+  KJVA_BOOK_SIZES,
+  type ScriptureBookSize,
+  totalBytes,
+  WEB_BOOK_SIZES,
+} from "../../lib/content/scriptureSizes";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { APOCRYPHA_OPTIONS, TRANSLATION_OPTIONS } from "../../lib/translations";
 import { OptionChips } from "./SettingsUi";
@@ -80,6 +89,45 @@ export function BibleSettingsPanel({
         </Text>
       </View>
       <View style={styles.section}>
+        <Text style={styles.label}>Scripture Data</Text>
+        <Text style={styles.settingDescription}>
+          Size of scripture included in the app.
+        </Text>
+        <View style={styles.dataGroups}>
+          <TranslationGroup
+            title="King James Version"
+            sections={[
+              {
+                title: "Old Testament",
+                items: KJV_BOOK_SIZES.filter((b) => b.testament === "OT"),
+              },
+              {
+                title: "New Testament",
+                items: KJV_BOOK_SIZES.filter((b) => b.testament === "NT"),
+              },
+              { title: "Apocrypha (KJVA)", items: KJVA_BOOK_SIZES },
+            ]}
+          />
+          <TranslationGroup
+            title="World English Bible"
+            sections={[
+              {
+                title: "Old Testament",
+                items: WEB_BOOK_SIZES.filter((b) => b.testament === "OT"),
+              },
+              {
+                title: "New Testament",
+                items: WEB_BOOK_SIZES.filter((b) => b.testament === "NT"),
+              },
+              {
+                title: "Apocrypha (WEB)",
+                items: WEB_BOOK_SIZES.filter((b) => b.testament === "DC"),
+              },
+            ]}
+          />
+        </View>
+      </View>
+      <View style={styles.section}>
         <Text style={styles.label}>Reading Progress</Text>
         <Text style={styles.value}>
           {`${Math.round((reached / total) * 100)}% · ${reached} of ${total} chapters reached`}
@@ -101,5 +149,55 @@ export function BibleSettingsPanel({
         </Text>
       </View>
     </>
+  );
+}
+
+type SizeSection = { title: string; items: ScriptureBookSize[] };
+
+function TranslationGroup({
+  title,
+  sections,
+}: {
+  title: string;
+  sections: SizeSection[];
+}) {
+  const styles = useThemedStyles(settingsStyles);
+  const [open, setOpen] = useState(false);
+  const allItems = sections.flatMap((section) => section.items);
+  return (
+    <View style={styles.dataGroup}>
+      <Pressable
+        style={({ hovered }) => [
+          styles.dataGroupHeader,
+          styles.dataGroupHeaderPressable,
+          hovered && styles.dataGroupHeaderHover,
+        ]}
+        onPress={() => setOpen((v) => !v)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+      >
+        <View style={styles.dataGroupTitleRow}>
+          <Chevron direction={open ? "down" : "right"} size={5} stroke={1.5} />
+          <Text style={styles.dataGroupTitle}>{title}</Text>
+        </View>
+        <Text style={styles.dataGroupTotal}>
+          {formatBytes(totalBytes(allItems))}
+        </Text>
+      </Pressable>
+      {open ? (
+        <View style={styles.dataList}>
+          {sections.map((section) => (
+            <View key={section.title} style={styles.dataRow}>
+              <Text style={styles.dataName} numberOfLines={1}>
+                {section.title}
+              </Text>
+              <Text style={styles.dataSize}>
+                {formatBytes(totalBytes(section.items))}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+    </View>
   );
 }

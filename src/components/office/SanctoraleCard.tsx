@@ -3,14 +3,14 @@ import { Pressable, Text, View } from "react-native";
 
 import { useTranslation } from "../../context/TranslationContext";
 import {
+  wikipediaArticleUrl,
+  wikipediaSearchUrl,
+} from "../../lib/calendar/lesserFeastWiki";
+import {
   sanctoraleBySlug,
   sanctoraleDateLabel,
 } from "../../lib/calendar/sanctorale";
 import { SANCTORALE_WIKI } from "../../lib/calendar/sanctoraleWiki";
-import {
-  wikipediaArticleUrl,
-  wikipediaSearchUrl,
-} from "../../lib/calendar/lesserFeastWiki";
 import { getScripturePassagesFromDolRef } from "../../lib/content/bible";
 import { collectPassage } from "../../lib/content/collects";
 import { parsePsalmCitation } from "../../lib/content/psalms";
@@ -53,9 +53,16 @@ function LessonRow({ ref, first }: { ref: string; first?: boolean }) {
   }
   return (
     <View style={row}>
-      {passages.map((p, i) => (
-        <ScriptureView key={`${p.book}-${p.chapter}-${i}`} passage={p} />
-      ))}
+      {passages.map((p) => {
+        const first = p.verses[0]?.verse;
+        const last = p.verses[p.verses.length - 1]?.verse;
+        return (
+          <ScriptureView
+            key={`${p.book}-${p.chapter}-${first ?? "x"}-${last ?? "x"}`}
+            passage={p}
+          />
+        );
+      })}
     </View>
   );
 }

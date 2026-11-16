@@ -578,4 +578,68 @@ export const settingsStyles = defineThemedStyles({
     color: "var(--text)",
     fontWeight: "600",
   },
+  dataGroups: {
+    gap: 12,
+    marginTop: 8,
+  },
+  dataGroup: {
+    borderWidth: 1,
+    borderColor: "var(--border)",
+    borderRadius: 6,
+    overflow: "hidden",
+  },
+  dataGroupHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    backgroundColor: "var(--surface)",
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border)",
+  },
+  dataGroupHeaderPressable: {
+    cursor: "pointer",
+  },
+  dataGroupHeaderHover: {
+    backgroundColor: "var(--control-hover)",
+  },
+  dataGroupTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  dataGroupTitle: {
+    fontFamily: "var(--chrome-font)",
+    fontSize: 12,
+    fontWeight: "600",
+    color: "var(--text)",
+  },
+  dataGroupTotal: {
+    fontFamily: "var(--chrome-font)",
+    fontSize: 11,
+    color: "var(--text-secondary)",
+  },
+  dataList: {
+    paddingVertical: 2,
+  },
+  dataRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  dataName: {
+    flex: 1,
+    fontFamily: "var(--chrome-font)",
+    fontSize: 12,
+    color: "var(--text-secondary)",
+  },
+  dataSize: {
+    fontFamily: "var(--chrome-font)",
+    fontSize: 11,
+    color: "var(--text-faint)",
+  },
 });

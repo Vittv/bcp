@@ -77,6 +77,7 @@ import {
   u,
 } from "./model/shellUtils";
 import { DEVOTIONS } from "./OfficeTabs";
+import { ScriptureLoadingBar } from "./ScriptureLoadingBar";
 import { StatusBar } from "./StatusBar";
 import { TopBar } from "./TopBar";
 import { UpdateBanner } from "./UpdateBanner";
@@ -609,6 +610,7 @@ export function Shell() {
                           </div>
                         </div>
 
+                        <ScriptureLoadingBar />
                         <UpdateBanner />
                         <StatusBar
                           season={season}
