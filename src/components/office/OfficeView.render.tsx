@@ -75,8 +75,8 @@ export function LessonRow({
         {lesson.optional ? "  (optional)" : ""}
       </Text>
       {passages.map((p) => {
-        const first = p.verses[0]?.verse;
-        const last = p.verses[p.verses.length - 1]?.verse;
+        const first = p.verses[0]?.number;
+        const last = p.verses[p.verses.length - 1]?.number;
         return (
           <ScriptureView
             key={`${p.book}-${p.chapter}-${first ?? "x"}-${last ?? "x"}`}
