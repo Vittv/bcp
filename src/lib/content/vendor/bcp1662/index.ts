@@ -13,6 +13,7 @@ import rulesData from "./lectionary-rules.json";
 import officeTextData from "./office-text/offices.json";
 import canticlesData from "./office-text/canticles.json";
 import fixedCollectsData from "./office-text/collects.json";
+import properCollectsData from "./office-text/collects-proper.json";
 
 export type Bcp1662Office = "morning" | "evening";
 
@@ -128,16 +129,39 @@ export type Bcp1662OfficeTextOffice = {
   preces?: Bcp1662OfficeTextVersicle[];
 };
 
+export type Bcp1662InvitatoryText = {
+  title: string;
+  rubric?: string;
+  text: string;
+};
+
+export type Bcp1662CommonPrayer = {
+  id: string;
+  title: string;
+  text: string;
+};
+
+export type Bcp1662OpeningSentence = {
+  label: string;
+  text: string;
+};
+
 export const BCP1662_OFFICE_TEXT =
   // SAFETY: vendored static 1662 office-text JSON (best-effort draft) matching the declared shape.
   officeTextData as {
     meta: { edition: string; title: string; status?: string };
     common: {
+      exhortation?: string;
       confession: string;
       absolution_priest: string;
       lords_prayer: string;
       apostles_creed: string;
       grace: string;
+      venite?: Bcp1662InvitatoryText;
+      easterAnthems?: Bcp1662InvitatoryText;
+      openingSentences?: Bcp1662OpeningSentence[];
+      suffrages?: Bcp1662OfficeTextVersicle[];
+      prayers?: Bcp1662CommonPrayer[];
     };
     offices: Bcp1662OfficeTextOffice[];
   };
@@ -170,6 +194,18 @@ export const BCP1662_FIXED_COLLECTS =
     collects: Bcp1662FixedCollect[];
   };
 
+export type Bcp1662ProperCollect = {
+  name: string;
+  text: string;
+};
+
+export const BCP1662_PROPER_COLLECTS =
+  // SAFETY: vendored static 1662 proper collects JSON (best-effort subset) matching the declared shape.
+  properCollectsData as {
+    meta: { edition: string; title: string; status?: string };
+    collects: Bcp1662ProperCollect[];
+  };
+
 export function getBcp1662OfficeText(office: Bcp1662Office) {
   return BCP1662_OFFICE_TEXT.offices.find((o) => o.id === office);
 }
@@ -180,6 +216,10 @@ export function getBcp1662Canticle(id: string) {
 
 export function getBcp1662FixedCollects(office: Bcp1662Office) {
   return BCP1662_FIXED_COLLECTS.collects.filter((c) => c.office === office);
+}
+
+export function getBcp1662ProperCollect(name: string) {
+  return BCP1662_PROPER_COLLECTS.collects.find((c) => c.name === name);
 }
 
 /** Look up the daily-calendar lessons for a civil month/day (1-based day). */
@@ -271,7 +311,7 @@ export function getBcp1662HolyDayProperLessons(name: string) {
   );
 }
 
-/** 1662 monthly psalter for a day of month (1–31). Day 31 uses day 30. */
+/** monthly psalter for a day of month (1-31), day 31 uses day 30. */
 export function getBcp1662MonthlyPsalms(dayOfMonth: number): Bcp1662MonthlyPsalms {
   const d = dayOfMonth >= 31 ? 30 : dayOfMonth <= 0 ? 1 : dayOfMonth;
   return (
@@ -401,7 +441,7 @@ export function normalizeBcp1662LessonRef(ref: string): string {
   s = s.replace(/\bunto\s+v\.?\s*(\d+)/gi, "1-$1");
   // "v. N to v. M" / "v. N to M"
   s = s.replace(/\bv\.?\s*(\d+)\s+to\s+v\.?\s*(\d+)/gi, "$1-$2");
-  s = s.replace(/\bv\.?\s*(\d+)\s*[–-]\s*v\.?\s*(\d+)/gi, "$1-$2");
+  s = s.replace(/\bv\.?\s*(\d+)\s*[-\u2013]\s*v\.?\s*(\d+)/gi, "$1-$2");
   s = s.replace(/\bv\.?\s*(\d+)/gi, "$1");
   // chapter dot "3." -> "3" (before verse/range context)
   s = s.replace(/(\d+)\.(?=\s|$)/g, "$1");

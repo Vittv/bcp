@@ -4,12 +4,19 @@ import {
   type NativeSyntheticEvent,
   Platform,
   ScrollView,
+  Text,
   View,
 } from "react-native";
+import { Bcp1662OfficeView } from "../../components/office/Bcp1662OfficeView";
 import { Segmented } from "../../components/office/OfficeControls";
 import { OfficeHeader } from "../../components/office/OfficeHeader";
 import { OfficeView } from "../../components/office/OfficeView";
+import { useEdition } from "../../context/EditionContext";
 import { useOfficeSettings } from "../../context/OfficeSettingsContext";
+import {
+  type Bcp1662ComposedOffice,
+  composeBcp1662OfficeForDate,
+} from "../../lib/content/bcp1662";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
@@ -132,23 +139,88 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
 }: {
   base: RefOfficeBase;
 }) {
+  const { edition } = useEdition();
   const { officeDate, officeRite } = useReference();
   const { showRubrics, showSpeakers, customizationFor } = useOfficeSettings();
   const [fullText, setFullText] = useState(false);
   const officeId = refOfficeId(base, officeRite);
   const customization = customizationFor(officeId);
-  const document = useMemo(
-    () =>
-      composeOffice(officeDate, officeId, {
-        ...DEFAULT_PREFS,
-        rite: officeRite,
-        personalMode: false,
-        showRubrics,
-        fullText,
-        customization,
-      }),
-    [officeDate, officeId, officeRite, showRubrics, fullText, customization],
+  const document = useMemo(() => {
+    if (edition === "1662") return null;
+    return composeOffice(officeDate, officeId, {
+      ...DEFAULT_PREFS,
+      rite: officeRite,
+      personalMode: false,
+      showRubrics,
+      fullText,
+      customization,
+    });
+  }, [
+    edition,
+    officeDate,
+    officeId,
+    officeRite,
+    showRubrics,
+    fullText,
+    customization,
+  ]);
+
+  const [bcp1662Doc, setBcp1662Doc] = useState<Bcp1662ComposedOffice | null>(
+    null,
   );
+  const [bcp1662Loading, setBcp1662Loading] = useState(false);
+  const [bcp1662Error, setBcp1662Error] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (edition !== "1662") return;
+    if (base !== "morning" && base !== "evening") {
+      setBcp1662Doc(null);
+      setBcp1662Error(null);
+      setBcp1662Loading(false);
+      return;
+    }
+    let cancelled = false;
+    setBcp1662Loading(true);
+    setBcp1662Error(null);
+    void composeBcp1662OfficeForDate(officeDate, base)
+      .then((doc) => {
+        if (!cancelled) setBcp1662Doc(doc);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setBcp1662Doc(null);
+          setBcp1662Error(
+            e instanceof Error ? e.message : "Failed to compose 1662 office",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setBcp1662Loading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [edition, base, officeDate]);
+
+  if (edition === "1662") {
+    if (base !== "morning" && base !== "evening") {
+      return (
+        <Text style={{ opacity: 0.7 }}>
+          This office is not yet available in the 1662 Book of Common Prayer.
+        </Text>
+      );
+    }
+    if (bcp1662Loading && !bcp1662Doc) {
+      return <Text style={{ opacity: 0.7 }}>Composing office…</Text>;
+    }
+    if (bcp1662Error) {
+      return <Text style={{ opacity: 0.7 }}>{bcp1662Error}</Text>;
+    }
+    if (!bcp1662Doc) return null;
+    return <Bcp1662OfficeView doc={bcp1662Doc} />;
+  }
+
+  if (!document) return null;
   return (
     <>
       {/* the reference page can print the office as the book does, with the

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-
+import { Text, View } from "react-native";
 import type { CalendarDate } from "../../../lib/calendar/types";
+import type { Bcp1662ComposedOffice } from "../../../lib/content/bcp1662";
 import type { OfficeDocument, OfficeRite } from "../../../lib/office/types";
 import {
   BibleBar,
@@ -30,6 +31,7 @@ import {
   SaintsScreen,
 } from "../../../screens/reference";
 import { TodayScreen } from "../../../screens/TodayScreen";
+import { Bcp1662OfficeView } from "../../office/Bcp1662OfficeView";
 import { OfficeTabs } from "../OfficeTabs";
 import type { PageId } from "../Sidebar";
 import type { TabId } from "./shellUtils";
@@ -141,6 +143,9 @@ export type ContentContext = {
   devotions: boolean;
   handleTabChange: (t: TabId) => void;
   document: OfficeDocument;
+  edition: "1979" | "1662";
+  bcp1662TodayDoc: Bcp1662ComposedOffice | null;
+  bcp1662TodayLoading: boolean;
   showRubrics: boolean;
   showSpeakers: boolean;
   showSections: boolean;
@@ -160,6 +165,9 @@ export function renderContent(ctx: ContentContext): ReactNode {
     devotions,
     handleTabChange,
     document,
+    edition,
+    bcp1662TodayDoc,
+    bcp1662TodayLoading,
     showRubrics,
     showSpeakers,
     showSections,
@@ -172,6 +180,27 @@ export function renderContent(ctx: ContentContext): ReactNode {
 
   switch (page) {
     case "today":
+      if (edition === "1662") {
+        if (tab !== "morning" && tab !== "evening") {
+          return (
+            <View>
+              <Text style={{ opacity: 0.7 }}>
+                This office is not yet available in the 1662 Book of Common
+                Prayer.
+              </Text>
+            </View>
+          );
+        }
+        if (bcp1662TodayLoading && !bcp1662TodayDoc) {
+          return (
+            <View>
+              <Text style={{ opacity: 0.7 }}>Composing office…</Text>
+            </View>
+          );
+        }
+        if (!bcp1662TodayDoc) return null;
+        return <Bcp1662OfficeView doc={bcp1662TodayDoc} />;
+      }
       return (
         <TodayScreen
           key={`${date.year}-${date.month}-${date.day}-${tab}-${rite}-${devotions ? "dev" : "full"}`}
