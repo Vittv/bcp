@@ -59,4 +59,15 @@ describe("bcp1662 composition", () => {
     expect(short[0]?.passages.map((p) => p.book)).toEqual(["2 John", "3 John"]);
     expect(short[0]?.passages.map((p) => p.verses.length)).toEqual([13, 14]);
   });
+
+  it("uses monthly psalter cycle when no proper psalms are appointed", async () => {
+    const { resolveBcp1662OfficeForDate } = await import("../bcp1662");
+    const office = await resolveBcp1662OfficeForDate(
+      { year: 2026, month: 1, day: 2 },
+      "morning",
+    );
+    expect(office.psalmsSource).toBe("monthly");
+    expect(office.monthlyPsalms).toEqual(["9", "10", "11"]);
+    expect(office.psalms).toBeUndefined();
+  });
 });
