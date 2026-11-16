@@ -48,6 +48,8 @@ export type Bcp1662Observance = {
   properSundayName?: string;
   properHolyDayName?: string;
   properPsalmName?: string;
+  /** Number of Sundays between Trinity Sunday and Advent Sunday (exclusive of Advent). */
+  sundaysAfterTrinityInYear?: number;
 };
 
 /** Gregorian/Western Easter Sunday. */
@@ -270,6 +272,10 @@ export function resolveBcp1662Observance(
   const fixed = fixedHolyDay(date);
   if (fixed && !obs.holyDay) obs.holyDay = fixed;
   else if (fixed && obs.holyDay) obs.properHolyDayName = obs.holyDay; // keep moveable as primary
+
+  obs.sundaysAfterTrinityInYear = Math.floor(
+    (toDays(m.advent) - toDays(m.trinity)) / 7,
+  );
 
   // Sundays
   if (weekday(date) === 0) {

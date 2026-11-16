@@ -69,6 +69,25 @@ function findSundayProper(name: string) {
   return undefined;
 }
 
+function sundayProperForObservance(obs: Bcp1662ComposedDate["observance"]) {
+  if (!obs.properSundayName) return undefined;
+  const direct = findSundayProper(obs.properSundayName);
+  if (direct) return { entry: direct, note: undefined };
+  // 1662: when there are more Sundays after Trinity, lessons from Sundays after
+  // Epiphany may be used for later Sundays (e.g. Sunday next before Advent) per
+  // tables/rules. This is a placeholder note until fully modeled.
+  if (
+    obs.sunday?.kind === "trinity-after" &&
+    typeof obs.sundaysAfterTrinityInYear === "number"
+  ) {
+    return {
+      entry: undefined,
+      note: `No direct proper-lessons entry for ${obs.properSundayName}; 1662 overflow/adjustment rules may apply (Sundays after Trinity in year: ${obs.sundaysAfterTrinityInYear}).`,
+    };
+  }
+  return { entry: undefined, note: undefined };
+}
+
 /** Resolve 1662 appointments for a civil date (daily + calendar/propers). */
 export function composeBcp1662ForDate(date: CalendarDate): Bcp1662ComposedDate {
   const month = bcp1662MonthFromNumber(date.month);
@@ -76,8 +95,8 @@ export function composeBcp1662ForDate(date: CalendarDate): Bcp1662ComposedDate {
   const observance = resolveBcp1662Observance(date);
   const notes: string[] = [...(daily?.notes ?? [])];
 
-  const sundayName = observance.properSundayName;
-  const sundayProper = sundayName ? findSundayProper(sundayName) : undefined;
+  const sundayResolved = sundayProperForObservance(observance);
+  const sundayProper = sundayResolved?.entry;
 
   const holyDayName = observance.properHolyDayName ?? observance.holyDay;
   const holyDayProper =
@@ -94,12 +113,29 @@ export function composeBcp1662ForDate(date: CalendarDate): Bcp1662ComposedDate {
 
   if (sundayProper) {
     notes.push(`Sunday proper lessons are appointed: ${sundayProper.name}.`);
+  } else if (sundayResolved?.note) {
+    notes.push(sundayResolved.note);
   }
   if (holyDayProper && !daily?.properLessons) {
     notes.push(`Proper lessons are appointed for ${holyDayProper.name}.`);
   }
   if (properPsalms) {
     notes.push(`Proper psalms are appointed for ${properPsalms.name}.`);
+  }
+  // 1662 rule (simplified): on 1st Advent/Easter/Whitsun/Trinity Sundays the
+  // Sunday lessons take precedence over a coinciding holy day with proper
+  // lessons; on other Sundays the minister may choose Sunday or holy-day lessons.
+  if (observance.sunday && holyDayProper) {
+    const dominant =
+      (observance.sunday.kind === "advent" && observance.sunday.n === 1) ||
+      observance.sunday.kind === "easter" ||
+      observance.sunday.kind === "whitsunday" ||
+      observance.sunday.kind === "trinity";
+    notes.push(
+      dominant
+        ? "A holy day with proper lessons coincides with a principal Sunday; 1662 appoints the Sunday lessons in this case."
+        : "A holy day with proper lessons falls on this Sunday; 1662 allows the minister to choose Sunday or holy-day lessons.",
+    );
   }
 
   return {
@@ -127,7 +163,24 @@ export function getBcp1662LessonsForDate(
   const composed = composeBcp1662ForDate(date);
   const officeKey = office === "morning" ? "mattins" : "evensong";
 
-  // Simplified precedence: holy-day proper > Sunday proper > daily. Real 1662 precedence is more nuanced.
+  // Precedence (simplified, 1662-informed): on 1st Advent/Easter/Whitsun/Trinity
+  // Sundays the Sunday lessons take precedence over a coinciding holy day with
+  // proper lessons; otherwise a coinciding holy day proper is preferred here,
+  // noting that 1662 allows ministerial choice on other Sundays.
+  const obs = composed.observance;
+  const sundayDominant =
+    obs.sunday?.kind === "advent" && obs.sunday.n === 1
+      ? true
+      : obs.sunday?.kind === "easter" ||
+        obs.sunday?.kind === "whitsunday" ||
+        obs.sunday?.kind === "trinity";
+  if (composed.sundayProper && sundayDominant) {
+    return {
+      lessons: composed.sundayProper[officeKey],
+      source: "sunday-proper",
+      name: composed.sundayProper.name,
+    };
+  }
   if (composed.holyDayProper) {
     return {
       lessons: composed.holyDayProper[officeKey],
