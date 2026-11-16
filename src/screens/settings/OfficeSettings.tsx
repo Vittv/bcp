@@ -9,6 +9,8 @@ type OfficeSettingsProps = {
   setShowRubrics: (update: boolean | ((prev: boolean) => boolean)) => void;
   showSpeakers: boolean;
   setShowSpeakers: (update: boolean | ((prev: boolean) => boolean)) => void;
+  showSections: boolean;
+  setShowSections: (update: boolean | ((prev: boolean) => boolean)) => void;
   devotions: boolean;
   setDevotions: (v: boolean) => void;
   rite: OfficeRite;
@@ -25,6 +27,8 @@ export function OfficeSettingsPanel({
   setShowRubrics,
   showSpeakers,
   setShowSpeakers,
+  showSections,
+  setShowSections,
   devotions,
   setDevotions,
   rite,
@@ -52,6 +56,12 @@ export function OfficeSettingsPanel({
         value={showSpeakers}
         onChange={setShowSpeakers}
         description="Who speaks each part: Officiant, People, or All."
+      />
+      <ToggleRow
+        label="Sections"
+        value={showSections}
+        onChange={setShowSections}
+        description="Show a table of contents for Morning and Evening Prayer on wider screens."
       />
       <ToggleRow
         label="Daily Devotions"

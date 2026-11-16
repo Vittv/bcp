@@ -143,6 +143,7 @@ export type ContentContext = {
   document: OfficeDocument;
   showRubrics: boolean;
   showSpeakers: boolean;
+  showSections: boolean;
   sidebarShowButton: ReactNode;
   lectionaryDate: CalendarDate;
   isMobile: boolean;
@@ -161,6 +162,7 @@ export function renderContent(ctx: ContentContext): ReactNode {
     document,
     showRubrics,
     showSpeakers,
+    showSections,
     sidebarShowButton,
     lectionaryDate,
     isMobile,
@@ -179,6 +181,7 @@ export function renderContent(ctx: ContentContext): ReactNode {
           document={document}
           showRubrics={showRubrics}
           showSpeakers={showSpeakers}
+          showSections={showSections}
         />
       );
     case "calendar":

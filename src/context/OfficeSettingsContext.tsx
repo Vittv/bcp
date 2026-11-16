@@ -19,9 +19,11 @@ import {
   DEFAULT_DEVOTIONS,
   DEFAULT_RITE,
   DEFAULT_RUBRICS,
+  DEFAULT_SECTIONS,
   DEFAULT_SPEAKERS,
   KEY_DEVOTIONS,
   KEY_RUBRICS,
+  KEY_SECTIONS,
   KEY_SPEAKERS,
   loadBoolean,
   loadCustomizations,
@@ -44,11 +46,13 @@ import {
 type OfficeSettingsValue = {
   showRubrics: boolean;
   showSpeakers: boolean;
+  showSections: boolean;
   devotions: boolean;
   rite: OfficeRite;
   customizations: OfficeCustomizations;
   setShowRubrics: (update: ToggleUpdate) => void;
   setShowSpeakers: (update: ToggleUpdate) => void;
+  setShowSections: (update: ToggleUpdate) => void;
   setDevotions: (v: boolean) => void;
   setRite: (r: OfficeRite) => void;
   customizationFor: (officeId: OfficeId) => OfficeCustomization;
@@ -62,11 +66,13 @@ type OfficeSettingsValue = {
 const Ctx = createContext<OfficeSettingsValue>({
   showRubrics: DEFAULT_RUBRICS,
   showSpeakers: DEFAULT_SPEAKERS,
+  showSections: DEFAULT_SECTIONS,
   devotions: DEFAULT_DEVOTIONS,
   rite: DEFAULT_RITE,
   customizations: {},
   setShowRubrics: () => {},
   setShowSpeakers: () => {},
+  setShowSections: () => {},
   setDevotions: () => {},
   setRite: () => {},
   customizationFor: () => EMPTY_CUSTOMIZATION,
@@ -80,6 +86,9 @@ export function OfficeSettingsProvider({ children }: { children: ReactNode }) {
   );
   const [showSpeakers, setShowSpeakersState] = useState(() =>
     loadBoolean(KEY_SPEAKERS, DEFAULT_SPEAKERS),
+  );
+  const [showSections, setShowSectionsState] = useState(() =>
+    loadBoolean(KEY_SECTIONS, DEFAULT_SECTIONS),
   );
   const [devotions, setDevotionsState] = useState(() =>
     loadBoolean(KEY_DEVOTIONS, DEFAULT_DEVOTIONS),
@@ -99,6 +108,13 @@ export function OfficeSettingsProvider({ children }: { children: ReactNode }) {
     setShowSpeakersState((prev) => {
       const next = typeof update === "function" ? update(prev) : update;
       persistBoolean(KEY_SPEAKERS, next);
+      return next;
+    });
+  }, []);
+  const setShowSections = useCallback((update: ToggleUpdate) => {
+    setShowSectionsState((prev) => {
+      const next = typeof update === "function" ? update(prev) : update;
+      persistBoolean(KEY_SECTIONS, next);
       return next;
     });
   }, []);
@@ -138,11 +154,13 @@ export function OfficeSettingsProvider({ children }: { children: ReactNode }) {
       value={{
         showRubrics,
         showSpeakers,
+        showSections,
         devotions,
         rite,
         customizations,
         setShowRubrics,
         setShowSpeakers,
+        setShowSections,
         setDevotions,
         setRite,
         customizationFor,

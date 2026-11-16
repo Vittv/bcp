@@ -18,6 +18,7 @@ import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { MentionedText } from "./MentionedText";
 import { ChoiceMenu, MenuAnchor } from "./OfficeControls";
+import { officeSectionId } from "./OfficeToc";
 import { MenuView } from "./OfficeView.controls";
 import {
   canticleOptions,
@@ -340,7 +341,7 @@ export function SectionView({
   if (section.nodes.length === 0) return null;
   const keys = sectionKeys(section.nodes);
   return (
-    <MenuAnchor style={styles.section}>
+    <MenuAnchor nativeID={officeSectionId(section.key)} style={styles.section}>
       {section.heading ? (
         control ? (
           <MenuAnchor

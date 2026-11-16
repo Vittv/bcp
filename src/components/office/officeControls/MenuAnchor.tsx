@@ -22,9 +22,11 @@ export const MenuAnchorContext = createContext<(open: boolean) => void>(
 export function MenuAnchor({
   children,
   style,
+  nativeID,
 }: {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
+  nativeID?: string;
 }) {
   const styles = useThemedStyles(menuAnchorStyles);
   const notifyParent = useContext(MenuAnchorContext);
@@ -38,7 +40,9 @@ export function MenuAnchor({
   );
   return (
     <MenuAnchorContext.Provider value={notify}>
-      <View style={[style, open && styles.raised]}>{children}</View>
+      <View nativeID={nativeID} style={[style, open && styles.raised]}>
+        {children}
+      </View>
     </MenuAnchorContext.Provider>
   );
 }

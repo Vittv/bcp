@@ -19,6 +19,7 @@ export type ToggleUpdate = boolean | ((prev: boolean) => boolean);
 export const KEY_RUBRICS = "rubrics";
 export const KEY_SPEAKERS = "speakers";
 export const KEY_DEVOTIONS = "devotions";
+export const KEY_SECTIONS = "sections";
 export const KEY_RITE = "rite";
 export const KEY_CUSTOMIZATIONS = "office:customizations:v1";
 
@@ -27,6 +28,7 @@ export const KEY_CUSTOMIZATIONS = "office:customizations:v1";
 export const DEFAULT_RUBRICS = true;
 export const DEFAULT_SPEAKERS = true;
 export const DEFAULT_DEVOTIONS = false;
+export const DEFAULT_SECTIONS = true;
 // the contemporary office is the default
 export const DEFAULT_RITE: OfficeRite = "Two";
 

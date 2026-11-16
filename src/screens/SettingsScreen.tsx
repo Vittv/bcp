@@ -217,6 +217,8 @@ export function SettingsScreen({
             setShowRubrics={office.setShowRubrics}
             showSpeakers={office.showSpeakers}
             setShowSpeakers={office.setShowSpeakers}
+            showSections={office.showSections}
+            setShowSections={office.setShowSections}
             devotions={office.devotions}
             setDevotions={office.setDevotions}
             rite={office.rite}
