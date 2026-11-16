@@ -50,9 +50,9 @@ function LessonRow({ lesson }: { lesson: LectionaryLesson }) {
       ) : passages.length === 0 ? (
         <Text style={styles.lessonMissing}>Reading text not available</Text>
       ) : (
-        passages.map((p) => (
+        passages.map((p, i) => (
           <ScriptureView
-            key={`${p.book}-${p.chapter}`}
+            key={`${p.book}-${p.chapter}-${i}`}
             passage={p}
             size="body"
           />

@@ -53,8 +53,8 @@ function LessonRow({ ref, first }: { ref: string; first?: boolean }) {
   }
   return (
     <View style={row}>
-      {passages.map((p) => (
-        <ScriptureView key={`${p.book}-${p.chapter}`} passage={p} />
+      {passages.map((p, i) => (
+        <ScriptureView key={`${p.book}-${p.chapter}-${i}`} passage={p} />
       ))}
     </View>
   );
