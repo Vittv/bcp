@@ -1,0 +1,3831 @@
+{
+  "meta": {
+    "edition": "1662",
+    "title": "1662 Book of Common Prayer — The Kalendar with the Table of Lessons (Daily Office)",
+    "description": "Daily Morning and Evening Prayer lessons (First and Second Lessons) from the 1662 BCP calendar, by month and day.",
+    "sources": [
+      {
+        "role": "primary-witness",
+        "ref": "Internet Archive bookofcommonpray00chur_14 (1669, Griffiths 1669/1)",
+        "url": "https://archive.org/details/bookofcommonpray00chur_14",
+        "note": "Public-domain primary witness consulted for corroboration (PDF/text extraction; OCR garbled in places)."
+      },
+      {
+        "role": "secondary-witness",
+        "ref": "Internet Archive bookofcommonpray00chur_17 (1770, Griffiths 1770/2)",
+        "url": "https://archive.org/details/bookofcommonpray00chur_17",
+        "note": "Secondary PD witness for future cross-check; not exhaustively compared in this pass."
+      },
+      {
+        "role": "readability-reference",
+        "ref": "Linda Howell, 1662 Book of Common Prayer calendar pages",
+        "url": "https://www.eskimo.com/~lhowell/bcp1662/info/cal_1662/",
+        "note": "Readable calendar transcription used to compile normalized lesson references. Terms/reuse status not explicitly clear; treated as readability/cross-check aid pending image-level verification against PD witnesses."
+      }
+    ],
+    "compiled": "2026-11-16",
+    "caveats": [
+      "Holy days/festivals may have blank daily lesson columns when Proper Lessons are appointed; nulls preserved.",
+      "References normalized from calendar link targets and visible text; some verse-range notations and book/chapter details require image-verification against PD witness page images.",
+      "February 29 entry included as present in 1662 calendar tables.",
+      "Covers daily calendar lessons only; Proper Psalms/Lessons tables and lectionary rules are separate (see spike/provenance).",
+      "Book/chapter punctuation normalized (trailing periods removed) and minor spacing fixes applied (e.g. 2 Peter)."
+    ]
+  },
+  "months": {
+    "january": {
+      "1": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": null
+        },
+        "feast": "Circumc. of our Ld."
+      },
+      "2": {
+        "morning": {
+          "first": "Genesis 1",
+          "second": "Matthew 1"
+        },
+        "evening": {
+          "first": "Genesis 2",
+          "second": "Romans 1"
+        }
+      },
+      "3": {
+        "morning": {
+          "first": "Genesis 3",
+          "second": "Matthew 2"
+        },
+        "evening": {
+          "first": "Genesis 4",
+          "second": "Romans 2"
+        }
+      },
+      "4": {
+        "morning": {
+          "first": "Genesis 5",
+          "second": "Matthew 3"
+        },
+        "evening": {
+          "first": "Genesis 6",
+          "second": "Romans 3"
+        }
+      },
+      "5": {
+        "morning": {
+          "first": "Genesis 7",
+          "second": "Matthew 4"
+        },
+        "evening": {
+          "first": "Genesis 8",
+          "second": "Romans 4"
+        }
+      },
+      "6": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": null
+        },
+        "feast": "Epiphanie of our Ld."
+      },
+      "7": {
+        "morning": {
+          "first": "Genesis 9",
+          "second": "Matthew 5"
+        },
+        "evening": {
+          "first": "Genesis 12",
+          "second": "Romans 5"
+        }
+      },
+      "8": {
+        "morning": {
+          "first": "Genesis 13",
+          "second": "Matthew 6"
+        },
+        "evening": {
+          "first": "Genesis 14",
+          "second": "Romans 6"
+        },
+        "feast": "Lucian Pr. & Mart."
+      },
+      "9": {
+        "morning": {
+          "first": "Genesis 15",
+          "second": "Matthew 7"
+        },
+        "evening": {
+          "first": "Genesis 16",
+          "second": "Romans 7"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "Genesis 17",
+          "second": "Matthew 8"
+        },
+        "evening": {
+          "first": "Genesis 18",
+          "second": "Romans 8"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": "Genesis 19",
+          "second": "Matthew 9"
+        },
+        "evening": {
+          "first": "Genesis 20",
+          "second": "Romans 9"
+        }
+      },
+      "12": {
+        "morning": {
+          "first": "Genesis 21",
+          "second": "Matthew 10"
+        },
+        "evening": {
+          "first": "Genesis 22",
+          "second": "Romans 10"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "Genesis 23",
+          "second": "Matthew 11"
+        },
+        "evening": {
+          "first": "Genesis 24",
+          "second": "Romans 11"
+        },
+        "feast": "Hilarie B. &, Conf."
+      },
+      "14": {
+        "morning": {
+          "first": "Genesis 25",
+          "second": "Matthew 12"
+        },
+        "evening": {
+          "first": "Genesis 26",
+          "second": "Romans 12"
+        }
+      },
+      "15": {
+        "morning": {
+          "first": "Genesis 27",
+          "second": "Matthew 13"
+        },
+        "evening": {
+          "first": "Genesis 28",
+          "second": "Romans 13"
+        }
+      },
+      "16": {
+        "morning": {
+          "first": "Genesis 29",
+          "second": "Matthew 14"
+        },
+        "evening": {
+          "first": "Genesis 30",
+          "second": "Romans 14"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "Genesis 31",
+          "second": "Matthew 15"
+        },
+        "evening": {
+          "first": "Genesis 32",
+          "second": "Romans 15"
+        }
+      },
+      "18": {
+        "morning": {
+          "first": "Genesis 33",
+          "second": "Matthew 16"
+        },
+        "evening": {
+          "first": "Genesis 34",
+          "second": "Romans 16"
+        },
+        "feast": "Prisca Rom. Virg. & Mart."
+      },
+      "19": {
+        "morning": {
+          "first": "Genesis 35",
+          "second": "Matthew 17"
+        },
+        "evening": {
+          "first": "Genesis 37",
+          "second": "1 Corinthians 1"
+        }
+      },
+      "20": {
+        "morning": {
+          "first": "Genesis 38",
+          "second": "Matthew 18"
+        },
+        "evening": {
+          "first": "Genesis 39",
+          "second": "1 Corinthians 2"
+        },
+        "feast": "Fabian B. of Rome & Mart."
+      },
+      "21": {
+        "morning": {
+          "first": "Genesis 1",
+          "second": "Matthew 19"
+        },
+        "evening": {
+          "first": "Genesis 1",
+          "second": "1 Corinthians 3"
+        },
+        "feast": "Agnes Rom. Virg. & Mart."
+      },
+      "22": {
+        "morning": {
+          "first": "Genesis 1",
+          "second": "Matthew 20"
+        },
+        "evening": {
+          "first": "Genesis 1",
+          "second": "1 Corinthians 4"
+        },
+        "feast": "Vincent Span. Deac. & M."
+      },
+      "23": {
+        "morning": {
+          "first": "Genesis 1",
+          "second": "Matthew 21"
+        },
+        "evening": {
+          "first": "Genesis 1",
+          "second": "1 Corinthians 5"
+        }
+      },
+      "24": {
+        "morning": {
+          "first": "Genesis 1",
+          "second": "Matthew 22"
+        },
+        "evening": {
+          "first": "Genesis 1",
+          "second": "1 Corinthians 6"
+        }
+      },
+      "25": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": null
+        },
+        "feast": "Convers: of S. Paul"
+      },
+      "26": {
+        "morning": {
+          "first": "Genesis 1",
+          "second": "Matthew 23"
+        },
+        "evening": {
+          "first": "Genesis 1",
+          "second": "1 Corinthians 7"
+        }
+      },
+      "27": {
+        "morning": {
+          "first": "Genesis 1",
+          "second": "Matthew 24"
+        },
+        "evening": {
+          "first": "Exodus 1",
+          "second": "1 Corinthians 8"
+        }
+      },
+      "28": {
+        "morning": {
+          "first": "Exodus 2",
+          "second": "Matthew 25"
+        },
+        "evening": {
+          "first": "Exodus 3",
+          "second": "1 Corinthians 9"
+        }
+      },
+      "29": {
+        "morning": {
+          "first": "Exodus 1",
+          "second": "Matthew 26"
+        },
+        "evening": {
+          "first": "Exodus 5",
+          "second": "1 Corinthians 10"
+        }
+      },
+      "30": {
+        "morning": {
+          "first": "Exodus 6:1-14",
+          "second": "Matthew 27"
+        },
+        "evening": {
+          "first": "Exodus 7",
+          "second": "1 Corinthians 11"
+        },
+        "feast": "K. Charles Mart.",
+        "notes": [
+          "Exodus 6 is to be read only to verse 14."
+        ]
+      },
+      "31": {
+        "morning": {
+          "first": "Exodus 8",
+          "second": "Matthew 28"
+        },
+        "evening": {
+          "first": "Exodus 9",
+          "second": "1 Corinthians 12"
+        }
+      }
+    },
+    "february": {
+      "1": {
+        "morning": {
+          "first": "Exodus 10",
+          "second": "Mark 1"
+        },
+        "evening": {
+          "first": "Exodus 11",
+          "second": "1 Corinthians 13"
+        },
+        "feast": "Fast"
+      },
+      "2": {
+        "morning": {
+          "first": null,
+          "second": "Mark 2"
+        },
+        "evening": {
+          "first": null,
+          "second": "1 Corinthians 14"
+        },
+        "feast": "Purif. of Marie ye. B. Virg."
+      },
+      "3": {
+        "morning": {
+          "first": "Exodus 12",
+          "second": "Mark 3"
+        },
+        "evening": {
+          "first": "Exodus 13",
+          "second": "1 Corinthians 15"
+        },
+        "feast": "Blasius an Armen. B. & M."
+      },
+      "4": {
+        "morning": {
+          "first": "Exodus 14",
+          "second": "Mark 4"
+        },
+        "evening": {
+          "first": "Exodus 15",
+          "second": "1 Corinthians 16"
+        }
+      },
+      "5": {
+        "morning": {
+          "first": "Exodus 16",
+          "second": "Mark 5"
+        },
+        "evening": {
+          "first": "Exodus 17",
+          "second": "2 Corinthians 1"
+        },
+        "feast": "Agatha, a Sicilian V. & M."
+      },
+      "6": {
+        "morning": {
+          "first": "Exodus 18",
+          "second": "Mark 6"
+        },
+        "evening": {
+          "first": "Exodus 19",
+          "second": "2 Corinthians 2"
+        }
+      },
+      "7": {
+        "morning": {
+          "first": "Exodus 20",
+          "second": "Mark 7"
+        },
+        "evening": {
+          "first": "Exodus 21",
+          "second": "2 Corinthians 3"
+        }
+      },
+      "8": {
+        "morning": {
+          "first": "Exodus 22",
+          "second": "Mark 8"
+        },
+        "evening": {
+          "first": "Exodus 23",
+          "second": "2 Corinthians 4"
+        }
+      },
+      "9": {
+        "morning": {
+          "first": "Exodus 24",
+          "second": "Mark 9"
+        },
+        "evening": {
+          "first": "Exodus 32",
+          "second": "2 Corinthians 5"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "Exodus 33",
+          "second": "Mark 10"
+        },
+        "evening": {
+          "first": "Exodus 34",
+          "second": "2 Corinthians 6"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": "Leviticus 18",
+          "second": "Mark 11"
+        },
+        "evening": {
+          "first": "Leviticus 19",
+          "second": "2 Corinthians 7"
+        }
+      },
+      "12": {
+        "morning": {
+          "first": "Leviticus 20",
+          "second": "Mark 12"
+        },
+        "evening": {
+          "first": "Leviticus 26",
+          "second": "2 Corinthians 8"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "Numbers 11",
+          "second": "Mark 13"
+        },
+        "evening": {
+          "first": "Numbers 12",
+          "second": "2 Corinthians 9"
+        }
+      },
+      "14": {
+        "morning": {
+          "first": "Numbers 13",
+          "second": "Mark 14"
+        },
+        "evening": {
+          "first": "Numbers 14",
+          "second": "2 Corinthians 10"
+        },
+        "feast": "Valentine Bish. & M."
+      },
+      "15": {
+        "morning": {
+          "first": "Numbers 16",
+          "second": "Mark 15"
+        },
+        "evening": {
+          "first": "Numbers 17",
+          "second": "2 Corinthians 11"
+        }
+      },
+      "16": {
+        "morning": {
+          "first": "Numbers 20",
+          "second": "Mark 16"
+        },
+        "evening": {
+          "first": "Numbers 21",
+          "second": "2 Corinthians 12"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "Numbers 22",
+          "second": "Luke 1:1-39"
+        },
+        "evening": {
+          "first": "Numbers 23",
+          "second": "2 Corinthians 13"
+        }
+      },
+      "18": {
+        "morning": {
+          "first": "Numbers 24",
+          "second": "Luke 1:39"
+        },
+        "evening": {
+          "first": "Numbers 25",
+          "second": "Galatians 1"
+        }
+      },
+      "19": {
+        "morning": {
+          "first": "Numbers 27",
+          "second": "Luke 2"
+        },
+        "evening": {
+          "first": "Numbers 30",
+          "second": "Galatians 2"
+        }
+      },
+      "20": {
+        "morning": {
+          "first": "Numbers 31",
+          "second": "Luke 3"
+        },
+        "evening": {
+          "first": "Numbers 32",
+          "second": "Galatians 3"
+        }
+      },
+      "21": {
+        "morning": {
+          "first": "Numbers 35",
+          "second": "Luke 4"
+        },
+        "evening": {
+          "first": "Numbers 36",
+          "second": "Galatians 4"
+        }
+      },
+      "22": {
+        "morning": {
+          "first": "Deuteronomy 1",
+          "second": "Luke 5"
+        },
+        "evening": {
+          "first": "Deuteronomy 2",
+          "second": "Galatians 5"
+        }
+      },
+      "23": {
+        "morning": {
+          "first": "Deuteronomy 3",
+          "second": "Luke 6"
+        },
+        "evening": {
+          "first": "Deuteronomy 4",
+          "second": "Galatians 6"
+        },
+        "feast": "Fast"
+      },
+      "24": {
+        "morning": {
+          "first": null,
+          "second": "Luke 7"
+        },
+        "evening": {
+          "first": null,
+          "second": "Ephesians 1"
+        },
+        "feast": "Matthias Apost. & M."
+      },
+      "25": {
+        "morning": {
+          "first": "Deuteronomy 5",
+          "second": "Luke 8"
+        },
+        "evening": {
+          "first": "Deuteronomy 6",
+          "second": "Ephesians 2"
+        }
+      },
+      "26": {
+        "morning": {
+          "first": "Deuteronomy 7",
+          "second": "Luke 9"
+        },
+        "evening": {
+          "first": "Deuteronomy 8",
+          "second": "Ephesians 3"
+        }
+      },
+      "27": {
+        "morning": {
+          "first": "Deuteronomy 9",
+          "second": "Luke 10"
+        },
+        "evening": {
+          "first": "Deuteronomy 10",
+          "second": "Ephesians 4"
+        }
+      },
+      "28": {
+        "morning": {
+          "first": "Deuteronomy 11",
+          "second": "Luke 11"
+        },
+        "evening": {
+          "first": "Deuteronomy 12",
+          "second": "Ephesians 5"
+        }
+      },
+      "29": {
+        "morning": {
+          "first": "Deuteronomy 13",
+          "second": "Matthew 7"
+        },
+        "evening": {
+          "first": "Deuteronomy 14",
+          "second": "Romans 12"
+        }
+      }
+    },
+    "march": {
+      "1": {
+        "morning": {
+          "first": "Deuteronomy 15",
+          "second": "Luke 12"
+        },
+        "evening": {
+          "first": "Deuteronomy 16",
+          "second": "Ephesians 6"
+        },
+        "feast": "David Arch-B. of Menevia"
+      },
+      "2": {
+        "morning": {
+          "first": "Deuteronomy 17",
+          "second": "Luke 13"
+        },
+        "evening": {
+          "first": "Deuteronomy 18",
+          "second": "Philippians 1"
+        },
+        "feast": "Cedde, or Chad B. of Litchf."
+      },
+      "3": {
+        "morning": {
+          "first": "Deuteronomy 19",
+          "second": "Luke 14"
+        },
+        "evening": {
+          "first": "Deuteronomy 20",
+          "second": "Philippians 2"
+        }
+      },
+      "4": {
+        "morning": {
+          "first": "Deuteronomy 21",
+          "second": "Luke 15"
+        },
+        "evening": {
+          "first": "Deuteronomy 22",
+          "second": "Philippians 3"
+        }
+      },
+      "5": {
+        "morning": {
+          "first": "Deuteronomy 24",
+          "second": "Luke 16"
+        },
+        "evening": {
+          "first": "Deuteronomy 25",
+          "second": "Philippians 4"
+        }
+      },
+      "6": {
+        "morning": {
+          "first": "Deuteronomy 26",
+          "second": "Luke 17"
+        },
+        "evening": {
+          "first": "Deuteronomy 27",
+          "second": "Colossians 1"
+        }
+      },
+      "7": {
+        "morning": {
+          "first": "Deuteronomy 28",
+          "second": "Luke 18"
+        },
+        "evening": {
+          "first": "Deuteronomy 29",
+          "second": "Colossians 2"
+        },
+        "feast": "Perpetua Mauritan. M."
+      },
+      "8": {
+        "morning": {
+          "first": "Deuteronomy 30",
+          "second": "Luke 19"
+        },
+        "evening": {
+          "first": "Deuteronomy 31",
+          "second": "Colossians 3"
+        }
+      },
+      "9": {
+        "morning": {
+          "first": "Deuteronomy 32",
+          "second": "Luke 20"
+        },
+        "evening": {
+          "first": "Deuteronomy 33",
+          "second": "Colossians 4"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "Deuteronomy 34",
+          "second": "Luke 21"
+        },
+        "evening": {
+          "first": "Joshua 1",
+          "second": "1 Thessalonians 1"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": "Joshua 2",
+          "second": "Luke 22"
+        },
+        "evening": {
+          "first": "Joshua 3",
+          "second": "1 Thessalonians 2"
+        }
+      },
+      "12": {
+        "morning": {
+          "first": "Joshua 4",
+          "second": "Luke 23"
+        },
+        "evening": {
+          "first": "Joshua 5",
+          "second": "1 Thessalonians 3"
+        },
+        "feast": "Gregorio, M. B. of Rome, & C."
+      },
+      "13": {
+        "morning": {
+          "first": "Joshua 6",
+          "second": "Luke 24"
+        },
+        "evening": {
+          "first": "Joshua 7",
+          "second": "1 Thessalonians 4"
+        }
+      },
+      "14": {
+        "morning": {
+          "first": "Joshua 8",
+          "second": "John 1"
+        },
+        "evening": {
+          "first": "Joshua 9",
+          "second": "1 Thessalonians 5"
+        }
+      },
+      "15": {
+        "morning": {
+          "first": "Joshua 10",
+          "second": "John 2"
+        },
+        "evening": {
+          "first": "Joshua 13",
+          "second": "2 Thessalonians 1"
+        }
+      },
+      "16": {
+        "morning": {
+          "first": "Joshua 14",
+          "second": "John 3"
+        },
+        "evening": {
+          "first": "Judges 1",
+          "second": "2 Thessalonians 2"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "Judges 2",
+          "second": "John 4"
+        },
+        "evening": {
+          "first": "Judges 3",
+          "second": "2 Thessalonians 3"
+        }
+      },
+      "18": {
+        "morning": {
+          "first": "Judges 4",
+          "second": "John 5"
+        },
+        "evening": {
+          "first": "Judges 5",
+          "second": "1 Timothy 1"
+        },
+        "feast": "Edward K. of ye. West Saxons"
+      },
+      "19": {
+        "morning": {
+          "first": "Judges 6",
+          "second": "John 6"
+        },
+        "evening": {
+          "first": "Judges 7",
+          "second": "1 Timothy 2;1 Timothy 3"
+        }
+      },
+      "20": {
+        "morning": {
+          "first": "Judges 8",
+          "second": "John 7"
+        },
+        "evening": {
+          "first": "Judges 9",
+          "second": "1 Timothy 4"
+        }
+      },
+      "21": {
+        "morning": {
+          "first": "Judges 10",
+          "second": "John 8"
+        },
+        "evening": {
+          "first": "Judges 11",
+          "second": "1 Timothy 5"
+        },
+        "feast": "Benedict Abbot"
+      },
+      "22": {
+        "morning": {
+          "first": "Judges 12",
+          "second": "John 9"
+        },
+        "evening": {
+          "first": "Judges 13",
+          "second": "1 Timothy 6"
+        }
+      },
+      "23": {
+        "morning": {
+          "first": "Judges 14",
+          "second": "John 10"
+        },
+        "evening": {
+          "first": "Judges 15",
+          "second": "2 Timothy 1"
+        }
+      },
+      "24": {
+        "morning": {
+          "first": "Judges 16",
+          "second": "John 11"
+        },
+        "evening": {
+          "first": "Judges 17",
+          "second": "2 Timothy 2"
+        },
+        "feast": "Fast"
+      },
+      "25": {
+        "morning": {
+          "first": null,
+          "second": "John 12"
+        },
+        "evening": {
+          "first": null,
+          "second": "2 Timothy 3"
+        },
+        "feast": "Annunc. of Mary"
+      },
+      "26": {
+        "morning": {
+          "first": "Judges 18",
+          "second": "John 13"
+        },
+        "evening": {
+          "first": "Judges 19",
+          "second": "2 Timothy 4"
+        }
+      },
+      "27": {
+        "morning": {
+          "first": "Judges 20",
+          "second": "John 14"
+        },
+        "evening": {
+          "first": "Judges 21",
+          "second": "Titus 1"
+        }
+      },
+      "28": {
+        "morning": {
+          "first": "Ruth 1",
+          "second": "John 15"
+        },
+        "evening": {
+          "first": "Ruth 2",
+          "second": "Titus 2;Titus 3"
+        }
+      },
+      "29": {
+        "morning": {
+          "first": "Ruth 3",
+          "second": "John 16"
+        },
+        "evening": {
+          "first": "Ruth 4",
+          "second": "Philemon"
+        }
+      },
+      "30": {
+        "morning": {
+          "first": "1 Samuel 1",
+          "second": "John 17"
+        },
+        "evening": {
+          "first": "1 Samuel 2",
+          "second": "Hebrews 1"
+        }
+      },
+      "31": {
+        "morning": {
+          "first": "1 Samuel 3",
+          "second": "John 18"
+        },
+        "evening": {
+          "first": "1 Samuel 4",
+          "second": "Hebrews 2"
+        }
+      }
+    },
+    "april": {
+      "1": {
+        "morning": {
+          "first": "1 Samuel 5",
+          "second": "John 19"
+        },
+        "evening": {
+          "first": "1 Samuel 6",
+          "second": "Hebrews 3"
+        }
+      },
+      "2": {
+        "morning": {
+          "first": "1 Samuel 7",
+          "second": "John 20"
+        },
+        "evening": {
+          "first": "1 Samuel 8",
+          "second": "Hebrews 4"
+        }
+      },
+      "3": {
+        "morning": {
+          "first": "1 Samuel 9",
+          "second": "John 21"
+        },
+        "evening": {
+          "first": "1 Samuel 10",
+          "second": "Hebrews 5"
+        },
+        "feast": "Richard B. of Chichester"
+      },
+      "4": {
+        "morning": {
+          "first": "1 Samuel 11",
+          "second": "Acts 1"
+        },
+        "evening": {
+          "first": "1 Samuel 12",
+          "second": "Hebrews 6"
+        },
+        "feast": "Ambrose B. of Millan."
+      },
+      "5": {
+        "morning": {
+          "first": "1 Samuel 13",
+          "second": "Acts 2"
+        },
+        "evening": {
+          "first": "1 Samuel 14",
+          "second": "Hebrews 7"
+        }
+      },
+      "6": {
+        "morning": {
+          "first": "1 Samuel 15",
+          "second": "Acts 3"
+        },
+        "evening": {
+          "first": "1 Samuel 16",
+          "second": "Hebrews 8"
+        }
+      },
+      "7": {
+        "morning": {
+          "first": "1 Samuel 17",
+          "second": "Acts 4"
+        },
+        "evening": {
+          "first": "1 Samuel 18",
+          "second": "Hebrews 9"
+        }
+      },
+      "8": {
+        "morning": {
+          "first": "1 Samuel 19",
+          "second": "Acts 5"
+        },
+        "evening": {
+          "first": "1 Samuel 20",
+          "second": "Hebrews 10"
+        }
+      },
+      "9": {
+        "morning": {
+          "first": "1 Samuel 21",
+          "second": "Acts 6"
+        },
+        "evening": {
+          "first": "1 Samuel 22",
+          "second": "Hebrews 11"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "1 Samuel 23",
+          "second": "Acts 7"
+        },
+        "evening": {
+          "first": "1 Samuel 24",
+          "second": "Hebrews 12"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": "1 Samuel 25",
+          "second": "Acts 8"
+        },
+        "evening": {
+          "first": "1 Samuel 26",
+          "second": "Hebrews 13"
+        }
+      },
+      "12": {
+        "morning": {
+          "first": "1 Samuel 27",
+          "second": "Acts 9"
+        },
+        "evening": {
+          "first": "1 Samuel 28",
+          "second": "James 1"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "1 Samuel 29",
+          "second": "Acts 10"
+        },
+        "evening": {
+          "first": "1 Samuel 30",
+          "second": "James 2"
+        }
+      },
+      "14": {
+        "morning": {
+          "first": "1 Samuel 31",
+          "second": "Acts 11"
+        },
+        "evening": {
+          "first": "2 Samuel 1",
+          "second": "James 3"
+        }
+      },
+      "15": {
+        "morning": {
+          "first": "2 Samuel 1",
+          "second": "Acts 12"
+        },
+        "evening": {
+          "first": "2 Samuel 3",
+          "second": "James 4"
+        }
+      },
+      "16": {
+        "morning": {
+          "first": "2 Samuel 4",
+          "second": "Acts 13"
+        },
+        "evening": {
+          "first": "2 Samuel 5",
+          "second": "James 5"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "2 Samuel 6",
+          "second": "Acts 14"
+        },
+        "evening": {
+          "first": "2 Samuel 7",
+          "second": "1 Peter 1"
+        }
+      },
+      "18": {
+        "morning": {
+          "first": "2 Samuel 8",
+          "second": "Acts 15"
+        },
+        "evening": {
+          "first": "2 Samuel 9",
+          "second": "1 Peter 2"
+        }
+      },
+      "19": {
+        "morning": {
+          "first": "2 Samuel 10",
+          "second": "Acts 16"
+        },
+        "evening": {
+          "first": "2 Samuel 11",
+          "second": "1 Peter 3"
+        },
+        "feast": "Alphege Arch-B. of Cant."
+      },
+      "20": {
+        "morning": {
+          "first": "2 Samuel 12",
+          "second": "Acts 17"
+        },
+        "evening": {
+          "first": "2 Samuel 13",
+          "second": "1 Peter 4"
+        }
+      },
+      "21": {
+        "morning": {
+          "first": "2 Samuel 14",
+          "second": "Acts 18"
+        },
+        "evening": {
+          "first": "2 Samuel 15",
+          "second": "1 Peter 5"
+        }
+      },
+      "22": {
+        "morning": {
+          "first": "2 Samuel 16",
+          "second": "Acts 19"
+        },
+        "evening": {
+          "first": "2 Samuel 17",
+          "second": "2 Peter 1"
+        }
+      },
+      "23": {
+        "morning": {
+          "first": "2 Samuel 18",
+          "second": "Acts 20"
+        },
+        "evening": {
+          "first": "2 Samuel 19",
+          "second": "2 Peter 2"
+        },
+        "feast": "S. George M."
+      },
+      "24": {
+        "morning": {
+          "first": "2 Samuel 20",
+          "second": "Acts 21"
+        },
+        "evening": {
+          "first": "2 Samuel 21",
+          "second": "2 Peter 3"
+        }
+      },
+      "25": {
+        "morning": {
+          "first": null,
+          "second": "Acts 22"
+        },
+        "evening": {
+          "first": null,
+          "second": "1 John 1"
+        },
+        "feast": "S. Mark Evang. & Mart."
+      },
+      "26": {
+        "morning": {
+          "first": "2 Samuel 22",
+          "second": "Acts 23"
+        },
+        "evening": {
+          "first": "2 Samuel 23",
+          "second": "1 John 2"
+        }
+      },
+      "27": {
+        "morning": {
+          "first": "2 Samuel 24",
+          "second": "Acts 24"
+        },
+        "evening": {
+          "first": "1 Kings 1",
+          "second": "1 John 3"
+        }
+      },
+      "28": {
+        "morning": {
+          "first": "1 Kings 1",
+          "second": "Acts 25"
+        },
+        "evening": {
+          "first": "1 Kings 3",
+          "second": "1 John 4"
+        }
+      },
+      "29": {
+        "morning": {
+          "first": "1 Kings 4",
+          "second": "Acts 26"
+        },
+        "evening": {
+          "first": "1 Kings 5",
+          "second": "1 John 5"
+        }
+      },
+      "30": {
+        "morning": {
+          "first": "1 Kings 6",
+          "second": "Acts 27"
+        },
+        "evening": {
+          "first": "1 Kings 7",
+          "second": "2 John; 3 John"
+        }
+      }
+    },
+    "may": {
+      "1": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": "Jude"
+        },
+        "feast": "S. Phil & S. Jac Ap. & M."
+      },
+      "2": {
+        "morning": {
+          "first": "1 Kings 8",
+          "second": "Acts 28"
+        },
+        "evening": {
+          "first": "1 Kings 9",
+          "second": "Romans 1"
+        }
+      },
+      "3": {
+        "morning": {
+          "first": "1 Kings 10",
+          "second": "Matthew 1"
+        },
+        "evening": {
+          "first": "1 Kings 11",
+          "second": "Romans 2"
+        },
+        "feast": "Invention of the Cross."
+      },
+      "4": {
+        "morning": {
+          "first": "1 Kings 12",
+          "second": "Matthew 2"
+        },
+        "evening": {
+          "first": "1 Kings 13",
+          "second": "Romans 3"
+        }
+      },
+      "5": {
+        "morning": {
+          "first": "1 Kings 14",
+          "second": "Matthew 3"
+        },
+        "evening": {
+          "first": "1 Kings 15",
+          "second": "Romans 4"
+        }
+      },
+      "6": {
+        "morning": {
+          "first": "1 Kings 16",
+          "second": "Matthew 4"
+        },
+        "evening": {
+          "first": "1 Kings 17",
+          "second": "Romans 5"
+        },
+        "feast": "S. John Evang. ante port. latin."
+      },
+      "7": {
+        "morning": {
+          "first": "1 Kings 18",
+          "second": "Matthew 5"
+        },
+        "evening": {
+          "first": "1 Kings 19",
+          "second": "Romans 6"
+        }
+      },
+      "8": {
+        "morning": {
+          "first": "1 Kings 20",
+          "second": "Matthew 6"
+        },
+        "evening": {
+          "first": "1 Kings 21",
+          "second": "Romans 7"
+        }
+      },
+      "9": {
+        "morning": {
+          "first": "1 Kings 22",
+          "second": "Matthew 7"
+        },
+        "evening": {
+          "first": "2 Kings 1",
+          "second": "Romans 8"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "2 Kings 2",
+          "second": "Matthew 8"
+        },
+        "evening": {
+          "first": "2 Kings 3",
+          "second": "Romans 9"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": "2 Kings 4",
+          "second": "Matthew 9"
+        },
+        "evening": {
+          "first": "2 Kings 5",
+          "second": "Romans 10"
+        }
+      },
+      "12": {
+        "morning": {
+          "first": "2 Kings 6",
+          "second": "Matthew 10"
+        },
+        "evening": {
+          "first": "2 Kings 7",
+          "second": "Romans 11"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "2 Kings 8",
+          "second": "Matthew 11"
+        },
+        "evening": {
+          "first": "2 Kings 9",
+          "second": "Romans 12"
+        }
+      },
+      "14": {
+        "morning": {
+          "first": "2 Kings 10",
+          "second": "Matthew 12"
+        },
+        "evening": {
+          "first": "2 Kings 11",
+          "second": "Romans 13"
+        }
+      },
+      "15": {
+        "morning": {
+          "first": "2 Kings 12",
+          "second": "Matthew 13"
+        },
+        "evening": {
+          "first": "2 Kings 13",
+          "second": "Romans 14"
+        }
+      },
+      "16": {
+        "morning": {
+          "first": "2 Kings 14",
+          "second": "Matthew 14"
+        },
+        "evening": {
+          "first": "2 Kings 15",
+          "second": "Romans 15"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "2 Kings 16",
+          "second": "Matthew 15"
+        },
+        "evening": {
+          "first": "2 Kings 17",
+          "second": "Romans 16"
+        }
+      },
+      "18": {
+        "morning": {
+          "first": "2 Kings 18",
+          "second": "Matthew 16"
+        },
+        "evening": {
+          "first": "2 Kings 19",
+          "second": "1 Corinthians 1"
+        }
+      },
+      "19": {
+        "morning": {
+          "first": "2 Kings 20",
+          "second": "Matthew 17"
+        },
+        "evening": {
+          "first": "2 Kings 21",
+          "second": "1 Corinthians 2"
+        },
+        "feast": "Dunstan Arch.B. of Cant."
+      },
+      "20": {
+        "morning": {
+          "first": "2 Kings 22",
+          "second": "Matthew 18"
+        },
+        "evening": {
+          "first": "2 Kings 23",
+          "second": "1 Corinthians 3"
+        }
+      },
+      "21": {
+        "morning": {
+          "first": "2 Kings 24",
+          "second": "Matthew 19"
+        },
+        "evening": {
+          "first": "2 Kings 25",
+          "second": "1 Corinthians 4"
+        }
+      },
+      "22": {
+        "morning": {
+          "first": "Ezra 1",
+          "second": "Matthew 20"
+        },
+        "evening": {
+          "first": "Ezra 3",
+          "second": "1 Corinthians 5"
+        }
+      },
+      "23": {
+        "morning": {
+          "first": "Ezra 4",
+          "second": "Matthew 21"
+        },
+        "evening": {
+          "first": "Ezra 5",
+          "second": "1 Corinthians 6"
+        }
+      },
+      "24": {
+        "morning": {
+          "first": "Ezra 6",
+          "second": "Matthew 22"
+        },
+        "evening": {
+          "first": "Ezra 7",
+          "second": "1 Corinthians 7"
+        }
+      },
+      "25": {
+        "morning": {
+          "first": "Ezra 9",
+          "second": "Matthew 23"
+        },
+        "evening": {
+          "first": "Nehemiah 1",
+          "second": "1 Corinthians 8"
+        }
+      },
+      "26": {
+        "morning": {
+          "first": "Nehemiah 2",
+          "second": "Matthew 24"
+        },
+        "evening": {
+          "first": "Nehemiah 4",
+          "second": "1 Corinthians 9"
+        },
+        "feast": "Aug: ye. first Arch B. of Cant."
+      },
+      "27": {
+        "morning": {
+          "first": "Nehemiah 5",
+          "second": "Matthew 25"
+        },
+        "evening": {
+          "first": "Nehemiah 6",
+          "second": "1 Corinthians 10"
+        },
+        "feast": "Ven. Bede pr."
+      },
+      "28": {
+        "morning": {
+          "first": "Nehemiah 8",
+          "second": "Matthew 26"
+        },
+        "evening": {
+          "first": "Nehemiah 9",
+          "second": "1 Corinthians 11"
+        }
+      },
+      "29": {
+        "morning": {
+          "first": "Nehemiah 10",
+          "second": "Matthew 27"
+        },
+        "evening": {
+          "first": "Nehemiah 11",
+          "second": "1 Corinthians 12"
+        },
+        "feast": "CH. II. Nat. et Ret."
+      },
+      "30": {
+        "morning": {
+          "first": "Esther 1",
+          "second": "Matthew 28"
+        },
+        "evening": {
+          "first": "Esther 2",
+          "second": "1 Corinthians 13"
+        }
+      },
+      "31": {
+        "morning": {
+          "first": "Esther 3",
+          "second": "Mark 1"
+        },
+        "evening": {
+          "first": "Esther 4",
+          "second": "1 Corinthians 14"
+        }
+      }
+    },
+    "june": {
+      "1": {
+        "morning": {
+          "first": "Esther 5",
+          "second": "Mark 2"
+        },
+        "evening": {
+          "first": "Esther 6",
+          "second": "1 Corinthians 15"
+        },
+        "feast": "Nicomede Rom. Pr. & M."
+      },
+      "2": {
+        "morning": {
+          "first": "Esther 7",
+          "second": "Mark 3"
+        },
+        "evening": {
+          "first": "Esther 8",
+          "second": "1 Corinthians 16"
+        }
+      },
+      "3": {
+        "morning": {
+          "first": "Esther 9",
+          "second": "Mark 4"
+        },
+        "evening": {
+          "first": "Job 1",
+          "second": "2 Corinthians 1"
+        }
+      },
+      "4": {
+        "morning": {
+          "first": "Job 2",
+          "second": "Mark 5"
+        },
+        "evening": {
+          "first": "Job 3",
+          "second": "2 Corinthians 20"
+        }
+      },
+      "5": {
+        "morning": {
+          "first": "Job 4",
+          "second": "Mark 6"
+        },
+        "evening": {
+          "first": "Job 5",
+          "second": "2 Corinthians 3"
+        },
+        "feast": "Boniface B. of Mentz & M."
+      },
+      "6": {
+        "morning": {
+          "first": "Job 6",
+          "second": "Mark 7"
+        },
+        "evening": {
+          "first": "Job 7",
+          "second": "2 Corinthians 4"
+        }
+      },
+      "7": {
+        "morning": {
+          "first": "Job 8",
+          "second": "Mark 8"
+        },
+        "evening": {
+          "first": "Job 9",
+          "second": "2 Corinthians 5"
+        }
+      },
+      "8": {
+        "morning": {
+          "first": "Job 10",
+          "second": "Mark 9"
+        },
+        "evening": {
+          "first": "Job 11",
+          "second": "2 Corinthians 6"
+        }
+      },
+      "9": {
+        "morning": {
+          "first": "Job 12",
+          "second": "Mark 10"
+        },
+        "evening": {
+          "first": "Job 13",
+          "second": "2 Corinthians 7"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "Job 14",
+          "second": "Mark 11"
+        },
+        "evening": {
+          "first": "Job 15",
+          "second": "2 Corinthians 8"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": null
+        },
+        "feast": "S. Barnab, Apost. & M."
+      },
+      "12": {
+        "morning": {
+          "first": "Job 16",
+          "second": "Mark 12"
+        },
+        "evening": {
+          "first": "Job 17;Job 18",
+          "second": "2 Corinthians 9"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "Job 19",
+          "second": "Mark 13"
+        },
+        "evening": {
+          "first": "Job 20",
+          "second": "2 Corinthians 10"
+        }
+      },
+      "14": {
+        "morning": {
+          "first": "Job 21",
+          "second": "Mark 14"
+        },
+        "evening": {
+          "first": "Job 22",
+          "second": "2 Corinthians 11"
+        }
+      },
+      "15": {
+        "morning": {
+          "first": "Job 23",
+          "second": "Mark 15"
+        },
+        "evening": {
+          "first": "Job 24;Job 25",
+          "second": "2 Corinthians 12"
+        }
+      },
+      "16": {
+        "morning": {
+          "first": "Job 26;Job 27",
+          "second": "Mark 16"
+        },
+        "evening": {
+          "first": "Job 28",
+          "second": "2 Corinthians 13"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "Job 29",
+          "second": "Luke 1"
+        },
+        "evening": {
+          "first": "Job 30",
+          "second": "Galatians 1"
+        },
+        "feast": "S. Alban M."
+      },
+      "18": {
+        "morning": {
+          "first": "Job 31",
+          "second": "Luke 2"
+        },
+        "evening": {
+          "first": "Job 32",
+          "second": "Galatians 2"
+        }
+      },
+      "19": {
+        "morning": {
+          "first": "Job 33",
+          "second": "Luke 3"
+        },
+        "evening": {
+          "first": "Job 34",
+          "second": "Galatians 3"
+        }
+      },
+      "20": {
+        "morning": {
+          "first": "Job 35",
+          "second": "Luke 4"
+        },
+        "evening": {
+          "first": "Job 36",
+          "second": "Galatians 4"
+        },
+        "feast": "Transl: of Edwd. K. of ye. W. Sax."
+      },
+      "21": {
+        "morning": {
+          "first": "Job 37",
+          "second": "Luke 5"
+        },
+        "evening": {
+          "first": "Job 38",
+          "second": "Galatians 5"
+        }
+      },
+      "22": {
+        "morning": {
+          "first": "Job 39",
+          "second": "Luke 6"
+        },
+        "evening": {
+          "first": "Job 40",
+          "second": "Galatians 6"
+        }
+      },
+      "23": {
+        "morning": {
+          "first": "Job 41",
+          "second": "Luke 7"
+        },
+        "evening": {
+          "first": "Job 42",
+          "second": "Ephesians 1"
+        },
+        "feast": "Fast"
+      },
+      "24": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": null
+        },
+        "feast": "Nativ. of S. John Bapt:"
+      },
+      "25": {
+        "morning": {
+          "first": "Proverbs 1",
+          "second": "Luke 8"
+        },
+        "evening": {
+          "first": "Proverbs 2",
+          "second": "Ephesians 2"
+        }
+      },
+      "26": {
+        "morning": {
+          "first": "Proverbs 3",
+          "second": "Luke 9"
+        },
+        "evening": {
+          "first": "Proverbs 4",
+          "second": "Ephesians 3"
+        }
+      },
+      "27": {
+        "morning": {
+          "first": "Proverbs 5",
+          "second": "Luke 10"
+        },
+        "evening": {
+          "first": "Proverbs 6",
+          "second": "Ephesians 4"
+        }
+      },
+      "28": {
+        "morning": {
+          "first": "Proverbs 7",
+          "second": "Luke 11"
+        },
+        "evening": {
+          "first": "Proverbs 8",
+          "second": "Ephesians 5"
+        },
+        "feast": "Fast"
+      },
+      "29": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": null
+        },
+        "feast": "S. Pet. Apost. & M."
+      },
+      "30": {
+        "morning": {
+          "first": "Proverbs 9",
+          "second": "Luke 12"
+        },
+        "evening": {
+          "first": "Proverbs 10",
+          "second": "Ephesians 6"
+        }
+      }
+    },
+    "july": {
+      "1": {
+        "morning": {
+          "first": "Proverbs 11",
+          "second": "Luke 13"
+        },
+        "evening": {
+          "first": "Proverbs 12",
+          "second": "Philippians 1"
+        }
+      },
+      "2": {
+        "morning": {
+          "first": "Proverbs 13",
+          "second": "Luke 14"
+        },
+        "evening": {
+          "first": "Proverbs 14",
+          "second": "Philippians 2"
+        },
+        "feast": "Visit: of ye. Bl. Virg. Marie."
+      },
+      "3": {
+        "morning": {
+          "first": "Proverbs 15",
+          "second": "Luke 15"
+        },
+        "evening": {
+          "first": "Proverbs 16",
+          "second": "Philippians 3"
+        }
+      },
+      "4": {
+        "morning": {
+          "first": "Proverbs 17",
+          "second": "Luke 16"
+        },
+        "evening": {
+          "first": "Proverbs 18",
+          "second": "Philippians 4"
+        },
+        "feast": "Transl: of S. Martin B. & C."
+      },
+      "5": {
+        "morning": {
+          "first": "Proverbs 19",
+          "second": "Luke 17"
+        },
+        "evening": {
+          "first": "Proverbs 20",
+          "second": "Colossians 1"
+        }
+      },
+      "6": {
+        "morning": {
+          "first": "Proverbs 21",
+          "second": "Luke 18"
+        },
+        "evening": {
+          "first": "Proverbs 22",
+          "second": "Colossians 2"
+        }
+      },
+      "7": {
+        "morning": {
+          "first": "Proverbs 23",
+          "second": "Luke 19"
+        },
+        "evening": {
+          "first": "Proverbs 24",
+          "second": "Colossians 3"
+        }
+      },
+      "8": {
+        "morning": {
+          "first": "Proverbs 25",
+          "second": "Luke 20"
+        },
+        "evening": {
+          "first": "Proverbs 26",
+          "second": "Colossians 4"
+        }
+      },
+      "9": {
+        "morning": {
+          "first": "Proverbs 27",
+          "second": "Luke 21"
+        },
+        "evening": {
+          "first": "Proverbs 28",
+          "second": "1 Thessalonians 1"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "Proverbs 29",
+          "second": "Luke 22"
+        },
+        "evening": {
+          "first": "Proverbs 31",
+          "second": "1 Thessalonians 2"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": "Ecclesiastes 1",
+          "second": "Luke 23"
+        },
+        "evening": {
+          "first": "Ecclesiastes 2",
+          "second": "1 Thessalonians 3"
+        }
+      },
+      "12": {
+        "morning": {
+          "first": "Ecclesiastes 3",
+          "second": "Luke 24"
+        },
+        "evening": {
+          "first": "Ecclesiastes 4",
+          "second": "1 Thessalonians 4"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "Ecclesiastes 5",
+          "second": "John 1"
+        },
+        "evening": {
+          "first": "Ecclesiastes 6",
+          "second": "1 Thessalonians 5"
+        }
+      },
+      "14": {
+        "morning": {
+          "first": "Ecclesiastes 7",
+          "second": "John 2"
+        },
+        "evening": {
+          "first": "Ecclesiastes 8",
+          "second": "2 Thessalonians 1"
+        }
+      },
+      "15": {
+        "morning": {
+          "first": "Ecclesiastes 9",
+          "second": "John 3"
+        },
+        "evening": {
+          "first": "Ecclesiastes 10",
+          "second": "2 Thessalonians 2"
+        },
+        "feast": "Swithun B. of Winch. Transl."
+      },
+      "16": {
+        "morning": {
+          "first": "Ecclesiastes 11",
+          "second": "John 4"
+        },
+        "evening": {
+          "first": "Ecclesiastes 12",
+          "second": "2 Thessalonians 3"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "Jeremiah 1",
+          "second": "John 5"
+        },
+        "evening": {
+          "first": "Jeremiah 2",
+          "second": "1 Timothy 1"
+        }
+      },
+      "18": {
+        "morning": {
+          "first": "Jeremiah 3",
+          "second": "John 6"
+        },
+        "evening": {
+          "first": "Jeremiah 4",
+          "second": "1 Timothy 2;1 Timothy 3"
+        }
+      },
+      "19": {
+        "morning": {
+          "first": "Jeremiah 5",
+          "second": "John 7"
+        },
+        "evening": {
+          "first": "Jeremiah 6",
+          "second": "1 Timothy 4"
+        }
+      },
+      "20": {
+        "morning": {
+          "first": "Jeremiah 7",
+          "second": "John 8"
+        },
+        "evening": {
+          "first": "Jeremiah 8",
+          "second": "1 Timothy 5"
+        },
+        "feast": "Margaret V. & M. at Antioch."
+      },
+      "21": {
+        "morning": {
+          "first": "Jeremiah 9",
+          "second": "John 9"
+        },
+        "evening": {
+          "first": "Jeremiah 10",
+          "second": "1 Timothy 6"
+        },
+        "feast": "S. Marie Magdalen."
+      },
+      "22": {
+        "morning": {
+          "first": "Jeremiah 11",
+          "second": "John 10"
+        },
+        "evening": {
+          "first": "Jeremiah 12",
+          "second": "2 Timothy 1"
+        }
+      },
+      "23": {
+        "morning": {
+          "first": "Jeremiah 13",
+          "second": "John 11"
+        },
+        "evening": {
+          "first": "Jeremiah 14",
+          "second": "2 Timothy 2"
+        }
+      },
+      "24": {
+        "morning": {
+          "first": "Jeremiah 15",
+          "second": "John 12"
+        },
+        "evening": {
+          "first": "Jeremiah 16",
+          "second": "2 Timothy 3"
+        },
+        "feast": "Fast"
+      },
+      "25": {
+        "morning": {
+          "first": null,
+          "second": "John 13"
+        },
+        "evening": {
+          "first": null,
+          "second": "2 Timothy 4"
+        },
+        "feast": "S. Iames Apost. & M."
+      },
+      "26": {
+        "morning": {
+          "first": "Jeremiah 17",
+          "second": "John 14"
+        },
+        "evening": {
+          "first": "Jeremiah 18",
+          "second": "Titus 1"
+        },
+        "feast": "S. Anne, mother to ye. Bl. V. M."
+      },
+      "27": {
+        "morning": {
+          "first": "Jeremiah 19",
+          "second": "John 15"
+        },
+        "evening": {
+          "first": "Jeremiah 20",
+          "second": "Titus 2;Titus 3"
+        }
+      },
+      "28": {
+        "morning": {
+          "first": "Jeremiah 21",
+          "second": "John 16"
+        },
+        "evening": {
+          "first": "Jeremiah 22",
+          "second": "Philemon"
+        }
+      },
+      "29": {
+        "morning": {
+          "first": "Jeremiah 23",
+          "second": "John 17"
+        },
+        "evening": {
+          "first": "Jeremiah 24",
+          "second": "Hebrews 1"
+        }
+      },
+      "30": {
+        "morning": {
+          "first": "Jeremiah 25",
+          "second": "John 18"
+        },
+        "evening": {
+          "first": "Jeremiah 26",
+          "second": "Hebrews 2"
+        }
+      },
+      "31": {
+        "morning": {
+          "first": "Jeremiah 27",
+          "second": "John 19"
+        },
+        "evening": {
+          "first": "Jeremiah 28",
+          "second": "Hebrews 3"
+        }
+      }
+    },
+    "august": {
+      "1": {
+        "morning": {
+          "first": "Jeremiah 29",
+          "second": "John 20"
+        },
+        "evening": {
+          "first": "Jeremiah 30",
+          "second": "Hebrews 4"
+        },
+        "feast": "Lammas day."
+      },
+      "2": {
+        "morning": {
+          "first": "Jeremiah 31",
+          "second": "John 21"
+        },
+        "evening": {
+          "first": "Jeremiah 32",
+          "second": "Hebrews 5"
+        }
+      },
+      "3": {
+        "morning": {
+          "first": "Jeremiah 33",
+          "second": "Acts 1"
+        },
+        "evening": {
+          "first": "Jeremiah 34",
+          "second": "Hebrews 6"
+        }
+      },
+      "4": {
+        "morning": {
+          "first": "Jeremiah 35",
+          "second": "Acts 2"
+        },
+        "evening": {
+          "first": "Jeremiah 36",
+          "second": "Hebrews 7"
+        }
+      },
+      "5": {
+        "morning": {
+          "first": "Jeremiah 37",
+          "second": "Acts 3"
+        },
+        "evening": {
+          "first": "Jeremiah 38",
+          "second": "Hebrews 8"
+        }
+      },
+      "6": {
+        "morning": {
+          "first": "Jeremiah 39",
+          "second": "Acts 4"
+        },
+        "evening": {
+          "first": "Jeremiah 40",
+          "second": "Hebrews 9"
+        },
+        "feast": "Transfigur. of our Lord."
+      },
+      "7": {
+        "morning": {
+          "first": "Jeremiah 41",
+          "second": "Acts 5"
+        },
+        "evening": {
+          "first": "Jeremiah 42",
+          "second": "Hebrews 10"
+        },
+        "feast": "Name of Jesus."
+      },
+      "8": {
+        "morning": {
+          "first": "Jeremiah 43",
+          "second": "Acts 6"
+        },
+        "evening": {
+          "first": "Jeremiah 44",
+          "second": "Hebrews 11"
+        }
+      },
+      "9": {
+        "morning": {
+          "first": "Jeremiah 45;Jeremiah 46",
+          "second": "Acts 7"
+        },
+        "evening": {
+          "first": "Jeremiah 47",
+          "second": "Hebrews 12"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "Jeremiah 48",
+          "second": "Acts 8"
+        },
+        "evening": {
+          "first": "Jeremiah 49",
+          "second": "Hebrews 10"
+        },
+        "feast": "S. Laur. Arch D. of Rome & M."
+      },
+      "11": {
+        "morning": {
+          "first": "Jeremiah 50",
+          "second": "Acts 9"
+        },
+        "evening": {
+          "first": "Jeremiah 51",
+          "second": "James 1"
+        }
+      },
+      "12": {
+        "morning": {
+          "first": "Jeremiah 52",
+          "second": "Acts 10"
+        },
+        "evening": {
+          "first": "Lamentations 1",
+          "second": "James 2"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "Lamentations 2",
+          "second": "Acts 11"
+        },
+        "evening": {
+          "first": "Lamentations 3",
+          "second": "James 3"
+        }
+      },
+      "14": {
+        "morning": {
+          "first": "Lamentations 4",
+          "second": "Acts 12"
+        },
+        "evening": {
+          "first": "Lamentations 5",
+          "second": "James 4"
+        }
+      },
+      "15": {
+        "morning": {
+          "first": "Ezekiel 2",
+          "second": "Acts 13"
+        },
+        "evening": {
+          "first": "Ezekiel 3",
+          "second": "James 5"
+        }
+      },
+      "16": {
+        "morning": {
+          "first": "Ezekiel 6",
+          "second": "Acts 14"
+        },
+        "evening": {
+          "first": "Ezekiel 7",
+          "second": "1 Peter 1"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "Ezekiel 13",
+          "second": "Acts 15"
+        },
+        "evening": {
+          "first": "Ezekiel 14",
+          "second": "1 Peter 2"
+        }
+      },
+      "18": {
+        "morning": {
+          "first": "Ezekiel 18",
+          "second": "Acts 16"
+        },
+        "evening": {
+          "first": "Ezekiel 33",
+          "second": "1 Peter 3"
+        }
+      },
+      "19": {
+        "morning": {
+          "first": "Ezekiel 34",
+          "second": "Acts 17"
+        },
+        "evening": {
+          "first": "Daniel 1",
+          "second": "1 Peter 4"
+        }
+      },
+      "20": {
+        "morning": {
+          "first": "Daniel 2",
+          "second": "Acts 18"
+        },
+        "evening": {
+          "first": "Daniel 3",
+          "second": "1 Peter 5"
+        }
+      },
+      "21": {
+        "morning": {
+          "first": "Daniel 4",
+          "second": "Acts 19"
+        },
+        "evening": {
+          "first": "Daniel 5",
+          "second": "2 Peter 1"
+        }
+      },
+      "22": {
+        "morning": {
+          "first": "Daniel 6",
+          "second": "Acts 20"
+        },
+        "evening": {
+          "first": "Daniel 7",
+          "second": "2 Peter 2"
+        }
+      },
+      "23": {
+        "morning": {
+          "first": "Daniel 8",
+          "second": "Acts 21"
+        },
+        "evening": {
+          "first": "Daniel 9",
+          "second": "2 Peter 3"
+        },
+        "feast": "Fast."
+      },
+      "24": {
+        "morning": {
+          "first": null,
+          "second": "Acts 22"
+        },
+        "evening": {
+          "first": null,
+          "second": "1 John 1"
+        },
+        "feast": "S. Barth. Apost. & M."
+      },
+      "25": {
+        "morning": {
+          "first": "Daniel 10",
+          "second": "Acts 23"
+        },
+        "evening": {
+          "first": "Daniel 11",
+          "second": "1 John 2"
+        }
+      },
+      "26": {
+        "morning": {
+          "first": "Daniel 12",
+          "second": "Acts 24"
+        },
+        "evening": {
+          "first": "Hosea 1",
+          "second": "1 John 3"
+        }
+      },
+      "27": {
+        "morning": {
+          "first": "Hosea 2; Hosea 3",
+          "second": "Acts 25"
+        },
+        "evening": {
+          "first": "Hosea 4",
+          "second": "1 John 4"
+        }
+      },
+      "28": {
+        "morning": {
+          "first": "Hosea 5;Hosea 6",
+          "second": "Acts 26"
+        },
+        "evening": {
+          "first": "Hosea 7",
+          "second": "1 John 5"
+        },
+        "feast": "S. Aug. B. of Hippo. C. D."
+      },
+      "29": {
+        "morning": {
+          "first": "Hosea 8",
+          "second": "Acts 27"
+        },
+        "evening": {
+          "first": "Hosea 9",
+          "second": "2 John; 3 John"
+        },
+        "feast": "Behead: of S. John Bapt."
+      },
+      "30": {
+        "morning": {
+          "first": "Hosea 10",
+          "second": "Acts 28"
+        },
+        "evening": {
+          "first": "Hosea 11",
+          "second": "Jude"
+        }
+      },
+      "31": {
+        "morning": {
+          "first": "Hosea 12",
+          "second": "Matthew 1"
+        },
+        "evening": {
+          "first": "Hosea 13",
+          "second": "Romans 1"
+        }
+      }
+    },
+    "september": {
+      "1": {
+        "morning": {
+          "first": "Hosea 14",
+          "second": "Matthew 2"
+        },
+        "evening": {
+          "first": "Joel 1",
+          "second": "Romans 2"
+        },
+        "feast": "Giles Abbot & Conf."
+      },
+      "2": {
+        "morning": {
+          "first": "Joel 2",
+          "second": "Matthew 3"
+        },
+        "evening": {
+          "first": "Joel 3",
+          "second": "Romans 3"
+        }
+      },
+      "3": {
+        "morning": {
+          "first": "Amos 1",
+          "second": "Matthew 4"
+        },
+        "evening": {
+          "first": "Amos 2",
+          "second": "Romans 4"
+        }
+      },
+      "4": {
+        "morning": {
+          "first": "Amos 3",
+          "second": "Matthew 5"
+        },
+        "evening": {
+          "first": "Amos 4",
+          "second": "Romans 5"
+        }
+      },
+      "5": {
+        "morning": {
+          "first": "Amos 5",
+          "second": "Matthew 6"
+        },
+        "evening": {
+          "first": "Amos 6",
+          "second": "Romans 6"
+        }
+      },
+      "6": {
+        "morning": {
+          "first": "Amos 7",
+          "second": "Matthew 7"
+        },
+        "evening": {
+          "first": "Amos 8",
+          "second": "Romans 7"
+        }
+      },
+      "7": {
+        "morning": {
+          "first": "Amos 9",
+          "second": "Matthew 8"
+        },
+        "evening": {
+          "first": "Obadiah",
+          "second": "Romans 8"
+        },
+        "feast": "Enurchus B. of Orleans"
+      },
+      "8": {
+        "morning": {
+          "first": "Jonah 1",
+          "second": "Matthew 9"
+        },
+        "evening": {
+          "first": "Jonah 2; Jonah 3",
+          "second": "Romans 9"
+        },
+        "feast": "Nativ. of ye. Bl. Virg. Mary"
+      },
+      "9": {
+        "morning": {
+          "first": "Jonah 4",
+          "second": "Matthew 10"
+        },
+        "evening": {
+          "first": "Micah 1",
+          "second": "Romans 10"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "Micah 2",
+          "second": "Matthew 11"
+        },
+        "evening": {
+          "first": "Micah 3",
+          "second": "Romans 11"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": "Micah 4",
+          "second": "Matthew 12"
+        },
+        "evening": {
+          "first": "Micah 5",
+          "second": "Romans 12"
+        }
+      },
+      "12": {
+        "morning": {
+          "first": "Micah 6",
+          "second": "Matthew 13"
+        },
+        "evening": {
+          "first": "Micah 7",
+          "second": "Romans 13"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "Nahum 1",
+          "second": "Matthew 14"
+        },
+        "evening": {
+          "first": "Nahum 2",
+          "second": "Romans 14"
+        }
+      },
+      "14": {
+        "morning": {
+          "first": "Nahum 3",
+          "second": "Matthew 15"
+        },
+        "evening": {
+          "first": "Habbakuk 1",
+          "second": "Romans 15"
+        },
+        "feast": "Holy crosse day"
+      },
+      "15": {
+        "morning": {
+          "first": "Habbakuk 2",
+          "second": "Matthew 16"
+        },
+        "evening": {
+          "first": "Habbakuk 3",
+          "second": "Romans 16"
+        }
+      },
+      "16": {
+        "morning": {
+          "first": "Zephaniah 1",
+          "second": "Matthew 17"
+        },
+        "evening": {
+          "first": "Zephaniah 2",
+          "second": "1 Corinthians 1"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "Zephaniah 3",
+          "second": "Matthew 18"
+        },
+        "evening": {
+          "first": "Haggai 1",
+          "second": "1 Corinthians 2"
+        },
+        "feast": "Lambert B. & M."
+      },
+      "18": {
+        "morning": {
+          "first": "Haggai 2",
+          "second": "Matthew 19"
+        },
+        "evening": {
+          "first": "Zechariah 1",
+          "second": "1 Corinthians 3"
+        }
+      },
+      "19": {
+        "morning": {
+          "first": "Zechariah 2; Zechariah 3",
+          "second": "Matthew 20"
+        },
+        "evening": {
+          "first": "Zechariah 4;Zechariah 5",
+          "second": "1 Corinthians 4"
+        }
+      },
+      "20": {
+        "morning": {
+          "first": "Zechariah 6",
+          "second": "Matthew 21"
+        },
+        "evening": {
+          "first": "Zechariah 7",
+          "second": "1 Corinthians 5"
+        },
+        "feast": "Fast"
+      },
+      "21": {
+        "morning": {
+          "first": null,
+          "second": "Matthew 22"
+        },
+        "evening": {
+          "first": null,
+          "second": "1 Corinthians 6"
+        },
+        "feast": "S. Mat. Ap. Evang. & M."
+      },
+      "22": {
+        "morning": {
+          "first": "Zechariah 8",
+          "second": "Matthew 23"
+        },
+        "evening": {
+          "first": "Zechariah 9",
+          "second": "1 Corinthians 7"
+        }
+      },
+      "23": {
+        "morning": {
+          "first": "Zechariah 10",
+          "second": "Matthew 24"
+        },
+        "evening": {
+          "first": "Zechariah 11",
+          "second": "1 Corinthians 8"
+        }
+      },
+      "24": {
+        "morning": {
+          "first": "Zechariah 12",
+          "second": "Matthew 25"
+        },
+        "evening": {
+          "first": "Zechariah 13",
+          "second": "1 Corinthians 9"
+        }
+      },
+      "25": {
+        "morning": {
+          "first": "Zechariah 14",
+          "second": "Matthew 26"
+        },
+        "evening": {
+          "first": "Malachi 1",
+          "second": "1 Corinthians 10"
+        }
+      },
+      "26": {
+        "morning": {
+          "first": "Malachi 2",
+          "second": "Matthew 27"
+        },
+        "evening": {
+          "first": "Malachi 3",
+          "second": "1 Corinthians 11"
+        },
+        "feast": "S. Cypr: Ar. B. of Carth & M."
+      },
+      "27": {
+        "morning": {
+          "first": "Malachi 4",
+          "second": "Matthew 28"
+        },
+        "evening": {
+          "first": "Tobit 1",
+          "second": "1 Corinthians 12"
+        }
+      },
+      "28": {
+        "morning": {
+          "first": "Tobit 2",
+          "second": "Mark 1"
+        },
+        "evening": {
+          "first": "Tobit 3",
+          "second": "Matthew 13"
+        }
+      },
+      "29": {
+        "morning": {
+          "first": null,
+          "second": "Mark 2"
+        },
+        "evening": {
+          "first": null,
+          "second": "1 Corinthians 14"
+        },
+        "feast": "S. Mich. & all Angels"
+      },
+      "30": {
+        "morning": {
+          "first": "Tobit 4",
+          "second": "Mark 3"
+        },
+        "evening": {
+          "first": "Tobit 6",
+          "second": "1 Corinthians 15"
+        },
+        "feast": "S. Hierome Pr. Conf. & Doct."
+      }
+    },
+    "october": {
+      "1": {
+        "morning": {
+          "first": "Tobit 7",
+          "second": "Mark 4"
+        },
+        "evening": {
+          "first": "Tobit 8",
+          "second": "1 Corinthians 16"
+        },
+        "feast": "Remigius B. of Rhemes"
+      },
+      "2": {
+        "morning": {
+          "first": "Tobit 9",
+          "second": "Mark 5"
+        },
+        "evening": {
+          "first": "Tobit 10",
+          "second": "2 Corinthians 1"
+        }
+      },
+      "3": {
+        "morning": {
+          "first": "Tobit 11",
+          "second": "Mark 6"
+        },
+        "evening": {
+          "first": "Tobit 12",
+          "second": "2 Corinthians 2"
+        }
+      },
+      "4": {
+        "morning": {
+          "first": "Tobit 13",
+          "second": "Mark 7"
+        },
+        "evening": {
+          "first": "Tobit 13",
+          "second": "2 Corinthians 3"
+        }
+      },
+      "5": {
+        "morning": {
+          "first": "Judith 1",
+          "second": "Mark 8"
+        },
+        "evening": {
+          "first": "Judith 2",
+          "second": "2 Corinthians 4"
+        }
+      },
+      "6": {
+        "morning": {
+          "first": "Judith 3",
+          "second": "Mark 9"
+        },
+        "evening": {
+          "first": "Judith 4",
+          "second": "2 Corinthians 5"
+        },
+        "feast": "Faith Virg. & M."
+      },
+      "7": {
+        "morning": {
+          "first": "Judith 5",
+          "second": "Mark 10"
+        },
+        "evening": {
+          "first": "Judith 6",
+          "second": "2 Corinthians 6"
+        }
+      },
+      "8": {
+        "morning": {
+          "first": "Judith 7",
+          "second": "Mark 11"
+        },
+        "evening": {
+          "first": "Judith 8",
+          "second": "2 Corinthians 7"
+        }
+      },
+      "9": {
+        "morning": {
+          "first": "Judith 9",
+          "second": "Mark 12"
+        },
+        "evening": {
+          "first": "Judith 10",
+          "second": "2 Corinthians 8"
+        },
+        "feast": "S. Denys Areop. B. & M."
+      },
+      "10": {
+        "morning": {
+          "first": "Judith 11",
+          "second": "Mark 13"
+        },
+        "evening": {
+          "first": "Judith 12",
+          "second": "2 Corinthians 9"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": "Judith 13",
+          "second": "Mark 14"
+        },
+        "evening": {
+          "first": "Judith 14",
+          "second": "2 Corinthians 10"
+        }
+      },
+      "12": {
+        "morning": {
+          "first": "Judith 15",
+          "second": "Mark 15"
+        },
+        "evening": {
+          "first": "Judith 16",
+          "second": "2 Corinthians 11"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "Wisdom 1",
+          "second": "Mark 16"
+        },
+        "evening": {
+          "first": "Wisdom 2",
+          "second": "2 Corinthians 12"
+        },
+        "feast": "Transl. of K. Edward Conf."
+      },
+      "14": {
+        "morning": {
+          "first": "Wisdom 3",
+          "second": "Luke 1:1-39"
+        },
+        "evening": {
+          "first": "Wisdom 4",
+          "second": "2 Corinthians 13"
+        }
+      },
+      "15": {
+        "morning": {
+          "first": "Wisdom 4",
+          "second": "Luke 1:39-80"
+        },
+        "evening": {
+          "first": "Wisdom 5",
+          "second": "Galatians 1"
+        }
+      },
+      "16": {
+        "morning": {
+          "first": "Wisdom 7",
+          "second": "Luke 2"
+        },
+        "evening": {
+          "first": "Wisdom 8",
+          "second": "Galatians 2"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "Wisdom 9",
+          "second": "Luke 3"
+        },
+        "evening": {
+          "first": "Wisdom 10",
+          "second": "Galatians 3"
+        },
+        "feast": "Ethelrede Virg."
+      },
+      "18": {
+        "morning": {
+          "first": null,
+          "second": "Luke 4"
+        },
+        "evening": {
+          "first": null,
+          "second": "Galatians 4"
+        },
+        "feast": "S. Luke Evang."
+      },
+      "19": {
+        "morning": {
+          "first": "Wisdom 11",
+          "second": "Luke 5"
+        },
+        "evening": {
+          "first": "Wisdom 12",
+          "second": "Galatians 5"
+        }
+      },
+      "20": {
+        "morning": {
+          "first": "Wisdom 13",
+          "second": "Luke 6"
+        },
+        "evening": {
+          "first": "Wisdom 14",
+          "second": "Galatians 6"
+        }
+      },
+      "21": {
+        "morning": {
+          "first": "Wisdom 15",
+          "second": "Luke 7"
+        },
+        "evening": {
+          "first": "Wisdom 16",
+          "second": "Ephesians 1"
+        }
+      },
+      "22": {
+        "morning": {
+          "first": "Wisdom 17",
+          "second": "Luke 8"
+        },
+        "evening": {
+          "first": "Wisdom 18",
+          "second": "Ephesians 2"
+        }
+      },
+      "23": {
+        "morning": {
+          "first": "Wisdom 19",
+          "second": "Luke 9"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 1",
+          "second": "Ephesians 3"
+        }
+      },
+      "24": {
+        "morning": {
+          "first": "Ecclesiasticus 2",
+          "second": "Luke 10"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 3",
+          "second": "Ephesians 4"
+        }
+      },
+      "25": {
+        "morning": {
+          "first": "Ecclesiasticus 4",
+          "second": "Luke 11"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 5",
+          "second": "Ephesians 5"
+        },
+        "feast": "Crispine Mart."
+      },
+      "26": {
+        "morning": {
+          "first": "Ecclesiasticus 6",
+          "second": "Luke 12"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 7",
+          "second": "Ephesians 6"
+        }
+      },
+      "27": {
+        "morning": {
+          "first": "Ecclesiasticus 8",
+          "second": "Luke 13"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 9",
+          "second": "Philippians 1"
+        },
+        "feast": "Fast"
+      },
+      "28": {
+        "morning": {
+          "first": null,
+          "second": "Luke 14"
+        },
+        "evening": {
+          "first": null,
+          "second": "Philippians 2"
+        },
+        "feast": "S. Sim. & S. Jud. Ap. & M."
+      },
+      "29": {
+        "morning": {
+          "first": "Ecclesiasticus 10",
+          "second": "Luke 15"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 11",
+          "second": "Philippians 3"
+        }
+      },
+      "30": {
+        "morning": {
+          "first": "Ecclesiasticus 12",
+          "second": "Luke 16"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 13",
+          "second": "Philippians 4"
+        }
+      },
+      "31": {
+        "morning": {
+          "first": "Ecclesiasticus 14",
+          "second": "Luke 17"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 15",
+          "second": "Colossians 1"
+        },
+        "feast": "Fast"
+      }
+    },
+    "november": {
+      "1": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": null
+        },
+        "feast": "All Saints day."
+      },
+      "2": {
+        "morning": {
+          "first": "Ecclesiasticus 16",
+          "second": "Luke 18"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 17",
+          "second": "Colossians 2"
+        }
+      },
+      "3": {
+        "morning": {
+          "first": "Ecclesiasticus 18",
+          "second": "Luke 19"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 19",
+          "second": "Colossians 3"
+        }
+      },
+      "4": {
+        "morning": {
+          "first": "Ecclesiasticus 20",
+          "second": "Luke 20"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 21",
+          "second": "Colossians 4"
+        }
+      },
+      "5": {
+        "morning": {
+          "first": "Ecclesiasticus 22",
+          "second": "Luke 21"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 23",
+          "second": "1 Thessalonians 1"
+        },
+        "feast": "Papists Conspiracy"
+      },
+      "6": {
+        "morning": {
+          "first": "Ecclesiasticus 24",
+          "second": "Luke 22"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 25",
+          "second": "1 Thessalonians 2"
+        },
+        "feast": "Leonard Confess."
+      },
+      "7": {
+        "morning": {
+          "first": "Ecclesiasticus 27",
+          "second": "Luke 23"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 28",
+          "second": "1 Thessalonians 3"
+        }
+      },
+      "8": {
+        "morning": {
+          "first": "Ecclesiasticus 29",
+          "second": "Luke 24"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 30",
+          "second": "1 Thessalonians 4"
+        }
+      },
+      "9": {
+        "morning": {
+          "first": "Ecclesiasticus 31",
+          "second": "John 1"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 32",
+          "second": "1 Thessalonians 5"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "Ecclesiasticus 33",
+          "second": "John 2"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 34",
+          "second": "2 Thessalonians 1"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": "Ecclesiasticus 35",
+          "second": "John 3"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 36",
+          "second": "2 Thessalonians 2"
+        },
+        "feast": "S. Martin B. & Conf:"
+      },
+      "12": {
+        "morning": {
+          "first": "Ecclesiasticus 37",
+          "second": "John 4"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 38",
+          "second": "2 Thessalonians 3"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "Ecclesiasticus 39",
+          "second": "John 5"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 40",
+          "second": "1 Timothy 1"
+        },
+        "feast": "Britius Bishop"
+      },
+      "14": {
+        "morning": {
+          "first": "Ecclesiasticus 41",
+          "second": "John 6"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 42",
+          "second": "1 Timothy 2;1 Timothy 3"
+        }
+      },
+      "15": {
+        "morning": {
+          "first": "Ecclesiasticus 43",
+          "second": "John 7"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 44",
+          "second": "1 Timothy 4"
+        },
+        "feast": "Machutus B."
+      },
+      "16": {
+        "morning": {
+          "first": "Ecclesiasticus 45",
+          "second": "John 8"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 46",
+          "second": "1 Timothy 5"
+        }
+      },
+      "17": {
+        "morning": {
+          "first": "Ecclesiasticus 47",
+          "second": "John 9"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 48",
+          "second": "1 Timothy 6"
+        },
+        "feast": "Hugh B. of Lincoln."
+      },
+      "18": {
+        "morning": {
+          "first": "Ecclesiasticus 49",
+          "second": "John 10"
+        },
+        "evening": {
+          "first": "Ecclesiasticus 50",
+          "second": "2 Timothy 1"
+        }
+      },
+      "19": {
+        "morning": {
+          "first": "Ecclesiasticus 51",
+          "second": "John 11"
+        },
+        "evening": {
+          "first": "Baruch 1",
+          "second": "2 Timothy 2"
+        }
+      },
+      "20": {
+        "morning": {
+          "first": "Baruch 2",
+          "second": "John 12"
+        },
+        "evening": {
+          "first": "Baruch 3",
+          "second": "2 Timothy 3"
+        },
+        "feast": "Edmund K. & M."
+      },
+      "21": {
+        "morning": {
+          "first": "Baruch 4",
+          "second": "John 13"
+        },
+        "evening": {
+          "first": "Baruch 5",
+          "second": "2 Timothy 4"
+        }
+      },
+      "22": {
+        "morning": {
+          "first": "Baruch 6",
+          "second": "John 14"
+        },
+        "evening": {
+          "first": "Susanna 1",
+          "second": "Titus 1"
+        },
+        "feast": "Cecilia Virg. & M."
+      },
+      "23": {
+        "morning": {
+          "first": "Bel and the Dragon 1",
+          "second": "John 15"
+        },
+        "evening": {
+          "first": "Isaiah 1",
+          "second": "Titus 2;Titus 3"
+        },
+        "feast": "S.Clemt. 1. B of R. & M."
+      },
+      "24": {
+        "morning": {
+          "first": "Isaiah 2",
+          "second": "John 16"
+        },
+        "evening": {
+          "first": "Isaiah 3",
+          "second": "Philemon"
+        }
+      },
+      "25": {
+        "morning": {
+          "first": "Isaiah 4",
+          "second": "John 17"
+        },
+        "evening": {
+          "first": "Isaiah 5",
+          "second": "Hebrews 1"
+        },
+        "feast": "Catherine Virg. & M."
+      },
+      "26": {
+        "morning": {
+          "first": "Isaiah 6",
+          "second": "John 18"
+        },
+        "evening": {
+          "first": "Isaiah 7",
+          "second": "Hebrews 2"
+        }
+      },
+      "27": {
+        "morning": {
+          "first": "Isaiah 8",
+          "second": "John 19"
+        },
+        "evening": {
+          "first": "Isaiah 9",
+          "second": "Hebrews 3"
+        }
+      },
+      "28": {
+        "morning": {
+          "first": "Isaiah 10",
+          "second": "John 20"
+        },
+        "evening": {
+          "first": "Isaiah 11",
+          "second": "Hebrews 4"
+        }
+      },
+      "29": {
+        "morning": {
+          "first": "Isaiah 12",
+          "second": "John 21"
+        },
+        "evening": {
+          "first": "Isaiah 13",
+          "second": "Hebrews 5"
+        },
+        "feast": "Fast"
+      },
+      "30": {
+        "morning": {
+          "first": null,
+          "second": "Acts 1"
+        },
+        "evening": {
+          "first": null,
+          "second": "Hebrews 6"
+        },
+        "feast": "S. Andr. Apost. & M."
+      }
+    },
+    "december": {
+      "1": {
+        "morning": {
+          "first": "Isaiah 14",
+          "second": "Acts 2"
+        },
+        "evening": {
+          "first": "Isaiah 15",
+          "second": "Hebrews 7"
+        }
+      },
+      "2": {
+        "morning": {
+          "first": "Isaiah 16",
+          "second": "Acts 3"
+        },
+        "evening": {
+          "first": "Isaiah 17",
+          "second": "Hebrews 8"
+        }
+      },
+      "3": {
+        "morning": {
+          "first": "Isaiah 18",
+          "second": "Acts 4"
+        },
+        "evening": {
+          "first": "Isaiah 19",
+          "second": "Hebrews 9"
+        }
+      },
+      "4": {
+        "morning": {
+          "first": "Isaiah 20;Isaiah 21",
+          "second": "Acts 5"
+        },
+        "evening": {
+          "first": "Isaiah 22",
+          "second": "Hebrews 10"
+        }
+      },
+      "5": {
+        "morning": {
+          "first": "Isaiah 23",
+          "second": "Acts 6"
+        },
+        "evening": {
+          "first": "Isaiah 24",
+          "second": "Hebrews 11"
+        }
+      },
+      "6": {
+        "morning": {
+          "first": "Isaiah 25",
+          "second": "Acts 7:1-30"
+        },
+        "evening": {
+          "first": "Isaiah 26",
+          "second": "Hebrews 12"
+        },
+        "feast": "Nicholas B. of Myra in Lycia"
+      },
+      "7": {
+        "morning": {
+          "first": "Isaiah 27",
+          "second": "Acts 7:30-60"
+        },
+        "evening": {
+          "first": "Isaiah 28",
+          "second": "Hebrews 13"
+        }
+      },
+      "8": {
+        "morning": {
+          "first": "Isaiah 29",
+          "second": "Acts 8"
+        },
+        "evening": {
+          "first": "Isaiah 30",
+          "second": "James 1"
+        },
+        "feast": "Concep: of ye. Bl. V. Mary."
+      },
+      "9": {
+        "morning": {
+          "first": "Isaiah 31",
+          "second": "Acts 9"
+        },
+        "evening": {
+          "first": "Isaiah 32",
+          "second": "James 2"
+        }
+      },
+      "10": {
+        "morning": {
+          "first": "Isaiah 33",
+          "second": "Acts 10"
+        },
+        "evening": {
+          "first": "Isaiah 34",
+          "second": "James 3"
+        }
+      },
+      "11": {
+        "morning": {
+          "first": "Isaiah 35",
+          "second": "Acts 11"
+        },
+        "evening": {
+          "first": "Isaiah 36",
+          "second": "James 4"
+        }
+      },
+      "12": {
+        "morning": {
+          "first": "Isaiah 37",
+          "second": "Acts 12"
+        },
+        "evening": {
+          "first": "Isaiah 38",
+          "second": "James 5"
+        }
+      },
+      "13": {
+        "morning": {
+          "first": "Isaiah 39",
+          "second": "Acts 13"
+        },
+        "evening": {
+          "first": "Isaiah 40",
+          "second": "1 Peter 1"
+        },
+        "feast": "Lucie Virg. & M."
+      },
+      "14": {
+        "morning": {
+          "first": "Isaiah 41",
+          "second": "Acts 14"
+        },
+        "evening": {
+          "first": "Isaiah 42",
+          "second": "1 Peter 2"
+        }
+      },
+      "15": {
+        "morning": {
+          "first": "Isaiah 43",
+          "second": "Acts 15"
+        },
+        "evening": {
+          "first": "Isaiah 44",
+          "second": "1 Peter 3"
+        }
+      },
+      "16": {
+        "morning": {
+          "first": "Isaiah 45",
+          "second": "Acts 16"
+        },
+        "evening": {
+          "first": "Isaiah 46",
+          "second": "1 Peter 4"
+        },
+        "feast": "O Sapientia."
+      },
+      "17": {
+        "morning": {
+          "first": "Isaiah 47",
+          "second": "Acts 17"
+        },
+        "evening": {
+          "first": "Isaiah 48",
+          "second": "1 Peter 5"
+        }
+      },
+      "18": {
+        "morning": {
+          "first": "Isaiah 49",
+          "second": "Acts 18"
+        },
+        "evening": {
+          "first": "Isaiah 50",
+          "second": "2 Peter 1"
+        }
+      },
+      "19": {
+        "morning": {
+          "first": "Isaiah 51",
+          "second": "Acts 19"
+        },
+        "evening": {
+          "first": "Isaiah 52",
+          "second": "2 Peter 2"
+        }
+      },
+      "20": {
+        "morning": {
+          "first": "Isaiah 53",
+          "second": "Acts 20"
+        },
+        "evening": {
+          "first": "Isaiah 54",
+          "second": "2 Peter 3"
+        },
+        "feast": "Fast."
+      },
+      "21": {
+        "morning": {
+          "first": null,
+          "second": "Acts 21"
+        },
+        "evening": {
+          "first": null,
+          "second": "1 John 1"
+        },
+        "feast": "S Thomas Apost. & M."
+      },
+      "22": {
+        "morning": {
+          "first": "Isaiah 55",
+          "second": "Acts 22"
+        },
+        "evening": {
+          "first": "Isaiah 56",
+          "second": "1 John 2"
+        }
+      },
+      "23": {
+        "morning": {
+          "first": "Isaiah 57",
+          "second": "Acts 23"
+        },
+        "evening": {
+          "first": "Isaiah 58",
+          "second": "1 John 3"
+        }
+      },
+      "24": {
+        "morning": {
+          "first": "Isaiah 59",
+          "second": "Acts 24"
+        },
+        "evening": {
+          "first": "Isaiah 60",
+          "second": "1 John 4"
+        },
+        "feast": "Fast"
+      },
+      "25": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": null
+        },
+        "feast": "Christmas day."
+      },
+      "26": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": null
+        },
+        "feast": "S. Steph. ye. first Mart."
+      },
+      "27": {
+        "morning": {
+          "first": null,
+          "second": null
+        },
+        "evening": {
+          "first": null,
+          "second": null
+        },
+        "feast": "S. John Apost. & Evang."
+      },
+      "28": {
+        "morning": {
+          "first": null,
+          "second": "Acts 25"
+        },
+        "evening": {
+          "first": null,
+          "second": "1 John 5"
+        },
+        "feast": "Innocents day."
+      },
+      "29": {
+        "morning": {
+          "first": "Isaiah 61",
+          "second": "Acts 26"
+        },
+        "evening": {
+          "first": "Isaiah 62",
+          "second": "2 John"
+        }
+      },
+      "30": {
+        "morning": {
+          "first": "Isaiah 63",
+          "second": "Acts 27"
+        },
+        "evening": {
+          "first": "Isaiah 64",
+          "second": "3 John"
+        }
+      },
+      "31": {
+        "morning": {
+          "first": "Isaiah 65",
+          "second": "Acts 28"
+        },
+        "evening": {
+          "first": "Isaiah 66",
+          "second": "Jude"
+        },
+        "feast": "Silvester B. of Rome."
+      }
+    }
+  }
+}

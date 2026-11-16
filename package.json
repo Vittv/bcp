@@ -51,6 +51,7 @@
     "check:guard": "bun scripts/check-webview-guard.ts",
     "check:changelog": "bun scripts/check-changelog-sync.ts",
     "build:changelog": "bun scripts/build-changelog.ts",
+    "check:bcp1662": "bun scripts/check-bcp1662-vendor.ts",
     "check:release": "bun scripts/check-release.ts"
   }
 }

@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "edition": "1662",
+    "title": "1662 Book of Common Prayer — Proper Psalms on Certain Days",
+    "description": "Proper Psalms appointed for Mattins and Evensong on certain days (1662).",
+    "sources": [
+      {
+        "role": "primary-witness",
+        "ref": "Internet Archive bookofcommonpray00chur_14 (1669, Griffiths 1669/1)",
+        "url": "https://archive.org/details/bookofcommonpray00chur_14",
+        "note": "Public-domain primary witness consulted for corroboration where readable."
+      },
+      {
+        "role": "readability-reference",
+        "ref": "Linda Howell, 1662 BCP — Proper Psalms on Certain Days",
+        "url": "https://www.eskimo.com/~lhowell/bcp1662/info/proper_psalms.html",
+        "note": "Readable reference used to compile entries. Terms/reuse status not explicitly clear; treated as readability/cross-check aid pending image-level verification against PD witnesses."
+      }
+    ],
+    "compiled": "2026-11-16",
+    "caveats": [
+      "Compiled from readability reference and cross-checked for consistency with known 1662 form; requires image-level verification against PD witness page images."
+    ]
+  },
+  "days": [
+    { "name": "Christmas Day", "mattins": [19, 45, 85], "evensong": [89, 110, 132] },
+    { "name": "Ash Wednesday", "mattins": [6, 32, 38], "evensong": [102, 130, 143] },
+    { "name": "Good Friday", "mattins": [22, 40, 54], "evensong": [69, 88] },
+    { "name": "Easter Day", "mattins": [2, 57, 111], "evensong": [113, 114, 118] },
+    { "name": "Ascension Day", "mattins": [8, 15, 21], "evensong": [24, 47, 108] },
+    { "name": "Whitsunday", "mattins": [48, 68], "evensong": [104, 145] }
+  ]
+}

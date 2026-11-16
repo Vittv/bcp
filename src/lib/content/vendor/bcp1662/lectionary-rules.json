@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "edition": "1662",
+    "title": "1662 Book of Common Prayer — Lectionary Rules and Notes (Daily Office / Lessons)",
+    "description": "Key rules affecting appointment of Psalms and Lessons in the 1662 Daily Office, compiled for vendoring/reference.",
+    "sources": [
+      {
+        "role": "primary-witness",
+        "ref": "Internet Archive bookofcommonpray00chur_14 (1669, Griffiths 1669/1)",
+        "url": "https://archive.org/details/bookofcommonpray00chur_14",
+        "note": "Public-domain primary witness consulted; rules summarized/normalized from readable extraction and cross-checks. Exact wording and page refs to be pinned by image verification."
+      },
+      {
+        "role": "readability-reference",
+        "ref": "Linda Howell, 1662 BCP — The Order how the rest of holy Scripture is appointed to be read",
+        "url": "https://www.eskimo.com/~lhowell/bcp1662/info/reading_script.html",
+        "note": "Readable reference for rule text/meaning. Terms/reuse status not explicitly clear; treated as readability/cross-check aid pending image-level verification against PD witness."
+      },
+      {
+        "role": "readability-reference",
+        "ref": "Linda Howell, 1662 BCP — The Order how the Psalter is appointed to be read",
+        "url": "https://www.eskimo.com/~lhowell/bcp1662/info/reading_psalt.html",
+        "note": "Readable reference for psalter appointment rule. Treated as readability/cross-check aid pending verification."
+      }
+    ],
+    "compiled": "2026-11-16",
+    "caveats": [
+      "Rules are normalized summaries/structured captures for implementation guidance; verify exact wording and completeness against PD witness page images.",
+      "Not exhaustive of all rubrics in the 1662 BCP; focused on lectionary/psalm appointment behavior."
+    ]
+  },
+  "rules": [
+    {
+      "id": "ot-nt-appointment",
+      "summary": "The Old Testament is appointed for First Lessons at Morning and Evening Prayer so that most is read once each year as in the Calendar. The New Testament is appointed for Second Lessons and read in order twice each year (morning and evening), besides Epistles and Gospels; only certain lessons are appointed from the Apocalypse."
+    },
+    {
+      "id": "calendar-and-proper-lessons",
+      "summary": "To know what Lessons are read each day, consult the day of the month in the Calendar for chapters/portions at Morning and Evening Prayer, except movable feasts (not in the Calendar) and immovable days where a blank is left in the lesson columns; Proper Lessons for those days are found in the Table of Proper Lessons."
+    },
+    {
+      "id": "proper-overrides-ordinary",
+      "summary": "Whensoever Proper Psalms or Lessons are appointed, the Psalms and Lessons of ordinary course appointed in the Psalter and Calendar (if different) shall be omitted for that time."
+    },
+    {
+      "id": "sunday-lessons-on-holy-days",
+      "summary": "If a Holy-day with Proper Lessons falls on a Sunday that is the first Sunday in Advent, Easter Day, Whitsunday, or Trinity Sunday, the Lessons appointed for such Sunday shall be read. If it falls on any other Sunday, the Lessons appointed either for the Sunday or for the Holy-day may be read at the discretion of the minister."
+    },
+    {
+      "id": "collect-epistle-gospel-week",
+      "summary": "The Collect, Epistle, and Gospel appointed for the Sunday shall serve all the week after, where it is not in this Book otherwise ordered."
+    },
+    {
+      "id": "psalter-monthly-cycle",
+      "summary": "The Psalter is appointed to be read through once every month as appointed for Morning and Evening Prayer. In months with 31 days, the same Psalms appointed for the 30th day are read again on the 31st so the Psalter may begin again on the first day of the next month. In February, it is read only to the 28th or 29th day as appointed."
+    },
+    {
+      "id": "trinity-sundays-overflow-note",
+      "summary": "1662 practice includes provision for varying numbers of Sundays after Epiphany/Trinity; where fewer or more Sundays occur, lessons from omitted/provided Sundays are used according to the 1662 tables/rules (e.g. use of Sundays after Epiphany lessons when needed; the Twenty-seventh Sunday after Trinity lessons are used on the Sunday next before Advent when applicable). Confirm exact application against PD witness tables/rules."
+    }
+  ]
+}
