@@ -18,7 +18,7 @@ import {
   loadScriptureBook,
   type ScriptureSettings,
 } from "./bible";
-import { getPassageFromDolRef, parseDolRef } from "./scripture";
+import { getBookMeta, getPassageFromDolRef, parseDolRef } from "./scripture";
 import type { KjvPassage } from "./types";
 import {
   BCP1662_PROPER_LESSONS,
@@ -151,7 +151,10 @@ export function getBcp1662LessonsForDate(
 export type Bcp1662ResolvedPassage = {
   ref: string;
   normalized: string;
+  /** First resolved passage (for convenience/backward compatibility). */
   passage: KjvPassage | null;
+  /** All resolved passages/ranges for the lesson ref. */
+  passages: KjvPassage[];
   error?: string;
 };
 
@@ -173,16 +176,25 @@ export type Bcp1662ResolvedOffice = {
  */
 export async function resolveBcp1662LessonToPassages(
   lesson: string | Bcp1662LessonPair | null | undefined,
-  parseAndLoad: (
-    ref: string,
-  ) => Promise<{ passage: KjvPassage | null; error?: string }>,
+  parseAndLoad: (ref: string) => Promise<{
+    passage: KjvPassage | null;
+    passages?: KjvPassage[];
+    error?: string;
+  }>,
 ): Promise<Bcp1662ResolvedPassage[]> {
   if (lesson == null) return [];
   if (typeof lesson === "string") {
     const normalized = normalizeBcp1662LessonRef(lesson);
     const out = await parseAndLoad(normalized);
+    const passages = out.passages ?? (out.passage ? [out.passage] : []);
     return [
-      { ref: lesson, normalized, passage: out.passage, error: out.error },
+      {
+        ref: lesson,
+        normalized,
+        passage: out.passage ?? passages[0] ?? null,
+        passages,
+        error: out.error,
+      },
     ];
   }
   const refs = [lesson.first, lesson.second].filter(
@@ -192,10 +204,12 @@ export async function resolveBcp1662LessonToPassages(
   for (const r of refs) {
     const normalized = normalizeBcp1662LessonRef(r);
     const out = await parseAndLoad(normalized);
+    const passages = out.passages ?? (out.passage ? [out.passage] : []);
     results.push({
       ref: r,
       normalized,
-      passage: out.passage,
+      passage: out.passage ?? passages[0] ?? null,
+      passages,
       error: out.error,
     });
   }
@@ -212,41 +226,94 @@ export const DEFAULT_BCP1662_SCRIPTURE_SETTINGS: ScriptureSettings = {
  * loaders (normalized refs). Best-effort: unparseable/unavailable refs return
  * empty passages with an error note.
  */
+function splitLessonSegments(ref: string): string[] {
+  // Split on semicolons (1662 tables use ";" to separate readings/ranges).
+  return ref
+    .split(";")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+async function resolveSegmentPassages(
+  segment: string,
+  settings: ScriptureSettings,
+): Promise<KjvPassage[]> {
+  const seg = segment.trim();
+  const parsed = parseDolRef(ALL_SCRIPTURE_BOOKS, seg);
+
+  // Single-chapter books may be referenced by book name only (e.g. "2 John", "Jude").
+  if (!parsed) {
+    const meta = getBookMeta(ALL_SCRIPTURE_BOOKS, seg);
+    if (meta && meta.chapters === 1) {
+      const book = await loadScriptureBook(settings, meta.abbrev);
+      if (!book) return [];
+      const chapterKey = Object.keys(book.verses)[0] ?? "1";
+      const verses = book.verses[chapterKey];
+      if (!verses) return [];
+      const nums = Object.keys(verses)
+        .map((k) => Number.parseInt(k, 10))
+        .sort((a, b) => a - b);
+      return [
+        {
+          book: book.book,
+          abbrev: book.abbrev,
+          testament: book.testament,
+          chapter: Number.parseInt(chapterKey, 10) || 1,
+          verses: nums.map((n) => ({ number: n, text: verses[String(n)] })),
+        },
+      ];
+    }
+    return [];
+  }
+
+  // Whole-chapter (or whole-book chapter) refs: "Genesis 1", "Ps 119"
+  const chapterOnly =
+    parsed.verseStart === undefined &&
+    parsed.verseEnd === undefined &&
+    parsed.endChapter === undefined &&
+    !/[:,–-]/.test(seg.replace(/^\d?\s?[A-Za-z.]+\s+\d*$/, (m) => m));
+
+  if (chapterOnly) {
+    const passage = await getPassageFromDolRef(
+      ALL_SCRIPTURE_BOOKS,
+      (b) => loadScriptureBook(settings, b),
+      seg,
+    );
+    return passage ? [passage] : [];
+  }
+
+  const passages = await getScripturePassagesFromDolRef(settings, seg);
+  if (passages.length > 0) return passages;
+
+  // Fallback: try direct single-range resolution.
+  const passage = await getPassageFromDolRef(
+    ALL_SCRIPTURE_BOOKS,
+    (b) => loadScriptureBook(settings, b),
+    seg,
+  );
+  return passage ? [passage] : [];
+}
+
 export async function resolveBcp1662LessonPassages(
   lesson: string | Bcp1662LessonPair | null | undefined,
   settings: ScriptureSettings = DEFAULT_BCP1662_SCRIPTURE_SETTINGS,
 ): Promise<Bcp1662ResolvedPassage[]> {
   return resolveBcp1662LessonToPassages(lesson, async (ref) => {
     try {
-      // Chapter-only refs (e.g. "Genesis 1") must resolve to the whole chapter;
-      // getScripturePassagesFromDolRef treats bare numbers as verse selectors.
-      const parsed = parseDolRef(ALL_SCRIPTURE_BOOKS, ref);
-      const chapterOnly =
-        parsed &&
-        parsed.verseStart === undefined &&
-        parsed.verseEnd === undefined &&
-        parsed.endChapter === undefined &&
-        !/[:;,–-]/.test(ref.replace(/^\d?\s?[A-Za-z.]+\s+\d+/, ""));
-      if (chapterOnly) {
-        const passage = await getPassageFromDolRef(
-          ALL_SCRIPTURE_BOOKS,
-          (b) => loadScriptureBook(settings, b),
-          ref,
-        );
-        return passage
-          ? { passage }
-          : { passage: null, error: "unresolved reference" };
+      const segments = splitLessonSegments(ref);
+      const all: KjvPassage[] = [];
+      for (const seg of segments) {
+        const ps = await resolveSegmentPassages(seg, settings);
+        all.push(...ps);
       }
-      const passages = await getScripturePassagesFromDolRef(settings, ref);
-      if (passages.length === 0) {
-        return { passage: null, error: "unresolved reference" };
+      if (all.length === 0) {
+        return { passage: null, passages: [], error: "unresolved reference" };
       }
-      // A single 1662 lesson ref may span ranges; return the first passage and
-      // let callers that need all ranges use the lower-level helper.
-      return { passage: passages[0] ?? null };
+      return { passage: all[0] ?? null, passages: all };
     } catch (e) {
       return {
         passage: null,
+        passages: [],
         error: e instanceof Error ? e.message : "failed to resolve",
       };
     }

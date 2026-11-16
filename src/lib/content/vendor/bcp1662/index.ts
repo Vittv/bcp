@@ -282,20 +282,16 @@ export function normalizeBcp1662LessonRef(ref: string): string {
   let s = ref.trim();
   // Common 1662/Apocrypha book-name aliases to forms recognized by scripture parsing.
   const bookAliases: Array<[RegExp, string]> = [
-    [/^Ecclesiasticus\b/i, "Sirach"],
-    [/^Ecclus\.?\b/i, "Sirach"],
-    [/^Wisdom of Solomon\b/i, "Wisdom"],
-    [/^Wisdom\b(?! of)/i, "Wisdom"],
-    [/^Canticles\b/i, "Song"],
-    [/^Solomon'?s Song\b/i, "Song"],
-    [/^Revelations?\b/i, "Rev"],
-    [/^Psalm\b/i, "Ps"],
+    [/\bEcclesiasticus\b/gi, "Sirach"],
+    [/\bEcclus\.?\b/gi, "Sirach"],
+    [/\bWisdom of Solomon\b/gi, "Wisdom"],
+    [/\bCanticles\b/gi, "Song"],
+    [/\bSolomon'?s Song\b/gi, "Song"],
+    [/\bRevelations?\b/gi, "Rev"],
+    [/\bPsalm\b/gi, "Ps"],
   ];
   for (const [re, rep] of bookAliases) {
-    if (re.test(s)) {
-      s = s.replace(re, rep);
-      break;
-    }
+    s = s.replace(re, rep);
   }
   // "to v. N" / "to verse N" / "unto v. N" meaning from start of chapter to verse N
   s = s.replace(/\bto\s+v\.?\s*(\d+)/gi, "1-$1");
