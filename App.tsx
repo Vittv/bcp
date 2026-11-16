@@ -2,6 +2,7 @@ import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Shell } from "./src/components/shell/Shell";
+import { EditionProvider } from "./src/context/EditionContext";
 import { OfficeSettingsProvider } from "./src/context/OfficeSettingsContext";
 import { ThemeProvider } from "./src/context/ThemeContext";
 import { TranslationProvider } from "./src/context/TranslationContext";
@@ -32,10 +33,12 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <TranslationProvider>
-          <OfficeSettingsProvider>
-            <Shell />
-            <StatusBar style="dark" />
-          </OfficeSettingsProvider>
+          <EditionProvider>
+            <OfficeSettingsProvider>
+              <Shell />
+              <StatusBar style="dark" />
+            </OfficeSettingsProvider>
+          </EditionProvider>
         </TranslationProvider>
       </ThemeProvider>
     </SafeAreaProvider>

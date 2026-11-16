@@ -144,6 +144,48 @@ export const sidebarStyles = defineThemedStyles({
     textTransform: "capitalize",
     opacity: 1,
   },
+  editionWrap: {
+    flexShrink: 0,
+    borderTopWidth: 1,
+    borderTopColor: "var(--border)",
+    backgroundColor: "var(--bg)",
+  },
+  editionList: {
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border-faint)",
+  },
+  editionItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  editionItemActive: {
+    backgroundColor: "var(--control-hover)",
+  },
+  editionItemText: {
+    fontFamily: CHROME_FONT,
+    fontSize: 12,
+    fontWeight: "500",
+    color: "var(--text-secondary)",
+  },
+  editionTrigger: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  editionTriggerText: {
+    fontFamily: CHROME_FONT,
+    fontSize: 12,
+    fontWeight: "500",
+    color: "var(--text-secondary)",
+    flexShrink: 1,
+  },
+  editionYearAccent: {
+    color: "var(--accent)",
+    fontWeight: "500",
+  },
   footer: {
     height: 24,
     flexShrink: 0,

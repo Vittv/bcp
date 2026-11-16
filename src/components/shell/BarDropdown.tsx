@@ -24,6 +24,7 @@ export function BarDropdown<T extends string>({
   accent = false,
   steadyWidth = false,
   plain = false,
+  placement = "down",
 }: {
   value: T;
   options: readonly DropdownOption<T>[];
@@ -40,6 +41,8 @@ export function BarDropdown<T extends string>({
   steadyWidth?: boolean;
   // read as plain bar text: no chip border or fill, just the label and chevron
   plain?: boolean;
+  // open below or above the trigger
+  placement?: "down" | "up";
 }) {
   const styles = useThemedStyles(barDropdownStyles);
   const barStyles = useThemedStyles(officeBarStyles);
@@ -78,7 +81,18 @@ export function BarDropdown<T extends string>({
         accessibilityState={{ expanded: open }}
         accessibilityLabel={accessibilityLabel}
       >
-        <Chevron direction={open ? "up" : "down"} size={5} />
+        <Chevron
+          direction={
+            open
+              ? placement === "up"
+                ? "down"
+                : "up"
+              : placement === "up"
+                ? "up"
+                : "down"
+          }
+          size={5}
+        />
         {steadyWidth ? (
           <View style={styles.labelWrap}>
             <Text style={[barStyles.toggleText, labelStyle, styles.labelGhost]}>
@@ -120,6 +134,7 @@ export function BarDropdown<T extends string>({
               styles.menu,
               { width: menuWidth },
               align === "start" ? { left: 0 } : { right: 0 },
+              placement === "up" ? { top: undefined, bottom: 30 } : null,
             ]}
           >
             {options.map((o) => {

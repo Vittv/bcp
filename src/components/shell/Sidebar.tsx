@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import {
   Pressable,
   type StyleProp,
@@ -7,10 +7,12 @@ import {
   type ViewStyle,
 } from "react-native";
 
+import { type BcpEdition, useEdition } from "../../context/EditionContext";
 import { IS_STANDALONE, IS_TAURI } from "../../lib/desktop";
 import { DISCORD_URL } from "../../lib/release";
 import { useThemedStyles, useThemeVar } from "../../lib/theme/themedStyles";
 import { useAppVersion } from "../../lib/version";
+import { Chevron } from "./Chevron";
 import {
   DiscordIcon,
   DownloadIcon,
@@ -34,6 +36,11 @@ import { sidebarStyles } from "./Sidebar.styles";
 
 export type { ModalType, PageId, SidebarDetail };
 export { REPO_URL };
+
+const EDITION_OPTIONS: readonly { id: BcpEdition; label: string }[] = [
+  { id: "1979", label: "1979 The Episcopal Church BCP" },
+  { id: "1662", label: "1662 Book of Common Prayer" },
+];
 
 // a toolbar pill: bordered, icon plus optional label, hover fill, no pressed
 // state; `subtle` drops border and plate while keeping the pill anatomy
@@ -113,10 +120,14 @@ export function Sidebar({
   const styles = useThemedStyles(sidebarStyles);
   const v = useThemeVar();
   const version = useAppVersion();
+  const { edition, setEdition } = useEdition();
+  const [editionOpen, setEditionOpen] = useState(false);
   const sections = SECTIONS.map((id) => ({
     id,
     items: NAV.filter((item) => (item.section ?? "") === id),
   }));
+  const currentEditionLabel =
+    EDITION_OPTIONS.find((o) => o.id === edition)?.label ?? edition;
 
   return (
     <View style={[styles.sidebar, noSelect]}>
@@ -227,6 +238,58 @@ export function Sidebar({
             </View>
           ))}
         </View>
+      </View>
+      <View style={styles.editionWrap}>
+        {editionOpen ? (
+          <View style={styles.editionList}>
+            {EDITION_OPTIONS.filter((o) => o.id !== edition).map((o) => {
+              const [year, ...rest] = o.label.split(" ");
+              return (
+                <Pressable
+                  key={o.id}
+                  style={({ hovered }) => [
+                    styles.editionItem,
+                    hovered && styles.editionItemActive,
+                  ]}
+                  onPress={() => {
+                    setEdition(o.id);
+                    setEditionOpen(false);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={o.label}
+                >
+                  <Text style={styles.editionItemText} numberOfLines={1}>
+                    <Text style={styles.editionYearAccent}>{year}</Text>
+                    {rest.length ? ` ${rest.join(" ")}` : ""}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+        <Pressable
+          style={({ hovered }) => [
+            styles.editionTrigger,
+            (hovered || editionOpen) && styles.editionItemActive,
+          ]}
+          onPress={() => setEditionOpen((v) => !v)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: editionOpen }}
+          accessibilityLabel={`Prayer book edition: ${currentEditionLabel}`}
+        >
+          <Text style={styles.editionTriggerText} numberOfLines={1}>
+            {(() => {
+              const [year, ...rest] = currentEditionLabel.split(" ");
+              return (
+                <>
+                  <Text style={styles.editionYearAccent}>{year}</Text>
+                  {rest.length ? ` ${rest.join(" ")}` : ""}
+                </>
+              );
+            })()}
+          </Text>
+          <Chevron direction={editionOpen ? "down" : "up"} size={5} />
+        </Pressable>
       </View>
       <View style={styles.footer}>
         <Text style={styles.footerText} numberOfLines={1}>

@@ -32,6 +32,7 @@ import {
   getBcp1662FixedCollects,
   getBcp1662HolyDayProperLessons,
   getBcp1662OfficeText,
+  getBcp1662ProperCollect,
   getBcp1662ProperPsalms,
   normalizeBcp1662LessonRef,
 } from "./vendor/bcp1662";
@@ -381,7 +382,7 @@ async function resolveSegmentPassages(
     parsed.verseStart === undefined &&
     parsed.verseEnd === undefined &&
     parsed.endChapter === undefined &&
-    !/[:,–-]/.test(seg.replace(/^\d?\s?[A-Za-z.]+\s+\d*$/, (m) => m));
+    !/[:,\-\u2013]/.test(seg.replace(/^\d?\s?[A-Za-z.]+\s+\d*$/, (m) => m));
 
   if (chapterOnly) {
     const passage = await getPassageFromDolRef(
@@ -485,13 +486,58 @@ export function composeBcp1662Office(
     source.observance.properSundayName;
   const psalmRefs = psalmRefsForResolved(resolved);
 
-  const openingNodes: Bcp1662OfficeNode[] = [
-    {
+  const openingNodes: Bcp1662OfficeNode[] = [];
+  const sentences = BCP1662_OFFICE_TEXT.common.openingSentences ?? [];
+  if (sentences.length > 0) {
+    openingNodes.push({
       kind: "rubric",
-      text: "Opening Sentences and Exhortation (full text to be vendored/expanded).",
-    },
-  ];
+      text: "Sentences of Scripture (one or more may be read).",
+    });
+    for (const s of sentences.slice(0, 3)) {
+      openingNodes.push({ kind: "text", text: s.text });
+    }
+  } else {
+    openingNodes.push({
+      kind: "rubric",
+      text: "Sentences of Scripture may be read here.",
+    });
+  }
+  if (BCP1662_OFFICE_TEXT.common.exhortation) {
+    openingNodes.push({ kind: "heading", text: "The Exhortation" });
+    openingNodes.push({
+      kind: "text",
+      text: BCP1662_OFFICE_TEXT.common.exhortation,
+    });
+  }
+  openingNodes.push({
+    kind: "heading",
+    text: "The General Confession",
+  });
+  openingNodes.push({
+    kind: "text",
+    text: BCP1662_OFFICE_TEXT.common.confession,
+  });
+  openingNodes.push({
+    kind: "heading",
+    text: "The Absolution",
+  });
+  openingNodes.push({
+    kind: "text",
+    text: BCP1662_OFFICE_TEXT.common.absolution_priest,
+  });
+  openingNodes.push({
+    kind: "heading",
+    text: "The Lord's Prayer",
+  });
+  openingNodes.push({
+    kind: "text",
+    text: BCP1662_OFFICE_TEXT.common.lords_prayer,
+  });
   if (officeDef?.openingVersicles?.length) {
+    openingNodes.push({
+      kind: "rubric",
+      text: "Then likewise he shall say,",
+    });
     for (const v of officeDef.openingVersicles) {
       openingNodes.push({ kind: "text", text: `${v.speaker}: ${v.text}` });
     }
@@ -499,11 +545,41 @@ export function composeBcp1662Office(
   if (officeDef?.invitatory?.rubric) {
     openingNodes.push({ kind: "rubric", text: officeDef.invitatory.rubric });
   }
-  openingNodes.push({
-    kind: "placeholder",
-    key: "invitatory",
-    text: "Venite, exultemus Domino (Psalm 95) / appointed invitatory text to be vendored.",
-  });
+  const isEasterAnthemsDay =
+    source.observance.holyDay === "Easter Day" ||
+    source.observance.holyDay === "Monday in Easter Week" ||
+    source.observance.holyDay === "Tuesday in Easter Week" ||
+    resolved.name === "Easter Day" ||
+    resolved.name === "Monday in Easter Week" ||
+    resolved.name === "Tuesday in Easter Week";
+
+  if (isEasterAnthemsDay && BCP1662_OFFICE_TEXT.common.easterAnthems) {
+    const ea = BCP1662_OFFICE_TEXT.common.easterAnthems;
+    if (ea.rubric) openingNodes.push({ kind: "rubric", text: ea.rubric });
+    openingNodes.push({ kind: "heading", text: ea.title });
+    openingNodes.push({ kind: "text", text: ea.text });
+  } else if (BCP1662_OFFICE_TEXT.common.venite) {
+    openingNodes.push({
+      kind: "heading",
+      text: BCP1662_OFFICE_TEXT.common.venite.title,
+    });
+    if (BCP1662_OFFICE_TEXT.common.venite.rubric) {
+      openingNodes.push({
+        kind: "rubric",
+        text: BCP1662_OFFICE_TEXT.common.venite.rubric,
+      });
+    }
+    openingNodes.push({
+      kind: "text",
+      text: BCP1662_OFFICE_TEXT.common.venite.text,
+    });
+  } else {
+    openingNodes.push({
+      kind: "placeholder",
+      key: "invitatory",
+      text: "Venite, exultemus Domino (Psalm 95) / appointed invitatory text to be vendored.",
+    });
+  }
   openingNodes.push({ kind: "rubric", text: "Then shall follow the Psalms." });
 
   const psalmNodes: Bcp1662OfficeNode[] =
@@ -599,33 +675,68 @@ export function composeBcp1662Office(
     kind: "text",
     text: BCP1662_OFFICE_TEXT.common.lords_prayer,
   });
-  prayersNodes.push({
-    kind: "placeholder",
-    key: "suffrages",
-    text: "Versicles and responses to be vendored/expanded.",
-  });
-
-  const collectNodes: Bcp1662OfficeNode[] = [
-    {
+  if (BCP1662_OFFICE_TEXT.common.suffrages?.length) {
+    prayersNodes.push({
+      kind: "rubric",
+      text: "Then the Minister standing up shall say,",
+    });
+    for (const v of BCP1662_OFFICE_TEXT.common.suffrages) {
+      prayersNodes.push({ kind: "text", text: `${v.speaker}: ${v.text}` });
+    }
+  } else {
+    prayersNodes.push({
       kind: "placeholder",
-      key: "collect-day",
-      text: "Collect of the day (Sunday/holy-day proper) to be resolved from vendored propers.",
-    },
-  ];
+      key: "suffrages",
+      text: "Versicles and responses to be vendored/expanded.",
+    });
+  }
+
+  const collectCandidates = [
+    resolved.name,
+    source.observance.holyDay,
+    source.observance.properSundayName,
+    title,
+  ].filter((n): n is string => typeof n === "string" && n.length > 0);
+  const collectOfDay = collectCandidates
+    .map((name) => {
+      const c = getBcp1662ProperCollect(name);
+      return c ? { name, text: c.text } : undefined;
+    })
+    .find((c) => c !== undefined);
+
+  const collectNodes: Bcp1662OfficeNode[] = collectOfDay
+    ? [
+        { kind: "heading", text: `The Collect of the Day` },
+        { kind: "rubric", text: collectOfDay.name },
+        { kind: "text", text: collectOfDay.text },
+      ]
+    : [
+        {
+          kind: "placeholder",
+          key: "collect-day",
+          text: "Collect of the day (Sunday/holy-day proper) to be resolved from vendored propers.",
+        },
+      ];
   for (const c of getBcp1662FixedCollects(office)) {
     collectNodes.push({ kind: "heading", text: c.title });
     collectNodes.push({ kind: "text", text: c.text });
   }
 
-  const closingNodes: Bcp1662OfficeNode[] = [
-    {
+  const closingNodes: Bcp1662OfficeNode[] = [];
+  if (BCP1662_OFFICE_TEXT.common.prayers?.length) {
+    for (const p of BCP1662_OFFICE_TEXT.common.prayers) {
+      closingNodes.push({ kind: "heading", text: p.title });
+      closingNodes.push({ kind: "text", text: p.text });
+    }
+  } else {
+    closingNodes.push({
       kind: "placeholder",
       key: "closing-prayers",
       text: "Additional prayers/anthem as appointed (to be vendored).",
-    },
-    { kind: "heading", text: "The Grace" },
-    { kind: "text", text: BCP1662_OFFICE_TEXT.common.grace },
-  ];
+    });
+  }
+  closingNodes.push({ kind: "heading", text: "The Grace" });
+  closingNodes.push({ kind: "text", text: BCP1662_OFFICE_TEXT.common.grace });
 
   const sections: Bcp1662ComposedSection[] = [
     { key: "opening", heading: "Opening", nodes: openingNodes },

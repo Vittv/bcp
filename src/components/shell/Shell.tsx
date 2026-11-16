@@ -15,6 +15,7 @@ import {
   setBiblePendingRef,
   type Testament,
 } from "../../context/BibleContext";
+import { useEdition } from "../../context/EditionContext";
 import {
   HistoryProvider,
   type HistorySnapshot,
@@ -37,6 +38,10 @@ import {
   upcomingSanctoraleEntry,
 } from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
+import {
+  type Bcp1662ComposedOffice,
+  composeBcp1662OfficeForDate,
+} from "../../lib/content/bcp1662";
 import { prefetchAllScripture } from "../../lib/content/prefetchScripture";
 import { psalterDayForDate } from "../../lib/content/psalterDays";
 import {
@@ -84,6 +89,7 @@ import { UpdateBanner } from "./UpdateBanner";
 
 export function Shell() {
   const { fontScale, uiScale, tokens } = useTheme();
+  const { edition } = useEdition();
   const styles = useThemedStyles(shellStyles);
   const v = useThemeVar();
 
@@ -307,6 +313,34 @@ export function Shell() {
     showRubrics,
     customization: customizationFor(officeId),
   });
+
+  const [bcp1662TodayDoc, setBcp1662TodayDoc] =
+    useState<Bcp1662ComposedOffice | null>(null);
+  const [bcp1662TodayLoading, setBcp1662TodayLoading] = useState(false);
+
+  useEffect(() => {
+    if (edition !== "1662" || page !== "today") return;
+    if (tab !== "morning" && tab !== "evening") {
+      setBcp1662TodayDoc(null);
+      setBcp1662TodayLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setBcp1662TodayLoading(true);
+    void composeBcp1662OfficeForDate(date, tab)
+      .then((doc) => {
+        if (!cancelled) setBcp1662TodayDoc(doc);
+      })
+      .catch(() => {
+        if (!cancelled) setBcp1662TodayDoc(null);
+      })
+      .finally(() => {
+        if (!cancelled) setBcp1662TodayLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [edition, page, tab, date]);
   // the app's season context (top bar and status bar) always reflects the
   // real current date, never a date a page happened to be scrolled to; only
   // the Today office body (`document` above) follows the stepped office date
@@ -414,6 +448,9 @@ export function Shell() {
     devotions,
     handleTabChange,
     document,
+    edition,
+    bcp1662TodayDoc,
+    bcp1662TodayLoading,
     showRubrics,
     showSpeakers,
     showSections,
@@ -616,7 +653,16 @@ export function Shell() {
                           season={season}
                           seasonColor={seasonColor}
                           slot={slot}
-                          officeName={document.officeName}
+                          officeName={
+                            edition === "1662" && page === "today"
+                              ? tab === "morning"
+                                ? "Morning Prayer"
+                                : tab === "evening"
+                                  ? "Evening Prayer"
+                                  : (bcp1662TodayDoc?.officeName ??
+                                    document.officeName)
+                              : document.officeName
+                          }
                           scrollPct={scrollPct}
                           reading={
                             isReferencePage(page)
