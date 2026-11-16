@@ -10,6 +10,9 @@ import properData from "./lectionary-proper.json";
 import properPsalmsData from "./proper-psalms.json";
 import psalterCycleData from "./psalter-cycle.json";
 import rulesData from "./lectionary-rules.json";
+import officeTextData from "./office-text/offices.json";
+import canticlesData from "./office-text/canticles.json";
+import fixedCollectsData from "./office-text/collects.json";
 
 export type Bcp1662Office = "morning" | "evening";
 
@@ -103,6 +106,81 @@ export const BCP1662_RULES =
     meta: { edition: string; title: string; compiled: string };
     rules: Bcp1662Rule[];
   };
+
+export type Bcp1662OfficeTextVersicle = {
+  speaker: string;
+  text: string;
+};
+
+export type Bcp1662OfficeTextOffice = {
+  id: "morning" | "evening";
+  name: string;
+  openingVersicles?: Bcp1662OfficeTextVersicle[];
+  invitatory?: {
+    default?: string;
+    options?: string[];
+    rubric?: string;
+  };
+  canticles?: {
+    afterFirst?: string[];
+    afterSecond?: string[];
+  };
+  preces?: Bcp1662OfficeTextVersicle[];
+};
+
+export const BCP1662_OFFICE_TEXT =
+  // SAFETY: vendored static 1662 office-text JSON (best-effort draft) matching the declared shape.
+  officeTextData as {
+    meta: { edition: string; title: string; status?: string };
+    common: {
+      confession: string;
+      absolution_priest: string;
+      lords_prayer: string;
+      apostles_creed: string;
+      grace: string;
+    };
+    offices: Bcp1662OfficeTextOffice[];
+  };
+
+export type Bcp1662Canticle = {
+  id: string;
+  title: string;
+  rubric?: string;
+  text: string;
+};
+
+export const BCP1662_CANTICLES =
+  // SAFETY: vendored static 1662 canticles JSON (best-effort draft) matching the declared shape.
+  canticlesData as {
+    meta: { edition: string; title: string; status?: string };
+    canticles: Bcp1662Canticle[];
+  };
+
+export type Bcp1662FixedCollect = {
+  id: string;
+  office: "morning" | "evening";
+  title: string;
+  text: string;
+};
+
+export const BCP1662_FIXED_COLLECTS =
+  // SAFETY: vendored static 1662 fixed collects JSON (best-effort draft) matching the declared shape.
+  fixedCollectsData as {
+    meta: { edition: string; title: string; status?: string };
+    collects: Bcp1662FixedCollect[];
+  };
+
+export function getBcp1662OfficeText(office: Bcp1662Office) {
+  return BCP1662_OFFICE_TEXT.offices.find((o) => o.id === office);
+}
+
+export function getBcp1662Canticle(id: string) {
+  return BCP1662_CANTICLES.canticles.find((c) => c.id === id);
+}
+
+export function getBcp1662FixedCollects(office: Bcp1662Office) {
+  return BCP1662_FIXED_COLLECTS.collects.filter((c) => c.office === office);
+}
 
 /** Look up the daily-calendar lessons for a civil month/day (1-based day). */
 export function getBcp1662DailyLessons(

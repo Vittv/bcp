@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "edition": "1662",
+    "title": "1662 Book of Common Prayer  -  Daily Offices fixed texts (best-effort, not witness-verified)",
+    "status": "draft-best-effort",
+    "sources": [
+      {
+        "role": "reference-text",
+        "ref": "Standard 1662 BCP Morning and Evening Prayer texts (public domain)",
+        "note": "Best-effort compilation for composition; not image-verified against a PD witness. Sentences/exhortation may be abbreviated or added later."
+      }
+    ],
+    "caveats": [
+      "Text not witness-verified. Opening sentences and full exhortation/rubrics to be expanded from PD witness as needed.",
+      "Collect of the day and proper material handled separately."
+    ]
+  },
+  "common": {
+    "confession": "Almighty and most merciful Father; We have erred, and strayed from thy ways like lost sheep. We have followed too much the devices and desires of our own hearts. We have offended against thy holy laws. We have left undone those things which we ought to have done; And we have done those things which we ought not to have done; And there is no health in us. But thou, O Lord, have mercy upon us, miserable offenders. Spare thou them, O God, which confess their faults. Restore thou them that are penitent; According to thy promises declared unto mankind in Christ Jesu our Lord. And grant, O most merciful Father, for his sake; That we may hereafter live a godly, righteous, and sober life, To the glory of thy holy Name. Amen.",
+    "absolution_priest": "Almighty God, the Father of our Lord Jesus Christ, who desireth not the death of a sinner, but rather that he may turn from his wickedness, and live; and hath given power, and commandment, to his Ministers, to declare and pronounce to his people, being penitent, the Absolution and Remission of their sins: He pardoneth and absolveth all them that truly repent, and unfeignedly believe his holy Gospel. Wherefore let us beseech him to grant us true repentance, and his Holy Spirit, that those things may please him, which we do at this present; and that the rest of our life hereafter may be pure, and holy; so that at the last we may come to his eternal joy; through Jesus Christ our Lord. Amen.",
+    "lords_prayer": "Our Father, which art in heaven, Hallowed be thy Name. Thy kingdom come. Thy will be done in earth, As it is in heaven. Give us this day our daily bread. And forgive us our trespasses, As we forgive them that trespass against us. And lead us not into temptation; But deliver us from evil. Amen.",
+    "apostles_creed": "I believe in God the Father Almighty, Maker of heaven and earth: And in Jesus Christ his only Son our Lord, Who was conceived by the Holy Ghost, Born of the Virgin Mary, Suffered under Pontius Pilate, Was crucified, dead, and buried: He descended into hell; The third day he rose again from the dead; He ascended into heaven, And sitteth on the right hand of God the Father Almighty; From thence he shall come to judge the quick and the dead. I believe in the Holy Ghost; The holy Catholick Church; The Communion of Saints; The Forgiveness of sins; The Resurrection of the body, And the Life everlasting. Amen.",
+    "grace": "The grace of our Lord Jesus Christ, and the love of God, and the fellowship of the Holy Ghost, be with us all evermore. Amen."
+  },
+  "offices": [
+    {
+      "id": "morning",
+      "name": "The Order for Morning Prayer, Daily throughout the Year",
+      "openingVersicles": [
+        { "speaker": "minister", "text": "O Lord, open thou our lips." },
+        { "speaker": "people", "text": "And our mouth shall shew forth thy praise." },
+        { "speaker": "minister", "text": "O God, make speed to save us." },
+        { "speaker": "people", "text": "O Lord, make haste to help us." },
+        { "speaker": "all", "text": "Glory be to the Father, and to the Son, and to the Holy Ghost;" },
+        { "speaker": "people", "text": "As it was in the beginning, is now, and ever shall be, world without end. Amen." },
+        { "speaker": "minister", "text": "Praise ye the Lord." },
+        { "speaker": "people", "text": "The Lord's Name be praised." }
+      ],
+      "invitatory": {
+        "default": "venite",
+        "options": ["venite", "jubilate"],
+        "rubric": "Then shall be said or sung this Psalm following: Except on Easter Day, upon which another Anthem is appointed; and on the nineteenth day of every month it is not to be read here, but in the ordinary course of the Psalms."
+      },
+      "canticles": {
+        "afterFirst": ["te-deum", "benedicite"],
+        "afterSecond": ["benedictus", "jubilate"]
+      },
+      "preces": [
+        { "speaker": "minister", "text": "The Lord be with you." },
+        { "speaker": "people", "text": "And with thy spirit." },
+        { "speaker": "minister", "text": "Let us pray." },
+        { "speaker": "all", "text": "Lord, have mercy upon us. Christ, have mercy upon us. Lord, have mercy upon us." }
+      ]
+    },
+    {
+      "id": "evening",
+      "name": "The Order for Evening Prayer, Daily throughout the Year",
+      "openingVersicles": [
+        { "speaker": "minister", "text": "O Lord, open thou our lips." },
+        { "speaker": "people", "text": "And our mouth shall shew forth thy praise." },
+        { "speaker": "minister", "text": "O God, make speed to save us." },
+        { "speaker": "people", "text": "O Lord, make haste to help us." },
+        { "speaker": "all", "text": "Glory be to the Father, and to the Son, and to the Holy Ghost;" },
+        { "speaker": "people", "text": "As it was in the beginning, is now, and ever shall be, world without end. Amen." },
+        { "speaker": "minister", "text": "Praise ye the Lord." },
+        { "speaker": "people", "text": "The Lord's Name be praised." }
+      ],
+      "canticles": {
+        "afterFirst": ["magnificat"],
+        "afterSecond": ["nunc-dimittis"]
+      },
+      "preces": [
+        { "speaker": "minister", "text": "The Lord be with you." },
+        { "speaker": "people", "text": "And with thy spirit." },
+        { "speaker": "minister", "text": "Let us pray." },
+        { "speaker": "all", "text": "Lord, have mercy upon us. Christ, have mercy upon us. Lord, have mercy upon us." }
+      ]
+    }
+  ]
+}
