@@ -230,7 +230,9 @@ export function SanctoraleCard({
             <View style={styles.group}>
               <Text style={heading}>Collect of the Day</Text>
               {collectTitle ? (
-                <Text style={styles.collectTitle}>{collectTitle}</Text>
+                <Text style={[subheading, styles.collectTitleAsSubheading]}>
+                  {collectTitle}
+                </Text>
               ) : null}
               {[traditional, contemporary].map((c) => (
                 <View key={c.rite} style={styles.collect}>

@@ -61,26 +61,18 @@ export const sanctoraleCardStyles = defineThemedStyles({
   collect: {
     marginBottom: 20,
   },
-  // the collect's own title leads the block as a serif heading; ink
-  // stays in the paper colour so it reads as text, not a link
-  collectTitle: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 16,
-    lineHeight: 24,
-    color: "var(--text)",
-    marginTop: 8,
+  // the collect's own title sits under the section rule as a subheading
+  collectTitleAsSubheading: {
+    marginTop: 0,
     marginBottom: 12,
   },
-  // the rite markers stay small and muted so "Collect of the Day" leads
-  // the block; the red belongs to the section heading
+  // rite markers styled like the Collects page, scaled down to fit the card
   collectRite: {
     fontFamily: CHROME_FONT,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-    color: "var(--text-secondary)",
-    marginBottom: 4,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "var(--accent)",
+    marginBottom: 6,
   },
   collectText: {
     fontFamily: SERIF_FONT,
