@@ -11,6 +11,7 @@ import {
   bcp1662MoveableDays,
   resolveBcp1662Observance,
 } from "../calendar/bcp1662";
+import { sundayOnOrBefore } from "../calendar/date";
 import type { CalendarDate } from "../calendar/types";
 import {
   ALL_SCRIPTURE_BOOKS,
@@ -712,16 +713,30 @@ export function composeBcp1662Office(
     source.observance.properSundayName,
     title,
   ].filter((n): n is string => typeof n === "string" && n.length > 0);
-  const collectOfDay = collectCandidates
+  let collectOfDay = collectCandidates
     .map((name) => {
       const c = getBcp1662ProperCollect(name);
       return c ? { name, text: c.text } : undefined;
     })
     .find((c) => c !== undefined);
+  if (!collectOfDay) {
+    const prevSunday = sundayOnOrBefore(date);
+    const sundayObs = resolveBcp1662Observance(prevSunday);
+    const sundayCandidates = [
+      sundayObs.holyDay,
+      sundayObs.properSundayName,
+    ].filter((n): n is string => typeof n === "string" && n.length > 0);
+    collectOfDay = sundayCandidates
+      .map((name) => {
+        const c = getBcp1662ProperCollect(name);
+        return c ? { name, text: c.text } : undefined;
+      })
+      .find((c) => c !== undefined);
+  }
 
   const collectNodes: Bcp1662OfficeNode[] = collectOfDay
     ? [
-        { kind: "heading", text: `The Collect of the Day` },
+        { kind: "heading", text: "The Collect of the Day" },
         { kind: "rubric", text: collectOfDay.name },
         { kind: "text", text: collectOfDay.text },
       ]
