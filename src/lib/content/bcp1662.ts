@@ -246,7 +246,7 @@ export type Bcp1662OfficeSectionKey =
 export type Bcp1662OfficeNode =
   | { kind: "heading"; text: string }
   | { kind: "rubric"; text: string }
-  | { kind: "text"; text: string }
+  | { kind: "text"; text: string; speaker?: string }
   | {
       kind: "psalm";
       refs: string[];
@@ -490,63 +490,91 @@ export function composeBcp1662Office(
 
   const openingNodes: Bcp1662OfficeNode[] = [];
   const sentences = BCP1662_OFFICE_TEXT.common.openingSentences ?? [];
+  openingNodes.push({
+    kind: "rubric",
+    text:
+      officeDef?.openingRubric ??
+      "At the beginning of Morning Prayer the Minister shall read with a loud voice some one or more of these Sentences of the Scriptures that follow. And then he shall say that which is written after the said Sentences.",
+  });
   if (sentences.length > 0) {
-    openingNodes.push({
-      kind: "rubric",
-      text: "Sentences of Scripture (one or more may be read).",
-    });
-    for (const s of sentences.slice(0, 3)) {
-      openingNodes.push({ kind: "text", text: s.text });
+    for (const sentence of sentences) {
+      openingNodes.push({ kind: "text", text: sentence.text });
     }
-  } else {
-    openingNodes.push({
-      kind: "rubric",
-      text: "Sentences of Scripture may be read here.",
-    });
   }
+
   if (BCP1662_OFFICE_TEXT.common.exhortation) {
-    openingNodes.push({ kind: "heading", text: "The Exhortation" });
     openingNodes.push({
       kind: "text",
       text: BCP1662_OFFICE_TEXT.common.exhortation,
     });
   }
+
   openingNodes.push({
-    kind: "heading",
-    text: "The General Confession",
+    kind: "rubric",
+    text:
+      BCP1662_OFFICE_TEXT.common.confession_rubric ??
+      "A general Confession to be said of the whole Congregation after the Minister, all kneeling.",
   });
   openingNodes.push({
     kind: "text",
     text: BCP1662_OFFICE_TEXT.common.confession,
   });
+
   openingNodes.push({
-    kind: "heading",
-    text: "The Absolution",
+    kind: "rubric",
+    text:
+      BCP1662_OFFICE_TEXT.common.absolution_rubric ??
+      "The Absolution, or Remission of sins, to be pronounced by the Priest alone, standing: the people still kneeling.",
   });
   openingNodes.push({
     kind: "text",
     text: BCP1662_OFFICE_TEXT.common.absolution_priest,
   });
+  if (BCP1662_OFFICE_TEXT.common.amen_rubric) {
+    openingNodes.push({
+      kind: "rubric",
+      text: BCP1662_OFFICE_TEXT.common.amen_rubric,
+    });
+  }
+  if (BCP1662_OFFICE_TEXT.common.absolution_note) {
+    openingNodes.push({
+      kind: "rubric",
+      text: BCP1662_OFFICE_TEXT.common.absolution_note,
+    });
+  }
+
   openingNodes.push({
-    kind: "heading",
-    text: "The Lord's Prayer",
+    kind: "rubric",
+    text:
+      officeDef?.lordsPrayerOpeningRubric ??
+      "Then the Minister shall kneel, and say the Lord's Prayer with an audible voice; the people also kneeling, and repeating it with him.",
   });
   openingNodes.push({
     kind: "text",
-    text: BCP1662_OFFICE_TEXT.common.lords_prayer,
+    text:
+      BCP1662_OFFICE_TEXT.common.lords_prayer_opening ??
+      BCP1662_OFFICE_TEXT.common.lords_prayer,
   });
+
   if (officeDef?.openingVersicles?.length) {
-    openingNodes.push({
-      kind: "rubric",
-      text: "Then likewise he shall say,",
-    });
-    for (const v of officeDef.openingVersicles) {
-      openingNodes.push({ kind: "text", text: `${v.speaker}: ${v.text}` });
+    if (officeDef.openingVersiclesRubric) {
+      openingNodes.push({
+        kind: "rubric",
+        text: officeDef.openingVersiclesRubric,
+      });
+    }
+    for (let i = 0; i < officeDef.openingVersicles.length; i++) {
+      if (i === 4 && officeDef.gloriaStandingRubric) {
+        openingNodes.push({
+          kind: "rubric",
+          text: officeDef.gloriaStandingRubric,
+        });
+      }
+      const v = officeDef.openingVersicles[i];
+      openingNodes.push({ kind: "text", text: v.text, speaker: v.speaker });
     }
   }
-  if (officeDef?.invitatory?.rubric) {
-    openingNodes.push({ kind: "rubric", text: officeDef.invitatory.rubric });
-  }
+
   const isEasterAnthemsDay =
     source.observance.holyDay === "Easter Day" ||
     source.observance.holyDay === "Monday in Easter Week" ||
@@ -555,34 +583,49 @@ export function composeBcp1662Office(
     resolved.name === "Monday in Easter Week" ||
     resolved.name === "Tuesday in Easter Week";
 
-  if (isEasterAnthemsDay && BCP1662_OFFICE_TEXT.common.easterAnthems) {
-    const ea = BCP1662_OFFICE_TEXT.common.easterAnthems;
-    if (ea.rubric) openingNodes.push({ kind: "rubric", text: ea.rubric });
-    openingNodes.push({ kind: "heading", text: ea.title });
-    openingNodes.push({ kind: "text", text: ea.text });
-  } else if (BCP1662_OFFICE_TEXT.common.venite) {
-    openingNodes.push({
-      kind: "heading",
-      text: BCP1662_OFFICE_TEXT.common.venite.title,
-    });
-    if (BCP1662_OFFICE_TEXT.common.venite.rubric) {
+  if (office === "morning") {
+    if (officeDef?.invitatory?.rubric) {
+      openingNodes.push({ kind: "rubric", text: officeDef.invitatory.rubric });
+    }
+    if (isEasterAnthemsDay && BCP1662_OFFICE_TEXT.common.easterAnthems) {
+      const ea = BCP1662_OFFICE_TEXT.common.easterAnthems;
+      if (ea.rubric) openingNodes.push({ kind: "rubric", text: ea.rubric });
+      openingNodes.push({ kind: "heading", text: ea.title });
+      openingNodes.push({ kind: "text", text: ea.text });
+    } else if (BCP1662_OFFICE_TEXT.common.venite) {
       openingNodes.push({
-        kind: "rubric",
-        text: BCP1662_OFFICE_TEXT.common.venite.rubric,
+        kind: "heading",
+        text: BCP1662_OFFICE_TEXT.common.venite.title,
+      });
+      if (BCP1662_OFFICE_TEXT.common.venite.rubric) {
+        openingNodes.push({
+          kind: "rubric",
+          text: BCP1662_OFFICE_TEXT.common.venite.rubric,
+        });
+      }
+      openingNodes.push({
+        kind: "text",
+        text: BCP1662_OFFICE_TEXT.common.venite.text,
+      });
+    } else {
+      openingNodes.push({
+        kind: "placeholder",
+        key: "invitatory",
+        text: "Venite, exultemus Domino (Psalm 95) / appointed invitatory text to be vendored.",
       });
     }
+  }
+
+  openingNodes.push({
+    kind: "rubric",
+    text: officeDef?.psalmsRubric ?? "Then shall follow the Psalms.",
+  });
+  if (BCP1662_OFFICE_TEXT.common.psalms_gloria_rubric) {
     openingNodes.push({
-      kind: "text",
-      text: BCP1662_OFFICE_TEXT.common.venite.text,
-    });
-  } else {
-    openingNodes.push({
-      kind: "placeholder",
-      key: "invitatory",
-      text: "Venite, exultemus Domino (Psalm 95) / appointed invitatory text to be vendored.",
+      kind: "rubric",
+      text: `${BCP1662_OFFICE_TEXT.common.psalms_gloria_rubric}\n${BCP1662_OFFICE_TEXT.common.gloria_patri ?? "Glory be to the Father, and to the Son : and to the Holy Ghost;\nAs it was in the beginning, is now, and ever shall be : world without end. Amen."}`,
     });
   }
-  openingNodes.push({ kind: "rubric", text: "Then shall follow the Psalms." });
 
   const psalmInputRefs =
     resolved.psalms && resolved.psalms.length > 0
@@ -611,13 +654,6 @@ export function composeBcp1662Office(
                 },
               ]
             : []),
-          {
-            kind: "rubric",
-            text:
-              resolved.psalmsSource === "proper"
-                ? "Proper Psalms are appointed for this day."
-                : "Psalms appointed by the Thirty Day Psalm Cycle.",
-          },
         ]
       : [
           {
@@ -632,8 +668,26 @@ export function composeBcp1662Office(
     ["first", "First Lesson", "afterFirst"],
     ["second", "Second Lesson", "afterSecond"],
   ];
+  if (BCP1662_OFFICE_TEXT.common.lesson_note) {
+    lessonsAndCanticles.push({
+      kind: "rubric",
+      text: BCP1662_OFFICE_TEXT.common.lesson_note,
+    });
+  }
   for (let i = 0; i < lessonSlots.length; i++) {
     const [slot, label, canticleKey] = lessonSlots[i];
+    if (slot === "first" && officeDef?.firstLessonRubric) {
+      lessonsAndCanticles.push({
+        kind: "rubric",
+        text: officeDef.firstLessonRubric,
+      });
+    }
+    if (slot === "second" && officeDef?.secondLessonRubric) {
+      lessonsAndCanticles.push({
+        kind: "rubric",
+        text: officeDef.secondLessonRubric,
+      });
+    }
     const l = resolved.lessons[i];
     if (l) {
       lessonsAndCanticles.push({
@@ -673,19 +727,30 @@ export function composeBcp1662Office(
   }
 
   const creedNodes: Bcp1662OfficeNode[] = [
-    { kind: "rubric", text: "Then shall be said the Apostles' Creed." },
+    {
+      kind: "rubric",
+      text:
+        officeDef?.creedRubric ??
+        BCP1662_OFFICE_TEXT.common.creed_rubric ??
+        "Then shall be sung or said the Apostles' Creed.",
+    },
     { kind: "text", text: BCP1662_OFFICE_TEXT.common.apostles_creed },
   ];
 
   const prayersNodes: Bcp1662OfficeNode[] = [];
+  if (officeDef?.prayersRubric) {
+    prayersNodes.push({ kind: "rubric", text: officeDef.prayersRubric });
+  }
   if (officeDef?.preces?.length) {
     for (const v of officeDef.preces) {
-      prayersNodes.push({ kind: "text", text: `${v.speaker}: ${v.text}` });
+      prayersNodes.push({ kind: "text", text: v.text, speaker: v.speaker });
     }
   }
   prayersNodes.push({
-    kind: "heading",
-    text: "The Lord's Prayer",
+    kind: "rubric",
+    text:
+      officeDef?.lordsPrayerRubric ??
+      "Then the Minister, Clerks, and people shall say the Lord's Prayer with a loud voice.",
   });
   prayersNodes.push({
     kind: "text",
@@ -694,10 +759,11 @@ export function composeBcp1662Office(
   if (BCP1662_OFFICE_TEXT.common.suffrages?.length) {
     prayersNodes.push({
       kind: "rubric",
-      text: "Then the Minister standing up shall say,",
+      text:
+        officeDef?.suffragesRubric ?? "Then the Priest standing up shall say,",
     });
     for (const v of BCP1662_OFFICE_TEXT.common.suffrages) {
-      prayersNodes.push({ kind: "text", text: `${v.speaker}: ${v.text}` });
+      prayersNodes.push({ kind: "text", text: v.text, speaker: v.speaker });
     }
   } else {
     prayersNodes.push({
@@ -734,25 +800,40 @@ export function composeBcp1662Office(
       .find((c) => c !== undefined);
   }
 
-  const collectNodes: Bcp1662OfficeNode[] = collectOfDay
-    ? [
-        { kind: "heading", text: "The Collect of the Day" },
-        { kind: "rubric", text: collectOfDay.name },
-        { kind: "text", text: collectOfDay.text },
-      ]
-    : [
-        {
-          kind: "placeholder",
-          key: "collect-day",
-          text: "Collect of the day (Sunday/holy-day proper) to be resolved from vendored propers.",
-        },
-      ];
+  const collectNodes: Bcp1662OfficeNode[] = [];
+  if (officeDef?.collectsRubric) {
+    collectNodes.push({ kind: "rubric", text: officeDef.collectsRubric });
+  }
+  if (collectOfDay) {
+    collectNodes.push({ kind: "heading", text: "The Collect of the Day" });
+    collectNodes.push({ kind: "rubric", text: collectOfDay.name });
+    collectNodes.push({ kind: "text", text: collectOfDay.text });
+  } else {
+    collectNodes.push({
+      kind: "placeholder",
+      key: "collect-day",
+      text: "Collect of the day (Sunday/holy-day proper) to be resolved from vendored propers.",
+    });
+  }
   for (const c of getBcp1662FixedCollects(office)) {
     collectNodes.push({ kind: "heading", text: c.title });
     collectNodes.push({ kind: "text", text: c.text });
   }
 
   const closingNodes: Bcp1662OfficeNode[] = [];
+  if (BCP1662_OFFICE_TEXT.common.anthem_rubric) {
+    closingNodes.push({
+      kind: "rubric",
+      text: BCP1662_OFFICE_TEXT.common.anthem_rubric,
+    });
+  }
+  const statePrayersRubric =
+    office === "morning"
+      ? BCP1662_OFFICE_TEXT.common.state_prayers_rubric_morning
+      : BCP1662_OFFICE_TEXT.common.state_prayers_rubric_evening;
+  if (statePrayersRubric) {
+    closingNodes.push({ kind: "rubric", text: statePrayersRubric });
+  }
   if (BCP1662_OFFICE_TEXT.common.prayers?.length) {
     for (const p of BCP1662_OFFICE_TEXT.common.prayers) {
       closingNodes.push({ kind: "heading", text: p.title });
@@ -767,6 +848,9 @@ export function composeBcp1662Office(
   }
   closingNodes.push({ kind: "heading", text: "The Grace" });
   closingNodes.push({ kind: "text", text: BCP1662_OFFICE_TEXT.common.grace });
+  if (officeDef?.endRubric) {
+    closingNodes.push({ kind: "rubric", text: officeDef.endRubric });
+  }
 
   const sections: Bcp1662ComposedSection[] = [
     { key: "opening", heading: "Opening", nodes: openingNodes },

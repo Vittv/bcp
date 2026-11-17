@@ -10,13 +10,14 @@
         "note": "Best-effort compilation for composition; not image-verified against a PD witness."
       }
     ],
-    "caveats": ["Text not witness-verified; review before treating as definitive."]
+    "caveats": [
+      "Text not witness-verified; review before treating as definitive."
+    ]
   },
   "canticles": [
     {
       "id": "te-deum",
       "title": "Te Deum Laudamus",
-      "rubric": "To be said or sung at Morning Prayer, after the first Lesson.",
       "text": "We praise thee, O God : we acknowledge thee to be the Lord.\nAll the earth doth worship thee : the Father everlasting.\nTo thee all Angels cry aloud : the heavens, and all the powers therein.\nTo thee Cherubin and Seraphin : continually do cry,\nHoly, Holy, Holy : Lord God of Sabaoth;\nHeaven and earth are full of the Majesty : of thy glory.\nThe glorious company of the Apostles : praise thee.\nThe goodly fellowship of the Prophets : praise thee.\nThe noble army of Martyrs : praise thee.\nThe holy Church throughout all the world : doth acknowledge thee;\nThe Father : of an infinite Majesty;\nThine honourable, true : and only Son;\nAlso the Holy Ghost : the Comforter.\nThou art the King of Glory : O Christ.\nThou art the everlasting Son : of the Father.\nWhen thou tookest upon thee to deliver man : thou didst not abhor the Virgin's womb.\nWhen thou hadst overcome the sharpness of death : thou didst open the Kingdom of Heaven to all believers.\nThou sittest at the right hand of God : in the glory of the Father.\nWe believe that thou shalt come : to be our Judge.\nWe therefore pray thee, help thy servants : whom thou hast redeemed with thy precious blood.\nMake them to be numbered with thy Saints : in glory everlasting.\nO Lord, save thy people : and bless thine heritage.\nGovern them : and lift them up for ever.\nDay by day : we magnify thee;\nAnd we worship thy Name : ever world without end.\nVouchsafe, O Lord : to keep us this day without sin.\nO Lord, have mercy upon us : have mercy upon us.\nO Lord, let thy mercy lighten upon us : as our trust is in thee.\nO Lord, in thee have I trusted : let me never be confounded."
     },
     {
@@ -28,25 +29,22 @@
     {
       "id": "benedictus",
       "title": "Benedictus",
-      "rubric": "To be said or sung after the second Lesson at Morning Prayer.",
       "text": "Blessed be the Lord God of Israel : for he hath visited and redeemed his people;\nAnd hath raised up a mighty salvation for us : in the house of his servant David;\nAs he spake by the mouth of his holy Prophets : which have been since the world began;\nThat we should be saved from our enemies : and from the hand of all that hate us.\nTo perform the mercy promised to our forefathers : and to remember his holy Covenant;\nTo perform the oath which he sware to our forefather Abraham : that he would give us;\nThat we being delivered out of the hand of our enemies : might serve him without fear;\nIn holiness and righteousness before him : all the days of our life.\nAnd thou, Child, shalt be called the Prophet of the Highest : for thou shalt go before the face of the Lord to prepare his ways;\nTo give knowledge of salvation unto his people : for the remission of their sins,\nThrough the tender mercy of our God : whereby the dayspring from on high hath visited us;\nTo give light to them that sit in darkness, and in the shadow of death : and to guide our feet into the way of peace.\nGlory be to the Father, and to the Son : and to the Holy Ghost;\nAs it was in the beginning, is now, and ever shall be : world without end. Amen."
     },
     {
       "id": "jubilate",
       "title": "Jubilate Deo",
-      "rubric": "Or this Psalm (Psalm 100).",
+      "rubric": "Or this Psalm,",
       "text": "O be joyful in the Lord, all ye lands : serve the Lord with gladness, and come before his presence with a song.\nBe ye sure that the Lord he is God : it is he that hath made us, and not we ourselves; we are his people, and the sheep of his pasture.\nO go your way into his gates with thanksgiving, and into his courts with praise : be thankful unto him, and speak good of his Name.\nFor the Lord is gracious, his mercy is everlasting : and his truth endureth from generation to generation.\nGlory be to the Father, and to the Son : and to the Holy Ghost;\nAs it was in the beginning, is now, and ever shall be : world without end. Amen."
     },
     {
       "id": "magnificat",
       "title": "Magnificat",
-      "rubric": "To be said or sung after the first Lesson at Evening Prayer.",
       "text": "My soul doth magnify the Lord : and my spirit hath rejoiced in God my Saviour.\nFor he hath regarded : the lowliness of his handmaiden.\nFor behold, from henceforth : all generations shall call me blessed.\nFor he that is mighty hath magnified me : and holy is his Name.\nAnd his mercy is on them that fear him : throughout all generations.\nHe hath shewed strength with his arm : he hath scattered the proud in the imagination of their hearts.\nHe hath put down the mighty from their seat : and hath exalted the humble and meek.\nHe hath filled the hungry with good things : and the rich he hath sent empty away.\nHe remembering his mercy hath holpen his servant Israel : as he promised to our forefathers, Abraham and his seed, for ever.\nGlory be to the Father, and to the Son : and to the Holy Ghost;\nAs it was in the beginning, is now, and ever shall be : world without end. Amen."
     },
     {
       "id": "nunc-dimittis",
       "title": "Nunc dimittis",
-      "rubric": "To be said or sung after the second Lesson at Evening Prayer.",
       "text": "Lord, now lettest thou thy servant depart in peace : according to thy word.\nFor mine eyes have seen : thy salvation,\nWhich thou hast prepared : before the face of all people;\nTo be a light to lighten the Gentiles : and to be the glory of thy people Israel.\nGlory be to the Father, and to the Son : and to the Holy Ghost;\nAs it was in the beginning, is now, and ever shall be : world without end. Amen."
     }
   ]

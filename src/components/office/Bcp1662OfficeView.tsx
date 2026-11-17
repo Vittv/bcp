@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Text, View } from "react-native";
 import type {
   Bcp1662ComposedOffice,
   Bcp1662OfficeNode,
 } from "../../lib/content/bcp1662";
+import { BCP1662_OFFICE_TEXT } from "../../lib/content/vendor/bcp1662";
 import {
   CHROME_FONT,
   HEADING_FONT,
@@ -15,6 +17,7 @@ import {
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
 import { useSectionHeading, useSubheading } from "./contentHeadings";
+import { ChoiceMenu } from "./OfficeControls";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 
@@ -26,18 +29,65 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
       return <Text style={subheading}>{node.text}</Text>;
     case "rubric":
       return <Text style={styles.rubric}>{node.text}</Text>;
-    case "text":
+    case "text": {
+      const speakerLabel =
+        node.speaker === "minister" || node.speaker === "priest"
+          ? "Minister"
+          : node.speaker === "people"
+            ? "People"
+            : node.speaker === "all"
+              ? "All"
+              : node.speaker === "answer"
+                ? "Answer"
+                : null;
+      const opening = BCP1662_OFFICE_TEXT.common.openingSentences ?? [];
+      const isOpening = opening.some((s) => s.text === node.text);
+      let body = node.text;
+      let citation: string | null = null;
+      if (isOpening) {
+        const text = node.text;
+        let bestRemainder = "";
+        let bestIndex = -1;
+        let idx = text.indexOf(". ", 0);
+        while (idx !== -1) {
+          const remainder = text.slice(idx + 2);
+          if (/[0-9]/.test(remainder) && /^[A-Za-z0-9]/.test(remainder)) {
+            if (remainder.length > bestRemainder.length) {
+              bestRemainder = remainder;
+              bestIndex = idx;
+            }
+          }
+          idx = text.indexOf(". ", idx + 2);
+        }
+        if (bestIndex !== -1) {
+          body = text.slice(0, bestIndex + 1).trimEnd();
+          citation = bestRemainder.trim();
+        }
+      }
       return (
         <View>
-          {node.text.split("\n").map((line, i) => (
+          {body.split("\n").map((line, i) => (
             // fixed liturgical text
-            // biome-ignore lint/suspicious/noArrayIndexKey: fixed liturgical text
-            <Text key={i} style={styles.text}>
+            <Text
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed liturgical text
+              key={i}
+              style={[
+                styles.text,
+                node.speaker === "people" && styles.textPeople,
+              ]}
+            >
+              {i === 0 && speakerLabel ? (
+                <Text style={styles.speaker}>{speakerLabel} </Text>
+              ) : null}
               {line}
+              {i === body.split("\n").length - 1 && citation ? (
+                <Text style={styles.citation}> {citation}</Text>
+              ) : null}
             </Text>
           ))}
         </View>
       );
+    }
     case "psalm":
       return (
         <View style={styles.block}>
@@ -94,6 +144,33 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
 export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
   const styles = useThemedStyles(bcp1662Styles);
   const sectionHeading = useSectionHeading();
+  const sentences = BCP1662_OFFICE_TEXT.common.openingSentences ?? [];
+  const suggested = sentences[0]?.text ?? "";
+  const [openingSelection, setOpeningSelection] = useState<string>("suggested");
+  const psalmNode = doc.sections
+    .find((s) => s.key === "psalms")
+    ?.nodes.find((n) => n.kind === "psalm");
+  const psalmRefs = psalmNode?.kind === "psalm" ? psalmNode.refs : [];
+  const [psalmSelection, setPsalmSelection] = useState<string>("suggested");
+  const isOpeningSentence = (text: string) =>
+    sentences.some((s) => s.text === text);
+  const truncate = (s: string, n: number) =>
+    s.length > n ? `${s.slice(0, n - 1)}…` : s;
+  const groups = Array.from(
+    sentences.reduce((map, s) => {
+      const list = map.get(s.label) ?? [];
+      list.push(s.text);
+      map.set(s.label, list);
+      return map;
+    }, new Map<string, string[]>()),
+  ).map(([season, texts]) => ({ season, texts }));
+  const options = [
+    { id: "suggested", label: truncate(suggested, 52), group: "Suggested" },
+    ...groups.flatMap((g) =>
+      g.texts.map((t) => ({ id: t, label: truncate(t, 64), group: g.season })),
+    ),
+    { id: "all", label: "All sentences", group: "Other" },
+  ];
   return (
     <View>
       <View style={styles.header}>
@@ -105,11 +182,72 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
       {doc.sections.map((section) => (
         <View key={section.key} style={styles.section}>
           <Text style={sectionHeading}>{section.heading}</Text>
-          {section.nodes.map((node, i) => (
-            // nodes are composed in order without stable ids
-            // biome-ignore lint/suspicious/noArrayIndexKey: composed office content
-            <NodeView key={`${section.key}-${node.kind}-${i}`} node={node} />
-          ))}
+          {section.key === "opening" && sentences.length > 0 ? (
+            <View style={styles.controlRow}>
+              <ChoiceMenu
+                value={openingSelection}
+                options={options}
+                label="Opening Sentence"
+                accessibilityLabel="Opening Sentence"
+                fullWidth
+                onChange={setOpeningSelection}
+              />
+            </View>
+          ) : null}
+          {section.key === "psalms" && psalmRefs.length > 1 ? (
+            <View style={styles.controlRow}>
+              <ChoiceMenu
+                value={psalmSelection}
+                options={[
+                  { id: "suggested", label: "All psalms", group: "Suggested" },
+                  ...psalmRefs.map((ref) => ({
+                    id: ref,
+                    label: ref,
+                    group: "Psalms",
+                  })),
+                ]}
+                label="Psalms"
+                accessibilityLabel="Psalms"
+                fullWidth
+                onChange={setPsalmSelection}
+              />
+            </View>
+          ) : null}
+          {section.nodes
+            .filter((node) => {
+              if (section.key !== "opening" || node.kind !== "text")
+                return true;
+              if (!isOpeningSentence(node.text)) return true;
+              if (openingSelection === "all") return true;
+              const target =
+                openingSelection === "suggested" ? suggested : openingSelection;
+              return node.text === target;
+            })
+            .map((node, i) => {
+              const renderedNode =
+                section.key === "psalms" && node.kind === "psalm"
+                  ? psalmSelection === "suggested"
+                    ? node
+                    : {
+                        ...node,
+                        refs: node.refs.filter((r) => r === psalmSelection),
+                        passages: node.passages.filter(
+                          (p) =>
+                            (p.ref.startsWith("Psalm")
+                              ? p.ref
+                              : `Psalm ${p.ref}`) === psalmSelection,
+                        ),
+                      }
+                  : node;
+              return (
+                // nodes are composed in order without stable ids
+                <NodeView
+                  // biome-ignore lint/suspicious/noArrayIndexKey: composed office content
+                  key={`${section.key}-${node.kind}-${i}`}
+                  node={renderedNode}
+                />
+              );
+            })}
         </View>
       ))}
       {doc.notes.length > 0 ? (
@@ -177,10 +315,10 @@ const bcp1662Styles = defineThemedStyles({
   },
   psalmTitle: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 16,
-    lineHeight: 24,
-    color: "var(--accent)",
-    marginBottom: 4,
+    fontSize: 18,
+    lineHeight: 30,
+    color: "var(--text-secondary)",
+    marginBottom: 2,
   },
   psalmSource: {
     fontFamily: SERIF_ITALIC_FONT,
@@ -189,7 +327,7 @@ const bcp1662Styles = defineThemedStyles({
     marginTop: 4,
   },
   lessonBlock: {
-    marginTop: 12,
+    marginTop: 16,
     marginBottom: 12,
   },
   text: {
@@ -199,9 +337,57 @@ const bcp1662Styles = defineThemedStyles({
     color: "var(--text)",
     marginTop: 4,
   },
+  speaker: {
+    fontFamily: SERIF_FONT,
+    fontWeight: "600",
+    fontSize: 15,
+    color: "var(--accent)",
+  },
+  textPeople: {
+    fontWeight: "700",
+  },
+  citation: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 18,
+    color: "var(--text-secondary)",
+  },
+  controlRow: {
+    position: "relative",
+    zIndex: 100,
+    isolation: "isolate",
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  psalmPicker: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  psalmToggle: {
+    borderWidth: 1,
+    borderColor: "var(--border)",
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: "var(--surface)",
+  },
+  psalmToggleOn: {
+    backgroundColor: "var(--accent)",
+    borderColor: "var(--accent)",
+  },
+  psalmToggleText: {
+    fontFamily: SERIF_FONT,
+    fontSize: 13,
+    color: "var(--text)",
+  },
+  psalmToggleTextOn: {
+    color: "var(--bg)",
+  },
   rubric: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
+    fontSize: 18,
     lineHeight: 25,
     color: "var(--text-secondary)",
     marginTop: 4,
@@ -227,8 +413,9 @@ const bcp1662Styles = defineThemedStyles({
   },
   lessonRef: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
+    fontSize: 18,
     color: "var(--text-secondary)",
+    marginTop: 4,
     marginBottom: 4,
   },
   accent: {
