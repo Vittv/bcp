@@ -38,8 +38,8 @@ export type { ModalType, PageId, SidebarDetail };
 export { REPO_URL };
 
 const EDITION_OPTIONS: readonly { id: BcpEdition; label: string }[] = [
-  { id: "1979", label: "1979 The Episcopal Church BCP" },
-  { id: "1662", label: "1662 Book of Common Prayer" },
+  { id: "1979", label: "1979 - The Episcopal Church BCP" },
+  { id: "1662", label: "1662 - Book of Common Prayer" },
 ];
 
 // a toolbar pill: bordered, icon plus optional label, hover fill, no pressed
@@ -243,7 +243,7 @@ export function Sidebar({
         {editionOpen ? (
           <View style={styles.editionList}>
             {EDITION_OPTIONS.filter((o) => o.id !== edition).map((o) => {
-              const [year, ...rest] = o.label.split(" ");
+              const [year, sep, ...rest] = o.label.split(" ");
               return (
                 <Pressable
                   key={o.id}
@@ -260,7 +260,19 @@ export function Sidebar({
                 >
                   <Text style={styles.editionItemText} numberOfLines={1}>
                     <Text style={styles.editionYearAccent}>{year}</Text>
-                    {rest.length ? ` ${rest.join(" ")}` : ""}
+                    {sep === "•" || sep === "-" ? (
+                      <>
+                        {" "}
+                        {sep === "•" ? (
+                          <Text style={styles.editionBullet}>•</Text>
+                        ) : (
+                          "-"
+                        )}
+                        {rest.length ? ` ${rest.join(" ")}` : ""}
+                      </>
+                    ) : (
+                      ` ${[sep, ...rest].filter(Boolean).join(" ")}`
+                    )}
                   </Text>
                 </Pressable>
               );
@@ -279,11 +291,23 @@ export function Sidebar({
         >
           <Text style={styles.editionTriggerText} numberOfLines={1}>
             {(() => {
-              const [year, ...rest] = currentEditionLabel.split(" ");
+              const [year, sep, ...rest] = currentEditionLabel.split(" ");
               return (
                 <>
                   <Text style={styles.editionYearAccent}>{year}</Text>
-                  {rest.length ? ` ${rest.join(" ")}` : ""}
+                  {sep === "•" || sep === "-" ? (
+                    <>
+                      {" "}
+                      {sep === "•" ? (
+                        <Text style={styles.editionBullet}>•</Text>
+                      ) : (
+                        "-"
+                      )}
+                      {rest.length ? ` ${rest.join(" ")}` : ""}
+                    </>
+                  ) : (
+                    ` ${[sep, ...rest].filter(Boolean).join(" ")}`
+                  )}
                 </>
               );
             })()}

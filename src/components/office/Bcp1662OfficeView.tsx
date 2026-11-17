@@ -15,6 +15,7 @@ import {
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
 import { useSectionHeading, useSubheading } from "./contentHeadings";
+import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 
 function NodeView({ node }: { node: Bcp1662OfficeNode }) {
@@ -40,16 +41,25 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
     case "psalm":
       return (
         <View style={styles.block}>
-          <Text style={styles.label}>
-            {node.refs.join(", ")}
-            <Text style={styles.muted}>
-              {" "}
-              (
-              {node.source === "proper"
-                ? "Proper Psalms"
-                : "Thirty Day Psalm Cycle"}
-              )
-            </Text>
+          {node.passages.length > 0 ? (
+            node.passages.map(({ ref, passage }) => (
+              <View
+                key={`${ref}-${passage.verses[0]?.number ?? 0}`}
+                style={styles.psalmBlock}
+              >
+                <Text style={styles.psalmTitle}>
+                  {ref.startsWith("Psalm") ? ref : `Psalm ${ref}`}
+                </Text>
+                <PsalmText passage={passage} />
+              </View>
+            ))
+          ) : (
+            <Text style={styles.label}>{node.refs.join(", ")}</Text>
+          )}
+          <Text style={[styles.muted, styles.psalmSource]}>
+            {node.source === "proper"
+              ? "Proper Psalms"
+              : "Thirty Day Psalm Cycle"}
           </Text>
         </View>
       );
@@ -90,7 +100,7 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
         <Text style={styles.officeName}>{doc.officeName}</Text>
         <Text style={styles.dateLabel}>{dayLabel(doc.date)}</Text>
         {doc.title ? <Text style={styles.entryTitle}>{doc.title}</Text> : null}
-        <Text style={styles.editionLabel}>1662 Book of Common Prayer</Text>
+        <Text style={styles.editionLabel}>1662 - Book of Common Prayer</Text>
       </View>
       {doc.sections.map((section) => (
         <View key={section.key} style={styles.section}>
@@ -160,6 +170,23 @@ const bcp1662Styles = defineThemedStyles({
   block: {
     marginTop: 8,
     marginBottom: 8,
+  },
+  psalmBlock: {
+    marginTop: 10,
+    marginBottom: 12,
+  },
+  psalmTitle: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 16,
+    lineHeight: 24,
+    color: "var(--accent)",
+    marginBottom: 4,
+  },
+  psalmSource: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 14,
+    lineHeight: 22,
+    marginTop: 4,
   },
   lessonBlock: {
     marginTop: 12,

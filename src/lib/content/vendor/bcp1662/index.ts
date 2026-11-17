@@ -9,11 +9,13 @@ import dailyData from "./lectionary-daily.json";
 import properData from "./lectionary-proper.json";
 import properPsalmsData from "./proper-psalms.json";
 import psalterCycleData from "./psalter-cycle.json";
+import psalterData from "./psalter.min.json";
 import rulesData from "./lectionary-rules.json";
 import officeTextData from "./office-text/offices.json";
 import canticlesData from "./office-text/canticles.json";
 import fixedCollectsData from "./office-text/collects.json";
 import properCollectsData from "./office-text/collects-proper.json";
+import type { PsalmPassage } from "../../types";
 
 export type Bcp1662Office = "morning" | "evening";
 
@@ -100,6 +102,16 @@ export const BCP1662_PSALTER_CYCLE =
     meta: { edition: string; title: string; compiled: string };
     days: Record<string, Bcp1662MonthlyPsalms>;
   };
+
+type Bcp1662PsalmPart = {
+  title?: string | null;
+  stanzas?: Record<string, string>;
+  verses: Record<string, string>;
+};
+
+export const BCP1662_PSALTER =
+  // SAFETY: vendored static 1662 Coverdale psalter text (PD/Bible Browser source), schema-compatible psalm map.
+  psalterData as Record<string, { parts: Bcp1662PsalmPart[] }>;
 
 export const BCP1662_RULES =
   // SAFETY: vendored static JSON table matching the declared rules shape; validated by scripts/check-bcp1662-vendor.ts.
@@ -220,6 +232,49 @@ export function getBcp1662FixedCollects(office: Bcp1662Office) {
 
 export function getBcp1662ProperCollect(name: string) {
   return BCP1662_PROPER_COLLECTS.collects.find((c) => c.name === name);
+}
+
+function versesOf1662(psalm: { parts: Bcp1662PsalmPart[] }): PsalmPassage["verses"] {
+  const out: PsalmPassage["verses"] = [];
+  for (const part of psalm.parts) {
+    for (const [number, text] of Object.entries(part.verses)) {
+      out.push({
+        number: Number(number),
+        text,
+        stanza: part.stanzas?.[number],
+      });
+    }
+  }
+  return out;
+}
+
+/** resolve a 1662 psalm ref (e.g. "82", "119:1-32") to a psalm passage. */
+export function getBcp1662PsalmPassage(ref: string): PsalmPassage | undefined {
+  const m = /^(\d{1,3})(?::(\d+)(?:-(\d+))?)?$/.exec(ref.trim());
+  if (!m) return undefined;
+  const psalmNum = Number(m[1]);
+  const psalm = BCP1662_PSALTER[String(psalmNum)];
+  if (!psalm) return undefined;
+  const all = versesOf1662(psalm);
+  if (!m[2]) return { psalm: psalmNum, verses: all };
+  const start = Number(m[2]);
+  const end = m[3] ? Number(m[3]) : start;
+  return {
+    psalm: psalmNum,
+    verses: all.filter((v) => v.number >= start && v.number <= end),
+  };
+}
+
+/** resolve a list of 1662 psalm refs/numbers to passages, preserving order. */
+export function getBcp1662PsalmPassages(
+  refs: Array<string | number>,
+): PsalmPassage[] {
+  const out: PsalmPassage[] = [];
+  for (const r of refs) {
+    const passage = getBcp1662PsalmPassage(String(r));
+    if (passage) out.push(passage);
+  }
+  return out;
 }
 
 /** Look up the daily-calendar lessons for a civil month/day (1-based day). */

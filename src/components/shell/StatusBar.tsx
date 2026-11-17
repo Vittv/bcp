@@ -102,9 +102,9 @@ export function StatusBar({
         )}
         {!compact && (
           <>
-            <Text style={styles.sep}>·</Text>
+            <Text style={styles.sep}>•</Text>
             <Text style={styles.text}>Year {slot.year}</Text>
-            <Text style={styles.sep}>·</Text>
+            <Text style={styles.sep}>•</Text>
             <Text style={styles.text} numberOfLines={1}>
               {weekLabel(slot)}
             </Text>

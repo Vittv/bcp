@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useEdition } from "../../context/EditionContext";
 import type { OfficeId } from "../../lib/content/types";
 import type { OfficeRite } from "../../lib/office/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
@@ -81,8 +82,21 @@ export function OfficeTabs({
   rite,
   onRiteChange,
 }: OfficeTabsProps) {
+  const { edition } = useEdition();
   const styles = useThemedStyles(officeBarStyles);
   const { width } = useViewport();
+  const tabs = useMemo(
+    () =>
+      edition === "1662"
+        ? TABS.filter((t) => t.id === "morning" || t.id === "evening")
+        : TABS,
+    [edition],
+  );
+  useEffect(() => {
+    if (edition === "1662" && active !== "morning" && active !== "evening") {
+      onSelect("morning");
+    }
+  }, [active, edition, onSelect]);
   // the full row needs about 600px of bar, which a desktop window only has
   // from 800px with the sidebar open
   const tabsAsMenu = width < 800;
@@ -91,30 +105,36 @@ export function OfficeTabs({
   const compact = width < WIDTH_COMPACT;
   const devotionsLabel =
     width >= 640 ? "Daily Devotions" : width < 400 ? "Dev" : "Devotions";
-  const showRite = !devotions && (active === "morning" || active === "evening");
+  const showRite =
+    edition !== "1662" &&
+    !devotions &&
+    (active === "morning" || active === "evening");
+  const showDevotionsToggle = edition !== "1662";
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={[styles.tabsLeft, compact && styles.groupCompact]}>
         {leading}
-        <Pressable
-          style={({ hovered }) => [
-            styles.toggle,
-            styles.modeToggle,
-            compact && styles.itemCompact,
-            hovered && styles.tabHover,
-            devotions && styles.modeToggleOn,
-          ]}
-          onPress={onToggleDevotions}
-          accessibilityRole="button"
-          accessibilityState={{ selected: devotions }}
-          accessibilityLabel="Daily Devotions"
-        >
-          <SteadyToggleText text={devotionsLabel} on={devotions} />
-        </Pressable>
+        {showDevotionsToggle ? (
+          <Pressable
+            style={({ hovered }) => [
+              styles.toggle,
+              styles.modeToggle,
+              compact && styles.itemCompact,
+              hovered && styles.tabHover,
+              devotions && styles.modeToggleOn,
+            ]}
+            onPress={onToggleDevotions}
+            accessibilityRole="button"
+            accessibilityState={{ selected: devotions }}
+            accessibilityLabel="Daily Devotions"
+          >
+            <SteadyToggleText text={devotionsLabel} on={devotions} />
+          </Pressable>
+        ) : null}
         {tabsAsMenu ? (
           <BarDropdown
             value={active}
-            options={TABS}
+            options={tabs}
             onChange={onSelect}
             align="start"
             accent
@@ -123,7 +143,7 @@ export function OfficeTabs({
             accessibilityLabel="Office"
           />
         ) : (
-          TABS.map((t) => {
+          tabs.map((t) => {
             const isActive = active === t.id;
             return (
               <Pressable

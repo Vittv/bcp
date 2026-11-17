@@ -4,19 +4,22 @@ Best-effort vendored lectionary/psalm-appointment data for the **1662 Book of Co
 
 ## Current contents
 
-- `lectionary-daily.json` / `.min.json` — daily Morning/Evening Prayer First and Second Lessons from the 1662 Kalendar/Table of Lessons, by month/day (366 entries incl. Feb 29). Includes feast markers and nulls for blank/proper-lesson cells.
-- `lectionary-proper.json` / `.min.json` — Proper Lessons for Sundays and other Holy-days throughout the year (Mattins/Evensong; First/Second lessons where appointed).
-- `proper-psalms.json` / `.min.json` — Proper Psalms on certain days (Mattins/Evensong).
-- `lectionary-rules.json` / `.min.json` — key normalized lectionary/psalm-appointment rules and notes (proper overrides ordinary, Sunday/holy-day precedence, psalter cycle, Sunday collect/epistle/gospel week rule, etc.).
-- `PROVENANCE.md` — witness selection, sourcing policy, extraction/compilation log, caveats, and QA/verification TODOs (**read before treating as definitive**).
-- `spike/` — early schema/partial spike artifacts retained for history.
+- `lectionary-daily.json` / `.min.json` - daily Morning/Evening Prayer First and Second Lessons from the 1662 Kalendar/Table of Lessons, by month/day (366 entries incl. Feb 29). Includes feast markers and nulls for blank/proper-lesson cells.
+- `lectionary-proper.json` / `.min.json` - Proper Lessons for Sundays and other Holy-days throughout the year (Mattins/Evensong; First/Second lessons where appointed).
+- `proper-psalms.json` / `.min.json` - Proper Psalms on certain days (Mattins/Evensong).
+- `psalter-cycle.json` / `.min.json` - 30-day monthly psalter appointments (Morning/Evening) by day of month.
+- `psalter.json` / `.min.json` - 1662 Coverdale Psalter text (150 psalms, 2508 verses), best-effort extraction for office rendering.
+- `lectionary-rules.json` / `.min.json` - key normalized lectionary/psalm-appointment rules and notes (proper overrides ordinary, Sunday/holy-day precedence, psalter cycle, Sunday collect/epistle/gospel week rule, etc.).
+- `office-text/` - vendored office texts, canticles, fixed/proper collects, and related scaffolds for Matins/Evensong composition (best-effort).
+- `PROVENANCE.md` - witness selection, sourcing policy, extraction/compilation log, caveats, and QA/verification TODOs (**read before treating as definitive**).
+- `spike/` - early schema/partial spike artifacts retained for history.
 
 ## Status and caveats
 
 - **Best-effort vendoring complete for lectionary/psalm-appointment tables, pending PD image verification:** compiled using readable 1662 reference pages as cross-check/readability aids because primary public-domain witness OCR (`IA bookofcommonpray00chur_14`, 1669) was garbled; structure/samples were corroborated against that PD witness where readable.
 - **Cross-checked (readability sources):** daily lessons were compared full-year against Linda Howell’s readable 1662 calendar tables and spot-checked against other 1662 references, with clear normalization/data corrections applied (see `PROVENANCE.md`). Proper lessons/psalms/rules were reviewed against readable tables for key sections. This is sanity-check confidence, not definitive proof.
 - **Not yet image-verified:** exact page/image ranges and image-level verification against PD witnesses are still TODO. Resolve any discrepancies in favor of the PD witness.
-- **Scope:** covers lectionary tables and key appointment rules; 1662 office texts, full psalter/canticles/collects, and calendar/movable-feast content are separate edition-content workstreams (see `~/.viai/dev/bcp/plan/PLAN-1662-BCP-EDITION.md`, `PLAN-BCP-1662.md`).
+- **Scope:** lectionary/appointment tables, Coverdale psalter text, and core office/canticle/collect texts for Matins/Evensong composition are vendored as best-effort data; calendar/movable-feast and rubrical edge cases remain under refinement (see `~/.viai/dev/bcp/plan/PLAN-1662-BCP-EDITION.md`, `PLAN-BCP-1662.md`).
 
 ## Automation and usage
 
