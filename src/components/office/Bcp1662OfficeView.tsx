@@ -23,9 +23,13 @@ import { ScriptureView } from "./ScriptureView";
 
 function NodeView({ node }: { node: Bcp1662OfficeNode }) {
   const styles = useThemedStyles(bcp1662Styles);
+  const sectionHeading = useSectionHeading();
   const subheading = useSubheading();
   switch (node.kind) {
     case "heading":
+      if (node.text === "Suffrages") {
+        return <Text style={sectionHeading}>{node.text}</Text>;
+      }
       return <Text style={subheading}>{node.text}</Text>;
     case "rubric":
       return <Text style={styles.rubric}>{node.text}</Text>;

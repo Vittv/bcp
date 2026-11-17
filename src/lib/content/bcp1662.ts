@@ -759,6 +759,7 @@ export function composeBcp1662Office(
     text: BCP1662_OFFICE_TEXT.common.lords_prayer,
   });
   if (BCP1662_OFFICE_TEXT.common.suffrages?.length) {
+    prayersNodes.push({ kind: "heading", text: "Suffrages" });
     prayersNodes.push({
       kind: "rubric",
       text:
