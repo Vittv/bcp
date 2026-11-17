@@ -88,7 +88,10 @@ export function OfficeTabs({
   const tabs = useMemo(
     () =>
       edition === "1662"
-        ? TABS.filter((t) => t.id === "morning" || t.id === "evening")
+        ? ([
+            { id: "morning", label: "Matins" },
+            { id: "evening", label: "Evensong" },
+          ] as const)
         : TABS,
     [edition],
   );

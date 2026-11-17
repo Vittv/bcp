@@ -459,7 +459,7 @@ export async function resolveBcp1662OfficeForDate(
 }
 
 function bcp1662OfficeName(office: Bcp1662Office): string {
-  return office === "morning" ? "Morning Prayer" : "Evening Prayer";
+  return office === "morning" ? "Matins" : "Evensong";
 }
 
 function psalmRefsForResolved(resolved: Bcp1662ResolvedOffice): string[] {
