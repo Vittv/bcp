@@ -136,3 +136,5 @@ enough detail to audit a normalized entry back to the witnessed form.
 ## Monthly psalter cycle (30-day)
 - `psalter-cycle.json` / `.min.json`: best-effort compilation of the 1662 30-day monthly psalter (Morning/Evening by day 1-30; day 31 uses day 30) from widely attested 1662 table form.
 - Pending image-level verification against PD witness page images (IA 1669/1770) and recording of page/image refs, especially Psalm 119 divisions (days 24-26).
+
+- **2026-11-16, rubric enrichment (best-effort):** expanded vendored 1662 office rubrics toward the original 1662 order using Church of England 1662 text and Baskerville 1762 facsimile (comparison/QA only), including opening/absolution/confession/amen/lesson/canticle/creed/prayer/collect/anthem/state-prayer/end directions. Added office-specific creed rubric and rendered previously unused collects/anthem/state/end rubrics in composition. Canticle rubrics trimmed to original alternatives only. Not image-verified against PD witness; pending witness verification.

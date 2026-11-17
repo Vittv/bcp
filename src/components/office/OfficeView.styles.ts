@@ -55,7 +55,7 @@ export const officeViewStyles = defineThemedStyles({
   },
   rubric: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
+    fontSize: 18,
     lineHeight: 25,
     color: "var(--text-secondary)",
     marginTop: 4,
@@ -80,17 +80,16 @@ export const officeViewStyles = defineThemedStyles({
   // the printed citation a menu reading names after its passage
   textCitation: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
-    lineHeight: 24,
+    fontSize: 18,
+    lineHeight: 30,
     color: "var(--text-secondary)",
     marginTop: 2,
     marginBottom: 4,
   },
   speaker: {
-    fontFamily: CHROME_FONT,
+    fontFamily: SERIF_FONT,
     fontWeight: "600",
-    fontSize: 11,
-    letterSpacing: 0.4,
+    fontSize: 15,
     color: "var(--accent)",
   },
   psalmBlock: {
@@ -99,7 +98,8 @@ export const officeViewStyles = defineThemedStyles({
   },
   psalmTitle: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
+    fontSize: 18,
+    lineHeight: 30,
     color: "var(--text-secondary)",
     marginBottom: 6,
   },
@@ -112,7 +112,8 @@ export const officeViewStyles = defineThemedStyles({
   },
   lessonRef: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
+    fontSize: 18,
+    lineHeight: 30,
     color: "var(--text-secondary)",
   },
   lessonLabel: {

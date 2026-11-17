@@ -128,7 +128,20 @@ export type Bcp1662OfficeTextVersicle = {
 export type Bcp1662OfficeTextOffice = {
   id: "morning" | "evening";
   name: string;
+  openingRubric?: string;
   openingVersicles?: Bcp1662OfficeTextVersicle[];
+  openingVersiclesRubric?: string;
+  gloriaStandingRubric?: string;
+  lordsPrayerOpeningRubric?: string;
+  psalmsRubric?: string;
+  firstLessonRubric?: string;
+  secondLessonRubric?: string;
+  creedRubric?: string;
+  prayersRubric?: string;
+  lordsPrayerRubric?: string;
+  suffragesRubric?: string;
+  collectsRubric?: string;
+  endRubric?: string;
   invitatory?: {
     default?: string;
     options?: string[];
@@ -165,15 +178,27 @@ export const BCP1662_OFFICE_TEXT =
     common: {
       exhortation?: string;
       confession: string;
+      confession_rubric?: string;
       absolution_priest: string;
+      absolution_rubric?: string;
+      absolution_note?: string;
+      amen_rubric?: string;
       lords_prayer: string;
+      lords_prayer_opening?: string;
       apostles_creed: string;
+      creed_rubric?: string;
       grace: string;
       venite?: Bcp1662InvitatoryText;
       easterAnthems?: Bcp1662InvitatoryText;
       openingSentences?: Bcp1662OpeningSentence[];
       suffrages?: Bcp1662OfficeTextVersicle[];
       prayers?: Bcp1662CommonPrayer[];
+      anthem_rubric?: string;
+      state_prayers_rubric_morning?: string;
+      state_prayers_rubric_evening?: string;
+      gloria_patri?: string;
+      lesson_note?: string;
+      psalms_gloria_rubric?: string;
     };
     offices: Bcp1662OfficeTextOffice[];
   };
