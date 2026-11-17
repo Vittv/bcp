@@ -73,6 +73,15 @@ export const BASE_OFFICES: {
   { id: "compline", label: "Compline", name: "Compline" },
 ];
 
+export const BCP1662_BASE_OFFICES: {
+  id: RefOfficeBase;
+  label: string;
+  name: string;
+}[] = [
+  { id: "morning", label: "Morning", name: "Morning Prayer" },
+  { id: "evening", label: "Evening", name: "Evening Prayer" },
+];
+
 export function refOfficeId(
   base: RefOfficeBase,
   rite: OfficeRite,

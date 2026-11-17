@@ -3,8 +3,8 @@
  * (daily calendar, Sunday/holy-day propers, proper psalms) and optionally
  * resolve lesson references to scripture passages using existing loaders.
  *
- * This is an incremental step toward full 1662 Daily Office composition
- * (Matins/Evensong texts/rubrics/canticles/collects remain separate work).
+ * This composes 1662 Daily Offices (Matins/Evensong) from vendored texts,
+ * lectionary/psalm appointments, canticles, collects, and resolved scripture.
  */
 import {
   type Bcp1662Observance,
@@ -19,7 +19,7 @@ import {
   type ScriptureSettings,
 } from "./bible";
 import { getBookMeta, getPassageFromDolRef, parseDolRef } from "./scripture";
-import type { KjvPassage } from "./types";
+import type { KjvPassage, PsalmPassage } from "./types";
 import {
   BCP1662_OFFICE_TEXT,
   BCP1662_PROPER_LESSONS,
@@ -34,6 +34,7 @@ import {
   getBcp1662OfficeText,
   getBcp1662ProperCollect,
   getBcp1662ProperPsalms,
+  getBcp1662PsalmPassages,
   normalizeBcp1662LessonRef,
 } from "./vendor/bcp1662";
 
@@ -236,7 +237,6 @@ export type Bcp1662OfficeSectionKey =
   | "opening"
   | "psalms"
   | "lessons"
-  | "canticles"
   | "creed"
   | "prayers"
   | "collects"
@@ -249,6 +249,7 @@ export type Bcp1662OfficeNode =
   | {
       kind: "psalm";
       refs: string[];
+      passages: Array<{ ref: string; passage: PsalmPassage }>;
       source: "proper" | "monthly";
     }
   | {
@@ -582,25 +583,39 @@ export function composeBcp1662Office(
   }
   openingNodes.push({ kind: "rubric", text: "Then shall follow the Psalms." });
 
+  const psalmInputRefs =
+    resolved.psalms && resolved.psalms.length > 0
+      ? resolved.psalms.map(String)
+      : (resolved.monthlyPsalms ?? []);
+  const psalmPassages = psalmInputRefs.flatMap((ref) => {
+    const passage = getBcp1662PsalmPassages([ref])[0];
+    return passage ? [{ ref, passage }] : [];
+  });
+
   const psalmNodes: Bcp1662OfficeNode[] =
     psalmRefs.length > 0
       ? [
           {
             kind: "psalm",
             refs: psalmRefs,
+            passages: psalmPassages,
             source: resolved.psalmsSource,
           },
+          ...(psalmPassages.length === 0
+            ? [
+                {
+                  kind: "placeholder" as const,
+                  key: "psalm-text",
+                  text: "Psalm text (Coverdale, 1662) not available for appointed psalms.",
+                },
+              ]
+            : []),
           {
             kind: "rubric",
             text:
               resolved.psalmsSource === "proper"
                 ? "Proper Psalms are appointed for this day."
                 : "Psalms appointed by the Thirty Day Psalm Cycle.",
-          },
-          {
-            kind: "placeholder",
-            key: "psalm-text",
-            text: "Psalm text (Coverdale, 1662) to be vendored from PD witness.",
           },
         ]
       : [
@@ -746,16 +761,6 @@ export function composeBcp1662Office(
       heading: "Lessons & Canticles",
       nodes: lessonsAndCanticles,
     },
-    {
-      key: "canticles",
-      heading: "Canticles",
-      nodes: [
-        {
-          kind: "rubric",
-          text: "Canticles are included with the Lessons in this composition.",
-        },
-      ],
-    },
     { key: "creed", heading: "Creed", nodes: creedNodes },
     { key: "prayers", heading: "Prayers", nodes: prayersNodes },
     { key: "collects", heading: "Collects", nodes: collectNodes },
@@ -789,7 +794,6 @@ export const BCP1662_OFFICE_SECTION_ORDER: Bcp1662OfficeSectionKey[] = [
   "opening",
   "psalms",
   "lessons",
-  "canticles",
   "creed",
   "prayers",
   "collects",

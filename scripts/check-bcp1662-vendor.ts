@@ -65,6 +65,8 @@ async function main() {
   const cycleMin = await readJson("psalter-cycle.min.json");
   const rules = await readJson("lectionary-rules.json");
   const rulesMin = await readJson("lectionary-rules.min.json");
+  const psalter = await readJson("psalter.json");
+  const psalterMin = await readJson("psalter.min.json");
 
   for (const [name, a, b] of [
     ["lectionary-daily", daily, dailyMin],
@@ -72,6 +74,7 @@ async function main() {
     ["proper-psalms", psalms, psalmsMin],
     ["psalter-cycle", cycle, cycleMin],
     ["lectionary-rules", rules, rulesMin],
+    ["psalter", psalter, psalterMin],
   ] as const) {
     if (JSON.stringify(a) !== JSON.stringify(b)) {
       fail(`${name}.min.json does not match ${name}.json`, failures);
@@ -198,13 +201,60 @@ async function main() {
       fail(`rule missing id/summary: ${JSON.stringify(r)}`, failures);
   }
 
+  // coverdale psalter text (1662)
+  if (!psalter || typeof psalter !== "object") {
+    fail("psalter missing", failures);
+  } else {
+    let pcount = 0;
+    let vcount = 0;
+    for (let n = 1; n <= 150; n++) {
+      const p = psalter[String(n)];
+      if (!p || !Array.isArray(p.parts) || p.parts.length === 0) {
+        fail(`psalter missing psalm ${n}`, failures);
+        continue;
+      }
+      pcount++;
+      let hasVerse = false;
+      for (const part of p.parts) {
+        if (!part || typeof part.verses !== "object" || !part.verses) {
+          fail(`psalter psalm ${n} has invalid part/verses`, failures);
+          continue;
+        }
+        const keys = Object.keys(part.verses);
+        if (keys.length > 0) hasVerse = true;
+        vcount += keys.length;
+      }
+      if (!hasVerse) fail(`psalter psalm ${n} has no verses`, failures);
+    }
+    if (pcount !== 150)
+      fail(`psalter has ${pcount} psalms, expected 150`, failures);
+    if (vcount === 0) fail("psalter has no verses", failures);
+  }
+
   if (failures.length) {
     console.error("bcp1662 vendor check failed:");
     for (const f of failures) console.error(`  - ${f}`);
     process.exit(1);
   }
+  const psalmVerseCount = psalter
+    ? // SAFETY: vendored psalter JSON validated above to be a psalm-number-keyed map of parts/verses.
+      Object.values(
+        psalter as Record<
+          string,
+          { parts: Array<{ verses: Record<string, string> }> }
+        >,
+      ).reduce(
+        (s, p) =>
+          s +
+          (p.parts ?? []).reduce(
+            (ss, part) => ss + Object.keys(part.verses ?? {}).length,
+            0,
+          ),
+        0,
+      )
+    : 0;
   console.log(
-    `✓ bcp1662 vendor tables OK (daily ${total} days, proper sundays ${proper.sundays.length} seasons, holyDays ${proper.holyDays.length}, proper-psalm days ${psalms.days.length}, cycle 30 days, rules ${rules.rules.length})`,
+    `✓ bcp1662 vendor tables OK (daily ${total} days, proper sundays ${proper.sundays.length} seasons, holyDays ${proper.holyDays.length}, proper-psalm days ${psalms.days.length}, cycle 30 days, rules ${rules.rules.length}, psalter 150 psalms/${psalmVerseCount} verses)`,
   );
 }
 

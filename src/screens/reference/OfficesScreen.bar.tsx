@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import {
@@ -7,6 +7,7 @@ import {
 } from "../../components/shell/BarDropdown";
 import { Chevron } from "../../components/shell/Chevron";
 import { useSeasonColorMap } from "../../components/shell/SeasonDot";
+import { useEdition } from "../../context/EditionContext";
 import { useTheme } from "../../context/ThemeContext";
 import { addDays, colorFor, daysInMonth, weekday } from "../../lib/calendar";
 import type { CalendarDate } from "../../lib/calendar/types";
@@ -14,6 +15,7 @@ import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { useViewport } from "../../lib/viewport";
 import {
   BASE_OFFICES,
+  BCP1662_BASE_OFFICES,
   noSelect,
   type OfficeRite,
   type RefOfficeBase,
@@ -194,12 +196,23 @@ export function OfficesBar({
     officeDate,
     setOfficeDate,
   } = useReference();
+  const { edition } = useEdition();
   const { tokens } = useTheme();
   const { width } = useViewport();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const styles = useThemedStyles(styleDef);
-  const current = openOffice ?? "morning";
+  const offices = edition === "1662" ? BCP1662_BASE_OFFICES : BASE_OFFICES;
+  const current =
+    openOffice && offices.some((o) => o.id === openOffice)
+      ? openOffice
+      : "morning";
+
+  useEffect(() => {
+    if (openOffice && !offices.some((o) => o.id === openOffice)) {
+      setOpenOffice("morning");
+    }
+  }, [offices, openOffice, setOpenOffice]);
   // narrow bars tighten the chips; the main office bar uses the same breakpoint
   const compact = width < 500;
   // the narrowest phones drop Today from the bar; the date picker carries
@@ -224,7 +237,8 @@ export function OfficesBar({
     setMenuOpen(false);
   };
 
-  const showRite = current === "morning" || current === "evening";
+  const showRite =
+    edition !== "1662" && (current === "morning" || current === "evening");
 
   const controls = (
     <View style={[styles.barRight, compact && styles.barRightCompact]}>
@@ -306,7 +320,7 @@ export function OfficesBar({
           >
             <Chevron direction={menuOpen ? "up" : "down"} size={5} />
             <Text style={styles.officeBtnText}>
-              {BASE_OFFICES.find((b) => b.id === current)?.label}
+              {offices.find((b) => b.id === current)?.label}
             </Text>
           </Pressable>
         </View>
@@ -320,7 +334,7 @@ export function OfficesBar({
               accessibilityRole="button"
             />
             <View style={[styles.popover, styles.popMenuWide, sheetStyle]}>
-              {BASE_OFFICES.map((b) => {
+              {offices.map((b) => {
                 const isSelected = b.id === current;
                 return (
                   <Pressable
@@ -374,7 +388,7 @@ export function OfficesBar({
       <View style={styles.barLeft}>
         {leading}
         <View style={styles.offTabs}>
-          {BASE_OFFICES.map((t) => {
+          {offices.map((t) => {
             const isActive = t.id === current;
             return (
               <Pressable

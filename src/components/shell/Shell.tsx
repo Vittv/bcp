@@ -77,6 +77,7 @@ import {
   isReferencePage,
   OFFICE_LABEL,
   officeForHour,
+  officeForHour1662,
   type TabId,
   today,
   u,
@@ -118,7 +119,9 @@ export function Shell() {
   // on Today; stepping its prev/next/today never touches the global date
   const [lectionaryDate, setLectionaryDate] = useState<CalendarDate>(today);
   const [tab, setTab] = useState<TabId>(() =>
-    officeForHour(new Date().getHours()),
+    edition === "1662"
+      ? officeForHour1662(new Date().getHours())
+      : officeForHour(new Date().getHours()),
   );
   const [page, setPage] = useState<PageId>("today");
   // increments on every navigation (including re-entering the same
@@ -319,6 +322,16 @@ export function Shell() {
   const [bcp1662TodayLoading, setBcp1662TodayLoading] = useState(false);
 
   useEffect(() => {
+    if (edition !== "1662") return;
+    if (devotions) {
+      setDevotions(false);
+    }
+    if (tab !== "morning" && tab !== "evening") {
+      setTab(officeForHour1662(new Date().getHours()));
+    }
+  }, [devotions, edition, setDevotions, tab]);
+
+  useEffect(() => {
     if (edition !== "1662" || page !== "today") return;
     if (tab !== "morning" && tab !== "evening") {
       setBcp1662TodayDoc(null);
@@ -378,7 +391,13 @@ export function Shell() {
   };
   const nextLesserFeast = upcomingLesserFeast(now);
   const sidebarDetail: Partial<Record<PageId, SidebarDetail>> = {
-    today: { text: OFFICE_LABEL[officeForHour(new Date().getHours())] },
+    today: {
+      text: OFFICE_LABEL[
+        edition === "1662"
+          ? officeForHour1662(new Date().getHours())
+          : officeForHour(new Date().getHours())
+      ],
+    },
     saints: nextFeast
       ? {
           text: holyDayCountdown(nextFeast, now),

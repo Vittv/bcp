@@ -186,6 +186,9 @@ export const sidebarStyles = defineThemedStyles({
     color: "var(--accent)",
     fontWeight: "500",
   },
+  editionBullet: {
+    fontSize: 10,
+  },
   footer: {
     height: 24,
     flexShrink: 0,

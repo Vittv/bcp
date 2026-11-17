@@ -6,6 +6,7 @@ export type {
 } from "./shared/model";
 export {
   BASE_OFFICES,
+  BCP1662_BASE_OFFICES,
   defaultLesserFeast,
   defaultSaint,
   FIRST_COLLECT,

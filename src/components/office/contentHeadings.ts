@@ -1,25 +1,26 @@
-import { SERIF_FONT, SUBHEADING_FONT } from "../../lib/fonts";
+import { CHROME_FONT, SUBHEADING_FONT } from "../../lib/fonts";
 import {
   defineThemedStyles,
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
 
-// every content section rule (Opening, Psalms, Lessons, etc.) shares one
-// BCP-like voice: centered serif small-caps style, larger than body labels,
-// with a hairline rule beneath. both pages must keep step here, so they call
-// this one hook instead of spelling the rule out again.
+// every content section rule (PSALMS, READINGS, COLLECT OF THE DAY) across
+// the office and saints pages shares one voice: Inter Tight 11/600,
+// letterspaced, uppercase, accent red, hairline rule directly beneath.
+// both pages must keep step here, so they call this one hook instead of
+// spelling the rule out again. the space above outranks the subheading's, so a
+// new section breaks wider than a new block and the two ranks stay distinct
 const sectionHeadingStyles = defineThemedStyles({
   rule: {
-    fontFamily: SERIF_FONT,
-    fontSize: 15,
+    fontFamily: CHROME_FONT,
+    fontSize: 11,
     fontWeight: "600",
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     textTransform: "uppercase",
-    textAlign: "center",
     color: "var(--accent)",
-    marginBottom: 10,
-    marginTop: 22,
-    paddingBottom: 8,
+    marginBottom: 8,
+    marginTop: 18,
+    paddingBottom: 6,
     borderBottomWidth: 1,
     borderBottomColor: "var(--border-content)",
   },

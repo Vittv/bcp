@@ -18,6 +18,7 @@ export function OfficeHeader({ document }: { document: OfficeDocument }) {
       {document.entryTitle ? (
         <Text style={styles.entryTitle}>{document.entryTitle}</Text>
       ) : null}
+      <Text style={styles.editionLabel}>1979 - The Episcopal Church BCP</Text>
     </View>
   );
 }
@@ -52,5 +53,12 @@ const officeHeaderStyles = defineThemedStyles({
     textTransform: "uppercase",
     color: "var(--accent)",
     marginTop: 8,
+  },
+  editionLabel: {
+    fontFamily: CHROME_FONT,
+    fontSize: 11,
+    fontWeight: "500",
+    color: "var(--text-secondary)",
+    marginTop: 6,
   },
 });

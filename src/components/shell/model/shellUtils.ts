@@ -41,6 +41,11 @@ export function officeForHour(hour: number): TabId {
   return "compline";
 }
 
+export function officeForHour1662(hour: number): TabId {
+  if (hour < 12) return "morning";
+  return "evening";
+}
+
 // sidebar observance detail: the days until the next fixed feast ("today" on
 // a feast day), wrapping to the start of the table when the year ends
 export function holyDayCountdown(
