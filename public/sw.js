@@ -7,69 +7,85 @@
 // (public/index.html skips registration there), because a stale worker
 // inside the webview would keep serving an old embedded bundle after an
 // app update on windows, where tauri serves http://tauri.localhost.
-const VERSION = "v2";
-const CACHE = `bcp-${VERSION}`;
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE));
-  self.skipWaiting();
-});
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    (async () => {
-      for (const name of await caches.keys()) {
-        if (name !== CACHE) await caches.delete(name);
-      }
-      await self.clients.claim();
-    })(),
-  );
-});
-
-function isImmutable(url) {
-  return (
-    url.pathname.includes("/_expo/static/") ||
-    url.pathname.includes("/assets/") ||
-    /\.(woff2?|png|svg|ico)$/.test(url.pathname)
-  );
-}
-
-async function cacheFirst(request) {
-  const cache = await caches.open(CACHE);
-  const hit = await cache.match(request);
-  if (hit) return hit;
-  const response = await fetch(request);
-  // await the write: the worker can be stopped as soon as respondWith settles
-  if (response.ok) await cache.put(request, response.clone());
-  return response;
-}
-
-// the document and manifest revalidate in the background: the cached copy
-// answers at once, so a launch never waits on a slow or absent network
-async function refresh(request) {
-  const cache = await caches.open(CACHE);
-  const response = await fetch(request);
-  if (response.ok) await cache.put(request, response.clone());
-  return response;
-}
-
-async function cacheThenRefresh(request, refreshed) {
-  const cache = await caches.open(CACHE);
-  const cached = await cache.match(request);
-  return cached ?? refreshed;
-}
-
-self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-  if (event.request.method !== "GET" || url.origin !== location.origin) {
+(() => {
+  // dev bundles are unversioned, so a caching worker replays stale revisions and
+  // loops reloads; a worker installed on a dev host uninstalls itself instead
+  const isDev =
+    self.location.hostname === "localhost" ||
+    self.location.hostname === "127.0.0.1" ||
+    self.location.port === "8081";
+  if (isDev) {
+    self.addEventListener("install", () => self.skipWaiting());
+    self.addEventListener("activate", () => {
+      self.registration.unregister();
+    });
     return;
   }
-  if (isImmutable(url)) {
-    event.respondWith(cacheFirst(event.request));
-    return;
+
+  const VERSION = "v2";
+  const CACHE = `bcp-${VERSION}`;
+
+  self.addEventListener("install", (event) => {
+    event.waitUntil(caches.open(CACHE));
+    self.skipWaiting();
+  });
+
+  self.addEventListener("activate", (event) => {
+    event.waitUntil(
+      (async () => {
+        for (const name of await caches.keys()) {
+          if (name !== CACHE) await caches.delete(name);
+        }
+        await self.clients.claim();
+      })(),
+    );
+  });
+
+  function isImmutable(url) {
+    return (
+      url.pathname.includes("/_expo/static/") ||
+      url.pathname.includes("/assets/") ||
+      /\.(woff2?|png|svg|ico)$/.test(url.pathname)
+    );
   }
-  // index.html and the manifest: cached first, refreshed behind the scenes
-  const refreshed = refresh(event.request);
-  event.waitUntil(refreshed.catch(() => {}));
-  event.respondWith(cacheThenRefresh(event.request, refreshed));
-});
+
+  async function cacheFirst(request) {
+    const cache = await caches.open(CACHE);
+    const hit = await cache.match(request);
+    if (hit) return hit;
+    const response = await fetch(request);
+    // await the write: the worker can be stopped as soon as respondWith settles
+    if (response.ok) await cache.put(request, response.clone());
+    return response;
+  }
+
+  // the document and manifest revalidate in the background: the cached copy
+  // answers at once, so a launch never waits on a slow or absent network
+  async function refresh(request) {
+    const cache = await caches.open(CACHE);
+    const response = await fetch(request);
+    if (response.ok) await cache.put(request, response.clone());
+    return response;
+  }
+
+  async function cacheThenRefresh(request, refreshed) {
+    const cache = await caches.open(CACHE);
+    const cached = await cache.match(request);
+    return cached ?? refreshed;
+  }
+
+  self.addEventListener("fetch", (event) => {
+    const url = new URL(event.request.url);
+    if (event.request.method !== "GET" || url.origin !== location.origin) {
+      return;
+    }
+    if (isImmutable(url)) {
+      event.respondWith(cacheFirst(event.request));
+      return;
+    }
+    // index.html and the manifest: cached first, refreshed behind the scenes
+    const refreshed = refresh(event.request);
+    event.waitUntil(refreshed.catch(() => {}));
+    event.respondWith(cacheThenRefresh(event.request, refreshed));
+  });
+})();
