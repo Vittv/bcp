@@ -549,6 +549,7 @@ export function composeBcp1662Office(
       officeDef?.lordsPrayerOpeningRubric ??
       "Then the Minister shall kneel, and say the Lord's Prayer with an audible voice; the people also kneeling, and repeating it with him.",
   });
+  openingNodes.push({ kind: "heading", text: "The Lord's Prayer" });
   openingNodes.push({
     kind: "text",
     text:
@@ -752,6 +753,7 @@ export function composeBcp1662Office(
       officeDef?.lordsPrayerRubric ??
       "Then the Minister, Clerks, and people shall say the Lord's Prayer with a loud voice.",
   });
+  prayersNodes.push({ kind: "heading", text: "The Lord's Prayer" });
   prayersNodes.push({
     kind: "text",
     text: BCP1662_OFFICE_TEXT.common.lords_prayer,
