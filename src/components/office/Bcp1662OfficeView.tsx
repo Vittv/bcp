@@ -152,6 +152,7 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
     ?.nodes.find((n) => n.kind === "psalm");
   const psalmRefs = psalmNode?.kind === "psalm" ? psalmNode.refs : [];
   const [psalmSelection, setPsalmSelection] = useState<string>("suggested");
+  const [lessonSelection, setLessonSelection] = useState<string>("suggested");
   const isOpeningSentence = (text: string) =>
     sentences.some((s) => s.text === text);
   const truncate = (s: string, n: number) =>
@@ -213,15 +214,46 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
               />
             </View>
           ) : null}
+          {section.key === "lessons" ? (
+            <View style={styles.controlRow}>
+              <ChoiceMenu
+                value={lessonSelection}
+                options={[
+                  {
+                    id: "suggested",
+                    label: "OT & NT",
+                    group: "Suggested",
+                  },
+                  { id: "first", label: "OT only", group: "Lessons" },
+                  {
+                    id: "second",
+                    label: "NT only",
+                    group: "Lessons",
+                  },
+                ]}
+                label="Lessons"
+                accessibilityLabel="Lessons"
+                fullWidth
+                onChange={setLessonSelection}
+              />
+            </View>
+          ) : null}
           {section.nodes
             .filter((node) => {
-              if (section.key !== "opening" || node.kind !== "text")
-                return true;
-              if (!isOpeningSentence(node.text)) return true;
-              if (openingSelection === "all") return true;
-              const target =
-                openingSelection === "suggested" ? suggested : openingSelection;
-              return node.text === target;
+              if (section.key === "opening" && node.kind === "text") {
+                if (!isOpeningSentence(node.text)) return true;
+                if (openingSelection === "all") return true;
+                const target =
+                  openingSelection === "suggested"
+                    ? suggested
+                    : openingSelection;
+                return node.text === target;
+              }
+              if (section.key === "lessons" && node.kind === "lesson") {
+                if (lessonSelection === "suggested") return true;
+                return node.slot === lessonSelection;
+              }
+              return true;
             })
             .map((node, i) => {
               const renderedNode =
@@ -239,13 +271,22 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
                         ),
                       }
                   : node;
+              const isLordsPrayerText =
+                node.kind === "text" &&
+                i > 0 &&
+                section.nodes[i - 1]?.kind === "heading" &&
+                section.nodes[i - 1]?.text === "The Lord's Prayer";
               return (
                 // nodes are composed in order without stable ids
-                <NodeView
+                <View
                   // biome-ignore lint/suspicious/noArrayIndexKey: composed office content
                   key={`${section.key}-${node.kind}-${i}`}
-                  node={renderedNode}
-                />
+                  style={
+                    isLordsPrayerText ? styles.lordsPrayerBlock : undefined
+                  }
+                >
+                  <NodeView node={renderedNode} />
+                </View>
               );
             })}
         </View>
@@ -357,6 +398,9 @@ const bcp1662Styles = defineThemedStyles({
     isolation: "isolate",
     marginTop: 8,
     marginBottom: 12,
+  },
+  lordsPrayerBlock: {
+    marginBottom: 16,
   },
   psalmPicker: {
     flexDirection: "row",
