@@ -149,7 +149,9 @@ const isWebBrowser =
   !("__TAURI_INTERNALS__" in window) &&
   // SAFETY: React Native sets navigator.product to "ReactNative"
   (navigator as { product?: string } | undefined)?.product !== "ReactNative";
-const useBundledScripture = !isWebBrowser;
+// dev web loads the bundled module so metro does not reload on each json chunk
+const useBundledScripture =
+  !isWebBrowser || (typeof __DEV__ !== "undefined" && __DEV__);
 
 export async function loadWebBook(
   abbrevOrName: string,
@@ -164,7 +166,9 @@ export async function loadWebBook(
   try {
     let bookModule: unknown;
     if (useBundledScripture) {
-      const { books } = await import("./vendor/web/bundled");
+      const { books } = await trackScriptureLoad(
+        import("./vendor/web/bundled"),
+      );
       bookModule = books[filename];
     } else {
       const { loaders } = await import("./vendor/web/loaders");

@@ -76,15 +76,36 @@
          internals check keeps the shell out and the embedded bundle remains the
          only content the webview can render. -->
     <script>
-      if (
-        !window.__TAURI_INTERNALS__ &&
-        window.location.protocol.startsWith("http") &&
-        "serviceWorker" in navigator
-      ) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("sw.js").catch(() => {});
-        });
-      }
+      (() => {
+        // the production worker caches dev bundles at their unversioned url and
+        // serves stale revisions, so dev hosts unregister it and skip registration
+        var dev =
+          location.hostname === "localhost" ||
+          location.hostname === "127.0.0.1" ||
+          location.port === "8081";
+        if (dev) {
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker
+              .getRegistrations()
+              .then((registrations) => {
+                registrations.forEach((registration) => {
+                  registration.unregister();
+                });
+              })
+              .catch(() => {});
+          }
+          return;
+        }
+        if (
+          !window.__TAURI_INTERNALS__ &&
+          location.protocol.startsWith("http") &&
+          "serviceWorker" in navigator
+        ) {
+          window.addEventListener("load", () => {
+            navigator.serviceWorker.register("sw.js").catch(() => {});
+          });
+        }
+      })();
     </script>
   </body>
 </html>
