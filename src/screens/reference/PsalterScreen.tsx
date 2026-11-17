@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { useSectionHeading } from "../../components/office/contentHeadings";
 import { PsalmText } from "../../components/office/PsalmText";
 import { Chevron } from "../../components/shell/Chevron";
+import { useEdition } from "../../context/EditionContext";
 import { usePalette } from "../../context/PaletteContext";
 import { parsePsalmCitation } from "../../lib/content/psalms";
 import { psalmPassage } from "../../lib/content/psalter";
@@ -13,6 +14,8 @@ import {
   psalterDaySummary,
 } from "../../lib/content/psalterDays";
 import type { PsalterDay } from "../../lib/content/types";
+import { getBcp1662PsalmPassages } from "../../lib/content/vendor/bcp1662";
+import bcp1662PsalterCycle from "../../lib/content/vendor/bcp1662/psalter-cycle.json";
 import { searchPsalterDays } from "../../lib/reference/search";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
@@ -30,8 +33,48 @@ import { useIndexKeyboard } from "./useIndexKeyboard";
 
 // the page opens on today's cycle day: the day of the month, with the 31st
 // reading day 30 and February ending at 28 or 29
-function currentDay(): number {
+function currentDay(edition: string): number {
+  if (edition === "1662") {
+    const d = today();
+    return Math.min(Math.max(d.day, 1), 30);
+  }
   return psalterDayForDate(today());
+}
+
+const BCP1662_PSLATER_DAY_COUNT = 30;
+
+function bcp1662PsalterDay(
+  day: number,
+): { morning: string[]; evening: string[] } | null {
+  const d = Math.min(Math.max(day, 1), BCP1662_PSLATER_DAY_COUNT);
+  // SAFETY: vendored 1662 psalter-cycle JSON is keyed by day number.
+  const entry = (
+    bcp1662PsalterCycle as {
+      days: Record<string, { morning: string[]; evening: string[] }>;
+    }
+  ).days[String(d)];
+  return entry ?? null;
+}
+
+function bcp1662PsalterDays(): PsalterDay[] {
+  const out: PsalterDay[] = [];
+  for (let day = 1; day <= BCP1662_PSLATER_DAY_COUNT; day++) {
+    const entry = bcp1662PsalterDay(day);
+    if (entry)
+      out.push({ day, morning: entry.morning, evening: entry.evening });
+  }
+  return out;
+}
+
+function searchBcp1662PsalterDays(query: string): PsalterDay[] {
+  const q = query.trim().toLowerCase();
+  return bcp1662PsalterDays().filter((day) => {
+    if (!q) return true;
+    if (String(day.day) === q) return true;
+    return [...day.morning, ...day.evening].some((p) =>
+      p.toLowerCase().includes(q),
+    );
+  });
 }
 
 export function PsalterScreen({
@@ -43,14 +86,15 @@ export function PsalterScreen({
   fontScale: number;
   onScrollProgress?: (pct: number) => void;
 }) {
+  const { edition } = useEdition();
   const { openPsalterDay } = useReference();
-  const day = openPsalterDay ?? currentDay();
+  const day = openPsalterDay ?? currentDay(edition);
   const styles = useThemedStyles(styleDef);
   if (isMobile) {
     return (
       <View style={styles.container}>
         <DetailPage compact>
-          <PsalterDetailBody day={day} />
+          <PsalterDetailBody day={day} edition={edition} />
         </DetailPage>
       </View>
     );
@@ -59,7 +103,7 @@ export function PsalterScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      detail={<PsalterDetailBody day={day} key={`d${day}`} />}
+      detail={<PsalterDetailBody day={day} edition={edition} key={`d${day}`} />}
       detailOpen
     />
   );
@@ -68,21 +112,24 @@ export function PsalterScreen({
 // the bar mirrors the psalms bar: the sidebar-show button and the current-day
 // chip that re-opens the floating picker, with prev/next arrows clamped 1-30
 export function PsalterBar({ leading }: { leading?: ReactNode }) {
+  const { edition } = useEdition();
   const { openPsalterDay, setOpenPsalterDay } = useReference();
   const palette = usePalette();
   const styles = useThemedStyles(styleDef);
-  const n = openPsalterDay ?? currentDay();
-  const psalms =
-    (psalterDay(n)?.morning.length ?? 0) + (psalterDay(n)?.evening.length ?? 0);
+  const n = openPsalterDay ?? currentDay(edition);
+  const dayCount =
+    edition === "1662" ? BCP1662_PSLATER_DAY_COUNT : PSALTER_DAY_COUNT;
+  const row = edition === "1662" ? bcp1662PsalterDay(n) : psalterDay(n);
+  const psalms = (row?.morning.length ?? 0) + (row?.evening.length ?? 0);
   const atStart = n <= 1;
-  const atEnd = n >= PSALTER_DAY_COUNT;
+  const atEnd = n >= dayCount;
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
         <PickerButton
           label={`Day ${n}`}
-          meta={`${n} / ${PSALTER_DAY_COUNT} · ${psalms} psalm${
+          meta={`${n} / ${dayCount} · ${psalms} psalm${
             psalms === 1 ? "" : "s"
           }`}
           onPress={() => palette.open("psalter")}
@@ -166,7 +213,14 @@ export function PsalterIndex({
   selected: number | null;
   onSelect: (n: number | null) => void;
 }) {
-  const hits = useMemo(() => searchPsalterDays(query), [query]);
+  const { edition } = useEdition();
+  const hits = useMemo(
+    () =>
+      edition === "1662"
+        ? searchBcp1662PsalterDays(query)
+        : searchPsalterDays(query),
+    [edition, query],
+  );
   const onEnter = useCallback(
     (_i: number, day: PsalterDay) =>
       onSelect(day.day === selected ? null : day.day),
@@ -197,25 +251,39 @@ export function PsalterIndex({
 // should sit still unless its day actually changes
 const PsalterDetailBody = memo(function PsalterDetailBody({
   day,
+  edition,
 }: {
   day: number;
+  edition: string;
 }) {
-  const row = psalterDay(day);
+  const is1662 = edition === "1662";
+  const dayCount = is1662 ? BCP1662_PSLATER_DAY_COUNT : PSALTER_DAY_COUNT;
+  const row = is1662 ? bcp1662PsalterDay(day) : psalterDay(day);
   const styles = useThemedStyles(styleDef);
   if (!row) return null;
   // the 31st repeats day 30, so say so instead of silently showing it twice
-  const repeats = day === PSALTER_DAY_COUNT && today().day > PSALTER_DAY_COUNT;
+  const repeats = day === dayCount && today().day > dayCount;
   return (
     <>
       <Text style={styles.detailTitle}>Day {day}</Text>
       <Text style={styles.detailSubtitle}>
-        {"The Psalter in 30 days · Morning and Evening portions"}
+        {is1662
+          ? "1662 Psalter · 30 days · Morning and Evening portions"
+          : "The Psalter in 30 days · Morning and Evening portions"}
       </Text>
       {repeats ? (
         <Text style={styles.canticleNote}>{"The 31st repeats day 30."}</Text>
       ) : null}
-      <PsalterPortion label="Morning Prayer" citations={row.morning} />
-      <PsalterPortion label="Evening Prayer" citations={row.evening} />
+      <PsalterPortion
+        label="Morning Prayer"
+        citations={row.morning}
+        edition={edition}
+      />
+      <PsalterPortion
+        label="Evening Prayer"
+        citations={row.evening}
+        edition={edition}
+      />
     </>
   );
 });
@@ -223,20 +291,27 @@ const PsalterDetailBody = memo(function PsalterDetailBody({
 function PsalterPortion({
   label,
   citations,
+  edition,
 }: {
   label: string;
   citations: string[];
+  edition: string;
 }) {
   const heading = useSectionHeading();
   const styles = useThemedStyles(styleDef);
   if (citations.length === 0) return null;
+  const is1662 = edition === "1662";
   return (
     <View>
       <Text style={heading}>{label}</Text>
       <View style={styles.psalterBlock}>
         {citations.map((citation, i) => {
           const parsed = parsePsalmCitation(citation);
-          const passage = parsed ? psalmPassage(parsed) : undefined;
+          const passage = is1662
+            ? getBcp1662PsalmPassages([citation])[0]
+            : parsed
+              ? psalmPassage(parsed)
+              : undefined;
           return (
             <View
               key={citation}
