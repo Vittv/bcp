@@ -360,8 +360,8 @@ const bcp1662Styles = defineThemedStyles({
   },
   psalmTitle: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 18,
-    lineHeight: 30,
+    fontSize: 16,
+    lineHeight: 24,
     color: "var(--text-secondary)",
     marginBottom: 2,
   },
@@ -435,7 +435,7 @@ const bcp1662Styles = defineThemedStyles({
   },
   rubric: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 18,
+    fontSize: 15,
     lineHeight: 25,
     color: "var(--text-secondary)",
     marginTop: 4,
@@ -461,7 +461,7 @@ const bcp1662Styles = defineThemedStyles({
   },
   lessonRef: {
     fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 18,
+    fontSize: 15,
     color: "var(--text-secondary)",
     marginTop: 4,
     marginBottom: 4,
