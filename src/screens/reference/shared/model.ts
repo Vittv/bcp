@@ -78,8 +78,8 @@ export const BCP1662_BASE_OFFICES: {
   label: string;
   name: string;
 }[] = [
-  { id: "morning", label: "Morning", name: "Morning Prayer" },
-  { id: "evening", label: "Evening", name: "Evening Prayer" },
+  { id: "morning", label: "Matins", name: "Matins" },
+  { id: "evening", label: "Evensong", name: "Evensong" },
 ];
 
 export function refOfficeId(

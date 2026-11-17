@@ -76,6 +76,7 @@ import {
   IS_WEB,
   isReferencePage,
   OFFICE_LABEL,
+  OFFICE_LABEL_1662,
   officeForHour,
   officeForHour1662,
   type TabId,
@@ -392,11 +393,15 @@ export function Shell() {
   const nextLesserFeast = upcomingLesserFeast(now);
   const sidebarDetail: Partial<Record<PageId, SidebarDetail>> = {
     today: {
-      text: OFFICE_LABEL[
-        edition === "1662"
-          ? officeForHour1662(new Date().getHours())
-          : officeForHour(new Date().getHours())
-      ],
+      text: (() => {
+        const currentTab =
+          edition === "1662"
+            ? officeForHour1662(new Date().getHours())
+            : officeForHour(new Date().getHours());
+        return edition === "1662"
+          ? (OFFICE_LABEL_1662[currentTab] ?? OFFICE_LABEL[currentTab])
+          : OFFICE_LABEL[currentTab];
+      })(),
     },
     saints: nextFeast
       ? {
@@ -675,9 +680,9 @@ export function Shell() {
                           officeName={
                             edition === "1662" && page === "today"
                               ? tab === "morning"
-                                ? "Morning Prayer"
+                                ? "Matins"
                                 : tab === "evening"
-                                  ? "Evening Prayer"
+                                  ? "Evensong"
                                   : (bcp1662TodayDoc?.officeName ??
                                     document.officeName)
                               : document.officeName

@@ -34,6 +34,11 @@ export const OFFICE_LABEL: Record<TabId, string> = {
   compline: "Compline",
 };
 
+export const OFFICE_LABEL_1662: Partial<Record<TabId, string>> = {
+  morning: "Matins",
+  evening: "Evensong",
+};
+
 export function officeForHour(hour: number): TabId {
   if (hour < 12) return "morning";
   if (hour < 17) return "noonday";
