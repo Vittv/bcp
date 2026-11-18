@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { resolveBcp1662Observance } from "../../calendar/bcp1662";
+import {
+  athanasianCreedDay,
+  resolveBcp1662Observance,
+} from "../../calendar/bcp1662";
 import {
   composeBcp1662ForDate,
   getBcp1662LessonsForDate,
@@ -69,6 +72,37 @@ describe("bcp1662 composition", () => {
     expect(office.psalmsSource).toBe("monthly");
     expect(office.monthlyPsalms).toEqual(["9", "10", "11"]);
     expect(office.psalms).toBeUndefined();
+  });
+
+  it("appoints the Athanasian Creed on its proper feasts", () => {
+    const onFeast = (month: number, day: number) =>
+      athanasianCreedDay(resolveBcp1662Observance({ year: 2026, month, day }));
+    expect(onFeast(11, 17)).toBe(false);
+    expect(onFeast(12, 25)).toBe(true);
+    expect(onFeast(1, 6)).toBe(true);
+    expect(onFeast(4, 5)).toBe(true);
+    expect(onFeast(5, 24)).toBe(true);
+    expect(onFeast(5, 31)).toBe(true);
+    expect(onFeast(11, 30)).toBe(true);
+  });
+
+  it("switches the creed to Athanasian at Matins on an appointed feast", async () => {
+    const { composeBcp1662OfficeForDate } = await import("../bcp1662");
+    const date = { year: 2026, month: 5, day: 31 };
+    const morning = await composeBcp1662OfficeForDate(date, "morning");
+    const section = morning.sections.find((s) => s.key === "creed");
+    expect(section?.heading).toBe("The Creed of Saint Athanasius");
+    const creeds = section?.nodes.flatMap((n) =>
+      n.kind === "creed" ? [{ id: n.id, suggested: n.suggested }] : [],
+    );
+    expect(creeds).toEqual([
+      { id: "apostles", suggested: false },
+      { id: "athanasian", suggested: true },
+    ]);
+    const evening = await composeBcp1662OfficeForDate(date, "evening");
+    expect(evening.sections.find((s) => s.key === "creed")?.heading).toBe(
+      "The Apostles' Creed",
+    );
   });
 
   it("emits canticles with a suggested default and drops invented section rules", async () => {

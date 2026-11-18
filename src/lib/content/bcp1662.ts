@@ -7,6 +7,7 @@
  * lectionary/psalm appointments, canticles, collects, and resolved scripture.
  */
 import {
+  athanasianCreedDay,
   type Bcp1662Observance,
   bcp1662MoveableDays,
   resolveBcp1662Observance,
@@ -266,6 +267,14 @@ export type Bcp1662OfficeNode =
       kind: "canticle";
       slot: "first" | "second";
       id: string;
+      title: string;
+      rubric?: string;
+      text: string;
+      suggested: boolean;
+    }
+  | {
+      kind: "creed";
+      id: "apostles" | "athanasian";
       title: string;
       rubric?: string;
       text: string;
@@ -751,16 +760,28 @@ export function composeBcp1662Office(
     }
   }
 
+  const useAthanasian =
+    office === "morning" && athanasianCreedDay(source.observance);
   const creedNodes: Bcp1662OfficeNode[] = [
     {
-      kind: "rubric",
-      text:
-        officeDef?.creedRubric ??
-        BCP1662_OFFICE_TEXT.common.creed_rubric ??
-        "Then shall be sung or said the Apostles' Creed.",
+      kind: "creed",
+      id: "apostles",
+      title: "The Apostles' Creed",
+      rubric: officeDef?.creedRubric ?? BCP1662_OFFICE_TEXT.common.creed_rubric,
+      text: BCP1662_OFFICE_TEXT.common.apostles_creed,
+      suggested: !useAthanasian,
     },
-    { kind: "text", text: BCP1662_OFFICE_TEXT.common.apostles_creed },
   ];
+  if (BCP1662_OFFICE_TEXT.common.athanasian_creed) {
+    creedNodes.push({
+      kind: "creed",
+      id: "athanasian",
+      title: "The Creed of Saint Athanasius",
+      rubric: BCP1662_OFFICE_TEXT.common.athanasian_creed_rubric,
+      text: BCP1662_OFFICE_TEXT.common.athanasian_creed,
+      suggested: useAthanasian,
+    });
+  }
 
   const prayersNodes: Bcp1662OfficeNode[] = [];
   if (officeDef?.prayersRubric) {
@@ -887,7 +908,13 @@ export function composeBcp1662Office(
       heading: "The Lessons",
       nodes: lessonsAndCanticles,
     },
-    { key: "creed", heading: "The Apostles' Creed", nodes: creedNodes },
+    {
+      key: "creed",
+      heading: useAthanasian
+        ? "The Creed of Saint Athanasius"
+        : "The Apostles' Creed",
+      nodes: creedNodes,
+    },
     { key: "prayers", heading: "The Prayers", nodes: prayersNodes },
     { key: "collects", nodes: collectNodes },
     { key: "closing", nodes: closingNodes },
