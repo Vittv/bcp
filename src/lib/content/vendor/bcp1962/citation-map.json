@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "edition": "1962",
+    "title": "1962 Canadian BCP, citation normalization map",
+    "description": "Book-name aliases and psalm-part rules used to normalize 1962 citations for the app's scripture loaders. The raw citation is always kept alongside the normalized form.",
+    "sources": [
+      {
+        "role": "witness convention",
+        "ref": "The Book of Common Prayer (1962), The Table of Lessons and Proper Psalms",
+        "url": "https://www.anglican.ca/wp-content/uploads/bcp.pdf",
+        "note": "Alias targets are the book ids used by the app's KJV and KJVA corpora."
+      }
+    ],
+    "compiled": "2026-11-18",
+    "caveats": []
+  },
+  "bookAliases": [
+    ["Ecclesiasticus", "Sirach"],
+    ["Ecclus.", "Sirach"],
+    ["Ecclus", "Sirach"],
+    ["Wisdom of Solomon", "Wisdom"],
+    ["Wisd.", "Wisdom"],
+    ["Wisd", "Wisdom"],
+    ["S. of Sol.", "Song"],
+    ["S. of the Three Children", "S3Y"],
+    ["Song of Three Children", "S3Y"],
+    ["Prayer of Manasses", "Pr Man"],
+    ["2 Esdras", "2 Esd"],
+    ["Revelations", "Rev"],
+    ["Psalm", "Ps"]
+  ],
+  "psalmParts": {
+    "book": "Ps",
+    "chapter": 119,
+    "partCount": 22,
+    "versesPerPart": 8
+  },
+  "endKeyword": {
+    "token": "end",
+    "strategy": "replace with the last verse of the loaded chapter, keep raw citation on failure"
+  }
+}

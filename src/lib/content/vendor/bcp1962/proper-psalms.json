@@ -1,0 +1,1158 @@
+{
+  "meta": {
+    "edition": "1962",
+    "title": "1962 Canadian BCP, Psalms proper for Sundays and holy days",
+    "description": "The table 'Psalms to be used on Sundays and Holy-days' from the official ACC 1962 BCP. Mattins and Evensong columns are for the Daily Office. The Eucharist columns are stored for fidelity but are not used by a Daily Office experience.",
+    "sources": [
+      {
+        "role": "primary witness",
+        "ref": "The Book of Common Prayer (1962), General Synod of the Anglican Church of Canada, Proper Psalms, printed pages l to liii",
+        "url": "https://www.anglican.ca/wp-content/uploads/bcp.pdf",
+        "note": "Local copy /tmp/opencode/bcp1962-acc.pdf, text extracted with pdftotext -layout."
+      },
+      {
+        "role": "cross-check only",
+        "ref": "Prayer Book Society of Canada, BCP Online, Tables of Psalms",
+        "url": "https://prayerbook.ca/bcp-online/tables-of-psalms/",
+        "note": "Third-party presentation used only to flag discrepancies, never as the transcription base."
+      }
+    ],
+    "compiled": "2026-11-18",
+    "caveats": [
+      "Psalm appointments are raw strings because the witness uses alternatives and Psalm 119 parts, for example '96, 97, or 119, Pts 11, 12' and '119, Pts 1, 2'.",
+      "A null slot means the witness left the cell blank or referred the reader elsewhere.",
+      "First Evensong rows are separate entries with an id suffix and only an evensong value.",
+      "Ids are editorial join keys derived from the witness row labels."
+    ]
+  },
+  "days": [
+    {
+      "id": "advent-1",
+      "name": "Advent 1",
+      "mattins": "9",
+      "evensong": "50",
+      "eucharist": {
+        "introit": "25. 1–7",
+        "betweenLections": "85. 4–7"
+      }
+    },
+    {
+      "id": "advent-2",
+      "name": "Advent 2",
+      "mattins": "96, 97, or 119, Pts 11, 12",
+      "evensong": "98, 99, or 119, Pts 13, 14",
+      "eucharist": {
+        "introit": "80. 1–7, or 119, Pt 17",
+        "betweenLections": "50. 1–6"
+      }
+    },
+    {
+      "id": "advent-ember-days",
+      "name": "Ember Days in Advent",
+      "mattins": null,
+      "evensong": "(see Pentecost)",
+      "eucharist": {
+        "introit": "119, Pt 19",
+        "betweenLections": "85. 1–3"
+      },
+      "note": "The witness refers the Mattins and Evensong appointment to the Pentecost Ember Days."
+    },
+    {
+      "id": "advent-3",
+      "name": "Advent 3",
+      "mattins": "11, 12",
+      "evensong": "13, 14",
+      "eucharist": {
+        "introit": "33. 1–6",
+        "betweenLections": "80. 1–3"
+      }
+    },
+    {
+      "id": "advent-4",
+      "name": "Advent 4",
+      "mattins": "33",
+      "evensong": "25",
+      "eucharist": {
+        "introit": "19. 1–6",
+        "betweenLections": "145. 18–22"
+      }
+    },
+    {
+      "id": "christmas-first-evensong",
+      "name": "The First Evensong of Christmas",
+      "mattins": "(of Christmas)",
+      "evensong": "8, 19"
+    },
+    {
+      "id": "christmas-day",
+      "name": "Christmas Day",
+      "mattins": "45",
+      "evensong": "85, 110",
+      "eucharist": {
+        "introit": "98. 1–4, or 2. 7–8",
+        "betweenLections": "98. 5–7, or 110. 1–4"
+      }
+    },
+    {
+      "id": "st-stephen",
+      "name": "St Stephen",
+      "mattins": "15, 16",
+      "evensong": "31",
+      "eucharist": {
+        "introit": "119, Pt 3",
+        "betweenLections": "119, Pt 21"
+      }
+    },
+    {
+      "id": "st-john",
+      "name": "St John the Evangelist",
+      "mattins": "116, 117",
+      "evensong": "27",
+      "eucharist": {
+        "introit": "92. 1–4",
+        "betweenLections": "92. 12–15"
+      }
+    },
+    {
+      "id": "innocents",
+      "name": "Innocents",
+      "mattins": "26",
+      "evensong": "130, 131",
+      "eucharist": {
+        "introit": "8. 1–2",
+        "betweenLections": "124. 5–7"
+      }
+    },
+    {
+      "id": "sundays-after-christmas",
+      "name": "Sundays after Christmas",
+      "mattins": "132",
+      "evensong": "45",
+      "eucharist": {
+        "introit": "93",
+        "betweenLections": "110. 1–4"
+      }
+    },
+    {
+      "id": "octave-day",
+      "name": "Octave Day (Jan. 1)",
+      "mattins": "85, 113",
+      "evensong": "125, 126, 127",
+      "eucharist": {
+        "introit": "8",
+        "betweenLections": "145. 18–22"
+      }
+    },
+    {
+      "id": "epiphany-first-evensong",
+      "name": "The First Evensong of the Epiphany",
+      "mattins": "(of the Epiphany)",
+      "evensong": "66, 67"
+    },
+    {
+      "id": "epiphany",
+      "name": "The Epiphany",
+      "mattins": "87, 93",
+      "evensong": "72",
+      "eucharist": {
+        "introit": "72. 1–7",
+        "betweenLections": "72. 8–11"
+      }
+    },
+    {
+      "id": "epiphany-1",
+      "name": "Epiphany 1",
+      "mattins": "66",
+      "evensong": "119, Pts 1, 2",
+      "eucharist": {
+        "introit": "100",
+        "betweenLections": "84. 1–4"
+      }
+    },
+    {
+      "id": "epiphany-2",
+      "name": "Epiphany 2",
+      "mattins": "27",
+      "evensong": "34",
+      "eucharist": {
+        "introit": "66. 1–3",
+        "betweenLections": "107. 8–9"
+      }
+    },
+    {
+      "id": "epiphany-3",
+      "name": "Epiphany 3",
+      "mattins": "96, 97",
+      "evensong": "65, 67",
+      "eucharist": {
+        "introit": "148. 1–6",
+        "betweenLections": "102. 15–18"
+      }
+    },
+    {
+      "id": "epiphany-4",
+      "name": "Epiphany 4",
+      "mattins": "119, Pts 3, 4",
+      "evensong": "107, Pt 1",
+      "eucharist": {
+        "introit": "98. 1–7",
+        "betweenLections": "98. 8–10"
+      }
+    },
+    {
+      "id": "epiphany-5",
+      "name": "Epiphany 5",
+      "mattins": "148, 149",
+      "evensong": "119, Pts 5, 6",
+      "eucharist": {
+        "introit": "97. 1–6",
+        "betweenLections": "126. 5–7"
+      }
+    },
+    {
+      "id": "epiphany-6",
+      "name": "Epiphany 6",
+      "mattins": "139",
+      "evensong": "141, 142",
+      "eucharist": {
+        "introit": "99. 1–5",
+        "betweenLections": "99. 6–9"
+      }
+    },
+    {
+      "id": "septuagesima",
+      "name": "Septuagesima",
+      "mattins": "104, Pt 1",
+      "evensong": "80",
+      "eucharist": {
+        "introit": "18. 1–7",
+        "betweenLections": "119, Pt 4"
+      }
+    },
+    {
+      "id": "sexagesima",
+      "name": "Sexagesima",
+      "mattins": "42, 43",
+      "evensong": "81",
+      "eucharist": {
+        "introit": "44. 24–27",
+        "betweenLections": "17. 6–9"
+      }
+    },
+    {
+      "id": "quinquagesima",
+      "name": "Quinquagesima",
+      "mattins": "84, 133",
+      "evensong": "103",
+      "eucharist": {
+        "introit": "31. 1–6",
+        "betweenLections": "31. 22–26"
+      }
+    },
+    {
+      "id": "ash-wednesday",
+      "name": "Ash Wednesday",
+      "mattins": "6, 143",
+      "evensong": "102",
+      "eucharist": {
+        "introit": "57. 1–7",
+        "betweenLections": "103. 8–14"
+      }
+    },
+    {
+      "id": "lent-1",
+      "name": "Lent 1",
+      "mattins": "38",
+      "evensong": "32, 36",
+      "eucharist": {
+        "introit": "91. 1–8",
+        "betweenLections": "91. 9–16"
+      }
+    },
+    {
+      "id": "lent-ember-days",
+      "name": "Ember Days in Lent",
+      "mattins": null,
+      "evensong": "(see Pentecost)",
+      "eucharist": {
+        "introit": "84. 8–13",
+        "betweenLections": "141. 1–4"
+      },
+      "note": "The witness refers the Mattins and Evensong appointment to the Pentecost Ember Days."
+    },
+    {
+      "id": "lent-2",
+      "name": "Lent 2",
+      "mattins": "51",
+      "evensong": "130, 131, 134",
+      "eucharist": {
+        "introit": "25. 1–7",
+        "betweenLections": "123"
+      }
+    },
+    {
+      "id": "lent-3",
+      "name": "Lent 3",
+      "mattins": "52, 54",
+      "evensong": "55 or 102",
+      "eucharist": {
+        "introit": "25. 8–15",
+        "betweenLections": "25. 16–22"
+      }
+    },
+    {
+      "id": "lent-4",
+      "name": "Lent 4",
+      "mattins": "86, 87",
+      "evensong": "75, 76",
+      "eucharist": {
+        "introit": "122",
+        "betweenLections": "125"
+      }
+    },
+    {
+      "id": "passion-sunday",
+      "name": "Passion Sunday",
+      "mattins": "77",
+      "evensong": "73",
+      "eucharist": {
+        "introit": "43",
+        "betweenLections": "143. 1–10"
+      }
+    },
+    {
+      "id": "palm-sunday",
+      "name": "Palm Sunday",
+      "mattins": "23, 24",
+      "evensong": "118",
+      "eucharist": {
+        "introit": "118. 19–29, 22. 1–11",
+        "betweenLections": "22. 12–21"
+      }
+    },
+    {
+      "id": "holy-week-monday",
+      "name": "Monday in Holy Week",
+      "mattins": "94",
+      "evensong": "69",
+      "eucharist": {
+        "introit": "35. 1–3",
+        "betweenLections": "79. 8–10"
+      }
+    },
+    {
+      "id": "holy-week-tuesday",
+      "name": "Tuesday in Holy Week",
+      "mattins": "71",
+      "evensong": "79",
+      "eucharist": {
+        "introit": "69. 17–22",
+        "betweenLections": "35. 11–16"
+      }
+    },
+    {
+      "id": "holy-week-wednesday",
+      "name": "Wednesday in Holy Week",
+      "mattins": "109",
+      "evensong": "120, 140",
+      "eucharist": {
+        "introit": "102. 1–11",
+        "betweenLections": "55. 12–15"
+      }
+    },
+    {
+      "id": "maundy-thursday",
+      "name": "Maundy Thursday",
+      "mattins": "40, 41",
+      "evensong": "116, 117",
+      "eucharist": {
+        "introit": "67",
+        "betweenLections": "22. 22–26"
+      }
+    },
+    {
+      "id": "good-friday",
+      "name": "Good Friday",
+      "mattins": "22",
+      "evensong": "88",
+      "eucharist": {
+        "introit": null,
+        "betweenLections": "54"
+      }
+    },
+    {
+      "id": "holy-saturday",
+      "name": "Holy Saturday",
+      "mattins": "16, 30",
+      "evensong": "27",
+      "eucharist": {
+        "introit": "42. 1–7",
+        "betweenLections": "42. 8–14"
+      }
+    },
+    {
+      "id": "easter-day",
+      "name": "Easter Day",
+      "mattins": "2, 3",
+      "evensong": "113, 114",
+      "eucharist": {
+        "introit": "139. 1–5, 17–18, or 30. 1–5",
+        "betweenLections": "118. 22–25"
+      }
+    },
+    {
+      "id": "easter-week-monday",
+      "name": "Monday in Easter Week",
+      "mattins": "20, 21",
+      "evensong": "118",
+      "eucharist": {
+        "introit": "105. 1–6",
+        "betweenLections": "118. 22–25"
+      }
+    },
+    {
+      "id": "easter-week-tuesday",
+      "name": "Tuesday in Easter Week",
+      "mattins": "34",
+      "evensong": "29, 30",
+      "eucharist": {
+        "introit": "106. 1–5",
+        "betweenLections": "118. 22–25"
+      }
+    },
+    {
+      "id": "easter-week-wednesday",
+      "name": "Wednesday in Easter Week",
+      "mattins": "42, 43",
+      "evensong": "147",
+      "eucharist": {
+        "introit": "(see Easter Day)",
+        "betweenLections": "(see Easter Day)"
+      }
+    },
+    {
+      "id": "easter-week-thursday",
+      "name": "Thursday in Easter Week",
+      "mattins": "81",
+      "evensong": "66",
+      "eucharist": {
+        "introit": "(see Easter Day)",
+        "betweenLections": "(see Easter Day)"
+      }
+    },
+    {
+      "id": "easter-week-friday",
+      "name": "Friday in Easter Week",
+      "mattins": "103",
+      "evensong": "145",
+      "eucharist": {
+        "introit": "(see Easter Day)",
+        "betweenLections": "(see Easter Day)"
+      }
+    },
+    {
+      "id": "easter-week-saturday",
+      "name": "Saturday in Easter Week",
+      "mattins": "27",
+      "evensong": "146, 150",
+      "eucharist": {
+        "introit": "(see Easter Day)",
+        "betweenLections": "(see Easter Day)"
+      }
+    },
+    {
+      "id": "easter-1",
+      "name": "Easter 1",
+      "mattins": "56, 57",
+      "evensong": "111, 112",
+      "eucharist": {
+        "introit": "81. 1–4",
+        "betweenLections": "118. 22–25"
+      }
+    },
+    {
+      "id": "easter-2",
+      "name": "Easter 2",
+      "mattins": "135",
+      "evensong": "23, 115",
+      "eucharist": {
+        "introit": "33. 1–9",
+        "betweenLections": "63. 1–4"
+      }
+    },
+    {
+      "id": "easter-3",
+      "name": "Easter 3",
+      "mattins": "121, 122",
+      "evensong": "123, 124, 125",
+      "eucharist": {
+        "introit": "66. 1–6",
+        "betweenLections": "66. 7–8"
+      }
+    },
+    {
+      "id": "easter-4",
+      "name": "Easter 4",
+      "mattins": "126, 127, 128",
+      "evensong": "136",
+      "eucharist": {
+        "introit": "98. 1–4",
+        "betweenLections": "118. 15–18"
+      }
+    },
+    {
+      "id": "rogation-sunday",
+      "name": "Rogation Sunday",
+      "mattins": "46, 63",
+      "evensong": "61, 62",
+      "eucharist": {
+        "introit": "107. 1–9",
+        "betweenLections": "66. 15–19"
+      }
+    },
+    {
+      "id": "rogation-monday",
+      "name": "Rogation Monday",
+      "mattins": "126, 144",
+      "evensong": "104",
+      "eucharist": {
+        "introit": "4",
+        "betweenLections": "23"
+      }
+    },
+    {
+      "id": "rogation-tuesday",
+      "name": "Rogation Tuesday",
+      "mattins": "68, Pt 1",
+      "evensong": "65, 67",
+      "eucharist": {
+        "introit": "18. 1–7",
+        "betweenLections": "118. 1–4"
+      }
+    },
+    {
+      "id": "rogation-wednesday",
+      "name": "Rogation Wednesday",
+      "mattins": "11, 12, 13",
+      "evensong": null,
+      "eucharist": {
+        "introit": "65. 10–15",
+        "betweenLections": "23"
+      }
+    },
+    {
+      "id": "ascension-first-evensong",
+      "name": "The First Evensong of the Ascension",
+      "mattins": "(of the Ascension)",
+      "evensong": "68, Pt 2"
+    },
+    {
+      "id": "ascension-day",
+      "name": "Ascension Day",
+      "mattins": "8, 15",
+      "evensong": "24, 47",
+      "eucharist": {
+        "introit": "47. 1–7",
+        "betweenLections": "68. 17–20"
+      }
+    },
+    {
+      "id": "ascension-1",
+      "name": "Ascension 1",
+      "mattins": "20, 21",
+      "evensong": "98, 99",
+      "eucharist": {
+        "introit": "27. 1–12",
+        "betweenLections": "47. 5–10"
+      }
+    },
+    {
+      "id": "whitsunday-first-evensong",
+      "name": "The First Evensong of Whitsunday",
+      "mattins": "(of Whitsunday)",
+      "evensong": "42, 117"
+    },
+    {
+      "id": "pentecost",
+      "name": "Pentecost",
+      "mattins": "145",
+      "evensong": "48, 104, Pt 2",
+      "eucharist": {
+        "introit": "68. 1–6, or 122",
+        "betweenLections": "68. 7–10, or 125"
+      }
+    },
+    {
+      "id": "pentecost-octave-monday",
+      "name": "Monday in the Octave of Pentecost",
+      "mattins": "66, 67",
+      "evensong": "86, 87",
+      "eucharist": {
+        "introit": "81. 13–16",
+        "betweenLections": "104. 28–31"
+      }
+    },
+    {
+      "id": "pentecost-octave-tuesday",
+      "name": "Tuesday in the Octave of Pentecost",
+      "mattins": "46, 48",
+      "evensong": "119, Pts 1, 2, 3",
+      "eucharist": {
+        "introit": "78. 1–8",
+        "betweenLections": "23. 1–4"
+      }
+    },
+    {
+      "id": "whitsunday-ember-wednesday",
+      "name": "Wednesday Ember Day after Whitsunday",
+      "mattins": "119, Pts 4, 5",
+      "evensong": "119, Pts 6, 7, 8",
+      "eucharist": {
+        "introit": "132. 7–10",
+        "betweenLections": "135. 19–21"
+      }
+    },
+    {
+      "id": "pentecost-octave-thursday",
+      "name": "Thursday in the Octave of Pentecost",
+      "mattins": "119, Pts 9, 10",
+      "evensong": "119, Pts 11, 12, 13",
+      "eucharist": {
+        "introit": "(see Pentecost)",
+        "betweenLections": "(see Pentecost)"
+      }
+    },
+    {
+      "id": "whitsunday-ember-friday",
+      "name": "Friday Ember Day after Whitsunday",
+      "mattins": "119, Pts 14, 15",
+      "evensong": "119, Pts 16, 17, 18",
+      "eucharist": {
+        "introit": "(see Ember Wednesday)",
+        "betweenLections": "(see Ember Wednesday)"
+      }
+    },
+    {
+      "id": "whitsunday-ember-saturday",
+      "name": "Saturday Ember Day after Whitsunday",
+      "mattins": "119, Pts 19, 20",
+      "evensong": "119, Pts 21, 22",
+      "eucharist": {
+        "introit": "(see Ember Wednesday)",
+        "betweenLections": "(see Ember Wednesday)"
+      }
+    },
+    {
+      "id": "trinity-sunday",
+      "name": "Trinity Sunday",
+      "mattins": "92, 93",
+      "evensong": "146, 150",
+      "eucharist": {
+        "introit": "8",
+        "betweenLections": "136. 1–3"
+      }
+    },
+    {
+      "id": "trinity-1",
+      "name": "Trinity 1",
+      "mattins": "1, 5",
+      "evensong": "4, 6",
+      "eucharist": {
+        "introit": "13",
+        "betweenLections": "41. 1–4"
+      }
+    },
+    {
+      "id": "trinity-2",
+      "name": "Trinity 2",
+      "mattins": "7, 8",
+      "evensong": "15, 16",
+      "eucharist": {
+        "introit": "18. 18–21",
+        "betweenLections": "23. 5–6"
+      }
+    },
+    {
+      "id": "trinity-3",
+      "name": "Trinity 3",
+      "mattins": "26",
+      "evensong": "19, 20",
+      "eucharist": {
+        "introit": "25. 16–22",
+        "betweenLections": "7. 9–12"
+      }
+    },
+    {
+      "id": "trinity-4",
+      "name": "Trinity 4",
+      "mattins": "18, Pt 1",
+      "evensong": "18, Pt 2",
+      "eucharist": {
+        "introit": "27. 1–7",
+        "betweenLections": "9. 9–12"
+      }
+    },
+    {
+      "id": "trinity-5",
+      "name": "Trinity 5",
+      "mattins": "28, 29",
+      "evensong": "30, 32",
+      "eucharist": {
+        "introit": "27. 8–16",
+        "betweenLections": "84. 8–13"
+      }
+    },
+    {
+      "id": "trinity-6",
+      "name": "Trinity 6",
+      "mattins": "34",
+      "evensong": "31",
+      "eucharist": {
+        "introit": "28. 7–10",
+        "betweenLections": "90. 14–18"
+      }
+    },
+    {
+      "id": "trinity-7",
+      "name": "Trinity 7",
+      "mattins": "37, Pt 1",
+      "evensong": "37, Pt 2",
+      "eucharist": {
+        "introit": "47. 1–4",
+        "betweenLections": "34. 11–15"
+      }
+    },
+    {
+      "id": "trinity-8",
+      "name": "Trinity 8",
+      "mattins": "39, 41",
+      "evensong": "40",
+      "eucharist": {
+        "introit": "48. 1–12",
+        "betweenLections": "48. 13–15"
+      }
+    },
+    {
+      "id": "trinity-9",
+      "name": "Trinity 9",
+      "mattins": "44",
+      "evensong": "46, 47",
+      "eucharist": {
+        "introit": "54",
+        "betweenLections": "105. 39–43"
+      }
+    },
+    {
+      "id": "trinity-10",
+      "name": "Trinity 10",
+      "mattins": "50",
+      "evensong": "51",
+      "eucharist": {
+        "introit": "55. 1–8, 22",
+        "betweenLections": "137"
+      }
+    },
+    {
+      "id": "trinity-11",
+      "name": "Trinity 11",
+      "mattins": "65, 67",
+      "evensong": "68",
+      "eucharist": {
+        "introit": "111",
+        "betweenLections": "51. 15–17"
+      }
+    },
+    {
+      "id": "trinity-12",
+      "name": "Trinity 12",
+      "mattins": "69",
+      "evensong": "71",
+      "eucharist": {
+        "introit": "70",
+        "betweenLections": "34. 1–5"
+      }
+    },
+    {
+      "id": "trinity-13",
+      "name": "Trinity 13",
+      "mattins": "72",
+      "evensong": "74",
+      "eucharist": {
+        "introit": "90. 1–13",
+        "betweenLections": "90. 14–18"
+      }
+    },
+    {
+      "id": "trinity-14",
+      "name": "Trinity 14",
+      "mattins": "78, Pt 1, or 119, Pts 7, 8",
+      "evensong": "78, Pt 2, or 119, Pts 9, 10",
+      "eucharist": {
+        "introit": "84",
+        "betweenLections": "95. 1–3"
+      }
+    },
+    {
+      "id": "trinity-15",
+      "name": "Trinity 15",
+      "mattins": "79",
+      "evensong": "84, 85",
+      "eucharist": {
+        "introit": "86. 1–7",
+        "betweenLections": "92. 1–4"
+      }
+    },
+    {
+      "id": "trinity-16",
+      "name": "Trinity 16",
+      "mattins": "90",
+      "evensong": "91",
+      "eucharist": {
+        "introit": "146. 1–6",
+        "betweenLections": "146. 7–10"
+      }
+    },
+    {
+      "id": "trinity-17",
+      "name": "Trinity 17",
+      "mattins": "119, Pts 15, 16",
+      "evensong": "102",
+      "eucharist": {
+        "introit": "119, Pt 18",
+        "betweenLections": "131"
+      }
+    },
+    {
+      "id": "trinity-ember-days",
+      "name": "Ember Days after Trinity",
+      "mattins": null,
+      "evensong": "(see Pentecost)",
+      "eucharist": {
+        "introit": "81. 1–10",
+        "betweenLections": "105. 1–6"
+      },
+      "note": "The witness refers the Mattins and Evensong appointment to the Pentecost Ember Days."
+    },
+    {
+      "id": "trinity-18",
+      "name": "Trinity 18",
+      "mattins": "105, Pt 1, or 119, Pts 17, 18",
+      "evensong": "105, Pt 2, or 119, Pts 19, 20",
+      "eucharist": {
+        "introit": "122. 1–5",
+        "betweenLections": "122. 6–9"
+      }
+    },
+    {
+      "id": "trinity-19",
+      "name": "Trinity 19",
+      "mattins": "106, Pt 1, or 119, Pts 21, 22",
+      "evensong": "106, Pt 2, or 100, 101",
+      "eucharist": {
+        "introit": "138",
+        "betweenLections": "103. 1–5"
+      }
+    },
+    {
+      "id": "trinity-20",
+      "name": "Trinity 20",
+      "mattins": "107, Pt 1",
+      "evensong": "107, Pt 2, 108",
+      "eucharist": {
+        "introit": "145. 1–13",
+        "betweenLections": "145. 14–17"
+      }
+    },
+    {
+      "id": "trinity-21",
+      "name": "Trinity 21",
+      "mattins": "147",
+      "evensong": "116, 117",
+      "eucharist": {
+        "introit": "119, Pt 1",
+        "betweenLections": "114. 1–4"
+      }
+    },
+    {
+      "id": "trinity-22",
+      "name": "Trinity 22",
+      "mattins": "118",
+      "evensong": "121, 122, 123",
+      "eucharist": {
+        "introit": "130",
+        "betweenLections": "133"
+      }
+    },
+    {
+      "id": "trinity-23",
+      "name": "Trinity 23",
+      "mattins": "137, 138",
+      "evensong": "103",
+      "eucharist": {
+        "introit": "121",
+        "betweenLections": "24. 7–10"
+      }
+    },
+    {
+      "id": "trinity-24",
+      "name": "Trinity 24",
+      "mattins": "143",
+      "evensong": "17, or 145",
+      "eucharist": {
+        "introit": "147. 1–11",
+        "betweenLections": "147. 12–15"
+      }
+    },
+    {
+      "id": "before-advent",
+      "name": "Sunday next before Advent",
+      "mattins": "80",
+      "evensong": "81, 82",
+      "eucharist": {
+        "introit": "85. 1–7",
+        "betweenLections": "85. 8–13"
+      }
+    },
+    {
+      "id": "st-andrew",
+      "name": "St Andrew",
+      "mattins": "19, 20",
+      "evensong": "1st E. 116, 117; 2nd E. 96, 97",
+      "firstEvensong": "116, 117",
+      "secondEvensong": "96, 97",
+      "eucharist": {
+        "introit": "92. 1–4",
+        "betweenLections": "92. 12–15"
+      }
+    },
+    {
+      "id": "st-thomas",
+      "name": "St Thomas",
+      "mattins": "15, 16",
+      "evensong": "1st E. 62, 63; 2nd E. 17",
+      "firstEvensong": "62, 63",
+      "secondEvensong": "17",
+      "eucharist": {
+        "introit": "139. 1–11",
+        "betweenLections": "30. 1–5"
+      }
+    },
+    {
+      "id": "conversion-of-st-paul",
+      "name": "Conversion of St Paul",
+      "mattins": "66, 67",
+      "evensong": "1st E. 96, 98; 2nd E. 72",
+      "firstEvensong": "96, 98",
+      "secondEvensong": "72",
+      "eucharist": {
+        "introit": "126",
+        "betweenLections": "117"
+      }
+    },
+    {
+      "id": "purification",
+      "name": "Purification",
+      "mattins": "45",
+      "evensong": "1st E. 26, 27; 2nd E. 84, 85",
+      "firstEvensong": "26, 27",
+      "secondEvensong": "84, 85",
+      "eucharist": {
+        "introit": "48. 1–12",
+        "betweenLections": "48. 13–15"
+      }
+    },
+    {
+      "id": "st-matthias",
+      "name": "St Matthias",
+      "mattins": "119, Pts 1, 2",
+      "evensong": "1st E. 15, 16; 2nd E. 132",
+      "firstEvensong": "15, 16",
+      "secondEvensong": "132",
+      "eucharist": {
+        "introit": "16. 1–7",
+        "betweenLections": "80. 8–11"
+      }
+    },
+    {
+      "id": "annunciation",
+      "name": "Annunciation",
+      "mattins": "48",
+      "evensong": "1st E. 84, 85; 2nd E. 46, 98",
+      "firstEvensong": "84, 85",
+      "secondEvensong": "46, 98",
+      "eucharist": {
+        "introit": "45. 10–15",
+        "betweenLections": "131"
+      }
+    },
+    {
+      "id": "st-mark",
+      "name": "St Mark",
+      "mattins": "119, Pts 12, 13",
+      "evensong": "1st E. 19, 20; 2nd E. 119, Pts 14, 15",
+      "firstEvensong": "19, 20",
+      "secondEvensong": "119, Pts 14, 15",
+      "eucharist": {
+        "introit": "45. 1–4",
+        "betweenLections": "119, Pt 2"
+      }
+    },
+    {
+      "id": "st-philip-and-st-james",
+      "name": "St Philip and St James",
+      "mattins": "139",
+      "evensong": "1st E. 119, Pts 4, 5; 2nd E. 27",
+      "firstEvensong": "119, Pts 4, 5",
+      "secondEvensong": "27",
+      "eucharist": {
+        "introit": "33. 1–6",
+        "betweenLections": "89. 5–8"
+      }
+    },
+    {
+      "id": "st-barnabas",
+      "name": "St Barnabas",
+      "mattins": "1, 15",
+      "evensong": "1st E. 146, 149; 2nd E. 41, 42",
+      "firstEvensong": "146, 149",
+      "secondEvensong": "41, 42",
+      "eucharist": {
+        "introit": "112",
+        "betweenLections": "145. 8–13"
+      }
+    },
+    {
+      "id": "nativity-st-john-baptist",
+      "name": "Nativity of St John Baptist",
+      "mattins": "82, 98",
+      "evensong": "1st E. 68, Pt 1; 2nd E. 29, 30",
+      "firstEvensong": "68, Pt 1",
+      "secondEvensong": "29, 30",
+      "eucharist": {
+        "introit": "46. 1–8",
+        "betweenLections": "119, Pt 21"
+      }
+    },
+    {
+      "id": "st-peter-and-st-paul",
+      "name": "St Peter and St Paul",
+      "mattins": "22. 22–31, 23",
+      "evensong": "1st E. 62, 63; 2nd E. 118",
+      "firstEvensong": "62, 63",
+      "secondEvensong": "118",
+      "eucharist": {
+        "introit": "87, or 18. 1–7",
+        "betweenLections": "31. 1–4 or 80. 14–15"
+      }
+    },
+    {
+      "id": "st-mary-magdalene",
+      "name": "St Mary Magdalene",
+      "mattins": "5, 6",
+      "evensong": "1st E. 13, 16; 2nd E. 62, 63",
+      "firstEvensong": "13, 16",
+      "secondEvensong": "62, 63",
+      "eucharist": {
+        "introit": "139. 1–11",
+        "betweenLections": "30. 1–5"
+      }
+    },
+    {
+      "id": "st-james",
+      "name": "St James",
+      "mattins": "119, Pts 21, 22",
+      "evensong": "1st E. 31; 2nd E. 116, 117",
+      "firstEvensong": "31",
+      "secondEvensong": "116, 117",
+      "eucharist": {
+        "introit": "15",
+        "betweenLections": "149. 1–6"
+      }
+    },
+    {
+      "id": "transfiguration",
+      "name": "Transfiguration",
+      "mattins": "96, 97",
+      "evensong": "1st E. 89, Pt 1; 2nd E. 27, 93",
+      "firstEvensong": "89, Pt 1",
+      "secondEvensong": "27, 93",
+      "eucharist": {
+        "introit": "84. 1–7",
+        "betweenLections": "84. 8–13"
+      }
+    },
+    {
+      "id": "st-bartholomew",
+      "name": "St Bartholomew",
+      "mattins": "1, 15",
+      "evensong": "1st E. 112, 113; 2nd E. 23, 24",
+      "firstEvensong": "112, 113",
+      "secondEvensong": "23, 24",
+      "eucharist": {
+        "introit": "116. 11–18",
+        "betweenLections": "97. 10–12"
+      }
+    },
+    {
+      "id": "st-matthew",
+      "name": "St Matthew",
+      "mattins": "37, Pt 1",
+      "evensong": "1st E. 15, 19; 2nd E. 37, Pt 2",
+      "firstEvensong": "15, 19",
+      "secondEvensong": "37, Pt 2",
+      "eucharist": {
+        "introit": "119, Pt 9",
+        "betweenLections": "119, Pt 12"
+      }
+    },
+    {
+      "id": "michaelmas",
+      "name": "Michaelmas",
+      "mattins": "34",
+      "evensong": "1st E. 89, Pt 1; 2nd E. 91",
+      "firstEvensong": "89, Pt 1",
+      "secondEvensong": "91",
+      "eucharist": {
+        "introit": "103. 119–22",
+        "betweenLections": "148. 1–3"
+      },
+      "note": "Printed oddity confirmed by page image: '103. 119–22' in the Eucharist introit column. Kept verbatim."
+    },
+    {
+      "id": "st-luke",
+      "name": "St Luke",
+      "mattins": "119, Pts 12, 13",
+      "evensong": "1st E. 41, 43; 2nd E. 45",
+      "firstEvensong": "41, 43",
+      "secondEvensong": "45",
+      "eucharist": {
+        "introit": "45. 1–4",
+        "betweenLections": "37. 31–32"
+      }
+    },
+    {
+      "id": "st-simon-and-st-jude",
+      "name": "St Simon and St Jude",
+      "mattins": "118",
+      "evensong": "1st E. 18, Pt 1; 2nd E. 62, 63",
+      "firstEvensong": "18, Pt 1",
+      "secondEvensong": "62, 63",
+      "eucharist": {
+        "introit": "87",
+        "betweenLections": "45. 16–17"
+      }
+    },
+    {
+      "id": "all-saints",
+      "name": "All Saints",
+      "mattins": "1, 15, 112",
+      "evensong": "1st E. 34; 2nd E. 146, 149",
+      "firstEvensong": "34",
+      "secondEvensong": "146, 149",
+      "eucharist": {
+        "introit": "33. 1–5",
+        "betweenLections": "34. 8–10"
+      }
+    }
+  ]
+}

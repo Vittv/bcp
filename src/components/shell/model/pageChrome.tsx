@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Text, View } from "react-native";
+import type { BcpEdition } from "../../../context/EditionContext";
 import type { CalendarDate } from "../../../lib/calendar/types";
 import type { Bcp1662ComposedOffice } from "../../../lib/content/bcp1662";
 import type { OfficeDocument, OfficeRite } from "../../../lib/office/types";
@@ -142,7 +143,7 @@ export type ContentContext = {
   devotions: boolean;
   handleTabChange: (t: TabId) => void;
   document: OfficeDocument;
-  edition: "1979" | "1662";
+  edition: BcpEdition;
   bcp1662TodayDoc: Bcp1662ComposedOffice | null;
   bcp1662TodayLoading: boolean;
   showRubrics: boolean;

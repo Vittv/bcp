@@ -178,35 +178,35 @@ function numberToOrdinal(n: number): string {
   return names[n] ?? `${n}th`;
 }
 
+export const BCP1662_FIXED_HOLY_DAYS: Record<string, string> = {
+  "12-25": "Nativity of Christ (Christmas Day)",
+  "1-1": "Circumcision of our Lord",
+  "1-6": "Epiphany",
+  "11-30": "St. Andrew",
+  "12-21": "St. Thomas the Apostle",
+  "12-26": "St. Stephen",
+  "12-27": "St. John the Evangelist",
+  "12-28": "Innocents' Day",
+  "1-25": "Conversion of St. Paul",
+  "2-2": "Purification of the Virgin Mary",
+  "2-24": "St. Matthias",
+  "3-25": "Annunciation of our Lady",
+  "4-25": "St. Mark",
+  "5-1": "St. Philip and St. James",
+  "6-11": "St. Barnabas",
+  "6-24": "St. John Baptist",
+  "6-29": "St. Peter",
+  "7-25": "St. James",
+  "8-24": "St. Bartholomew",
+  "9-21": "St. Matthew",
+  "9-29": "St. Michael and All Angels",
+  "10-18": "St. Luke",
+  "10-28": "St. Simon and St. Jude",
+  "11-1": "All Saints",
+};
+
 function fixedHolyDay(date: CalendarDate): string | undefined {
-  const k = `${date.month}-${date.day}`;
-  const map: Record<string, string> = {
-    "12-25": "Nativity of Christ (Christmas Day)",
-    "1-1": "Circumcision of our Lord",
-    "1-6": "Epiphany",
-    "11-30": "St. Andrew",
-    "12-21": "St. Thomas the Apostle",
-    "12-26": "St. Stephen",
-    "12-27": "St. John the Evangelist",
-    "12-28": "Innocents' Day",
-    "1-25": "Conversion of St. Paul",
-    "2-2": "Purification of the Virgin Mary",
-    "2-24": "St. Matthias",
-    "3-25": "Annunciation of our Lady",
-    "4-25": "St. Mark",
-    "5-1": "St. Philip and St. James",
-    "6-11": "St. Barnabas",
-    "6-24": "St. John Baptist",
-    "6-29": "St. Peter",
-    "7-25": "St. James",
-    "8-24": "St. Bartholomew",
-    "9-21": "St. Matthew",
-    "9-29": "St. Michael and All Angels",
-    "10-18": "St. Luke",
-    "10-28": "St. Simon and St. Jude",
-    "11-1": "All Saints",
-  };
-  return map[k];
+  return BCP1662_FIXED_HOLY_DAYS[`${date.month}-${date.day}`];
 }
 
 /** Compute 1662 moveable holy days for the ecclesiastical/civil year context of a date. */

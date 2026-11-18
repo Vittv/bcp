@@ -19,6 +19,7 @@ import type { KjvPassage } from "../lib/content/types";
 import { dayLabel } from "../lib/office";
 import { useThemedStyles } from "../lib/theme/themedStyles";
 import { Lectionary1662Screen } from "./LectionaryScreen.bcp1662";
+import { Lectionary1962Screen } from "./LectionaryScreen.bcp1962";
 import { lectionaryStyles } from "./LectionaryScreen.styles";
 
 const IS_WEB = Platform.OS === "web";
@@ -105,6 +106,7 @@ function OfficeBlock({ office }: { office: LectionaryOffice }) {
 export function LectionaryScreen({ date }: { date: CalendarDate }) {
   const { edition } = useEdition();
   if (edition === "1662") return <Lectionary1662Screen date={date} />;
+  if (edition === "1962") return <Lectionary1962Screen date={date} />;
   return <Lectionary1979Screen date={date} />;
 }
 
