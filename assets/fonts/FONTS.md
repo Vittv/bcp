@@ -9,6 +9,7 @@ license text for each family is in `LICENSES/`.
 | EB Garamond | Reading, Heading | `eb-garamond-latin-400-normal.woff2`, `eb-garamond-latin-600-normal.woff2`, `eb-garamond-latin-400-italic.woff2` | https://github.com/octaviopardo/EBGaramond12 | OFL-1.1, `LICENSES/eb-garamond-OFL.txt` |
 | Libron | Reading, Interface | `libron-400-normal.woff2`, `libron-400-italic.woff2`, `libron-700-normal.woff2` | https://github.com/nicoverbruggen/libron | OFL-1.1, `LICENSES/libron-OFL.txt` |
 | Playfair Display | Heading | `playfair-display-latin-var.woff2` | https://github.com/clauseggers/Playfair-Display | OFL-1.1, `LICENSES/playfair-display-OFL.txt` |
+| Newsreader | Heading (default), Subheading | `newsreader-latin-var.woff2` | https://github.com/productiontype/Newsreader | OFL-1.1, `LICENSES/newsreader-OFL.txt` |
 | JetBrains Mono | Code | `jetbrains-mono-500.woff2` | https://github.com/JetBrains/JetBrainsMono | OFL-1.1, `LICENSES/jetbrains-mono-OFL.txt` |
 | Inter Tight | Interface | `inter-tight-latin-var.woff2` | https://github.com/rsms/inter-tight | OFL-1.1, `LICENSES/inter-tight-OFL.txt` |
 

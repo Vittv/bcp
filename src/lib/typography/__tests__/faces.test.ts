@@ -66,11 +66,13 @@ describe("face registry", () => {
     expect(HEADING_FACES.map((face) => face.id)).toEqual([
       "crimson-pro",
       "playfair-display",
+      "newsreader",
       "eb-garamond",
     ]);
     expect(SUBHEADING_FACES.map((face) => face.id)).toEqual([
       "crimson-pro",
       "playfair-display",
+      "newsreader",
       "eb-garamond",
     ]);
     expect(READING_FACES.map((face) => face.id)).toEqual([
