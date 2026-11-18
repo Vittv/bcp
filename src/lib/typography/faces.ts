@@ -90,6 +90,22 @@ export const FACES = {
       },
     ],
   },
+  newsreader: {
+    id: "newsreader",
+    label: "Newsreader",
+    role: "heading",
+    // one variable file covers the heading and semibold subheading registers
+    roles: ["heading", "subheading"],
+    generic: HEADING_GENERIC,
+    variants: [
+      {
+        family: "Newsreader",
+        weight: 400,
+        style: "normal",
+        weightRange: [200, 800],
+      },
+    ],
+  },
   libron: {
     id: "libron",
     label: "Libron",
@@ -169,7 +185,7 @@ export const SUBHEADING_FACES = facesByRole("subheading");
 export const READING_FACES = facesByRole("reading");
 
 export const DEFAULT_INTERFACE_FONT: FaceId = "inter";
-export const DEFAULT_HEADING_FONT: FaceId = "playfair-display";
+export const DEFAULT_HEADING_FONT: FaceId = "newsreader";
 export const DEFAULT_SUBHEADING_FONT: FaceId = "eb-garamond";
 export const DEFAULT_READING_FONT: FaceId = "libron";
 

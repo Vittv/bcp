@@ -8,6 +8,7 @@ export const FACE_ASSETS: Record<string, number> = {
   "Crimson Pro SemiBold": require("../../../assets/fonts/crimson-pro-latin-600-normal.woff2"),
   "Crimson Pro Italic": require("../../../assets/fonts/crimson-pro-latin-400-italic.woff2"),
   "Playfair Display": require("../../../assets/fonts/playfair-display-latin-var.woff2"),
+  Newsreader: require("../../../assets/fonts/newsreader-latin-var.woff2"),
   "JetBrains Mono": require("../../../assets/fonts/jetbrains-mono-500.woff2"),
   Libron: require("../../../assets/fonts/libron-400-normal.woff2"),
   "Libron Italic": require("../../../assets/fonts/libron-400-italic.woff2"),
