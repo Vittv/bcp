@@ -46,7 +46,7 @@ export const noSelect = {
 
 // the offices reference page browses the seven printed offices;
 // devotions are reachable from the Today view instead.
-export type RefOfficeId = Exclude<OfficeId, `devotions-${string}`>;
+export type RefOfficeId = Exclude<OfficeId, `devotions-${string}`> | "litany";
 
 // morning and evening exist in both rites; the rite is a toggle in the
 // bar rather than separate tabs, so selection tracks the base office
@@ -55,7 +55,8 @@ export type RefOfficeBase =
   | "evening"
   | "noonday"
   | "owe"
-  | "compline";
+  | "compline"
+  | "litany";
 
 export const BASE_OFFICES: {
   id: RefOfficeBase;
@@ -79,6 +80,7 @@ export const BCP1662_BASE_OFFICES: {
   name: string;
 }[] = [
   { id: "morning", label: "Matins", name: "Matins" },
+  { id: "litany", label: "The Litany", name: "The Litany" },
   { id: "evening", label: "Evensong", name: "Evensong" },
 ];
 
@@ -104,6 +106,7 @@ export const OFFICE_NAMES: Record<RefOfficeId, string> = {
   noonday: "Noonday Prayer",
   owe: "Order of Worship for the Evening",
   compline: "Compline",
+  litany: "The Litany",
 };
 
 // a collect picked in the index; both rites render together in the

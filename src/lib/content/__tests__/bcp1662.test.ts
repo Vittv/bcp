@@ -5,6 +5,7 @@ import {
 } from "../../calendar/bcp1662";
 import {
   composeBcp1662ForDate,
+  composeBcp1662Litany,
   getBcp1662LessonsForDate,
   normalizeBcp1662LessonRef,
   resolveBcp1662LessonPassages,
@@ -162,5 +163,20 @@ describe("bcp1662 composition", () => {
       "nunc-dimittis",
       "deus-misereatur",
     ]);
+  });
+
+  it("composes the Litany as a standalone office with speakers", () => {
+    const doc = composeBcp1662Litany({ year: 2026, month: 11, day: 18 });
+    expect(doc.officeName).toBe("The Litany");
+    expect(doc.sections.map((s) => s.key)).toEqual(["litany"]);
+    const nodes = doc.sections[0].nodes;
+    expect(nodes[0]).toMatchObject({ kind: "rubric" });
+    const last = nodes[nodes.length - 1];
+    expect(last.kind === "rubric" && last.text).toBe("Here endeth the Litany.");
+    const speakers = new Set(
+      nodes.flatMap((n) => (n.kind === "text" && n.speaker ? [n.speaker] : [])),
+    );
+    expect(speakers.has("minister")).toBe(true);
+    expect(speakers.has("people")).toBe(true);
   });
 });

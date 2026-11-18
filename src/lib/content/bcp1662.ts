@@ -33,6 +33,7 @@ import {
   getBcp1662Canticle,
   getBcp1662FixedCollects,
   getBcp1662HolyDayProperLessons,
+  getBcp1662Litany,
   getBcp1662OccasionalPrayers,
   getBcp1662OfficeText,
   getBcp1662ProperCollect,
@@ -243,7 +244,8 @@ export type Bcp1662OfficeSectionKey =
   | "creed"
   | "prayers"
   | "collects"
-  | "closing";
+  | "closing"
+  | "litany";
 
 export type Bcp1662OfficeNode =
   | { kind: "heading"; text: string }
@@ -964,6 +966,35 @@ export async function composeBcp1662OfficeForDate(
   return composeBcp1662Office(date, office, resolved, composed);
 }
 
+/** Compose the 1662 Litany. It has no lessons, psalms or creed, so it is a
+ * single section of rubrics, spoken lines and app-aid subheadings. */
+export function composeBcp1662Litany(
+  date: CalendarDate,
+): Bcp1662ComposedOffice {
+  const litany = getBcp1662Litany();
+  const nodes: Bcp1662OfficeNode[] = [];
+  for (const line of litany.lines) {
+    if (line.kind === "rubric") {
+      nodes.push({ kind: "rubric", text: line.text });
+    } else if (line.kind === "heading") {
+      nodes.push({ kind: "heading", text: line.text });
+    } else if (line.speaker) {
+      nodes.push({ kind: "text", text: line.text, speaker: line.speaker });
+    } else {
+      nodes.push({ kind: "text", text: line.text });
+    }
+  }
+  return {
+    edition: "1662",
+    office: "morning",
+    officeName: "The Litany",
+    date,
+    observance: resolveBcp1662Observance(date),
+    sections: [{ key: "litany", nodes }],
+    notes: [],
+  };
+}
+
 export const BCP1662_OFFICE_SECTION_ORDER: Bcp1662OfficeSectionKey[] = [
   "opening",
   "psalms",
@@ -972,6 +1003,7 @@ export const BCP1662_OFFICE_SECTION_ORDER: Bcp1662OfficeSectionKey[] = [
   "prayers",
   "collects",
   "closing",
+  "litany",
 ];
 
 export function getBcp1662OfficeSection(

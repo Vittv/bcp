@@ -15,6 +15,7 @@ import officeTextData from "./office-text/offices.json";
 import canticlesData from "./office-text/canticles.json";
 import fixedCollectsData from "./office-text/collects.json";
 import prayersData from "./office-text/prayers-thanksgivings.json";
+import litanyData from "./office-text/litany.json";
 import properCollectsData from "./office-text/collects-proper.json";
 import type { PsalmPassage } from "../../types";
 
@@ -252,6 +253,25 @@ export function getBcp1662OfficeText(office: Bcp1662Office) {
 
 export function getBcp1662Canticle(id: string) {
   return BCP1662_CANTICLES.canticles.find((c) => c.id === id);
+}
+
+export type Bcp1662LitanyLine =
+  | { kind: "rubric"; text: string }
+  | { kind: "heading"; text: string }
+  | {
+      kind: "text";
+      text: string;
+      speaker?: "minister" | "people" | "all";
+    };
+
+const BCP1662_LITANY =
+  // SAFETY: vendored static 1662 litany JSON matching the declared shape.
+  litanyData as {
+    lines: Bcp1662LitanyLine[];
+  };
+
+export function getBcp1662Litany(): { lines: Bcp1662LitanyLine[] } {
+  return BCP1662_LITANY;
 }
 
 export type Bcp1662OccasionalPrayer = {

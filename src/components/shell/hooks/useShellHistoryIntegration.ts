@@ -7,10 +7,8 @@ import {
   type HistoryController,
 } from "../../../lib/navigation/history";
 import type { SettingsSectionId } from "../../../lib/settings";
-import { historyLayer, markHistoryStep } from "../model/shellUtils";
+import { historyLayer, markHistoryStep, type TabId } from "../model/shellUtils";
 import type { ModalType, PageId } from "../Sidebar";
-
-type TabId = "morning" | "noonday" | "evening" | "compline";
 
 export function useShellHistoryIntegration(args: {
   page: PageId;

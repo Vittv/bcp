@@ -41,6 +41,7 @@ import { bcp1662CycleLabel } from "../../lib/calendar/bcp1662";
 import type { CalendarDate } from "../../lib/calendar/types";
 import {
   type Bcp1662ComposedOffice,
+  composeBcp1662Litany,
   composeBcp1662OfficeForDate,
 } from "../../lib/content/bcp1662";
 import { prefetchAllScripture } from "../../lib/content/prefetchScripture";
@@ -75,6 +76,7 @@ import {
   ensureSidebarAnimStyle,
   holyDayCountdown,
   IS_WEB,
+  is1662OfficeTab,
   isReferencePage,
   OFFICE_LABEL,
   OFFICE_LABEL_1662,
@@ -310,7 +312,12 @@ export function Shell() {
     hintsRef,
   });
 
-  const officeId = devotions ? DEVOTIONS[tab] : dailyOfficeId(tab, rite);
+  // the Litany is a 1662-only tab with no 1979 counterpart; compose a safe
+  // 1979 office so the always-run compose below cannot throw on it
+  const composeTab = tab === "litany" ? "morning" : tab;
+  const officeId = devotions
+    ? DEVOTIONS[composeTab]
+    : dailyOfficeId(composeTab, rite);
   const document = composeOffice(date, officeId, {
     ...DEFAULT_PREFS,
     rite,
@@ -328,13 +335,18 @@ export function Shell() {
     if (devotions) {
       setDevotions(false);
     }
-    if (tab !== "morning" && tab !== "evening") {
+    if (!is1662OfficeTab(tab)) {
       setTab(officeForHour1662(new Date().getHours()));
     }
   }, [devotions, edition, setDevotions, tab]);
 
   useEffect(() => {
     if (edition !== "1662" || page !== "today") return;
+    if (tab === "litany") {
+      setBcp1662TodayDoc(composeBcp1662Litany(date));
+      setBcp1662TodayLoading(false);
+      return;
+    }
     if (tab !== "morning" && tab !== "evening") {
       setBcp1662TodayDoc(null);
       setBcp1662TodayLoading(false);
