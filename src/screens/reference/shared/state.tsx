@@ -225,6 +225,16 @@ export function ReferenceProvider({
   // the status bar mirrors what the active page shows, including the
   // default-open first item; other pages' selections never leak in
   const { edition } = useEdition();
+  // feast slugs belong to one church's calendar. a selection kept while
+  // switching books rarely resolves in the new one, and the natural entry
+  // point for these pages is today's observance, so drop it on edition change.
+  const previousEdition = useRef(edition);
+  useEffect(() => {
+    if (previousEdition.current === edition) return;
+    previousEdition.current = edition;
+    setSaintRaw(null);
+    setLesserFeastRaw(null);
+  }, [edition, setSaintRaw, setLesserFeastRaw]);
   const readingLabel = readingLabelFor({
     edition,
     page,

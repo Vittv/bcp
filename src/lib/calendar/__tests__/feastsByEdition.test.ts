@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { canonicalFeastSlug, feastsForEditionDate } from "../feastsByEdition";
+import { canonicalFeastSlug, feastsForEditionDate } from "../feastsByTradition";
 import { dayInfo } from "../observances";
 import { sanctoraleBySlug } from "../sanctorale";
 import type { CalendarDate, CalendarEdition } from "../types";
@@ -91,12 +91,15 @@ describe("shared major feast dates", () => {
 
 describe("dayInfo edition scoping", () => {
   it("shows TEC Lesser Feasts only under 1979", () => {
+    const tecSlug = "aelred-of-rievaulx-monastic-and-theologian";
     const a = dayInfo(at("1979-01-12"), "1979");
-    expect(a.observances.some((o) => o.lesserSlug)).toBe(true);
+    expect(a.observances.some((o) => o.lesserSlug === tecSlug)).toBe(true);
     const olderEditions: CalendarEdition[] = ["1662", "1962"];
     for (const edition of olderEditions) {
       const info = dayInfo(at("1979-01-12"), edition);
-      expect(info.observances.some((o) => o.lesserSlug)).toBe(false);
+      expect(info.observances.some((o) => o.lesserSlug === tecSlug)).toBe(
+        false,
+      );
     }
   });
 

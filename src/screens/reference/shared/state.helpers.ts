@@ -1,6 +1,11 @@
 import type { PageId } from "../../../components/shell/Sidebar";
-import { lesserFeastBySlug } from "../../../lib/calendar/lesserFeasts";
+import {
+  holyDayBySlugForTradition,
+  lesserFeastBySlugForTradition,
+} from "../../../lib/calendar/feastsByTradition";
 import { sanctoraleBySlug } from "../../../lib/calendar/sanctorale";
+import { traditionForEdition } from "../../../lib/calendar/tradition";
+import type { CalendarEdition } from "../../../lib/calendar/types";
 import { canticleTitle } from "../../../lib/content/canticles";
 import { firstCollectForEdition } from "../../../lib/content/collectsEdition";
 import { psalmNumbers } from "../../../lib/content/psalter";
@@ -26,7 +31,7 @@ import {
 } from "./model";
 
 export function readingLabelFor(args: {
-  edition: string;
+  edition: CalendarEdition;
   page: PageId;
   openPsalm: number | null;
   openPsalterDay: number | null;
@@ -64,10 +69,18 @@ export function readingLabelFor(args: {
               ? firstCollectForEdition(edition).title
               : FIRST_COLLECT.title))
           : page === "saints"
-            ? (sanctoraleBySlug(openSaint ?? defaultSaint())?.title ?? null)
+            ? ((traditionForEdition(edition) === "tec"
+                ? sanctoraleBySlug(openSaint ?? defaultSaint("tec"))?.title
+                : holyDayBySlugForTradition(
+                    openSaint ?? defaultSaint(traditionForEdition(edition)),
+                    traditionForEdition(edition),
+                  )?.name) ?? null)
             : page === "lesser-feasts"
-              ? (lesserFeastBySlug(openLesserFeast ?? defaultLesserFeast())
-                  ?.name ?? null)
+              ? (lesserFeastBySlugForTradition(
+                  openLesserFeast ??
+                    defaultLesserFeast(traditionForEdition(edition)),
+                  traditionForEdition(edition),
+                )?.name ?? null)
               : page === "proverbs"
                 ? `Proverbs ${openProvChapter ?? 1}`
                 : page === "canticles"

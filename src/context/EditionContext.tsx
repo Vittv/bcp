@@ -5,15 +5,17 @@ import {
   useContext,
   useState,
 } from "react";
+import { isCalendarEdition } from "../lib/calendar/tradition";
+import type { CalendarEdition } from "../lib/calendar/types";
 import { readStorageString, writeStorageString } from "../lib/storage";
 
-export type BcpEdition = "1979" | "1662" | "1962";
+export type BcpEdition = CalendarEdition;
 
 const STORAGE_KEY = "bcp-edition";
 
 function loadEdition(): BcpEdition {
   const v = readStorageString(STORAGE_KEY);
-  if (v === "1979" || v === "1662" || v === "1962") return v;
+  if (isCalendarEdition(v)) return v;
   return "1979";
 }
 

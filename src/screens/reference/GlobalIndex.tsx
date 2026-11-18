@@ -1,6 +1,8 @@
 import { memo, useCallback, useMemo } from "react";
 import { Text, View } from "react-native";
 import { useBible } from "../../context/BibleContext";
+import { useEdition } from "../../context/EditionContext";
+import { traditionForEdition } from "../../lib/calendar/tradition";
 import {
   PALETTE_SECTION_ORDER,
   type PaletteEntry,
@@ -74,7 +76,12 @@ export function GlobalIndex({
   onSelect: (entry: PaletteEntry) => void;
 }) {
   const { corpus } = useBible();
-  const hits = useMemo(() => searchPalette(query, corpus), [query, corpus]);
+  const { edition } = useEdition();
+  const tradition = traditionForEdition(edition);
+  const hits = useMemo(
+    () => searchPalette(query, corpus, tradition),
+    [query, corpus, tradition],
+  );
   const onEnter = useCallback(
     (_i: number, entry: PaletteEntry) => onSelect(entry),
     [onSelect],

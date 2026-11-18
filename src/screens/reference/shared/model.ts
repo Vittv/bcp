@@ -1,8 +1,10 @@
-import { firstLesserFeastForDate } from "../../../lib/calendar/lesserFeasts";
 import {
-  SANCTORALE_ENTRIES,
-  sanctoraleForDate,
-} from "../../../lib/calendar/sanctorale";
+  holyDayForTraditionDate,
+  upcomingHolyDayForTradition,
+  upcomingLesserFeastForTradition,
+} from "../../../lib/calendar/feastsByTradition";
+import { SANCTORALE_ENTRIES } from "../../../lib/calendar/sanctorale";
+import type { CalendarTradition } from "../../../lib/calendar/tradition";
 import type { CalendarDate } from "../../../lib/calendar/types";
 import type { CollectSection, OfficeId } from "../../../lib/content/types";
 import type { OfficeRite } from "../../../lib/office/types";
@@ -29,14 +31,20 @@ export function today(): CalendarDate {
 
 // the holy days page opens on today's feast when the day has one, so a
 // reader arriving on Saint Luke finds Saint Luke, not the top of the list
-export function defaultSaint(): string {
-  return sanctoraleForDate(today())?.slug ?? FIRST_SAINT;
+export function defaultSaint(tradition: CalendarTradition = "tec"): string {
+  return (
+    holyDayForTraditionDate(today(), tradition)?.slug ??
+    upcomingHolyDayForTradition(today(), tradition).slug
+  );
 }
 
-// the lesser feasts page opens on today's commemoration when there is one,
-// else the first entry in date order
-export function defaultLesserFeast(): string {
-  return firstLesserFeastForDate(today()).slug;
+// the lesser feasts page opens on the next commemoration at or after today,
+// wrapping to the start of the year, so every church opens on a date-relevant
+// entry even when today itself has none.
+export function defaultLesserFeast(
+  tradition: CalendarTradition = "tec",
+): string {
+  return upcomingLesserFeastForTradition(today(), tradition).slug;
 }
 
 export const noSelect = {
