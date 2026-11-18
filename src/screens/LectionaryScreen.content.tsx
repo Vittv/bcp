@@ -4,6 +4,7 @@ import { Platform, ScrollView, Text, View } from "react-native";
 import { useSectionHeading } from "../components/office/contentHeadings";
 import { PsalmText } from "../components/office/PsalmText";
 import { ScriptureView } from "../components/office/ScriptureView";
+import { useEdition } from "../context/EditionContext";
 import { useTranslation } from "../context/TranslationContext";
 import type { CalendarDate } from "../lib/calendar/types";
 import { lectionaryForDate } from "../lib/content";
@@ -17,6 +18,7 @@ import { psalmPassage } from "../lib/content/psalter";
 import type { KjvPassage } from "../lib/content/types";
 import { dayLabel } from "../lib/office";
 import { useThemedStyles } from "../lib/theme/themedStyles";
+import { Lectionary1662Screen } from "./LectionaryScreen.bcp1662";
 import { lectionaryStyles } from "./LectionaryScreen.styles";
 
 const IS_WEB = Platform.OS === "web";
@@ -101,6 +103,12 @@ function OfficeBlock({ office }: { office: LectionaryOffice }) {
 }
 
 export function LectionaryScreen({ date }: { date: CalendarDate }) {
+  const { edition } = useEdition();
+  if (edition === "1662") return <Lectionary1662Screen date={date} />;
+  return <Lectionary1979Screen date={date} />;
+}
+
+function Lectionary1979Screen({ date }: { date: CalendarDate }) {
   const styles = useThemedStyles(lectionaryStyles);
   const heading = useSectionHeading();
   const day = lectionaryForDate(date);

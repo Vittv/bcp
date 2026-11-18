@@ -30,6 +30,13 @@ export const lectionaryStyles = defineThemedStyles({
     color: "var(--accent)",
     marginTop: 8,
   },
+  officeNote: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 13,
+    lineHeight: 18,
+    color: "var(--text-secondary)",
+    marginTop: 8,
+  },
   psalmBlock: {
     marginBottom: 22,
     paddingLeft: 4,
