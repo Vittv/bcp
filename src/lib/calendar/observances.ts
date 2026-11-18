@@ -4,7 +4,7 @@ import { lesserFeastsForDate } from "./lesserFeasts";
 import { sanctoraleForDate } from "./sanctorale";
 import { easterYear, seasonFor } from "./season";
 import { sundayName } from "./sundays";
-import type { CalendarDate, Season } from "./types";
+import type { CalendarDate, CalendarEdition, Season } from "./types";
 
 // how a day's observance ranks for ordering and display. the Sunday name is
 // the day's baseline title and always closes the list.
@@ -32,15 +32,27 @@ export interface DayInfo {
   observances: DayObservance[];
 }
 
-const SEASON_LABELS: Record<Season, string> = {
-  advent: "Advent",
-  christmas: "Christmas",
-  epiphany: "Epiphany",
-  lent: "Lent",
-  "holy-week": "Holy Week",
-  easter: "Easter",
-  pentecost: "Pentecost",
-  "after-pentecost": "After Pentecost",
+const SEASON_LABELS: Record<CalendarEdition, Record<Season, string>> = {
+  "1979": {
+    advent: "Advent",
+    christmas: "Christmas",
+    epiphany: "Epiphany",
+    lent: "Lent",
+    "holy-week": "Holy Week",
+    easter: "Easter",
+    pentecost: "Pentecost",
+    "after-pentecost": "After Pentecost",
+  },
+  "1662": {
+    advent: "Advent",
+    christmas: "Christmas",
+    epiphany: "Epiphany",
+    lent: "Lent",
+    "holy-week": "Holy Week",
+    easter: "Easter",
+    pentecost: "Whitsunday",
+    "after-pentecost": "After Trinity",
+  },
 };
 
 // fixed feasts of our Lord not carried by the sanctorale data (which
@@ -107,7 +119,10 @@ function seasonStartEnd(date: CalendarDate, year: number) {
 }
 
 /** the named observances and season boundaries for a calendar date. */
-export function dayInfo(date: CalendarDate): DayInfo {
+export function dayInfo(
+  date: CalendarDate,
+  edition: CalendarEdition = "1979",
+): DayInfo {
   const season = seasonFor(date);
   const ey = easterYear(date);
   const d = toDays(date);
@@ -119,7 +134,13 @@ export function dayInfo(date: CalendarDate): DayInfo {
   // `ey`); this already covers the First Sunday of Advent that opens the
   // year as well as the one that closes it next year.
   for (const [day, obs] of moveableDays(ey)) {
-    if (Number(day) === d) observances.push(obs);
+    if (Number(day) === d) {
+      observances.push(
+        edition === "1662" && obs.name === "The Day of Pentecost"
+          ? { ...obs, name: "Whitsunday" }
+          : obs,
+      );
+    }
   }
 
   // fixed feasts of our Lord (Holy Name) plus the fixed-date saints.
@@ -146,7 +167,7 @@ export function dayInfo(date: CalendarDate): DayInfo {
 
   // the Sunday name is the day's baseline title and always closes the list,
   // so it never outranks a special day or an optional commemoration.
-  const sunday = sundayName(date);
+  const sunday = sundayName(date, edition);
   if (sunday) {
     observances.push({ name: sunday, rank: "sunday" });
   }
@@ -159,7 +180,10 @@ export function dayInfo(date: CalendarDate): DayInfo {
   };
 }
 
-/** the display label for a season, e.g. "Advent" or "After Pentecost". */
-export function seasonLabel(season: Season): string {
-  return SEASON_LABELS[season];
+/** the display label for a season, e.g. "Advent" or "After Trinity". */
+export function seasonLabel(
+  season: Season,
+  edition: CalendarEdition = "1979",
+): string {
+  return SEASON_LABELS[edition][season];
 }

@@ -1,5 +1,5 @@
 import { type DayInfo, seasonLabel } from "../lib/calendar/observances";
-import type { CalendarDate } from "../lib/calendar/types";
+import type { CalendarDate, CalendarEdition } from "../lib/calendar/types";
 
 export const noSelect = {
   userSelect: "none" as const,
@@ -50,13 +50,14 @@ export function cellName(name: string): string {
 // name and lesser feasts stay quiet so an actual feast leads the cell.
 export function cellLabels(
   info: DayInfo,
+  edition: CalendarEdition = "1979",
 ): { season: boolean; quiet: boolean; text: string }[] {
   const labels: { season: boolean; quiet: boolean; text: string }[] = [];
   if (info.seasonStart || info.seasonEnd) {
     labels.push({
       season: true,
       quiet: false,
-      text: seasonLabel(info.season),
+      text: seasonLabel(info.season, edition),
     });
   }
   for (const obs of info.observances) {

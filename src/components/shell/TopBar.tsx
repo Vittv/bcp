@@ -1,7 +1,9 @@
 import { Image, Pressable, Text, View } from "react-native";
 
+import { useEdition } from "../../context/EditionContext";
 import { usePalette } from "../../context/PaletteContext";
 import { useTheme } from "../../context/ThemeContext";
+import { seasonLabel } from "../../lib/calendar/observances";
 import { sanctoraleTitle } from "../../lib/calendar/sanctorale";
 import type { Season } from "../../lib/calendar/types";
 import { IS_MACOS_TAURI, IS_TAURI } from "../../lib/desktop";
@@ -22,7 +24,6 @@ import { MagnifierIcon, MoonIcon, SunIcon, SystemIcon } from "./Icon";
 import {
   DRAG_DATA,
   formatHolyDay,
-  SEASON_LABEL,
   useWindowControlsOverlay,
   WCO_DATA,
   WCO_STOP,
@@ -49,6 +50,7 @@ export function TopBar({
   holyDay,
   windowControlStyle = "none",
 }: TopBarProps) {
+  const { edition } = useEdition();
   const { mode, setMode, fontPx, setFontPx, tokens } = useTheme();
   const styles = useThemedStyles(topBarStyles);
   const v = useThemeVar();
@@ -113,7 +115,7 @@ export function TopBar({
           numberOfLines={1}
           dataSet={IS_TAURI ? DRAG_DATA : undefined}
         >
-          {SEASON_LABEL[season]}
+          {seasonLabel(season, edition)}
         </Text>
         {!compact && (holyDayLabel || daysUntilNext > 0) && (
           <>

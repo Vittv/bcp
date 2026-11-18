@@ -2,6 +2,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { AppModal } from "../components/shell/AppModal";
 import { useSeasonColorMap } from "../components/shell/SeasonDot";
+import { useEdition } from "../context/EditionContext";
 import { colorFor } from "../lib/calendar";
 import {
   type DayInfo,
@@ -24,9 +25,10 @@ export function SelectedDayStrip({
   date: CalendarDate;
   onOpenDay: (d: CalendarDate) => void;
 }) {
+  const { edition } = useEdition();
   const styles = useThemedStyles(calendarStyles);
   const colorMap = useSeasonColorMap();
-  const info = dayInfo(date);
+  const info = dayInfo(date, edition);
   const seasonColor = colorMap[colorFor(date)];
   return (
     <View style={[styles.strip, noSelect]}>
@@ -40,7 +42,7 @@ export function SelectedDayStrip({
       >
         <Text style={styles.stripDate}>{formatDate(date)}</Text>
         <Text style={[styles.stripSeason, { color: seasonColor }]}>
-          {seasonLabel(info.season)}
+          {seasonLabel(info.season, edition)}
         </Text>
         <Text style={styles.stripBody}>
           {info.seasonStart
@@ -68,6 +70,7 @@ export function DayModal({
   onClose: () => void;
   onGo: (obs: DayObservance) => void;
 }) {
+  const { edition } = useEdition();
   const styles = useThemedStyles(calendarStyles);
   const colorMap = useSeasonColorMap();
   const seasonColor = colorMap[colorFor(date)];
@@ -84,7 +87,7 @@ export function DayModal({
       }}
     >
       <Text style={[styles.modalSeason, { color: seasonColor }]}>
-        {seasonLabel(info.season)}
+        {seasonLabel(info.season, edition)}
         {info.seasonStart ? " · begins" : info.seasonEnd ? " · ends" : ""}
       </Text>
       <View style={styles.modalList}>
