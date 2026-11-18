@@ -1,5 +1,6 @@
 import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
+import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Shell } from "./src/components/shell/Shell";
 import { EditionProvider } from "./src/context/EditionContext";
@@ -28,7 +29,8 @@ export default function App() {
     "EB Garamond Italic": require("./assets/fonts/eb-garamond-latin-400-italic.woff2"),
   });
 
-  if (!fontsLoaded) return null;
+  // web paints on system fallbacks; native waits for expo-font registration
+  if (Platform.OS !== "web" && !fontsLoaded) return null;
 
   return (
     <SafeAreaProvider>
