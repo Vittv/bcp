@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import type { BcpEdition } from "../../../context/EditionContext";
 import type { CalendarDate } from "../../../lib/calendar/types";
 import type { Bcp1662ComposedOffice } from "../../../lib/content/bcp1662";
+import { composeBcp1962Litany } from "../../../lib/content/bcp1962";
 import type { OfficeDocument, OfficeRite } from "../../../lib/office/types";
 import {
   BibleBar,
@@ -33,6 +34,7 @@ import {
 } from "../../../screens/reference";
 import { TodayScreen } from "../../../screens/TodayScreen";
 import { Bcp1662OfficeView } from "../../office/Bcp1662OfficeView";
+import { Bcp1962LitanyView } from "../../office/Bcp1962LitanyView";
 import { OfficeTabs } from "../OfficeTabs";
 import type { PageId } from "../Sidebar";
 import { is1662OfficeTab, type TabId, today } from "./shellUtils";
@@ -180,6 +182,15 @@ export function renderContent(ctx: ContentContext): ReactNode {
 
   switch (page) {
     case "today":
+      if (edition === "1962" && tab === "litany") {
+        return (
+          <Bcp1962LitanyView
+            doc={composeBcp1962Litany(date)}
+            showRubrics={showRubrics}
+            showSpeakers={showSpeakers}
+          />
+        );
+      }
       if (edition === "1662") {
         if (!is1662OfficeTab(tab)) {
           return (

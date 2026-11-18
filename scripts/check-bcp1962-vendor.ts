@@ -84,6 +84,20 @@ type AlternativeLessons = {
   >;
 };
 
+type PsalmPart = { title?: string | null; verses?: Record<string, string> };
+type Psalter = Record<string, { parts?: PsalmPart[] }>;
+type LitanyLine = {
+  kind?: string;
+  text?: string;
+  speaker?: string;
+};
+type Litany = { meta?: { edition?: string }; lines?: LitanyLine[] };
+type ProperCollect = { name?: string; text?: string };
+type ProperCollects = {
+  meta?: { edition?: string };
+  collects?: ProperCollect[];
+};
+
 type VendorTable = {
   meta?: { edition?: string; sources?: unknown[] };
   sections?: Section[];
@@ -355,13 +369,119 @@ async function main() {
     fail("citation-map.psalmParts invalid", failures);
   }
 
+  const psalter = await readJson<Psalter>("psalter.json");
+  const psalterMin = await readJson<Psalter>("psalter.min.json");
+  if (JSON.stringify(psalter) !== JSON.stringify(psalterMin)) {
+    fail("psalter.min.json does not match psalter.json", failures);
+  }
+  // the 1962 book omits Psalm 58 and renumbers the verses after each omission.
+  const psalmKeys = Object.keys(psalter)
+    .map(Number)
+    .sort((a, b) => a - b);
+  const expectedKeys = Array.from({ length: 150 }, (_, i) => i + 1).filter(
+    (n) => n !== 58,
+  );
+  if (JSON.stringify(psalmKeys) !== JSON.stringify(expectedKeys)) {
+    fail("psalter keys are not 1..150 excluding Psalm 58", failures);
+  }
+  let verseCount = 0;
+  for (const [num, psalm] of Object.entries(psalter)) {
+    if (!Array.isArray(psalm.parts) || psalm.parts.length === 0) {
+      fail(`psalter ${num} parts missing/empty`, failures);
+      continue;
+    }
+    for (const part of psalm.parts) {
+      if (!part.verses || typeof part.verses !== "object") {
+        fail(`psalter ${num} part verses missing`, failures);
+        continue;
+      }
+      for (const [v, text] of Object.entries(part.verses)) {
+        if (typeof text !== "string" || text.trim() === "") {
+          fail(`psalter ${num}:${v} empty/non-string verse`, failures);
+        }
+        verseCount++;
+      }
+    }
+  }
+  if (verseCount !== 2489) {
+    fail(`psalter has ${verseCount} verses, expected 2489`, failures);
+  }
+
+  const litany = await readJson<Litany>("office-text/litany.json");
+  const litanyMin = await readJson<Litany>("office-text/litany.min.json");
+  if (JSON.stringify(litany) !== JSON.stringify(litanyMin)) {
+    fail("office-text/litany.min.json does not match litany.json", failures);
+  }
+  if (litany.meta?.edition !== "1962") {
+    fail("litany.meta.edition !== 1962", failures);
+  }
+  const litanyLines = litany.lines;
+  if (!Array.isArray(litanyLines) || litanyLines.length === 0) {
+    fail("litany.lines missing/empty", failures);
+  } else {
+    for (const [i, line] of litanyLines.entries()) {
+      if (!["rubric", "heading", "text"].includes(line.kind ?? "")) {
+        fail(`litany line ${i} invalid kind: ${line.kind}`, failures);
+      }
+      if (typeof line.text !== "string" || line.text.trim() === "") {
+        fail(`litany line ${i} empty/non-string text`, failures);
+      }
+      if (
+        line.speaker &&
+        !["minister", "people", "all"].includes(line.speaker)
+      ) {
+        fail(`litany line ${i} invalid speaker: ${line.speaker}`, failures);
+      }
+    }
+    if (litanyLines[0]?.kind !== "rubric") {
+      fail("litany first line is not a rubric", failures);
+    }
+    if (litanyLines[litanyLines.length - 1]?.kind !== "rubric") {
+      fail("litany last line is not a rubric", failures);
+    }
+  }
+
+  const properCollects = await readJson<ProperCollects>(
+    "office-text/collects-proper.json",
+  );
+  const properCollectsMin = await readJson<ProperCollects>(
+    "office-text/collects-proper.min.json",
+  );
+  if (JSON.stringify(properCollects) !== JSON.stringify(properCollectsMin)) {
+    fail(
+      "office-text/collects-proper.min.json does not match collects-proper.json",
+      failures,
+    );
+  }
+  if (properCollects.meta?.edition !== "1962") {
+    fail("collects-proper.meta.edition !== 1962", failures);
+  }
+  const properList = properCollects.collects;
+  if (!Array.isArray(properList) || properList.length === 0) {
+    fail("collects-proper.collects missing/empty", failures);
+  } else {
+    const names = new Set<string>();
+    for (const [i, c] of properList.entries()) {
+      if (typeof c.name !== "string" || c.name.trim() === "") {
+        fail(`collects-proper ${i} missing name`, failures);
+      } else if (names.has(c.name)) {
+        fail(`collects-proper duplicate name: ${c.name}`, failures);
+      } else {
+        names.add(c.name);
+      }
+      if (typeof c.text !== "string" || c.text.trim() === "") {
+        fail(`collects-proper ${i} missing text`, failures);
+      }
+    }
+  }
+
   if (failures.length) {
     console.error("bcp1962 vendor check failed:");
     for (const f of failures) console.error(`  - ${f}`);
     process.exit(1);
   }
   console.log(
-    `✓ bcp1962 vendor tables OK (daily ${sections?.length} sections/407 rows/1860 refs, proper psalms ${psalmDays?.length} days, occasions ${occasions?.length}, cycle 2x31 days/24 selections, rules ${rules?.length}, calendar ${fixed?.length} commemorations)`,
+    `✓ bcp1962 vendor tables OK (daily ${sections?.length} sections/407 rows/1860 refs, proper psalms ${psalmDays?.length} days, occasions ${occasions?.length}, cycle 2x31 days/24 selections, rules ${rules?.length}, calendar ${fixed?.length} commemorations, psalter ${psalmKeys.length} psalms/${verseCount} verses, litany ${litanyLines?.length} lines, proper collects ${properList?.length})`,
   );
 }
 

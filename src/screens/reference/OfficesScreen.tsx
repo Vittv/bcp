@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { Bcp1662OfficeView } from "../../components/office/Bcp1662OfficeView";
+import { Bcp1962LitanyView } from "../../components/office/Bcp1962LitanyView";
 import { Segmented } from "../../components/office/OfficeControls";
 import { OfficeHeader } from "../../components/office/OfficeHeader";
 import { OfficeView } from "../../components/office/OfficeView";
@@ -18,6 +19,7 @@ import {
   composeBcp1662Litany,
   composeBcp1662OfficeForDate,
 } from "../../lib/content/bcp1662";
+import { composeBcp1962Litany } from "../../lib/content/bcp1962";
 import type { OfficeId } from "../../lib/content/types";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
@@ -155,7 +157,8 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
   ) as OfficeId;
   const customization = customizationFor(officeId);
   const document = useMemo(() => {
-    if (edition === "1662") return null;
+    if (edition === "1662" || (edition === "1962" && base === "litany"))
+      return null;
     return composeOffice(officeDate, officeId, {
       ...DEFAULT_PREFS,
       rite: officeRite,
@@ -166,6 +169,7 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     });
   }, [
     edition,
+    base,
     officeDate,
     officeId,
     officeRite,
@@ -235,6 +239,16 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     return (
       <Bcp1662OfficeView
         doc={bcp1662Doc}
+        showRubrics={showRubrics}
+        showSpeakers={showSpeakers}
+      />
+    );
+  }
+
+  if (edition === "1962" && base === "litany") {
+    return (
+      <Bcp1962LitanyView
+        doc={composeBcp1962Litany(officeDate)}
         showRubrics={showRubrics}
         showSpeakers={showSpeakers}
       />

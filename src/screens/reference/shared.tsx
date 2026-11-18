@@ -7,6 +7,7 @@ export type {
 export {
   BASE_OFFICES,
   BCP1662_BASE_OFFICES,
+  BCP1962_BASE_OFFICES,
   defaultLesserFeast,
   defaultSaint,
   FIRST_COLLECT,

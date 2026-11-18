@@ -16,6 +16,7 @@ import { useViewport } from "../../lib/viewport";
 import {
   BASE_OFFICES,
   BCP1662_BASE_OFFICES,
+  BCP1962_BASE_OFFICES,
   noSelect,
   type OfficeRite,
   type RefOfficeBase,
@@ -202,7 +203,12 @@ export function OfficesBar({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const styles = useThemedStyles(styleDef);
-  const offices = edition === "1662" ? BCP1662_BASE_OFFICES : BASE_OFFICES;
+  const offices =
+    edition === "1962"
+      ? BCP1962_BASE_OFFICES
+      : edition === "1662"
+        ? BCP1662_BASE_OFFICES
+        : BASE_OFFICES;
   const current =
     openOffice && offices.some((o) => o.id === openOffice)
       ? openOffice
@@ -238,7 +244,9 @@ export function OfficesBar({
   };
 
   const showRite =
-    edition !== "1662" && (current === "morning" || current === "evening");
+    edition !== "1662" &&
+    edition !== "1962" &&
+    (current === "morning" || current === "evening");
 
   const controls = (
     <View style={[styles.barRight, compact && styles.barRightCompact]}>

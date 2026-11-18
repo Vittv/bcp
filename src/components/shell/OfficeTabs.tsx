@@ -6,7 +6,11 @@ import type { OfficeRite } from "../../lib/office/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { useViewport, WIDTH_COMPACT } from "../../lib/viewport";
 import { BarDropdown, type DropdownOption } from "./BarDropdown";
-import { is1662OfficeTab, type TabId } from "./model/shellUtils";
+import {
+  is1662OfficeTab,
+  is1962OfficeTab,
+  type TabId,
+} from "./model/shellUtils";
 import { officeBarStyles } from "./officeBarStyles";
 
 const noSelect = {
@@ -88,7 +92,7 @@ export function OfficeTabs({
   const { width } = useViewport();
   const tabs = useMemo(
     () =>
-      edition === "1662"
+      edition === "1662" || edition === "1962"
         ? ([
             { id: "morning", label: "Matins" },
             { id: "litany", label: "The Litany" },
@@ -98,7 +102,10 @@ export function OfficeTabs({
     [edition],
   );
   useEffect(() => {
-    if (edition === "1662" && !is1662OfficeTab(active)) {
+    if (
+      (edition === "1662" && !is1662OfficeTab(active)) ||
+      (edition === "1962" && !is1962OfficeTab(active))
+    ) {
       onSelect("morning");
     }
   }, [active, edition, onSelect]);
@@ -112,9 +119,10 @@ export function OfficeTabs({
     width >= 640 ? "Daily Devotions" : width < 400 ? "Dev" : "Devotions";
   const showRite =
     edition !== "1662" &&
+    edition !== "1962" &&
     !devotions &&
     (active === "morning" || active === "evening");
-  const showDevotionsToggle = edition !== "1662";
+  const showDevotionsToggle = edition !== "1662" && edition !== "1962";
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={[styles.tabsLeft, compact && styles.groupCompact]}>

@@ -3,8 +3,9 @@
  * lectionary and psalm appointments, then optionally resolve lesson references
  * to scripture passages using the app loaders. Modeled on bcp1662.ts.
  *
- * The 1962 psalter text and office text are not vendored, so psalm appointments
- * are returned as raw strings rather than rendered psalm passages.
+ * psalm appointments are returned as citation strings; the vendored 1962
+ * psalter text resolves them to passages in the Lectionary and Psalter screens.
+ * office text is still not vendored.
  */
 import {
   type Bcp1962Observance,
@@ -26,6 +27,7 @@ import {
   type Bcp1962Office,
   expandBcp1962End,
   getBcp1962AlternativeFirstLesson,
+  getBcp1962Litany,
   getBcp1962ProperPsalms,
   getBcp1962Section,
   getBcp1962WeekdayPsalms,
@@ -353,4 +355,26 @@ export function composeBcp1962OfficeForDate(
   settings: ScriptureSettings = DEFAULT_BCP1962_SCRIPTURE_SETTINGS,
 ): Promise<Bcp1962ResolvedOffice> {
   return resolveBcp1962OfficeForDate(date, office, settings);
+}
+
+export type Bcp1962LitanyNode =
+  | { kind: "rubric"; text: string }
+  | { kind: "heading"; text: string }
+  | { kind: "text"; text: string; speaker?: "minister" | "people" | "all" };
+
+export type Bcp1962LitanyDoc = {
+  edition: "1962";
+  officeName: "The Litany";
+  date: CalendarDate;
+  nodes: Bcp1962LitanyNode[];
+};
+
+/** compose the 1962 Litany as a standalone office of rubrics and spoken lines. */
+export function composeBcp1962Litany(date: CalendarDate): Bcp1962LitanyDoc {
+  return {
+    edition: "1962",
+    officeName: "The Litany",
+    date,
+    nodes: getBcp1962Litany().lines.map((line) => ({ ...line })),
+  };
 }

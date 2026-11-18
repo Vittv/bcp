@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import type { PageId } from "../../../components/shell/Sidebar";
+import { useEdition } from "../../../context/EditionContext";
 import { useHistory, useHistoryField } from "../../../context/HistoryContext";
 import type { CalendarDate } from "../../../lib/calendar/types";
 import {
@@ -223,7 +224,9 @@ export function ReferenceProvider({
 
   // the status bar mirrors what the active page shows, including the
   // default-open first item; other pages' selections never leak in
+  const { edition } = useEdition();
   const readingLabel = readingLabelFor({
+    edition,
     page,
     openPsalm,
     openPsalterDay,

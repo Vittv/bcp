@@ -2,6 +2,7 @@ import type { PageId } from "../../../components/shell/Sidebar";
 import { lesserFeastBySlug } from "../../../lib/calendar/lesserFeasts";
 import { sanctoraleBySlug } from "../../../lib/calendar/sanctorale";
 import { canticleTitle } from "../../../lib/content/canticles";
+import { firstCollectForEdition } from "../../../lib/content/collectsEdition";
 import { psalmNumbers } from "../../../lib/content/psalter";
 import {
   PSALTER_DAY_COUNT,
@@ -25,6 +26,7 @@ import {
 } from "./model";
 
 export function readingLabelFor(args: {
+  edition: string;
   page: PageId;
   openPsalm: number | null;
   openPsalterDay: number | null;
@@ -37,6 +39,7 @@ export function readingLabelFor(args: {
   openCanticle: number | null;
 }): string | null {
   const {
+    edition,
     page,
     openPsalm,
     openPsalterDay,
@@ -56,7 +59,10 @@ export function readingLabelFor(args: {
       : page === "offices"
         ? OFFICE_NAMES[refOfficeId(openOffice ?? "morning", officeRite)]
         : page === "collects"
-          ? (selectedCollect ?? FIRST_COLLECT).title
+          ? (selectedCollect?.title ??
+            (edition === "1662" || edition === "1962"
+              ? firstCollectForEdition(edition).title
+              : FIRST_COLLECT.title))
           : page === "saints"
             ? (sanctoraleBySlug(openSaint ?? defaultSaint())?.title ?? null)
             : page === "lesser-feasts"
