@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   Pressable,
   type StyleProp,
@@ -12,6 +12,7 @@ import { IS_STANDALONE, IS_TAURI } from "../../lib/desktop";
 import { DISCORD_URL } from "../../lib/release";
 import { useThemedStyles, useThemeVar } from "../../lib/theme/themedStyles";
 import { useAppVersion } from "../../lib/version";
+import { registerEsc } from "./AppModal";
 import { Chevron } from "./Chevron";
 import {
   DiscordIcon,
@@ -122,6 +123,14 @@ export function Sidebar({
   const version = useAppVersion();
   const { edition, setEdition } = useEdition();
   const [editionOpen, setEditionOpen] = useState(false);
+  const [hoveredEdition, setHoveredEdition] = useState<string | null>(null);
+  useEffect(() => {
+    if (!editionOpen) {
+      setHoveredEdition(null);
+      return;
+    }
+    return registerEsc(() => setEditionOpen(false));
+  }, [editionOpen]);
   const sections = SECTIONS.map((id) => ({
     id,
     items: NAV.filter((item) => (item.section ?? "") === id),
@@ -131,6 +140,14 @@ export function Sidebar({
 
   return (
     <View style={[styles.sidebar, noSelect]}>
+      {editionOpen ? (
+        <Pressable
+          style={styles.editionBackdrop}
+          onPress={() => setEditionOpen(false)}
+          accessibilityLabel="Close edition picker"
+          accessibilityRole="button"
+        />
+      ) : null}
       <View style={styles.toolbar}>
         <Pressable
           dataSet={{ bcpBtn: "" }}
@@ -251,6 +268,12 @@ export function Sidebar({
                     styles.editionItem,
                     hovered && styles.editionItemActive,
                   ]}
+                  onHoverIn={() => setHoveredEdition(o.id)}
+                  onHoverOut={() =>
+                    setHoveredEdition((current) =>
+                      current === o.id ? null : current,
+                    )
+                  }
                   onPress={() => {
                     setEdition(o.id);
                     setEditionOpen(false);
@@ -282,7 +305,8 @@ export function Sidebar({
         <Pressable
           style={({ hovered }) => [
             styles.editionTrigger,
-            (hovered || editionOpen) && styles.editionItemActive,
+            (hovered || (editionOpen && !hoveredEdition)) &&
+              styles.editionItemActive,
           ]}
           onPress={() => setEditionOpen((v) => !v)}
           accessibilityRole="button"

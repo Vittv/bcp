@@ -144,11 +144,21 @@ export const sidebarStyles = defineThemedStyles({
     textTransform: "capitalize",
     opacity: 1,
   },
+  editionBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+  },
   editionWrap: {
     flexShrink: 0,
     borderTopWidth: 1,
     borderTopColor: "var(--border)",
     backgroundColor: "var(--bg)",
+    position: "relative",
+    zIndex: 2,
   },
   editionList: {
     borderBottomWidth: 1,
