@@ -33,6 +33,7 @@ import {
   getBcp1662Canticle,
   getBcp1662FixedCollects,
   getBcp1662HolyDayProperLessons,
+  getBcp1662OccasionalPrayers,
   getBcp1662OfficeText,
   getBcp1662ProperCollect,
   getBcp1662ProperPsalms,
@@ -279,6 +280,13 @@ export type Bcp1662OfficeNode =
       rubric?: string;
       text: string;
       suggested: boolean;
+    }
+  | {
+      kind: "occasional";
+      id: string;
+      title: string;
+      text: string;
+      group: "Prayers" | "Thanksgivings";
     }
   | { kind: "placeholder"; key: string; text: string };
 
@@ -884,6 +892,19 @@ export function composeBcp1662Office(
   }
   if (BCP1662_OFFICE_TEXT.common.prayers?.length) {
     for (const p of BCP1662_OFFICE_TEXT.common.prayers) {
+      // the occasional prayers belong before the two final prayers, so they
+      // land ahead of Chrysostom and the Grace
+      if (p.id === "chrysostom") {
+        for (const occ of getBcp1662OccasionalPrayers()) {
+          closingNodes.push({
+            kind: "occasional",
+            id: occ.id,
+            title: occ.title,
+            text: occ.text,
+            group: occ.group,
+          });
+        }
+      }
       closingNodes.push({ kind: "heading", text: p.title });
       closingNodes.push({ kind: "text", text: p.text });
     }

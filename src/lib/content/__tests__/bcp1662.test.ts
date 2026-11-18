@@ -74,6 +74,27 @@ describe("bcp1662 composition", () => {
     expect(office.psalms).toBeUndefined();
   });
 
+  it("places the occasional prayers before the two final prayers", async () => {
+    const { composeBcp1662OfficeForDate } = await import("../bcp1662");
+    const doc = await composeBcp1662OfficeForDate(
+      { year: 2026, month: 11, day: 17 },
+      "evening",
+    );
+    const nodes = doc.sections.find((s) => s.key === "closing")?.nodes ?? [];
+    const occasional = nodes.flatMap((n) =>
+      n.kind === "occasional" ? [{ group: n.group, title: n.title }] : [],
+    );
+    expect(occasional.length).toBeGreaterThan(0);
+    expect(occasional.some((p) => p.group === "Prayers")).toBe(true);
+    expect(occasional.some((p) => p.group === "Thanksgivings")).toBe(true);
+    const first = nodes.findIndex((n) => n.kind === "occasional");
+    const chrysostom = nodes.findIndex(
+      (n) => n.kind === "heading" && n.text === "A Prayer of St. Chrysostom",
+    );
+    expect(first).toBeGreaterThan(-1);
+    expect(first).toBeLessThan(chrysostom);
+  });
+
   it("appoints the Athanasian Creed on its proper feasts", () => {
     const onFeast = (month: number, day: number) =>
       athanasianCreedDay(resolveBcp1662Observance({ year: 2026, month, day }));
