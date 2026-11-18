@@ -17,7 +17,7 @@ import {
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
 import { useSectionHeading, useSubheading } from "./contentHeadings";
-import { ChoiceMenu } from "./OfficeControls";
+import { ChoiceMenu, MenuAnchor } from "./OfficeControls";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 
@@ -27,7 +27,7 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
   const subheading = useSubheading();
   switch (node.kind) {
     case "heading":
-      if (node.text === "Suffrages") {
+      if (node.text === "Suffrages" || node.text === "Confession of Sin") {
         return <Text style={sectionHeading}>{node.text}</Text>;
       }
       return <Text style={subheading}>{node.text}</Text>;
@@ -140,6 +140,16 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
           ) : null}
         </View>
       );
+    case "canticle":
+      return (
+        <View style={styles.canticleBlock}>
+          {node.rubric ? (
+            <Text style={styles.rubric}>{node.rubric}</Text>
+          ) : null}
+          <Text style={[subheading, styles.canticleTitle]}>{node.title}</Text>
+          <Text style={styles.text}>{node.text}</Text>
+        </View>
+      );
     case "placeholder":
       return <Text style={styles.placeholder}>{node.text}</Text>;
   }
@@ -157,6 +167,42 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
   const psalmRefs = psalmNode?.kind === "psalm" ? psalmNode.refs : [];
   const [psalmSelection, setPsalmSelection] = useState<string>("suggested");
   const [lessonSelection, setLessonSelection] = useState<string>("suggested");
+  const [canticleFirst, setCanticleFirst] = useState("suggested");
+  const [canticleSecond, setCanticleSecond] = useState("suggested");
+  const canticleNodes =
+    doc.sections
+      .find((s) => s.key === "lessons")
+      ?.nodes.filter(
+        (n): n is Extract<Bcp1662OfficeNode, { kind: "canticle" }> =>
+          n.kind === "canticle",
+      ) ?? [];
+  const canticleOptions = (slot: "first" | "second") => {
+    const inSlot = canticleNodes.filter((n) => n.slot === slot);
+    const suggested = inSlot.find((n) => n.suggested);
+    return [
+      ...(suggested
+        ? [{ id: "suggested", label: suggested.title, group: "Suggested" }]
+        : []),
+      ...inSlot.map((n) => ({ id: n.id, label: n.title, group: "Canticles" })),
+    ];
+  };
+  const canticleControl = (slot: "first" | "second") => {
+    const label =
+      slot === "first"
+        ? "Canticle after the First Lesson"
+        : "Canticle after the Second Lesson";
+    return (
+      <MenuAnchor style={styles.canticleControl}>
+        <ChoiceMenu
+          value={slot === "first" ? canticleFirst : canticleSecond}
+          options={canticleOptions(slot)}
+          label={label}
+          accessibilityLabel={label}
+          onChange={slot === "first" ? setCanticleFirst : setCanticleSecond}
+        />
+      </MenuAnchor>
+    );
+  };
   const isOpeningSentence = (text: string) =>
     sentences.some((s) => s.text === text);
   const truncate = (s: string, n: number) =>
@@ -185,22 +231,12 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
         <Text style={styles.editionLabel}>1662 - Book of Common Prayer</Text>
       </View>
       {doc.sections.map((section) => (
-        <View key={section.key} style={styles.section}>
-          <Text style={sectionHeading}>{section.heading}</Text>
-          {section.key === "opening" && sentences.length > 0 ? (
-            <View style={styles.controlRow}>
-              <ChoiceMenu
-                value={openingSelection}
-                options={options}
-                label="Opening Sentence"
-                accessibilityLabel="Opening Sentence"
-                fullWidth
-                onChange={setOpeningSelection}
-              />
-            </View>
-          ) : null}
+        <MenuAnchor key={section.key} style={styles.section}>
           {section.key === "psalms" && psalmRefs.length > 1 ? (
-            <View style={styles.controlRow}>
+            <MenuAnchor style={styles.headingRow}>
+              <Text style={[sectionHeading, styles.headingText]}>
+                {section.heading}
+              </Text>
               <ChoiceMenu
                 value={psalmSelection}
                 options={[
@@ -213,13 +249,14 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
                 ]}
                 label="Psalms"
                 accessibilityLabel="Psalms"
-                fullWidth
                 onChange={setPsalmSelection}
               />
-            </View>
-          ) : null}
-          {section.key === "lessons" ? (
-            <View style={styles.controlRow}>
+            </MenuAnchor>
+          ) : section.key === "lessons" ? (
+            <MenuAnchor style={styles.headingRow}>
+              <Text style={[sectionHeading, styles.headingText]}>
+                {section.heading}
+              </Text>
               <ChoiceMenu
                 value={lessonSelection}
                 options={[
@@ -237,10 +274,23 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
                 ]}
                 label="Lessons"
                 accessibilityLabel="Lessons"
-                fullWidth
                 onChange={setLessonSelection}
               />
-            </View>
+            </MenuAnchor>
+          ) : section.heading ? (
+            <Text style={sectionHeading}>{section.heading}</Text>
+          ) : null}
+          {section.key === "opening" && sentences.length > 0 ? (
+            <MenuAnchor style={styles.controlRow}>
+              <ChoiceMenu
+                value={openingSelection}
+                options={options}
+                label="Opening Sentence"
+                accessibilityLabel="Opening Sentence"
+                fullWidth
+                onChange={setOpeningSelection}
+              />
+            </MenuAnchor>
           ) : null}
           {section.nodes
             .filter((node) => {
@@ -256,6 +306,19 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
               if (section.key === "lessons" && node.kind === "lesson") {
                 if (lessonSelection === "suggested") return true;
                 return node.slot === lessonSelection;
+              }
+              if (node.kind === "canticle") {
+                if (
+                  lessonSelection !== "suggested" &&
+                  node.slot !== lessonSelection
+                ) {
+                  return false;
+                }
+                const selection =
+                  node.slot === "first" ? canticleFirst : canticleSecond;
+                return selection === "suggested"
+                  ? node.suggested
+                  : node.id === selection;
               }
               return true;
             })
@@ -289,11 +352,12 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
                     isLordsPrayerText ? styles.lordsPrayerBlock : undefined
                   }
                 >
+                  {node.kind === "canticle" ? canticleControl(node.slot) : null}
                   <NodeView node={renderedNode} />
                 </View>
               );
             })}
-        </View>
+        </MenuAnchor>
       ))}
       {doc.notes.length > 0 ? (
         <View style={styles.notes}>
@@ -396,12 +460,40 @@ const bcp1662Styles = defineThemedStyles({
     fontSize: 18,
     color: "var(--text-secondary)",
   },
+  headingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginTop: 18,
+    marginBottom: 8,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "var(--border-content)",
+  },
+  headingText: {
+    marginTop: 0,
+    marginBottom: 0,
+    paddingBottom: 0,
+    borderBottomWidth: 0,
+  },
   controlRow: {
     position: "relative",
-    zIndex: 100,
-    isolation: "isolate",
     marginTop: 8,
     marginBottom: 12,
+  },
+  canticleControl: {
+    position: "relative",
+    alignSelf: "flex-end",
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  canticleBlock: {
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  canticleTitle: {
+    marginTop: 4,
   },
   lordsPrayerBlock: {
     marginBottom: 16,

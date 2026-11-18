@@ -262,11 +262,20 @@ export type Bcp1662OfficeNode =
       passages: KjvPassage[];
       error?: string;
     }
+  | {
+      kind: "canticle";
+      slot: "first" | "second";
+      id: string;
+      title: string;
+      rubric?: string;
+      text: string;
+      suggested: boolean;
+    }
   | { kind: "placeholder"; key: string; text: string };
 
 export type Bcp1662ComposedSection = {
   key: Bcp1662OfficeSectionKey;
-  heading: string;
+  heading?: string;
   nodes: Bcp1662OfficeNode[];
 };
 
@@ -502,6 +511,13 @@ export function composeBcp1662Office(
     }
   }
 
+  // the penitential opening carries one section rule over exhortation,
+  // confession, and absolution; the absolution keeps its own rubric
+  openingNodes.push({
+    kind: "heading",
+    text: "Confession of Sin",
+  });
+
   if (BCP1662_OFFICE_TEXT.common.exhortation) {
     openingNodes.push({
       kind: "text",
@@ -710,19 +726,27 @@ export function composeBcp1662Office(
       canticleKey === "afterFirst"
         ? (officeDef?.canticles?.afterFirst ?? [])
         : (officeDef?.canticles?.afterSecond ?? []);
-    const canticleId = canticleIds[0];
-    const canticle = canticleId ? getBcp1662Canticle(canticleId) : undefined;
-    if (canticle) {
-      if (canticle.rubric) {
-        lessonsAndCanticles.push({ kind: "rubric", text: canticle.rubric });
-      }
-      lessonsAndCanticles.push({ kind: "heading", text: canticle.title });
-      lessonsAndCanticles.push({ kind: "text", text: canticle.text });
-    } else {
+    const canticles = canticleIds.flatMap((id) => {
+      const canticle = getBcp1662Canticle(id);
+      return canticle ? [canticle] : [];
+    });
+    if (canticles.length === 0) {
       lessonsAndCanticles.push({
         kind: "placeholder",
         key: `canticle-${slot}`,
         text: "Canticle text to be vendored/selected.",
+      });
+    }
+    for (let i = 0; i < canticles.length; i++) {
+      const canticle = canticles[i];
+      lessonsAndCanticles.push({
+        kind: "canticle",
+        slot,
+        id: canticle.id,
+        title: canticle.title,
+        rubric: canticle.rubric,
+        text: canticle.text,
+        suggested: i === 0,
       });
     }
   }
@@ -856,17 +880,17 @@ export function composeBcp1662Office(
   }
 
   const sections: Bcp1662ComposedSection[] = [
-    { key: "opening", heading: "Opening", nodes: openingNodes },
+    { key: "opening", nodes: openingNodes },
     { key: "psalms", heading: "Psalms", nodes: psalmNodes },
     {
       key: "lessons",
-      heading: "Lessons & Canticles",
+      heading: "The Lessons",
       nodes: lessonsAndCanticles,
     },
-    { key: "creed", heading: "Creed", nodes: creedNodes },
-    { key: "prayers", heading: "Prayers", nodes: prayersNodes },
-    { key: "collects", heading: "Collects", nodes: collectNodes },
-    { key: "closing", heading: "Closing", nodes: closingNodes },
+    { key: "creed", heading: "The Apostles' Creed", nodes: creedNodes },
+    { key: "prayers", heading: "The Prayers", nodes: prayersNodes },
+    { key: "collects", nodes: collectNodes },
+    { key: "closing", nodes: closingNodes },
   ];
 
   return {
