@@ -84,6 +84,12 @@ export const BCP1662_BASE_OFFICES: {
   { id: "evening", label: "Evensong", name: "Evensong" },
 ];
 
+export const BCP1962_BASE_OFFICES: typeof BCP1662_BASE_OFFICES = [
+  { id: "morning", label: "Matins", name: "Matins" },
+  { id: "litany", label: "The Litany", name: "The Litany" },
+  { id: "evening", label: "Evensong", name: "Evensong" },
+];
+
 export function refOfficeId(
   base: RefOfficeBase,
   rite: OfficeRite,

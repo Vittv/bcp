@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
   composeBcp1962ForDate,
+  composeBcp1962Litany,
   DEFAULT_BCP1962_SCRIPTURE_SETTINGS,
   resolveBcp1962LessonPassages,
   resolveBcp1962OfficeForDate,
@@ -10,6 +11,30 @@ const at = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
   return { year, month, day };
 };
+
+describe("bcp1962 litany", () => {
+  it("composes the Litany as a standalone office with speakers", () => {
+    const doc = composeBcp1962Litany(at("2026-11-18"));
+    expect(doc.edition).toBe("1962");
+    expect(doc.officeName).toBe("The Litany");
+    expect(doc.nodes[0].kind).toBe("rubric");
+    expect(doc.nodes[doc.nodes.length - 1].kind).toBe("rubric");
+    const speakers = new Set(
+      doc.nodes.flatMap((n) =>
+        n.kind === "text" && n.speaker ? [n.speaker] : [],
+      ),
+    );
+    expect(speakers.has("minister")).toBe(true);
+    expect(speakers.has("people")).toBe(true);
+    expect(
+      doc.nodes.some(
+        (n) =>
+          n.kind === "text" &&
+          n.text.includes("O God the Father, Creator of heaven and earth"),
+      ),
+    ).toBe(true);
+  });
+});
 
 describe("bcp1962 date composition", () => {
   it("uses Year I and Year II Sunday lessons", () => {

@@ -10,10 +10,14 @@
 import calendarRulesData from "./calendar-rules.min.json";
 import citationMapData from "./citation-map.min.json";
 import dailyData from "./lectionary-daily.min.json";
+import collectsProperData from "./office-text/collects-proper.min.json";
+import litanyData from "./office-text/litany.min.json";
 import rulesData from "./lectionary-rules.min.json";
 import properPsalmsData from "./proper-psalms.min.json";
 import psalterCycleData from "./psalter-cycle.min.json";
+import psalterData from "./psalter.min.json";
 import specialOccasionsData from "./special-occasions.min.json";
+import type { PsalmPassage } from "../../types";
 
 export type Bcp1962Year = 1 | 2;
 export type Bcp1962Office = "morning" | "evening";
@@ -125,6 +129,47 @@ export const BCP1962_SELECTIONS =
 export const BCP1962_PSALTER_RUBRICS =
   // SAFETY: vendored static JSON table of rule strings; validated by scripts/check-bcp1962-vendor.ts.
   psalterCycleData.rubrics as Record<string, string | string[]>;
+
+type Bcp1962PsalmPart = {
+  title?: string | null;
+  verses: Record<string, string>;
+};
+
+export const BCP1962_PSALTER =
+  // SAFETY: vendored 1962 Coverdale psalter text extracted from the ACC PDF, validated by scripts/check-bcp1962-vendor.ts.
+  psalterData as Record<string, { parts: Bcp1962PsalmPart[] }>;
+
+export type Bcp1962LitanyLine =
+  | { kind: "rubric"; text: string }
+  | { kind: "heading"; text: string }
+  | {
+      kind: "text";
+      text: string;
+      speaker?: "minister" | "people" | "all";
+    };
+
+const BCP1962_LITANY =
+  // SAFETY: vendored 1962 Litany text extracted from the ACC PDF.
+  litanyData as { lines: Bcp1962LitanyLine[] };
+
+export function getBcp1962Litany(): { lines: Bcp1962LitanyLine[] } {
+  return BCP1962_LITANY;
+}
+
+export type Bcp1962ProperCollect = { name: string; text: string };
+
+export const BCP1962_PROPER_COLLECTS =
+  // SAFETY: vendored 1962 proper collects extracted from the ACC PDF.
+  collectsProperData as {
+    meta: { edition: string };
+    collects: Bcp1962ProperCollect[];
+  };
+
+export function getBcp1962ProperCollect(
+  name: string,
+): Bcp1962ProperCollect | undefined {
+  return BCP1962_PROPER_COLLECTS.collects.find((c) => c.name === name);
+}
 
 export const BCP1962_RULES =
   // SAFETY: vendored static JSON table matching the declared shape; validated by scripts/check-bcp1962-vendor.ts.
@@ -324,6 +369,45 @@ function partRange(chapter: string, part: number): string {
   const start = (part - 1) * versesPerPart + 1;
   const end = part * versesPerPart;
   return `${chapter}:${start}-${end}`;
+}
+
+function versesOf1962(psalm: { parts: Bcp1962PsalmPart[] }): PsalmPassage["verses"] {
+  const out: PsalmPassage["verses"] = [];
+  for (const part of psalm.parts) {
+    for (const [number, text] of Object.entries(part.verses)) {
+      out.push({ number: Number(number), text });
+    }
+  }
+  return out;
+}
+
+/** resolve a 1962 psalm citation (e.g. "96", "119:81-88") to a psalm passage. */
+export function getBcp1962PsalmPassage(ref: string): PsalmPassage | undefined {
+  const m = /^(\d{1,3})(?::(\d+)(?:-(\d+))?)?$/.exec(ref.trim());
+  if (!m) return undefined;
+  const psalmNum = Number(m[1]);
+  const psalm = BCP1962_PSALTER[String(psalmNum)];
+  if (!psalm) return undefined;
+  const all = versesOf1962(psalm);
+  if (!m[2]) return { psalm: psalmNum, verses: all };
+  const start = Number(m[2]);
+  const end = m[3] ? Number(m[3]) : start;
+  return {
+    psalm: psalmNum,
+    verses: all.filter((v) => v.number >= start && v.number <= end),
+  };
+}
+
+/** resolve a list of 1962 psalm citations to passages, preserving order. */
+export function getBcp1962PsalmPassages(
+  refs: Array<string | number>,
+): PsalmPassage[] {
+  const out: PsalmPassage[] = [];
+  for (const ref of refs) {
+    const passage = getBcp1962PsalmPassage(String(ref));
+    if (passage) out.push(passage);
+  }
+  return out;
 }
 
 /**

@@ -1,0 +1,620 @@
+{
+ "meta": {
+  "edition": "1962",
+  "title": "1962 Canadian BCP, The Litany",
+  "status": "curated-from-witness",
+  "sources": [
+   {
+    "role": "primary witness",
+    "ref": "The Book of Common Prayer (1962, Canada), The Litany, printed pages 30 to 36",
+    "url": "https://www.anglican.ca/wp-content/uploads/bcp.pdf",
+    "note": "Text extracted with pdftotext -layout; speaker attribution follows the printed minister/people alternation and the explicit Minister/People labels in the Supplication."
+   }
+  ],
+  "caveats": [
+   "Section headings are app aids for navigation, not printed rubrics.",
+   "The Royal Family placeholder and the bracketed Ember Ordination petition are retained as printed.",
+   "Speaker attribution in the main Litany is inferred from the printed alternation of long petitions and short responses."
+  ]
+ },
+ "lines": [
+  {
+   "kind": "rubric",
+   "text": "Which may be sung or said before the Holy Communion; or after the Creed at Morning or Evening Prayer, instead of the remaining part of the Service; or as a separate service, with Hymns, a Psalm, a Lesson, the Creed, and a Sermon, at the discretion of the Minister."
+  },
+  {
+   "kind": "rubric",
+   "text": "The Litany should always be used at least once a month on a Sunday, and is commended for use on Wednesdays, Fridays, and Rogation Days."
+  },
+  {
+   "kind": "heading",
+   "text": "The Invocations"
+  },
+  {
+   "kind": "text",
+   "text": "O God the Father, Creator of heaven and earth: have mercy upon us.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "O God the Father, Creator of heaven and earth: have mercy upon us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "O God the Son, Redeemer of the world: have mercy upon us.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "O God the Son, Redeemer of the world: have mercy upon us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "O God the Holy Ghost, Sanctifier of the faithful: have mercy upon us.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "O God the Holy Ghost, Sanctifier of the faithful: have mercy upon us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "O holy, blessed, and glorious Trinity, three Persons and one God: have mercy upon us.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "O holy, blessed, and glorious Trinity, three Persons and one God: have mercy upon us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "heading",
+   "text": "The Deprecation"
+  },
+  {
+   "kind": "text",
+   "text": "Remember not, Lord, our offences, nor the offences of our forefathers; spare us, good Lord, spare thy people, whom thou hast redeemed with thy most precious blood.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Spare us, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "From all evil and mischief; from sin, from the crafts and assaults of the devil; from thy wrath, and from everlasting condemnation,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Good Lord, deliver us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "From all blindness of heart; from pride, vain-glory, and hypocrisy; from envy, hatred, and malice, and all uncharitableness,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Good Lord, deliver us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "From all uncleanness in thought, word, and deed; and from all the deceits of the world, the flesh, and the devil,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Good Lord, deliver us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "From lightning and tempest; from earthquake, fire, and flood; from plague, pestilence, and famine; from battle and murder, and from sudden death,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Good Lord, deliver us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "From all sedition, conspiracy, and rebellion; from all false doctrine, heresy, and schism; from hardness of heart, and contempt of thy Word and Commandment,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Good Lord, deliver us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "By the mystery of thy holy Incarnation; by thy holy Nativity; by thy Baptism, Fasting, and Temptation,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Good Lord, deliver us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "By thine Agony and bloody Sweat; by thy Cross and Passion; by thy precious Death and Burial,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Good Lord, deliver us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "By thy glorious Resurrection and Ascension; by thy sending of the Holy Spirit; by thy heavenly Intercession; and by thy Coming again in glory,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Good Lord, deliver us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "In all times of tribulation; in all times of prosperity; in the hour of death, and in the day of judgement,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Good Lord, deliver us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "heading",
+   "text": "The Supplication"
+  },
+  {
+   "kind": "text",
+   "text": "We sinners do beseech thee to hear us, O Lord God: and that it may please thee to rule and govern thy holy Church universal in the right way,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To keep and strengthen in the true worshipping of thee, in holiness of life, and in devotion to her people, thy servant ELIZABETH, our most gracious Queen and Governor,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To be her defender and keeper, giving her the victory over all her enemies,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To bless and preserve [ . . . . ] and all the Royal Family,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "rubric",
+   "text": "Here shall be named, as determined by authority from time to time, the several members of the Royal Family."
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "rubric",
+   "text": "To be used in the Ember weeks, and on the day of an Ordination."
+  },
+  {
+   "kind": "text",
+   "text": "To bless thy servants at this time to be admitted to the Order of Deacons or of Priests, and to pour thy grace upon them; that they may duly execute their office to the edifying of thy Church, and to the glory of thy holy Name,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To send forth labourers into thy harvest; to prosper their work by thy Holy Spirit; to make thy saving health known unto all nations; and to hasten thy kingdom,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To bless the people of our Country and the Commonwealth, and to endue those set in authority with grace, wisdom, and understanding,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To bless and guide the judges and Magistrates, giving them grace to execute justice, and to maintain truth,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To bless and keep the Queen’s forces by sea, and land, and air, and to shield them in all dangers and adversities,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To give to all nations unity, peace, and concord, that they may serve thee without fear,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To bless and protect all who serve mankind by their labour and learning,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To preserve all that travel, all women labouring of child, all sick persons and young children; and to show thy pity upon all prisoners and captives,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To defend, and provide for, all widows and orphans, and all who are desolate and oppressed,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To bless and keep all thy people,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To give to all thy people increase of grace, to hear meekly thy Word, and to receive it with pure affection, and to bring forth the fruit of the Spirit,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To bring into the way of truth all who have erred and are deceived,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To strengthen such as do stand; to encourage the faint-hearted; to raise up those who fall; and finally to beat down Satan under our feet,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To succour, help, and comfort all that are in danger, necessity, and tribulation,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To have mercy upon all men,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To give and preserve to our use the kindly fruits of the earth, so that in due time we may enjoy them,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To forgive our enemies, persecutors, and slanderers, and to turn their hearts,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "To give us true repentance; to forgive us all our sins, negligences, and ignorances; and to endue us with the grace of thy Holy Spirit, to amend our lives according to thy holy Word,",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "We beseech thee, good Lord.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "Son of God, we beseech thee to hear us.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Son of God, we beseech thee to hear us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "O Lamb of God, that takest away the sin of the world;",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Have mercy upon us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "O Lamb of God, that takest away the sin of the world;",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Grant us thy peace.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "O Christ, hear us.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "O Christ, hear us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "Lord, have mercy upon us.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Christ, have mercy upon us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "Lord, have mercy upon us.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "heading",
+   "text": "The Lord’s Prayer"
+  },
+  {
+   "kind": "text",
+   "text": "Our Father who art in heaven, Hallowed be thy Name, Thy kingdom come, Thy will be done, on earth as it is in heaven. Give us this day our daily bread; And forgive us our trespasses, As we forgive them that trespass against us; And lead us not into temptation, But deliver us from evil. Amen.",
+   "speaker": "all"
+  },
+  {
+   "kind": "rubric",
+   "text": "Then shall follow the Collect of the day."
+  },
+  {
+   "kind": "heading",
+   "text": "A Prayer of Saint Chrysostom"
+  },
+  {
+   "kind": "text",
+   "text": "Almighty God, who hast given us grace at this time with one accord to make our common supplications unto thee; and dost promise that when two or three are gathered together in thy Name thou wilt grant their requests: Fulfil now, O Lord, the desires and petitions of thy servants, as may be most expedient for them; granting us in this world knowledge of thy truth, and in the world to come life everlasting. Amen.",
+   "speaker": "all"
+  },
+  {
+   "kind": "text",
+   "text": "2 Corinthians 13. 14."
+  },
+  {
+   "kind": "heading",
+   "text": "The Grace"
+  },
+  {
+   "kind": "text",
+   "text": "The grace of our Lord Jesus Christ, and the love of God, and the fellowship of the Holy Ghost, be with us all evermore. Amen.",
+   "speaker": "all"
+  },
+  {
+   "kind": "rubric",
+   "text": "When the Litany is read immediately before the Holy Communion, the Minister may proceed, after the Lord’s Prayer of the Litany, to the Communion Service, which may begin with the Mutual Salutation and the Collect of the day."
+  },
+  {
+   "kind": "heading",
+   "text": "A Supplication"
+  },
+  {
+   "kind": "rubric",
+   "text": "Which may be used before the Prayer of Saint Chrysostom in the Litany, or at other Services, especially in the Penitential Seasons and in times of trouble."
+  },
+  {
+   "kind": "text",
+   "text": "O Lord, arise, help us, and deliver us for thy Name’s sake.",
+   "speaker": "all"
+  },
+  {
+   "kind": "text",
+   "text": "O God, we have heard with our ears, and our fathers have declared unto us, the noble works that thou didst in their days, and in the old time before them.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "O Lord, arise, help us, and deliver us for thine honour.",
+   "speaker": "all"
+  },
+  {
+   "kind": "text",
+   "text": "Glory be to the Father, and to the Son, and to the Holy Ghost;",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "As it was in the beginning, is now, and ever shall be, world without end. Amen.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "O Lord, arise, help us, and deliver us for thy Name’s sake.",
+   "speaker": "all"
+  },
+  {
+   "kind": "text",
+   "text": "From our enemies defend us, O Christ;",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Graciously look upon our afflictions.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "Pitifully behold the sorrows of our hearts;",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Mercifully forgive the sins of thy people.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "Favourably with mercy hear our prayers;",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "O Son of David, have mercy upon us.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "Both now and ever vouchsafe to hear us, O Christ;",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Graciously hear us, O Christ; graciously hear us, O Lord Christ.",
+   "speaker": "people"
+  },
+  {
+   "kind": "rubric",
+   "text": "Then shall be said one or both of these prayers, with the versicles preceding:"
+  },
+  {
+   "kind": "text",
+   "text": "O Lord, let thy mercy be shown upon us;",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "As we do put our trust in thee.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "We humbly beseech thee, O Father, mercifully to look upon our infirmities; and, for the glory of thy Name, turn from us all those evils that we most justly have deserved; and grant that in all our troubles we may put our whole trust and confidence in thy mercy, and evermore serve thee in holiness and pureness of living, to thy honour and glory; through our only Mediator and Advocate, Jesus Christ our Lord. Amen.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "O Lord, deal not with us according to our sins;",
+   "speaker": "minister"
+  },
+  {
+   "kind": "text",
+   "text": "Neither reward us according to our iniquities.",
+   "speaker": "people"
+  },
+  {
+   "kind": "text",
+   "text": "O God, merciful Father, that despisest not the sighing of a contrite heart, nor the desire of such as be sorrowful: Mercifully assist our prayers that we make before thee in all our troubles and adversities, whensoever they oppress us; and graciously hear us, that those evils, which the craft and subtilty of the devil or man worketh against us, be brought to nought; and by the providence of thy goodness they may be dispersed; that we thy servants, being hurt by no persecutions, may evermore give thanks unto thee in thy holy Church; through Jesus Christ our Lord. Amen.",
+   "speaker": "minister"
+  },
+  {
+   "kind": "rubric",
+   "text": "Other prayers from this Book may be added, concluding with the Prayer of Saint Chrysostom and the Grace."
+  }
+ ]
+}

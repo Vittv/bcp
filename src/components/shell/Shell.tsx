@@ -77,11 +77,14 @@ import {
   holyDayCountdown,
   IS_WEB,
   is1662OfficeTab,
+  is1962OfficeTab,
   isReferencePage,
   OFFICE_LABEL,
   OFFICE_LABEL_1662,
+  OFFICE_LABEL_1962,
   officeForHour,
   officeForHour1662,
+  officeForHour1962,
   type TabId,
   today,
   u,
@@ -125,7 +128,9 @@ export function Shell() {
   const [tab, setTab] = useState<TabId>(() =>
     edition === "1662"
       ? officeForHour1662(new Date().getHours())
-      : officeForHour(new Date().getHours()),
+      : edition === "1962"
+        ? officeForHour1962(new Date().getHours())
+        : officeForHour(new Date().getHours()),
   );
   const [page, setPage] = useState<PageId>("today");
   // increments on every navigation (including re-entering the same
@@ -331,12 +336,15 @@ export function Shell() {
   const [bcp1662TodayLoading, setBcp1662TodayLoading] = useState(false);
 
   useEffect(() => {
-    if (edition !== "1662") return;
+    if (edition !== "1662" && edition !== "1962") return;
     if (devotions) {
       setDevotions(false);
     }
-    if (!is1662OfficeTab(tab)) {
+    if (edition === "1662" && !is1662OfficeTab(tab)) {
       setTab(officeForHour1662(new Date().getHours()));
+    }
+    if (edition === "1962" && !is1962OfficeTab(tab)) {
+      setTab(officeForHour1962(new Date().getHours()));
     }
   }, [devotions, edition, setDevotions, tab]);
 
@@ -411,10 +419,14 @@ export function Shell() {
         const currentTab =
           edition === "1662"
             ? officeForHour1662(new Date().getHours())
-            : officeForHour(new Date().getHours());
+            : edition === "1962"
+              ? officeForHour1962(new Date().getHours())
+              : officeForHour(new Date().getHours());
         return edition === "1662"
           ? (OFFICE_LABEL_1662[currentTab] ?? OFFICE_LABEL[currentTab])
-          : OFFICE_LABEL[currentTab];
+          : edition === "1962"
+            ? (OFFICE_LABEL_1962[currentTab] ?? OFFICE_LABEL[currentTab])
+            : OFFICE_LABEL[currentTab];
       })(),
     },
     saints: nextFeast

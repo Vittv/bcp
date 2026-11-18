@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Platform, ScrollView, Text, View } from "react-native";
 
 import { useSectionHeading } from "../components/office/contentHeadings";
+import { PsalmText } from "../components/office/PsalmText";
 import { ScriptureView } from "../components/office/ScriptureView";
 import { useTranslation } from "../context/TranslationContext";
 import type { CalendarDate } from "../lib/calendar/types";
@@ -11,6 +12,7 @@ import {
   composeBcp1962ForDate,
   resolveBcp1962OfficeForDate,
 } from "../lib/content/bcp1962";
+import { getBcp1962PsalmPassage } from "../lib/content/vendor/bcp1962";
 import { dayLabel } from "../lib/office";
 import { useThemedStyles } from "../lib/theme/themedStyles";
 import { lectionaryStyles } from "./LectionaryScreen.styles";
@@ -60,11 +62,15 @@ function PsalmsBlock({ refs }: { refs: string[] }) {
   if (refs.length === 0) return null;
   return (
     <View style={styles.psalmBlock}>
-      <Text style={styles.psalmRef}>Psalms appointed: {refs.join("; ")}</Text>
-      <Text style={styles.officeNote}>
-        The 1962 psalter text is not yet vendored, so appointments are shown as
-        citations.
-      </Text>
+      {refs.map((ref, i) => {
+        const passage = getBcp1962PsalmPassage(ref);
+        return (
+          <View key={ref} style={i === 0 ? undefined : styles.psalmItem}>
+            <Text style={styles.psalmRef}>Psalm {ref}</Text>
+            {passage ? <PsalmText passage={passage} size="body" /> : null}
+          </View>
+        );
+      })}
     </View>
   );
 }

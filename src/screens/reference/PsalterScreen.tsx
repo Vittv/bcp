@@ -16,6 +16,7 @@ import {
 import type { PsalterDay } from "../../lib/content/types";
 import { getBcp1662PsalmPassages } from "../../lib/content/vendor/bcp1662";
 import bcp1662PsalterCycle from "../../lib/content/vendor/bcp1662/psalter-cycle.json";
+import { getBcp1962PsalmPassages } from "../../lib/content/vendor/bcp1962";
 import { searchPsalterDays } from "../../lib/reference/search";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
@@ -301,17 +302,20 @@ function PsalterPortion({
   const styles = useThemedStyles(styleDef);
   if (citations.length === 0) return null;
   const is1662 = edition === "1662";
+  const is1962 = edition === "1962";
   return (
     <View>
       <Text style={heading}>{label}</Text>
       <View style={styles.psalterBlock}>
         {citations.map((citation, i) => {
           const parsed = parsePsalmCitation(citation);
-          const passage = is1662
-            ? getBcp1662PsalmPassages([citation])[0]
-            : parsed
-              ? psalmPassage(parsed)
-              : undefined;
+          const passage = is1962
+            ? getBcp1962PsalmPassages([citation])[0]
+            : is1662
+              ? getBcp1662PsalmPassages([citation])[0]
+              : parsed
+                ? psalmPassage(parsed)
+                : undefined;
           return (
             <View
               key={citation}

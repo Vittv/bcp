@@ -1,6 +1,6 @@
 # 1962 Canadian BCP, vendored content provenance
 
-Status: curated from the official ACC PDF, 2026-11-18. The lectionary, psalms, calendar, and rules are vendored. The 1962 psalter text and office text are not vendored.
+Status: curated from the official ACC PDF, 2026-11-18. The lectionary, psalms, calendar, rules, Coverdale psalter text, and The Litany are vendored. The proper collects are vendored; the rest of the 1962 office text is not vendored yet.
 
 Text is based on the Book of Common Prayer (1962) of the General Synod of the Anglican Church of Canada. This project is independent and is not endorsed by the Anglican Church of Canada. For the official publication, visit www.anglican.ca/texts.
 
@@ -17,7 +17,7 @@ On 2026-11-16, Alicia Brown of the Anglican Church of Canada stated that the 196
 | URL | https://www.anglican.ca/wp-content/uploads/bcp.pdf |
 | Local extraction copy | /tmp/opencode/bcp1962-acc.pdf |
 | PDF metadata | 792 pages, created 2000-04-01, modified 2025-11-06, producer Acrobat PDFWriter 4.0 |
-| Sections used | Calendar pages v to xii, Days of Fasting page xiii, Table of Lessons pages xv to xlv, Proper Psalms pages l to liii, Psalter appointment pages xlix to lv, Collects General Rubrics page 94 |
+| Sections used | Calendar pages v to xii, Days of Fasting page xiii, Table of Lessons pages xv to xlv, Proper Psalms pages l to liii, Psalter appointment pages xlix to lv, Collects General Rubrics page 94, The Litany printed pages 30 to 36, Collects Epistles and Gospels printed pages 94 to 330, The Psalter printed pages 331 to 521 |
 | Method | Text extracted with pdftotext -layout, facing pages paired manually, ambiguous readings checked against rendered page images |
 
 ## Cross-check sources
@@ -35,6 +35,9 @@ Lectionary Central, "The Table of Daily Lessons from The Book of Common Prayer C
 | calendar-rules.json | 155 fixed commemorations, the Year I/II rule, lesson table notes, fasting rules, Ember and Rogation definitions, and 8 transfer rules |
 | lectionary-rules.json | Rule records documenting resolver intent |
 | citation-map.json | Book aliases and the Psalm 119 part rule used by the citation normalizer |
+| psalter.json | The 1962 Coverdale psalter text: 149 psalms (Psalm 58 omitted) and 2489 renumbered verses |
+| office-text/litany.json | The Litany, 123 lines: opening rubrics, invocations, deprecation, supplication, Lord's Prayer, Chrysostom prayer, Grace, and the appended Supplication |
+| office-text/collects-proper.json | 107 proper collects from the Collects, Epistles, and Gospels, including votive and national occasions |
 
 Every table has a minified twin. The check script at scripts/check-bcp1962-vendor.ts validates parity and structural invariants.
 
@@ -52,8 +55,26 @@ These were confirmed against rendered page images from the witness. They are lik
 - Trinity XVIII, Tuesday evening first lesson: `Ezek. 36. .22–end`.
 - Michaelmas Eucharist introit: `103. 119–22`.
 
+## Psalter text curation
+
+`psalter.json` was extracted from the same ACC PDF, from the section titled "The Psalter as it is appointed to be said or sung in churches", printed pages 331 to 521. The witness arranges the psalms in a 30-day monthly cycle with Morning and Evening headings and page running heads; those structural lines were stripped and each psalm's verses collected into a single part keyed by the printed verse number.
+
+- The text is the 1962 Coverdale revision, not the 1662 text. Sample wording differs ("doth he meditate" against 1662 "will he exercise himself"), the divine name prints as `LORD`, and the appointed mediant is `/`, which is preserved verbatim in the verse text.
+- The "Order how the Psalter is Appointed" note lists omitted passages: Psalm 14. 5-7, 55. 16, 58 (all), 68. 21-23, 69. 23-29, 104. 35 (in part), 109. 5-19, 136. 27, 137. 7-9, 140. 9-10, 141. 7-8, with the verses renumbered. The witness's printed numbering is captured as-is, so Psalm 58 is absent and the affected psalms have shorter, contiguous verse sequences. Cross-checking verse counts against the 1662 text confirms each documented omission.
+- Psalm 119 keeps its 176 verses in one part, matching the app's eight-verses-per-part citation mapping used for `119, Pts N` appointments.
+- PDF text-layer damage was repaired where it was unambiguous: `I0` and `I` for verse-number digits, `4.` and missing spaces after verse numbers, `5 I` for verse 51, `L ORD`, `M YSELF`, a leading capital `1` for the pronoun `I`, a displaced `ever.` in the three "O give thanks" psalms (107, 118, 136), a stray space before punctuation, and three verses printed with a lowercase initial. Drop-cap initials were rejoined to their small-caps word using the 1662 text only as a word-boundary oracle, never as a wording source. Latin incipits were dropped because the text layer damaged them and the app does not render them.
+- No rendered page images were consulted for the psalter text, so this is a text-layer extraction rather than an image-verified transcription. The verse-count and omission checks above bound the structural risk.
+
+## Litany curation
+
+`office-text/litany.json` was extracted from The Litany, printed pages 30 to 36. It follows the 1662 litany JSON shape: a `lines` array of `rubric`, `heading`, and `text` items, where spoken lines carry a `speaker` of `minister`, `people`, or `all`. The 1962 book prints long petitions and short responses without speaker labels except in the appended Supplication, so speaker attribution in the main Litany is inferred from that alternation and recorded as a caveat in the table. The Royal Family placeholder and the bracketed Ember Ordination petition are retained as printed. Section headings are app navigation aids, not printed rubrics. The check script validates pretty/min parity, the line kinds, speaker values, and the opening and closing rubrics.
+
+## Proper collects curation
+
+`office-text/collects-proper.json` was extracted from the Collects, Epistles, and Gospels, printed pages 94 to 330. Each printed Collect or Collects heading became one `{name, text}` record, matching the 1662 proper-collect shape. Three propers print two collects under one heading (Maundy Thursday, Good Friday, Saint Peter and Saint Paul) and were split with numbered suffixes; the Octave Day of Christmas prints two additional collects split into "Of the Circumcision" and "For the New Year". Votive collects whose title appears only in an explanatory rubric were named from that rubric (for example "For Peace in the World" and "For Labour and Industry"). Margin cross-references, feast-date annotations, and interleaved psalter footnotes were removed where the text layer had displaced them into the collect. The check script validates pretty/min parity, edition, and unique non-empty names and texts.
+
 ## Known limitations
 
-- Psalm appointments are raw strings. The resolver maps Psalm 119 parts to verse ranges at read time; the 1962 psalter text itself is not vendored.
+- Psalm appointments are raw citation strings in the resolver; the vendored 1962 psalter text resolves them to passages in the Lectionary and Psalter screens through `getBcp1962PsalmPassage`.
 - The 50-year moveable-feast tables in the witness are reference tables, not an algorithmic definition. The app computes these values from the shared Easter and Advent primitives.
 - Lesson citations keep parenthetical alternatives and verse halves as visible text. The scripture parser currently strips them for lookup.

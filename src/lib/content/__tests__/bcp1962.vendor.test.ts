@@ -2,12 +2,17 @@ import { describe, expect, it } from "bun:test";
 import {
   BCP1962_DAILY,
   BCP1962_FIXED_CALENDAR,
+  BCP1962_PROPER_COLLECTS,
   BCP1962_PROPER_PSALMS,
+  BCP1962_PSALTER,
   BCP1962_RULES,
   BCP1962_SELECTIONS,
   expandBcp1962End,
   getBcp1962LessonSet,
+  getBcp1962ProperCollect,
   getBcp1962ProperPsalms,
+  getBcp1962PsalmPassage,
+  getBcp1962PsalmPassages,
   getBcp1962Selection,
   getBcp1962WeekdayPsalms,
   normalizeBcp1962Citation,
@@ -124,5 +129,57 @@ describe("bcp1962 psalm appointments", () => {
     expect(getBcp1962WeekdayPsalms(2, 1)?.mattins).toBe("6, 8");
     expect(getBcp1962WeekdayPsalms(1, 31)?.evensong).toBe("148, 149, 150");
     expect(getBcp1962Selection(24)?.psalms).toBe("148, 150");
+  });
+});
+
+describe("bcp1962 proper collects", () => {
+  it("vendors the curated proper collect set", () => {
+    expect(BCP1962_PROPER_COLLECTS.collects.length).toBe(107);
+    const names = BCP1962_PROPER_COLLECTS.collects.map((c) => c.name);
+    expect(new Set(names).size).toBe(names.length);
+  });
+
+  it("resolves a proper collect and keeps Canadian propers", () => {
+    const advent = getBcp1962ProperCollect(
+      "THE FIRST SUNDAY IN ADVENT BEING THE FOURTH SUNDAY BEFORE CHRISTMAS DAY",
+    );
+    expect(advent?.text).toContain("armour of light");
+    expect(getBcp1962ProperCollect("For a National Occasion")?.text).toContain(
+      "thy people by thy power",
+    );
+  });
+});
+
+describe("bcp1962 psalter text", () => {
+  it("vendors 149 psalms with Psalm 58 omitted", () => {
+    expect(Object.keys(BCP1962_PSALTER).length).toBe(149);
+    expect(BCP1962_PSALTER["58"]).toBeUndefined();
+    expect(Object.keys(BCP1962_PSALTER["119"].parts[0].verses).length).toBe(
+      176,
+    );
+  });
+
+  it("resolves a whole psalm with the printed mediant and renumbered verses", () => {
+    const psalm1 = getBcp1962PsalmPassage("1");
+    expect(psalm1?.verses.length).toBe(7);
+    expect(psalm1?.verses[0].text).toBe(
+      "Blessed is the man that hath not walked in the counsel of the ungodly, nor stood in the way of sinners, / and hath not sat in the seat of the scornful.",
+    );
+    const psalm14 = getBcp1962PsalmPassage("14");
+    expect(psalm14?.verses.length).toBe(9);
+    expect(psalm14?.verses[4].text).toContain("Have they no knowledge");
+  });
+
+  it("resolves a Psalm 119 part range produced by the appointment parser", () => {
+    const refs = parseBcp1962PsalmAppointment("119, Pts 11, 12");
+    const passages = getBcp1962PsalmPassages(refs);
+    expect(passages.length).toBe(2);
+    expect(passages[0].verses[0].number).toBe(81);
+    expect(passages[1].verses[0].number).toBe(89);
+  });
+
+  it("returns no passage for an omitted or malformed citation", () => {
+    expect(getBcp1962PsalmPassage("58")).toBeUndefined();
+    expect(getBcp1962PsalmPassage("not a psalm")).toBeUndefined();
   });
 });

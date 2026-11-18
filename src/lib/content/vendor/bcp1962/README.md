@@ -6,4 +6,4 @@ The data is edition scoped. It is not a set of readings to drop into the 1979 or
 
 Each table has a pretty and a minified twin. Run `bun run check:bcp1962` after editing any table.
 
-The 1962 psalter text and office text are not vendored. Psalm appointments are stored as citation strings and rendered as appointments, not as psalm text.
+The 1962 Coverdale psalter text is vendored in psalter.json (149 psalms, Psalm 58 omitted, with the printed verse renumbering). Appointments are stored as citation strings and resolved to this text for rendering. The Litany is vendored in office-text/litany.json and composed as a standalone office. The 107 proper collects are vendored in office-text/collects-proper.json. The rest of the 1962 office text is not vendored yet.
