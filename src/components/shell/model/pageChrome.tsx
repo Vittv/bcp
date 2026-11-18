@@ -199,7 +199,13 @@ export function renderContent(ctx: ContentContext): ReactNode {
           );
         }
         if (!bcp1662TodayDoc) return null;
-        return <Bcp1662OfficeView doc={bcp1662TodayDoc} />;
+        return (
+          <Bcp1662OfficeView
+            doc={bcp1662TodayDoc}
+            showRubrics={showRubrics}
+            showSpeakers={showSpeakers}
+          />
+        );
       }
       return (
         <TodayScreen
