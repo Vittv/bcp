@@ -6,7 +6,14 @@
  * This is an incremental foundation for 1662 office composition, not a complete
  * historical/precedence engine.
  */
-import { addDays, fromDays, sundayOnOrAfter, toDays, weekday } from "./date";
+import {
+  addDays,
+  fromDays,
+  sundayOnOrAfter,
+  sundayOnOrBefore,
+  toDays,
+  weekday,
+} from "./date";
 import type { CalendarDate } from "./types";
 
 export type Bcp1662Sunday =
@@ -404,6 +411,18 @@ const ATHANASIAN_FEASTS = new Set([
   "St. Simon and St. Jude",
   "St. Andrew",
 ]);
+
+// the 1662 lectionary has no Year 1/2 cycle or numbered Propers; Sundays in
+// the long green season are counted from Trinity instead. returns the label
+// for that count on a given date, or null outside the Trinity season.
+export function bcp1662CycleLabel(date: CalendarDate): string | null {
+  const m = bcp1662MoveableDays(date.year);
+  const sunday = toDays(sundayOnOrBefore(date));
+  if (sunday < toDays(m.trinity) || sunday >= toDays(m.advent)) return null;
+  const n = (sunday - toDays(m.trinity)) / 7;
+  if (n <= 0) return "Trinity Sunday";
+  return `${numberToOrdinal(n)} Sunday after Trinity`;
+}
 
 export function athanasianCreedDay(obs: Bcp1662Observance): boolean {
   if (

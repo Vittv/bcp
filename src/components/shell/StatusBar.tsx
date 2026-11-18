@@ -46,6 +46,9 @@ type StatusBarProps = {
   season: Season;
   seasonColor: Color;
   slot: DolSlot;
+  // 1662 has no Year 1/2 or numbered Propers; this replaces the Year/week
+  // segment with its own cycle label (e.g. "Twenty-fourth Sunday after Trinity")
+  cycleLabel?: string | null;
   officeName: string;
   scrollPct: number;
   // label of the reference document currently open (e.g. "Psalm 23");
@@ -62,6 +65,7 @@ export function StatusBar({
   season,
   seasonColor,
   slot,
+  cycleLabel,
   officeName,
   scrollPct,
   reading,
@@ -92,7 +96,14 @@ export function StatusBar({
             </Text>
           </View>
         )}
-        {!compact && (
+        {!compact && cycleLabel ? (
+          <>
+            <Text style={styles.sep}>•</Text>
+            <Text style={styles.text} numberOfLines={1}>
+              {cycleLabel}
+            </Text>
+          </>
+        ) : !compact && edition === "1979" ? (
           <>
             <Text style={styles.sep}>•</Text>
             <Text style={styles.text}>Year {slot.year}</Text>
@@ -101,7 +112,7 @@ export function StatusBar({
               {weekLabel(slot)}
             </Text>
           </>
-        )}
+        ) : null}
       </View>
       <View style={styles.right}>
         <Text style={[styles.text, styles.rightText]} numberOfLines={1}>
