@@ -140,6 +140,13 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
           ) : null}
         </View>
       );
+    case "occasional":
+      return (
+        <View style={styles.occasionalBlock}>
+          <Text style={[subheading, styles.occasionalTitle]}>{node.title}</Text>
+          <Text style={styles.text}>{node.text}</Text>
+        </View>
+      );
     case "creed":
       return (
         <View style={styles.lessonBlock}>
@@ -181,6 +188,43 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
   const [creedOverride, setCreedOverride] = useState<
     "apostles" | "athanasian" | null
   >(null);
+  const [occasionalSelection, setOccasionalSelection] = useState("none");
+  const occasionalNodes =
+    doc.sections
+      .find((s) => s.key === "closing")
+      ?.nodes.filter(
+        (n): n is Extract<Bcp1662OfficeNode, { kind: "occasional" }> =>
+          n.kind === "occasional",
+      ) ?? [];
+  const occasionalOptions = [
+    {
+      id: "none",
+      label: "Prayers and Thanksgivings: None",
+      menuLabel: "None",
+      group: "Other",
+    },
+    ...occasionalNodes.map((n) => ({
+      id: n.id,
+      label: `Prayers and Thanksgivings: ${n.title}`,
+      menuLabel: n.title,
+      group: n.group,
+    })),
+  ];
+  const occasionalShown = occasionalNodes.some(
+    (n) => n.id === occasionalSelection,
+  );
+  const occasionalControl = () => (
+    <MenuAnchor style={styles.controlRow}>
+      <ChoiceMenu
+        value={occasionalSelection}
+        options={occasionalOptions}
+        label="Prayers and Thanksgivings"
+        accessibilityLabel="Prayers and Thanksgivings"
+        fullWidth
+        onChange={setOccasionalSelection}
+      />
+    </MenuAnchor>
+  );
   const creedNodes =
     doc.sections
       .find((s) => s.key === "creed")
@@ -363,6 +407,9 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
                   : node.id === selection;
               }
               if (node.kind === "creed") return node.id === creedId;
+              if (node.kind === "occasional") {
+                return node.id === occasionalSelection;
+              }
               return true;
             })
             .map((node, i) => {
@@ -388,7 +435,7 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
                 section.nodes[i - 1]?.text === "The Lord's Prayer";
               return (
                 // nodes are composed in order without stable ids
-                <View
+                <MenuAnchor
                   // biome-ignore lint/suspicious/noArrayIndexKey: composed office content
                   key={`${section.key}-${node.kind}-${i}`}
                   style={
@@ -396,8 +443,16 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
                   }
                 >
                   {node.kind === "canticle" ? canticleControl(node.slot) : null}
+                  {node.kind === "occasional" ||
+                  (!occasionalShown &&
+                    occasionalNodes.length > 0 &&
+                    section.key === "closing" &&
+                    node.kind === "heading" &&
+                    node.text === "A Prayer of St. Chrysostom")
+                    ? occasionalControl()
+                    : null}
                   <NodeView node={renderedNode} />
-                </View>
+                </MenuAnchor>
               );
             })}
         </MenuAnchor>
@@ -456,6 +511,10 @@ const bcp1662Styles = defineThemedStyles({
   },
   section: {
     marginBottom: 20,
+    // RNW gives every View z-index 0, so without a positioned, raised
+    // ancestor the page paints over an open dropdown inside this section
+    position: "relative",
+    zIndex: 2,
   },
   block: {
     marginTop: 8,
@@ -504,6 +563,7 @@ const bcp1662Styles = defineThemedStyles({
     color: "var(--text-secondary)",
   },
   headingRow: {
+    position: "relative",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -537,6 +597,13 @@ const bcp1662Styles = defineThemedStyles({
   },
   canticleTitle: {
     marginTop: 4,
+  },
+  occasionalBlock: {
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  occasionalTitle: {
+    marginTop: 2,
   },
   lordsPrayerBlock: {
     marginBottom: 16,

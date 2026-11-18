@@ -14,6 +14,7 @@ import rulesData from "./lectionary-rules.json";
 import officeTextData from "./office-text/offices.json";
 import canticlesData from "./office-text/canticles.json";
 import fixedCollectsData from "./office-text/collects.json";
+import prayersData from "./office-text/prayers-thanksgivings.json";
 import properCollectsData from "./office-text/collects-proper.json";
 import type { PsalmPassage } from "../../types";
 
@@ -251,6 +252,38 @@ export function getBcp1662OfficeText(office: Bcp1662Office) {
 
 export function getBcp1662Canticle(id: string) {
   return BCP1662_CANTICLES.canticles.find((c) => c.id === id);
+}
+
+export type Bcp1662OccasionalPrayer = {
+  id: string;
+  title: string;
+  text: string;
+  group: "Prayers" | "Thanksgivings";
+};
+
+const BCP1662_PRAYERS =
+  // SAFETY: vendored static 1662 prayers JSON matching the declared shape.
+  prayersData as {
+    rubric?: string;
+    prayers: { id: string; title: string; text: string }[];
+    thanksgivings: { id: string; title: string; text: string }[];
+  };
+
+export function getBcp1662OccasionalPrayers(): Bcp1662OccasionalPrayer[] {
+  // rain and fair weather share an id across the two groups, so qualify it
+  // with the group to keep selection unambiguous
+  return [
+    ...BCP1662_PRAYERS.prayers.map((p) => ({
+      ...p,
+      id: `prayer-${p.id}`,
+      group: "Prayers" as const,
+    })),
+    ...BCP1662_PRAYERS.thanksgivings.map((t) => ({
+      ...t,
+      id: `thanksgiving-${t.id}`,
+      group: "Thanksgivings" as const,
+    })),
+  ];
 }
 
 export function getBcp1662FixedCollects(office: Bcp1662Office) {
