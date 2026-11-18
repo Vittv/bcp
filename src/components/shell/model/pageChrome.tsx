@@ -34,8 +34,7 @@ import { TodayScreen } from "../../../screens/TodayScreen";
 import { Bcp1662OfficeView } from "../../office/Bcp1662OfficeView";
 import { OfficeTabs } from "../OfficeTabs";
 import type { PageId } from "../Sidebar";
-import type { TabId } from "./shellUtils";
-import { today } from "./shellUtils";
+import { is1662OfficeTab, type TabId, today } from "./shellUtils";
 
 export type AuxRowContext = {
   page: PageId;
@@ -181,7 +180,7 @@ export function renderContent(ctx: ContentContext): ReactNode {
   switch (page) {
     case "today":
       if (edition === "1662") {
-        if (tab !== "morning" && tab !== "evening") {
+        if (!is1662OfficeTab(tab)) {
           return (
             <View>
               <Text style={{ opacity: 0.7 }}>

@@ -25,10 +25,12 @@ function NodeView({
   node,
   showRubrics,
   showSpeakers,
+  collect,
 }: {
   node: Bcp1662OfficeNode;
   showRubrics: boolean;
   showSpeakers: boolean;
+  collect?: boolean;
 }) {
   const styles = useThemedStyles(bcp1662Styles);
   const sectionHeading = useSectionHeading();
@@ -86,7 +88,7 @@ function NodeView({
               // biome-ignore lint/suspicious/noArrayIndexKey: fixed liturgical text
               key={i}
               style={[
-                styles.text,
+                collect ? styles.collectText : styles.text,
                 showSpeakers && node.speaker === "people" && styles.textPeople,
               ]}
             >
@@ -446,11 +448,12 @@ export function Bcp1662OfficeView({
                         ),
                       }
                   : node;
+              const prev = section.nodes[i - 1];
               const isLordsPrayerText =
                 node.kind === "text" &&
                 i > 0 &&
-                section.nodes[i - 1]?.kind === "heading" &&
-                section.nodes[i - 1]?.text === "The Lord's Prayer";
+                prev?.kind === "heading" &&
+                prev.text === "The Lord's Prayer";
               return (
                 // nodes are composed in order without stable ids
                 <MenuAnchor
@@ -473,6 +476,7 @@ export function Bcp1662OfficeView({
                     node={renderedNode}
                     showRubrics={showRubrics}
                     showSpeakers={showSpeakers}
+                    collect={section.key === "collects"}
                   />
                 </MenuAnchor>
               );
@@ -569,6 +573,15 @@ const bcp1662Styles = defineThemedStyles({
     lineHeight: 30,
     color: "var(--text)",
     marginTop: 4,
+  },
+  // collects read a step smaller and indented, as in the 1979 office
+  collectText: {
+    fontFamily: SERIF_FONT,
+    fontSize: 17,
+    lineHeight: 28,
+    color: "var(--text)",
+    marginTop: 4,
+    paddingLeft: 4,
   },
   speaker: {
     fontFamily: SERIF_FONT,

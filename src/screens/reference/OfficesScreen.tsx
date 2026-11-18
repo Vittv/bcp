@@ -15,8 +15,10 @@ import { useEdition } from "../../context/EditionContext";
 import { useOfficeSettings } from "../../context/OfficeSettingsContext";
 import {
   type Bcp1662ComposedOffice,
+  composeBcp1662Litany,
   composeBcp1662OfficeForDate,
 } from "../../lib/content/bcp1662";
+import type { OfficeId } from "../../lib/content/types";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
@@ -143,7 +145,14 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
   const { officeDate, officeRite } = useReference();
   const { showRubrics, showSpeakers, customizationFor } = useOfficeSettings();
   const [fullText, setFullText] = useState(false);
-  const officeId = refOfficeId(base, officeRite);
+  // the Litany is 1662-only; compose a safe 1979 id so the always-run compose
+  // below cannot throw, while the 1662 render path uses the litany doc instead
+  // SAFETY: base is narrowed to a non-litany id, so refOfficeId returns a real
+  // 1979 OfficeId; litany is mapped to morning before the call
+  const officeId = refOfficeId(
+    base === "litany" ? "morning" : base,
+    officeRite,
+  ) as OfficeId;
   const customization = customizationFor(officeId);
   const document = useMemo(() => {
     if (edition === "1662") return null;
@@ -173,6 +182,12 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
 
   useEffect(() => {
     if (edition !== "1662") return;
+    if (base === "litany") {
+      setBcp1662Doc(composeBcp1662Litany(officeDate));
+      setBcp1662Error(null);
+      setBcp1662Loading(false);
+      return;
+    }
     if (base !== "morning" && base !== "evening") {
       setBcp1662Doc(null);
       setBcp1662Error(null);
@@ -203,7 +218,7 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
   }, [edition, base, officeDate]);
 
   if (edition === "1662") {
-    if (base !== "morning" && base !== "evening") {
+    if (base !== "morning" && base !== "evening" && base !== "litany") {
       return (
         <Text style={{ opacity: 0.7 }}>
           This office is not yet available in the 1662 Book of Common Prayer.

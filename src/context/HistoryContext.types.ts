@@ -6,7 +6,12 @@ import type {
   RefOfficeBase,
 } from "../screens/reference/shared";
 
-export type HistoryTab = "morning" | "noonday" | "evening" | "compline";
+export type HistoryTab =
+  | "morning"
+  | "noonday"
+  | "evening"
+  | "compline"
+  | "litany";
 
 // the full navigation state a history step snapshots and restores. every
 // field is JSON-safe so an entry can cross reloads unchanged.

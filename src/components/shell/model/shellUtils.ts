@@ -24,7 +24,7 @@ export function historyLayer(): string | null {
   return typeof layer === "string" ? layer : null;
 }
 
-export type TabId = "morning" | "noonday" | "evening" | "compline";
+export type TabId = "morning" | "noonday" | "evening" | "compline" | "litany";
 
 // the sidebar's trailing info for the Today row mirrors the office tabs
 export const OFFICE_LABEL: Record<TabId, string> = {
@@ -32,11 +32,13 @@ export const OFFICE_LABEL: Record<TabId, string> = {
   noonday: "Noonday",
   evening: "Evening",
   compline: "Compline",
+  litany: "The Litany",
 };
 
 export const OFFICE_LABEL_1662: Partial<Record<TabId, string>> = {
   morning: "Matins",
   evening: "Evensong",
+  litany: "The Litany",
 };
 
 export function officeForHour(hour: number): TabId {
@@ -49,6 +51,11 @@ export function officeForHour(hour: number): TabId {
 export function officeForHour1662(hour: number): TabId {
   if (hour < 12) return "morning";
   return "evening";
+}
+
+// the 1662 book has Matins, Evensong and the Litany, no other daily offices
+export function is1662OfficeTab(tab: TabId): boolean {
+  return tab === "morning" || tab === "evening" || tab === "litany";
 }
 
 // sidebar observance detail: the days until the next fixed feast ("today" on

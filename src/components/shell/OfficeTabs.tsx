@@ -6,6 +6,7 @@ import type { OfficeRite } from "../../lib/office/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { useViewport, WIDTH_COMPACT } from "../../lib/viewport";
 import { BarDropdown, type DropdownOption } from "./BarDropdown";
+import { is1662OfficeTab, type TabId } from "./model/shellUtils";
 import { officeBarStyles } from "./officeBarStyles";
 
 const noSelect = {
@@ -13,15 +14,15 @@ const noSelect = {
   WebkitUserSelect: "none" as const,
 };
 
-type TabId = "morning" | "noonday" | "evening" | "compline";
-
 const RITE_OPTIONS: readonly DropdownOption<OfficeRite>[] = [
   { id: "One", label: "Rite I" },
   { id: "Two", label: "Rite II" },
 ];
 
 // daily devotions (BCP pp. 136-140) replace each office in devotions mode.
-export const DEVOTIONS: Record<TabId, OfficeId> = {
+type DevotionTab = Exclude<TabId, "litany">;
+
+export const DEVOTIONS: Record<DevotionTab, OfficeId> = {
   morning: "devotions-morning",
   noonday: "devotions-noon",
   evening: "devotions-evening",
@@ -90,13 +91,14 @@ export function OfficeTabs({
       edition === "1662"
         ? ([
             { id: "morning", label: "Matins" },
+            { id: "litany", label: "The Litany" },
             { id: "evening", label: "Evensong" },
           ] as const)
         : TABS,
     [edition],
   );
   useEffect(() => {
-    if (edition === "1662" && active !== "morning" && active !== "evening") {
+    if (edition === "1662" && !is1662OfficeTab(active)) {
       onSelect("morning");
     }
   }, [active, edition, onSelect]);
