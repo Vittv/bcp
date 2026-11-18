@@ -172,4 +172,18 @@ describe("seasonLabel", () => {
     expect(seasonLabel("after-pentecost")).toBe("After Pentecost");
     expect(seasonLabel("pentecost")).toBe("Pentecost");
   });
+
+  test("labels seasons in the 1662 convention", () => {
+    expect(seasonLabel("advent", "1662")).toBe("Advent");
+    expect(seasonLabel("after-pentecost", "1662")).toBe("After Trinity");
+    expect(seasonLabel("pentecost", "1662")).toBe("Whitsunday");
+  });
+
+  test("calls the feast Whitsunday in 1662", () => {
+    const info = dayInfo(d(2025, 6, 8), "1662");
+    expect(info.observances.some((o) => o.name === "Whitsunday")).toBe(true);
+    expect(
+      info.observances.some((o) => o.name === "The Day of Pentecost"),
+    ).toBe(false);
+  });
 });

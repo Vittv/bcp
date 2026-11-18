@@ -1,7 +1,7 @@
 import { toDays, weekday } from "./date";
 import { feastsForEasterYear } from "./feasts";
 import { easterYear, seasonFor } from "./season";
-import type { CalendarDate } from "./types";
+import type { CalendarDate, CalendarEdition } from "./types";
 
 // the ordinal words the Prayer Book uses for Sunday names. the season after
 // Pentecost can reach the twenty-seventh Sunday.
@@ -39,12 +39,16 @@ function ordinal(n: number): string | null {
   return ORDINALS[n - 1] ?? null;
 }
 
-// the Prayer Book's name for a Sunday, following the 1979 calendar: Sundays
-// count from the feast that opens their season, and the last Sunday of a
-// season keeps that title instead of a number. returns null on weekdays and
-// on Sundays that already carry a principal name, such as Easter Day or the
-// First Sunday of Advent.
-export function sundayName(date: CalendarDate): string | null {
+// the Prayer Book's name for a Sunday: Sundays count from the feast that
+// opens their season, and the last Sunday of a season keeps that title instead
+// of a number. 1979 counts the long season from Pentecost; 1662 counts it from
+// Trinity, its final Sundays reaching the twenties. returns null on weekdays
+// and on Sundays that already carry a principal name, such as Easter Day or
+// the First Sunday of Advent.
+export function sundayName(
+  date: CalendarDate,
+  edition: CalendarEdition = "1979",
+): string | null {
   if (weekday(date) !== 0) return null;
   const f = feastsForEasterYear(easterYear(date));
   const d = toDays(date);
@@ -89,9 +93,15 @@ export function sundayName(date: CalendarDate): string | null {
     case "pentecost":
       return null;
     case "after-pentecost": {
-      // Trinity Sunday is the first Sunday after Pentecost.
+      // Trinity Sunday opens its own counting in 1662 and closes the 1979 one.
       if (d === f.trinity) return null;
-      if (d === f.advent1Next - 7) return "The Last Sunday after Pentecost";
+      const last = d === f.advent1Next - 7;
+      if (edition === "1662") {
+        const n = (d - f.trinity) / 7;
+        const word = ordinal(n);
+        return word && n >= 1 ? `The ${word} Sunday after Trinity` : null;
+      }
+      if (last) return "The Last Sunday after Pentecost";
       const n = (d - f.pentecost) / 7;
       const word = ordinal(n);
       return word && n >= 2 ? `The ${word} Sunday after Pentecost` : null;

@@ -70,6 +70,19 @@ describe("sundayName", () => {
     expect(sundayName(d(2027, 11, 21))).toBe("The Last Sunday after Pentecost");
   });
 
+  test("counts sundays from Trinity in the 1662 convention", () => {
+    expect(sundayName(d(2025, 6, 15), "1662")).toBeNull();
+    expect(sundayName(d(2025, 6, 22), "1662")).toBe(
+      "The First Sunday after Trinity",
+    );
+    expect(sundayName(d(2025, 11, 16), "1662")).toBe(
+      "The Twenty-Second Sunday after Trinity",
+    );
+    expect(sundayName(d(2027, 11, 14), "1662")).toBe(
+      "The Twenty-Fifth Sunday after Trinity",
+    );
+  });
+
   test("returns null on every weekday", () => {
     for (let day = d(2025, 1, 1); day.year === 2025; day = addDays(day, 1)) {
       if (weekday(day) !== 0) expect(sundayName(day)).toBeNull();

@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 
-import type { Season } from "../../lib/calendar/types";
-
 // forwarded by react-native-web as data-tauri-drag-region; tauri's
 // injected script turns mousedown/double-click on it into window
 // dragging and maximize toggling
@@ -40,17 +38,6 @@ export function useWindowControlsOverlay(): boolean {
   }, []);
   return visible;
 }
-
-export const SEASON_LABEL: Record<Season, string> = {
-  advent: "Advent",
-  christmas: "Christmas",
-  epiphany: "Epiphany",
-  lent: "Lent",
-  "holy-week": "Holy Week",
-  easter: "Easter",
-  pentecost: "Pentecost",
-  "after-pentecost": "After Pentecost",
-};
 
 // fallback for feast slugs unknown to the sanctorale table
 export function formatHolyDay(slug: string): string {

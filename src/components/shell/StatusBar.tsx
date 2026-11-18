@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { type LayoutChangeEvent, Text, View } from "react-native";
+import { useEdition } from "../../context/EditionContext";
+import { seasonLabel } from "../../lib/calendar/observances";
 import type { Color, DolSlot, Season } from "../../lib/calendar/types";
 import { CHROME_FONT } from "../../lib/fonts";
 import {
@@ -11,17 +13,6 @@ import { SeasonDot } from "./SeasonDot";
 
 // bundled via expo-font; system monospace is the fallback on native
 const MONO = '"JetBrains Mono", monospace';
-
-const SEASON_LABELS: Record<Season, string> = {
-  advent: "Advent",
-  christmas: "Christmas",
-  epiphany: "Epiphany",
-  lent: "Lent",
-  "holy-week": "Holy Week",
-  easter: "Easter",
-  pentecost: "Pentecost",
-  "after-pentecost": "After Pentecost",
-};
 
 function weekLabel(slot: DolSlot): string {
   const w = slot.week;
@@ -75,6 +66,7 @@ export function StatusBar({
   scrollPct,
   reading,
 }: StatusBarProps) {
+  const { edition } = useEdition();
   const styles = useThemedStyles(statusBarStyles);
   const { width: viewportWidth } = useViewport();
   // the window width overstates the bar once the sidebar takes its column, so
@@ -96,7 +88,7 @@ export function StatusBar({
           <View style={styles.item}>
             <SeasonDot color={seasonColor} size={6} />
             <Text style={styles.text} numberOfLines={1}>
-              {SEASON_LABELS[season]}
+              {seasonLabel(season, edition)}
             </Text>
           </View>
         )}

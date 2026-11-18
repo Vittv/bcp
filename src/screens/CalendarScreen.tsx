@@ -9,6 +9,7 @@ import { Pressable, Text, useWindowDimensions, View } from "react-native";
 
 import { Chevron } from "../components/shell/Chevron";
 import { useSeasonColorMap } from "../components/shell/SeasonDot";
+import { useEdition } from "../context/EditionContext";
 import { useNavigation } from "../context/NavigationContext";
 import { colorFor, daysInMonth, weekday } from "../lib/calendar";
 import {
@@ -36,6 +37,7 @@ type CalendarScreenProps = {
 };
 
 export function CalendarScreen({ leading }: CalendarScreenProps) {
+  const { edition } = useEdition();
   const styles = useThemedStyles(calendarStyles);
   const colorMap = useSeasonColorMap();
   const { setOpenSaint, setOpenLesserFeast } = useReference();
@@ -81,15 +83,18 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
     for (let d = 1; d <= days; d++) {
       map.set(
         `${viewMonth.year}-${viewMonth.month}-${d}`,
-        dayInfo({
-          year: viewMonth.year,
-          month: viewMonth.month,
-          day: d,
-        }),
+        dayInfo(
+          {
+            year: viewMonth.year,
+            month: viewMonth.month,
+            day: d,
+          },
+          edition,
+        ),
       );
     }
     return map;
-  }, [viewMonth.year, viewMonth.month, days]);
+  }, [viewMonth.year, viewMonth.month, days, edition]);
 
   // step the visible month by one, rolling the year at the boundaries.
   const shiftMonth = useCallback((delta: number) => {
@@ -140,7 +145,7 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
     navigateTo("today");
   };
 
-  const openObs = openDay ? dayInfo(openDay) : null;
+  const openObs = openDay ? dayInfo(openDay, edition) : null;
 
   return (
     <View style={styles.container}>
@@ -220,7 +225,7 @@ export function CalendarScreen({ leading }: CalendarScreenProps) {
                 const seasonColor = isValid ? colorMap[colorFor(cell)] : null;
                 const isToday = isValid && isSameDay(cell, todayDate);
                 const isSelected = isValid && isSameDay(cell, selected);
-                const labels = info ? cellLabels(info) : [];
+                const labels = info ? cellLabels(info, edition) : [];
                 const visibleLabels =
                   labels.length > cellRows
                     ? labels.slice(0, cellRows - 1)
