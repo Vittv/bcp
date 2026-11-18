@@ -37,6 +37,7 @@ import {
   upcomingLesserFeast,
   upcomingSanctoraleEntry,
 } from "../../lib/calendar";
+import { bcp1662CycleLabel } from "../../lib/calendar/bcp1662";
 import type { CalendarDate } from "../../lib/calendar/types";
 import {
   type Bcp1662ComposedOffice,
@@ -361,6 +362,7 @@ export function Shell() {
   const season = seasonFor(today());
   const seasonColor = colorFor(today());
   const slot = resolve(today());
+  const cycleLabel = edition === "1662" ? bcp1662CycleLabel(today()) : null;
   const { days: daysUntilNext, label: nextSeason } = daysUntilNextSeason(
     today(),
   );
@@ -677,6 +679,7 @@ export function Shell() {
                           season={season}
                           seasonColor={seasonColor}
                           slot={slot}
+                          cycleLabel={cycleLabel}
                           officeName={
                             edition === "1662" && page === "today"
                               ? tab === "morning"

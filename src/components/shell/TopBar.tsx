@@ -119,7 +119,7 @@ export function TopBar({
         </Text>
         {!compact && (holyDayLabel || daysUntilNext > 0) && (
           <>
-            <Text style={styles.countdownSep}>·</Text>
+            <Text style={styles.countdownSep}>•</Text>
             {holyDayLabel ? (
               <Pressable
                 style={({ hovered }) => [
