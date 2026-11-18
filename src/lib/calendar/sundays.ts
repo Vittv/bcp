@@ -96,7 +96,7 @@ export function sundayName(
       // Trinity Sunday opens its own counting in 1662 and closes the 1979 one.
       if (d === f.trinity) return null;
       const last = d === f.advent1Next - 7;
-      if (edition === "1662") {
+      if (edition === "1662" || edition === "1962") {
         const n = (d - f.trinity) / 7;
         const word = ordinal(n);
         return word && n >= 1 ? `The ${word} Sunday after Trinity` : null;

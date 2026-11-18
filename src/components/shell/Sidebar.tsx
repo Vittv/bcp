@@ -41,6 +41,7 @@ export { REPO_URL };
 const EDITION_OPTIONS: readonly { id: BcpEdition; label: string }[] = [
   { id: "1979", label: "1979 - The Episcopal Church BCP" },
   { id: "1662", label: "1662 - Book of Common Prayer" },
+  { id: "1962", label: "1962 - Anglican Church of Canada BCP" },
 ];
 
 // a toolbar pill: bordered, icon plus optional label, hover fill, no pressed

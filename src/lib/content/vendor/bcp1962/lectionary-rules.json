@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "edition": "1962",
+    "title": "1962 Canadian BCP, lectionary and appointment rules",
+    "description": "Rule records for the 1962 Daily Office. The resolver in src/lib/content/bcp1962.ts applies these rules in code; the records document intent and support validation.",
+    "sources": [
+      {
+        "role": "primary witness",
+        "ref": "The Book of Common Prayer (1962), notes to the Table of Lessons, the Order how the Psalter is Appointed, and the General Rubrics",
+        "url": "https://www.anglican.ca/wp-content/uploads/bcp.pdf",
+        "note": "Transcribed from the official ACC PDF during plan curation; see PROVENANCE.md."
+      }
+    ],
+    "compiled": "2026-11-18",
+    "caveats": []
+  },
+  "rules": [
+    { "id": "year-cycle-advent", "summary": "When the First Sunday in Advent falls in an even year, read Year I for the whole ecclesiastical year; in an odd year, read Year II." },
+    { "id": "inclusive-verses", "summary": "Verses in the Table of Lessons are stated inclusively." },
+    { "id": "bracketed-verses", "summary": "Verses printed within brackets are permissive additions to the appointed passages." },
+    { "id": "verse-halves", "summary": "A letter a or b after a verse number signifies the first or second part of that verse." },
+    { "id": "pronoun-lessons", "summary": "When a Lesson begins with a pronoun, the reader substitutes the appropriate noun." },
+    { "id": "proper-overrides-ordinary", "summary": "Appointed propers for Sundays and holy days override the ordinary weekday lessons." },
+    { "id": "sunday-lessons-on-holy-days", "summary": "A holy-day falling on certain Sundays keeps its own Collect, Epistle, and Gospel, with the Sunday Collect said after it." },
+    { "id": "holy-day-transfers", "summary": "Holy-days on Sundays in Advent or Lent, Ash Wednesday, or Ascension Day transfer to the following Tuesday; other transfer cases are listed in calendar-rules.json." },
+    { "id": "pre-lent-holy-days", "summary": "On Septuagesima, Sexagesima, or Quinquagesima the Purification displaces the Sunday service; the Conversion of St Paul and St Matthias transfer to Tuesday." },
+    { "id": "epiphany-transfer", "summary": "If there is one additional Sunday before the Sunday next before Advent, use the Sixth Sunday after Epiphany; if two, use the Fifth and Sixth." },
+    { "id": "alternative-first-lessons", "summary": "On Trinity XXI to XXVI the minister may use canonical first lessons in place of the Apocrypha; second lessons are unchanged." },
+    { "id": "psalter-monthly-cycle", "summary": "The Psalter is read through once a month as appointed, unless one of the tables following is used." },
+    { "id": "psalter-31st-day", "summary": "On the thirty-first day, use the thirtieth day's psalms or one of the twenty-four selections." },
+    { "id": "weekday-psalm-omission", "summary": "On a weekday with no proper psalms, one psalm may be omitted provided one psalm or one numbered portion is retained." },
+    { "id": "psalm-119-parts", "summary": "Psalm 119 is appointed by numbered parts; each part is eight verses, part N covering verses 8N-7 through 8N." },
+    { "id": "ember-days", "summary": "Ember Days are the Wednesday, Friday, and Saturday after Advent III, Lent I, Whitsunday, and Holy Cross Day." },
+    { "id": "rogation-days", "summary": "Rogation Days are the Monday, Tuesday, and Wednesday before Ascension Day." }
+  ]
+}

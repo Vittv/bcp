@@ -5,9 +5,9 @@ export interface CalendarDate {
 }
 
 // which prayer book's naming convention the calendar speaks in. 1979 counts
-// Sundays from Pentecost; 1662 counts from Trinity and calls Whitsunday by
-// its English name.
-export type CalendarEdition = "1979" | "1662";
+// Sundays from Pentecost; 1662 and 1962 count from Trinity and call Whitsunday
+// by its English name.
+export type CalendarEdition = "1979" | "1662" | "1962";
 
 export type Season =
   | "advent"

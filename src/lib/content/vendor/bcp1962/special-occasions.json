@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "edition": "1962",
+    "title": "1962 Canadian BCP, psalms and lessons proper for special occasions",
+    "description": "The seven special-occasion blocks from the official ACC 1962 BCP, including national occasions. These are the Canadian particulars that make this edition distinct.",
+    "sources": [
+      {
+        "role": "primary witness",
+        "ref": "The Book of Common Prayer (1962), General Synod of the Anglican Church of Canada, Psalms and Lessons Proper for Special Occasions, printed pages xlvii to xlviii",
+        "url": "https://www.anglican.ca/wp-content/uploads/bcp.pdf",
+        "note": "Local copy /tmp/opencode/bcp1962-acc.pdf, text extracted with pdftotext -layout."
+      }
+    ],
+    "compiled": "2026-11-18",
+    "caveats": [
+      "Psalm lists and lesson citations are transcribed verbatim from the witness.",
+      "The witness gives no office split for these lessons, so each entry is a flat list."
+    ]
+  },
+  "occasions": [
+    {
+      "id": "accession-service",
+      "name": "Accession Service",
+      "psalms": "20, 21. 1–7, 101, 121",
+      "lessons": [
+        "Joshua 1. 1–9",
+        "Proverbs 8. 1–16",
+        "Romans 13. 1–10",
+        "Revelations 21. 22—22. 3"
+      ]
+    },
+    {
+      "id": "dominion-day",
+      "name": "Dominion Day and other occasions of national thanksgiving",
+      "psalms": "46, 67, 72, 145, 148",
+      "lessons": [
+        "Deuteronomy 6. 1–15",
+        "Deuteronomy 8",
+        "Deuteronomy 28. 1–14",
+        "Joshua 24. 14–25",
+        "Matthew 25. 14–30",
+        "Romans 13. 1–10",
+        "1 Timothy 2. 1–8"
+      ]
+    },
+    {
+      "id": "service-for-young-people",
+      "name": "Service for Young People",
+      "psalms": "23, 24, 121, 122",
+      "lessons": [
+        "Job 28. 12–end",
+        "Proverbs 4",
+        "Matthew 25. 1–13",
+        "2 Timothy 1. 1–14"
+      ],
+      "note": "The witness adds 'See also page 627.'"
+    },
+    {
+      "id": "missions",
+      "name": "Missions",
+      "psalms": "47, 67, 96, 97, 132",
+      "lessons": [
+        "Isaiah 49. 13–23",
+        "Isaiah 60. 1–14",
+        "John 10. 1–16",
+        "Ephesians. 3"
+      ]
+    },
+    {
+      "id": "remembrance-day",
+      "name": "Remembrance Day",
+      "psalms": "46, 144",
+      "lessons": [
+        "Micah 4. 1–5",
+        "Ecclesiasticus 51. 1–12",
+        "Romans 8. 31–end",
+        "1 Corinthians 15. 50–end"
+      ]
+    },
+    {
+      "id": "commemoration-of-the-faithful-departed",
+      "name": "Commemoration of the Faithful Departed",
+      "psalms": "90, 121, 130",
+      "lessons": [
+        "Isaiah 38. 10–20",
+        "Isaiah 43. 1–7",
+        "Job 19. 21–27a",
+        "John 5. 24–29",
+        "1 Corinthians 15. 50–end",
+        "Revelation 1. 9–18"
+      ]
+    },
+    {
+      "id": "consecration-of-a-church",
+      "name": "Consecration of a Church, or Dedication Festival",
+      "psalms": "84, 122, 132",
+      "lessons": [
+        "1 Kings 8. 22–30",
+        "1 Chronicles 29. 6–19",
+        "Zechariah 8. 9–end",
+        "Hebrews 10. 19–25"
+      ]
+    }
+  ]
+}

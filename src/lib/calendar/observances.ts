@@ -1,5 +1,6 @@
 import { toDays } from "./date";
 import { feastsForEasterYear } from "./feasts";
+import { feastsForEditionDate } from "./feastsByEdition";
 import { lesserFeastsForDate } from "./lesserFeasts";
 import { sanctoraleForDate } from "./sanctorale";
 import { easterYear, seasonFor } from "./season";
@@ -44,6 +45,16 @@ const SEASON_LABELS: Record<CalendarEdition, Record<Season, string>> = {
     "after-pentecost": "After Pentecost",
   },
   "1662": {
+    advent: "Advent",
+    christmas: "Christmas",
+    epiphany: "Epiphany",
+    lent: "Lent",
+    "holy-week": "Holy Week",
+    easter: "Easter",
+    pentecost: "Whitsunday",
+    "after-pentecost": "After Trinity",
+  },
+  "1962": {
     advent: "Advent",
     christmas: "Christmas",
     epiphany: "Epiphany",
@@ -135,34 +146,56 @@ export function dayInfo(
   // year as well as the one that closes it next year.
   for (const [day, obs] of moveableDays(ey)) {
     if (Number(day) === d) {
-      observances.push(
-        edition === "1662" && obs.name === "The Day of Pentecost"
-          ? { ...obs, name: "Whitsunday" }
-          : obs,
-      );
+      const whitsunday =
+        (edition === "1662" || edition === "1962") &&
+        obs.name === "The Day of Pentecost";
+      observances.push(whitsunday ? { ...obs, name: "Whitsunday" } : obs);
     }
   }
 
-  // fixed feasts of our Lord (Holy Name) plus the fixed-date saints.
-  for (const fx of FIXED_FEASTS) {
-    if (fx.month === date.month && fx.day === date.day) {
-      observances.push({ name: fx.name, rank: "principal" });
+  if (edition === "1979") {
+    // fixed feasts of our Lord (Holy Name) plus the fixed-date saints.
+    for (const fx of FIXED_FEASTS) {
+      if (fx.month === date.month && fx.day === date.day) {
+        observances.push({ name: fx.name, rank: "principal" });
+      }
     }
-  }
-  const saint = sanctoraleForDate(date);
-  if (saint) {
-    observances.push({ name: saint.title, slug: saint.slug, rank: "holy-day" });
-  }
+    const saint = sanctoraleForDate(date);
+    if (saint) {
+      observances.push({
+        name: saint.title,
+        slug: saint.slug,
+        rank: "holy-day",
+      });
+    }
 
-  // lesser feasts are optional and yield to the day's principal feast or
-  // holy day.
-  for (const feast of lesserFeastsForDate(date)) {
-    observances.push({
-      name: feast.name,
-      lesserSlug: feast.slug,
-      rank: "lesser",
-      optional: true,
-    });
+    // lesser feasts are optional and yield to the day's principal feast or
+    // holy day. They are a TEC dataset and do not apply to the older editions.
+    for (const feast of lesserFeastsForDate(date)) {
+      observances.push({
+        name: feast.name,
+        lesserSlug: feast.slug,
+        rank: "lesser",
+        optional: true,
+      });
+    }
+  } else {
+    const moveableNames = new Set(observances.map((o) => o.name));
+    for (const feast of feastsForEditionDate(date, edition)) {
+      if (
+        feast.canonical === "christmas" ||
+        feast.canonical === "epiphany" ||
+        moveableNames.has(feast.name)
+      ) {
+        continue;
+      }
+      observances.push({
+        name: feast.name,
+        slug: feast.slug,
+        rank: feast.rank,
+        optional: feast.optional,
+      });
+    }
   }
 
   // the Sunday name is the day's baseline title and always closes the list,
