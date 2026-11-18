@@ -388,3 +388,34 @@ export function resolveBcp1662Observance(
 
   return obs;
 }
+
+// the 1662 rubric appoints the Creed of Saint Athanasius at Morning Prayer on
+// these feasts, instead of the Apostles' Creed. holy-day names come from the
+// fixed table above; Easter, Whitsunday and Trinity are Sunday kinds.
+const ATHANASIAN_FEASTS = new Set([
+  "Nativity of Christ (Christmas Day)",
+  "Epiphany",
+  "St. Matthias",
+  "Ascension Day",
+  "St. John Baptist",
+  "St. James",
+  "St. Bartholomew",
+  "St. Matthew",
+  "St. Simon and St. Jude",
+  "St. Andrew",
+]);
+
+export function athanasianCreedDay(obs: Bcp1662Observance): boolean {
+  if (
+    obs.sunday?.kind === "easter" ||
+    obs.sunday?.kind === "whitsunday" ||
+    obs.sunday?.kind === "trinity"
+  ) {
+    return true;
+  }
+  if (obs.holyDay && ATHANASIAN_FEASTS.has(obs.holyDay)) return true;
+  if (obs.properHolyDayName && ATHANASIAN_FEASTS.has(obs.properHolyDayName)) {
+    return true;
+  }
+  return false;
+}

@@ -186,6 +186,8 @@ export const BCP1662_OFFICE_TEXT =
       lords_prayer: string;
       lords_prayer_opening?: string;
       apostles_creed: string;
+      athanasian_creed?: string;
+      athanasian_creed_rubric?: string;
       creed_rubric?: string;
       grace: string;
       venite?: Bcp1662InvitatoryText;

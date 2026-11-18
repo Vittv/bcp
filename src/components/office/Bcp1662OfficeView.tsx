@@ -17,7 +17,7 @@ import {
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
 import { useSectionHeading, useSubheading } from "./contentHeadings";
-import { ChoiceMenu, MenuAnchor } from "./OfficeControls";
+import { ChoiceMenu, MenuAnchor, Segmented } from "./OfficeControls";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 
@@ -140,6 +140,15 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
           ) : null}
         </View>
       );
+    case "creed":
+      return (
+        <View style={styles.lessonBlock}>
+          {node.rubric ? (
+            <Text style={styles.rubric}>{node.rubric}</Text>
+          ) : null}
+          <Text style={styles.text}>{node.text}</Text>
+        </View>
+      );
     case "canticle":
       return (
         <View style={styles.canticleBlock}>
@@ -169,6 +178,20 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
   const [lessonSelection, setLessonSelection] = useState<string>("suggested");
   const [canticleFirst, setCanticleFirst] = useState("suggested");
   const [canticleSecond, setCanticleSecond] = useState("suggested");
+  const [creedOverride, setCreedOverride] = useState<
+    "apostles" | "athanasian" | null
+  >(null);
+  const creedNodes =
+    doc.sections
+      .find((s) => s.key === "creed")
+      ?.nodes.filter(
+        (n): n is Extract<Bcp1662OfficeNode, { kind: "creed" }> =>
+          n.kind === "creed",
+      ) ?? [];
+  const creedSuggested = creedNodes.find((n) => n.suggested)?.id ?? "apostles";
+  const creedId = creedOverride ?? creedSuggested;
+  const creedTitle =
+    creedNodes.find((n) => n.id === creedId)?.title ?? "The Apostles' Creed";
   const canticleNodes =
     doc.sections
       .find((s) => s.key === "lessons")
@@ -277,6 +300,25 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
                 onChange={setLessonSelection}
               />
             </MenuAnchor>
+          ) : section.key === "creed" && creedNodes.length > 1 ? (
+            <MenuAnchor style={styles.headingRow}>
+              <Text style={[sectionHeading, styles.headingText]}>
+                {creedTitle}
+              </Text>
+              <Segmented
+                value={creedId}
+                options={[
+                  { id: "apostles", label: "Apostles" },
+                  { id: "athanasian", label: "Athanasian" },
+                ]}
+                accessibilityLabel="Creed"
+                onChange={(id) =>
+                  setCreedOverride(
+                    id === "athanasian" ? "athanasian" : "apostles",
+                  )
+                }
+              />
+            </MenuAnchor>
           ) : section.heading ? (
             <Text style={sectionHeading}>{section.heading}</Text>
           ) : null}
@@ -320,6 +362,7 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
                   ? node.suggested
                   : node.id === selection;
               }
+              if (node.kind === "creed") return node.id === creedId;
               return true;
             })
             .map((node, i) => {
