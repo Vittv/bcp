@@ -290,10 +290,12 @@
       ],
       "canticles": {
         "afterFirst": [
-          "magnificat"
+          "magnificat",
+          "cantate-domino"
         ],
         "afterSecond": [
-          "nunc-dimittis"
+          "nunc-dimittis",
+          "deus-misereatur"
         ]
       },
       "preces": [

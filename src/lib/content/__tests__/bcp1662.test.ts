@@ -70,4 +70,42 @@ describe("bcp1662 composition", () => {
     expect(office.monthlyPsalms).toEqual(["9", "10", "11"]);
     expect(office.psalms).toBeUndefined();
   });
+
+  it("emits canticles with a suggested default and drops invented section rules", async () => {
+    const { composeBcp1662OfficeForDate } = await import("../bcp1662");
+    const date = { year: 2026, month: 11, day: 17 };
+    const morning = await composeBcp1662OfficeForDate(date, "morning");
+    const canticles = morning.sections
+      .find((s) => s.key === "lessons")
+      ?.nodes.flatMap((n) =>
+        n.kind === "canticle"
+          ? [{ slot: n.slot, id: n.id, suggested: n.suggested }]
+          : [],
+      );
+    expect(canticles).toEqual([
+      { slot: "first", id: "te-deum", suggested: true },
+      { slot: "first", id: "benedicite", suggested: false },
+      { slot: "second", id: "benedictus", suggested: true },
+      { slot: "second", id: "jubilate", suggested: false },
+    ]);
+    expect(morning.sections.map((s) => s.heading)).toEqual([
+      undefined,
+      "Psalms",
+      "The Lessons",
+      "The Apostles' Creed",
+      "The Prayers",
+      undefined,
+      undefined,
+    ]);
+    const evening = await composeBcp1662OfficeForDate(date, "evening");
+    const eveningIds = evening.sections
+      .find((s) => s.key === "lessons")
+      ?.nodes.flatMap((n) => (n.kind === "canticle" ? [n.id] : []));
+    expect(eveningIds).toEqual([
+      "magnificat",
+      "cantate-domino",
+      "nunc-dimittis",
+      "deus-misereatur",
+    ]);
+  });
 });
