@@ -21,7 +21,15 @@ import { ChoiceMenu, MenuAnchor, Segmented } from "./OfficeControls";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 
-function NodeView({ node }: { node: Bcp1662OfficeNode }) {
+function NodeView({
+  node,
+  showRubrics,
+  showSpeakers,
+}: {
+  node: Bcp1662OfficeNode;
+  showRubrics: boolean;
+  showSpeakers: boolean;
+}) {
   const styles = useThemedStyles(bcp1662Styles);
   const sectionHeading = useSectionHeading();
   const subheading = useSubheading();
@@ -32,10 +40,11 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
       }
       return <Text style={subheading}>{node.text}</Text>;
     case "rubric":
+      if (!showRubrics) return null;
       return <Text style={styles.rubric}>{node.text}</Text>;
     case "text": {
-      const speakerLabel =
-        node.speaker === "minister" || node.speaker === "priest"
+      const speakerLabel = showSpeakers
+        ? node.speaker === "minister" || node.speaker === "priest"
           ? "Minister"
           : node.speaker === "people"
             ? "People"
@@ -43,7 +52,8 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
               ? "All"
               : node.speaker === "answer"
                 ? "Answer"
-                : null;
+                : null
+        : null;
       const opening = BCP1662_OFFICE_TEXT.common.openingSentences ?? [];
       const isOpening = opening.some((s) => s.text === node.text);
       let body = node.text;
@@ -77,7 +87,7 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
               key={i}
               style={[
                 styles.text,
-                node.speaker === "people" && styles.textPeople,
+                showSpeakers && node.speaker === "people" && styles.textPeople,
               ]}
             >
               {i === 0 && speakerLabel ? (
@@ -171,7 +181,15 @@ function NodeView({ node }: { node: Bcp1662OfficeNode }) {
   }
 }
 
-export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
+export function Bcp1662OfficeView({
+  doc,
+  showRubrics = true,
+  showSpeakers = true,
+}: {
+  doc: Bcp1662ComposedOffice;
+  showRubrics?: boolean;
+  showSpeakers?: boolean;
+}) {
   const styles = useThemedStyles(bcp1662Styles);
   const sectionHeading = useSectionHeading();
   const sentences = BCP1662_OFFICE_TEXT.common.openingSentences ?? [];
@@ -451,7 +469,11 @@ export function Bcp1662OfficeView({ doc }: { doc: Bcp1662ComposedOffice }) {
                     node.text === "A Prayer of St. Chrysostom")
                     ? occasionalControl()
                     : null}
-                  <NodeView node={renderedNode} />
+                  <NodeView
+                    node={renderedNode}
+                    showRubrics={showRubrics}
+                    showSpeakers={showSpeakers}
+                  />
                 </MenuAnchor>
               );
             })}

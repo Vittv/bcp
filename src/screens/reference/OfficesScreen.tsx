@@ -217,7 +217,13 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
       return <Text style={{ opacity: 0.7 }}>{bcp1662Error}</Text>;
     }
     if (!bcp1662Doc) return null;
-    return <Bcp1662OfficeView doc={bcp1662Doc} />;
+    return (
+      <Bcp1662OfficeView
+        doc={bcp1662Doc}
+        showRubrics={showRubrics}
+        showSpeakers={showSpeakers}
+      />
+    );
   }
 
   if (!document) return null;
