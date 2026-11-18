@@ -2,6 +2,12 @@ import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
 import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { AppErrorBoundary } from "./src/components/error/AppErrorBoundary";
+import {
+  clearErrorPreview,
+  ErrorPreviewCrash,
+  isErrorPreview,
+} from "./src/components/error/errorPreview";
 import { Shell } from "./src/components/shell/Shell";
 import { EditionProvider } from "./src/context/EditionContext";
 import { OfficeSettingsProvider } from "./src/context/OfficeSettingsContext";
@@ -12,6 +18,17 @@ import { TranslationProvider } from "./src/context/TranslationContext";
 // worker registration) lives statically in public/index.html, which Expo uses
 // as the web HTML template. Keeping it out of the bundle lets browsers read the
 // manifest at parse time, which Chrome and Firefox require for installability.
+
+const ERROR_PREVIEW =
+  typeof window !== "undefined" && isErrorPreview(window.location.search);
+
+if (ERROR_PREVIEW && typeof window !== "undefined") {
+  window.history.replaceState(
+    null,
+    "",
+    clearErrorPreview(window.location.href),
+  );
+}
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -33,17 +50,19 @@ export default function App() {
   if (Platform.OS !== "web" && !fontsLoaded) return null;
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <TranslationProvider>
-          <EditionProvider>
-            <OfficeSettingsProvider>
-              <Shell />
-              <StatusBar style="dark" />
-            </OfficeSettingsProvider>
-          </EditionProvider>
-        </TranslationProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <AppErrorBoundary>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <TranslationProvider>
+            <EditionProvider>
+              <OfficeSettingsProvider>
+                {ERROR_PREVIEW ? <ErrorPreviewCrash /> : <Shell />}
+                <StatusBar style="dark" />
+              </OfficeSettingsProvider>
+            </EditionProvider>
+          </TranslationProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </AppErrorBoundary>
   );
 }
