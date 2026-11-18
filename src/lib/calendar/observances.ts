@@ -1,10 +1,9 @@
 import { toDays } from "./date";
 import { feastsForEasterYear } from "./feasts";
-import { feastsForEditionDate } from "./feastsByEdition";
-import { lesserFeastsForDate } from "./lesserFeasts";
-import { sanctoraleForDate } from "./sanctorale";
+import { feastsForDate } from "./feastsByTradition";
 import { easterYear, seasonFor } from "./season";
 import { sundayName } from "./sundays";
+import { type CalendarTradition, traditionForEdition } from "./tradition";
 import type { CalendarDate, CalendarEdition, Season } from "./types";
 
 // how a day's observance ranks for ordering and display. the Sunday name is
@@ -33,8 +32,8 @@ export interface DayInfo {
   observances: DayObservance[];
 }
 
-const SEASON_LABELS: Record<CalendarEdition, Record<Season, string>> = {
-  "1979": {
+const SEASON_LABELS: Record<CalendarTradition, Record<Season, string>> = {
+  tec: {
     advent: "Advent",
     christmas: "Christmas",
     epiphany: "Epiphany",
@@ -44,7 +43,7 @@ const SEASON_LABELS: Record<CalendarEdition, Record<Season, string>> = {
     pentecost: "Pentecost",
     "after-pentecost": "After Pentecost",
   },
-  "1662": {
+  coe: {
     advent: "Advent",
     christmas: "Christmas",
     epiphany: "Epiphany",
@@ -54,7 +53,7 @@ const SEASON_LABELS: Record<CalendarEdition, Record<Season, string>> = {
     pentecost: "Whitsunday",
     "after-pentecost": "After Trinity",
   },
-  "1962": {
+  acc: {
     advent: "Advent",
     christmas: "Christmas",
     epiphany: "Epiphany",
@@ -65,12 +64,6 @@ const SEASON_LABELS: Record<CalendarEdition, Record<Season, string>> = {
     "after-pentecost": "After Trinity",
   },
 };
-
-// fixed feasts of our Lord not carried by the sanctorale data (which
-// covers the saints and the tempore-tied holy days).
-const FIXED_FEASTS: { month: number; day: number; name: string }[] = [
-  { month: 1, day: 1, name: "The Holy Name of Our Lord Jesus Christ" },
-];
 
 // the moveable days that carry a named observance, keyed by the day offset
 // from the liturgical year's start (the First Sunday of Advent). this
@@ -129,10 +122,10 @@ function seasonStartEnd(date: CalendarDate, year: number) {
   }
 }
 
-/** the named observances and season boundaries for a calendar date. */
-export function dayInfo(
+/** the named observances and season boundaries for a calendar date, by tradition. */
+export function dayInfoForTradition(
   date: CalendarDate,
-  edition: CalendarEdition = "1979",
+  tradition: CalendarTradition,
 ): DayInfo {
   const season = seasonFor(date);
   const ey = easterYear(date);
@@ -147,60 +140,32 @@ export function dayInfo(
   for (const [day, obs] of moveableDays(ey)) {
     if (Number(day) === d) {
       const whitsunday =
-        (edition === "1662" || edition === "1962") &&
-        obs.name === "The Day of Pentecost";
+        tradition !== "tec" && obs.name === "The Day of Pentecost";
       observances.push(whitsunday ? { ...obs, name: "Whitsunday" } : obs);
     }
   }
 
-  if (edition === "1979") {
-    // fixed feasts of our Lord (Holy Name) plus the fixed-date saints.
-    for (const fx of FIXED_FEASTS) {
-      if (fx.month === date.month && fx.day === date.day) {
-        observances.push({ name: fx.name, rank: "principal" });
-      }
+  const moveableNames = new Set(observances.map((o) => o.name));
+  for (const feast of feastsForDate(date, tradition)) {
+    if (
+      feast.canonical === "christmas" ||
+      feast.canonical === "epiphany" ||
+      moveableNames.has(feast.name)
+    ) {
+      continue;
     }
-    const saint = sanctoraleForDate(date);
-    if (saint) {
-      observances.push({
-        name: saint.title,
-        slug: saint.slug,
-        rank: "holy-day",
-      });
-    }
-
-    // lesser feasts are optional and yield to the day's principal feast or
-    // holy day. They are a TEC dataset and do not apply to the older editions.
-    for (const feast of lesserFeastsForDate(date)) {
-      observances.push({
-        name: feast.name,
-        lesserSlug: feast.slug,
-        rank: "lesser",
-        optional: true,
-      });
-    }
-  } else {
-    const moveableNames = new Set(observances.map((o) => o.name));
-    for (const feast of feastsForEditionDate(date, edition)) {
-      if (
-        feast.canonical === "christmas" ||
-        feast.canonical === "epiphany" ||
-        moveableNames.has(feast.name)
-      ) {
-        continue;
-      }
-      observances.push({
-        name: feast.name,
-        slug: feast.slug,
-        rank: feast.rank,
-        optional: feast.optional,
-      });
-    }
+    observances.push({
+      name: feast.name,
+      slug: feast.rank === "lesser" ? undefined : feast.slug,
+      lesserSlug: feast.rank === "lesser" ? feast.slug : undefined,
+      rank: feast.rank,
+      optional: feast.optional,
+    });
   }
 
   // the Sunday name is the day's baseline title and always closes the list,
   // so it never outranks a special day or an optional commemoration.
-  const sunday = sundayName(date, edition);
+  const sunday = sundayName(date, tradition === "tec" ? "1979" : "1662");
   if (sunday) {
     observances.push({ name: sunday, rank: "sunday" });
   }
@@ -213,10 +178,26 @@ export function dayInfo(
   };
 }
 
+/** the named observances and season boundaries for a calendar date. */
+export function dayInfo(
+  date: CalendarDate,
+  edition: CalendarEdition = "1979",
+): DayInfo {
+  return dayInfoForTradition(date, traditionForEdition(edition));
+}
+
+/** the display label for a season in a tradition, e.g. "After Trinity". */
+export function seasonLabelForTradition(
+  season: Season,
+  tradition: CalendarTradition,
+): string {
+  return SEASON_LABELS[tradition][season];
+}
+
 /** the display label for a season, e.g. "Advent" or "After Trinity". */
 export function seasonLabel(
   season: Season,
   edition: CalendarEdition = "1979",
 ): string {
-  return SEASON_LABELS[edition][season];
+  return seasonLabelForTradition(season, traditionForEdition(edition));
 }

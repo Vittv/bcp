@@ -331,7 +331,7 @@ describe("searchPalette", () => {
     expect(plural.map((e) => e.label)).toEqual(psalms.map((e) => e.label));
 
     expect(palette("collects")).toHaveLength(142);
-    expect(palette("saints")).toHaveLength(36);
+    expect(palette("saints")).toHaveLength(37);
     const lesser = palette("lesser feasts");
     expect(lesser[0]).toMatchObject({
       section: "pages",

@@ -34,10 +34,13 @@ import {
   daysUntilNextSeason,
   resolve,
   seasonFor,
-  upcomingLesserFeast,
-  upcomingSanctoraleEntry,
 } from "../../lib/calendar";
 import { bcp1662CycleLabel } from "../../lib/calendar/bcp1662";
+import {
+  upcomingHolyDayForTradition,
+  upcomingLesserFeastForTradition,
+} from "../../lib/calendar/feastsByTradition";
+import { traditionForEdition } from "../../lib/calendar/tradition";
 import type { CalendarDate } from "../../lib/calendar/types";
 import {
   type Bcp1662ComposedOffice,
@@ -394,7 +397,10 @@ export function Shell() {
   // storage because the bible context is cleared on every navigation, and
   // they are un-memoized so a progress reset cannot leave a stale label behind
   const now = today();
-  const nextFeast = upcomingSanctoraleEntry(now);
+  const nextFeast = upcomingHolyDayForTradition(
+    now,
+    traditionForEdition(edition),
+  );
   // the corpus the reader has selected, so the apocrypha row reads the
   // deuterocanonical corpus's own last place rather than the other one's
   const { apocrypha } = useTranslation();
@@ -412,7 +418,10 @@ export function Shell() {
     const pos = saved[t] ?? openingRef(t, apocrypha);
     return pos ? { text: `${pos.abbrev} ${pos.chapter}` } : undefined;
   };
-  const nextLesserFeast = upcomingLesserFeast(now);
+  const nextLesserFeast = upcomingLesserFeastForTradition(
+    now,
+    traditionForEdition(edition),
+  );
   const sidebarDetail: Partial<Record<PageId, SidebarDetail>> = {
     today: {
       text: (() => {

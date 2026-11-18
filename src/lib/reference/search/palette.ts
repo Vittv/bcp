@@ -1,4 +1,9 @@
+import {
+  searchHolyDaysForTradition,
+  searchLesserFeastsForTradition,
+} from "../../calendar/feastsByTradition";
 import { monthDayShortLabel } from "../../calendar/sanctorale";
+import type { CalendarTradition } from "../../calendar/tradition";
 import {
   ALL_SCRIPTURE_BOOKS,
   type ApocryphaCorpus,
@@ -15,10 +20,8 @@ import {
   canticleTitle,
   psalterDaySummary,
   searchCollects,
-  searchLesserFeasts,
   searchPsalms,
   searchPsalterDays,
-  searchSaints,
 } from "./individual";
 import {
   PALETTE_SECTION_ORDER,
@@ -125,20 +128,28 @@ function collectEntries(query: string, cap = Infinity): PaletteEntry[] {
     }));
 }
 
-function saintEntries(query: string, cap = Infinity): PaletteEntry[] {
-  return searchSaints(query)
+function saintEntries(
+  query: string,
+  tradition: CalendarTradition,
+  cap = Infinity,
+): PaletteEntry[] {
+  return searchHolyDaysForTradition(query, tradition)
     .slice(0, cap)
     .map((h) => ({
       id: `saint:${h.slug}`,
       section: "saints",
-      label: h.title,
+      label: h.name,
       detail: monthDayShortLabel(h.month, h.day),
       run: { kind: "saint", slug: h.slug },
     }));
 }
 
-function lesserFeastEntries(query: string, cap = Infinity): PaletteEntry[] {
-  return searchLesserFeasts(query)
+function lesserFeastEntries(
+  query: string,
+  tradition: CalendarTradition,
+  cap = Infinity,
+): PaletteEntry[] {
+  return searchLesserFeastsForTradition(query, tradition)
     .slice(0, cap)
     .map((h) => ({
       id: `lesser-feast:${h.slug}`,
@@ -278,7 +289,10 @@ function sectionKeyword(lower: string): PaletteSection | null {
   return null;
 }
 
-function expandSection(section: PaletteSection): PaletteEntry[] {
+function expandSection(
+  section: PaletteSection,
+  tradition: CalendarTradition,
+): PaletteEntry[] {
   switch (section) {
     case "psalms":
       return psalmEntries("");
@@ -291,9 +305,9 @@ function expandSection(section: PaletteSection): PaletteEntry[] {
     case "collects":
       return collectEntries("");
     case "saints":
-      return saintEntries("");
+      return saintEntries("", tradition);
     case "lesser-feasts":
-      return lesserFeastEntries("");
+      return lesserFeastEntries("", tradition);
     case "settings":
       return settingsEntries("");
     default:
@@ -383,6 +397,7 @@ function scriptureRefEntries(
 export function searchPalette(
   query: string,
   corpus: ApocryphaCorpus,
+  tradition: CalendarTradition = "tec",
 ): PaletteEntry[] {
   const q = query.trim();
   if (!q) return [];
@@ -401,7 +416,7 @@ export function searchPalette(
         detail: "Page",
         run: { kind: "page", page: "saints" },
       },
-      ...expandSection("saints"),
+      ...expandSection("saints", tradition),
     ];
   }
   if (lower === "lesser feasts" || lower === "lesser feast") {
@@ -413,11 +428,11 @@ export function searchPalette(
         detail: "Page",
         run: { kind: "page", page: "lesser-feasts" },
       },
-      ...expandSection("lesser-feasts"),
+      ...expandSection("lesser-feasts", tradition),
     ];
   }
   const section = sectionKeyword(lower);
-  if (section) return expandSection(section);
+  if (section) return expandSection(section, tradition);
 
   // a direct scripture reference like "John 4" or "Wis 1:1"
   const refHits = scriptureRefEntries(q, corpus);
@@ -430,8 +445,8 @@ export function searchPalette(
   pushEntries(out, proverbEntries(lower, PER_SECTION_CAP));
   pushEntries(out, canticleEntries(lower, PER_SECTION_CAP));
   pushEntries(out, collectEntries(q, PER_SECTION_CAP));
-  pushEntries(out, saintEntries(q, PER_SECTION_CAP));
-  pushEntries(out, lesserFeastEntries(q, PER_SECTION_CAP));
+  pushEntries(out, saintEntries(q, tradition, PER_SECTION_CAP));
+  pushEntries(out, lesserFeastEntries(q, tradition, PER_SECTION_CAP));
   pushEntries(out, settingsEntries(q, PER_SECTION_CAP));
 
   // bible: full book names and abbreviations

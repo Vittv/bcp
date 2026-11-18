@@ -7,30 +7,28 @@ import {
 } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSubheading } from "../../components/office/contentHeadings";
+import { useEdition } from "../../context/EditionContext";
 import { usePalette } from "../../context/PaletteContext";
-import { LESSER_FEAST_BIOS } from "../../lib/calendar/lesserFeastBios";
 import {
-  LESSER_FEASTS_URL,
-  lesserFeastBySlug,
-  lesserFeastsForDate,
-} from "../../lib/calendar/lesserFeasts";
+  type FeastIdentity,
+  feastMonthDayLabel,
+  feastMonthDayShortLabel,
+  lesserFeastBySlugForTradition,
+  lesserFeastForTraditionDate,
+  searchLesserFeastsForTradition,
+  upcomingLesserFeastForTradition,
+} from "../../lib/calendar/feastsByTradition";
+import { LESSER_FEAST_BIOS } from "../../lib/calendar/lesserFeastBios";
+import { LESSER_FEASTS_URL } from "../../lib/calendar/lesserFeasts";
 import {
   LESSER_FEAST_WIKI,
   wikipediaArticleUrl,
   wikipediaSearchUrl,
 } from "../../lib/calendar/lesserFeastWiki";
-import {
-  monthDayLabel,
-  monthDayShortLabel,
-} from "../../lib/calendar/sanctorale";
-import {
-  type LesserFeastHit,
-  searchLesserFeasts,
-} from "../../lib/reference/search";
+import { traditionForEdition } from "../../lib/calendar/tradition";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   DetailPage,
-  defaultLesserFeast,
   EmptyMessage,
   IndexRow,
   noSelect,
@@ -51,14 +49,19 @@ export function LesserFeastsScreen({
   fontScale: number;
   onScrollProgress?: (pct: number) => void;
 }) {
+  const { edition } = useEdition();
+  const tradition = traditionForEdition(edition);
   const { openLesserFeast } = useReference();
   const styles = useThemedStyles(styleDef);
-  const slug = openLesserFeast ?? defaultLesserFeast();
+  const selected =
+    (openLesserFeast &&
+      lesserFeastBySlugForTradition(openLesserFeast, tradition)) ||
+    upcomingLesserFeastForTradition(today(), tradition);
   if (isMobile) {
     return (
       <View style={styles.container}>
         <DetailPage compact>
-          <LesserFeastCard slug={slug} />
+          <LesserFeastCard feast={selected} tradition={tradition} />
         </DetailPage>
       </View>
     );
@@ -67,7 +70,13 @@ export function LesserFeastsScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      detail={<LesserFeastCard slug={slug} key={slug} />}
+      detail={
+        <LesserFeastCard
+          feast={selected}
+          tradition={tradition}
+          key={selected.slug}
+        />
+      }
       detailOpen
     />
   );
@@ -79,19 +88,26 @@ export function LesserFeastsScreen({
 // the calendar has an entry for today, since there is nothing to return to
 // on a day without one.
 export function LesserFeastsBar({ leading }: { leading?: ReactNode }) {
+  const { edition } = useEdition();
+  const tradition = traditionForEdition(edition);
   const { openLesserFeast, setOpenLesserFeast } = useReference();
   const palette = usePalette();
   const styles = useThemedStyles(styleDef);
-  const feast = lesserFeastBySlug(openLesserFeast ?? defaultLesserFeast());
-  const todayFeast = lesserFeastsForDate(today())[0];
-  const onToday = todayFeast !== undefined && feast?.slug === todayFeast.slug;
+  const feast =
+    (openLesserFeast &&
+      lesserFeastBySlugForTradition(openLesserFeast, tradition)) ||
+    upcomingLesserFeastForTradition(today(), tradition);
+  const todayFeast = lesserFeastForTraditionDate(today(), tradition);
+  const onToday = todayFeast !== undefined && feast.slug === todayFeast.slug;
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
         <PickerButton
           label={feast?.name ?? "Lesser feast"}
-          meta={feast ? monthDayShortLabel(feast.month, feast.day) : undefined}
+          meta={
+            feast ? feastMonthDayShortLabel(feast.month, feast.day) : undefined
+          }
           onPress={() => palette.open("lesser-feasts")}
         />
       </View>
@@ -125,7 +141,7 @@ const LesserFeastRow = memo(function LesserFeastRow({
   selected,
   onSelect,
 }: {
-  hit: LesserFeastHit;
+  hit: FeastIdentity;
   active: boolean;
   selected: string | null;
   onSelect: (slug: string | null) => void;
@@ -147,7 +163,7 @@ const LesserFeastRow = memo(function LesserFeastRow({
             {hit.name}
           </Text>
           <Text style={[styles.saintDate, a && styles.rowTextActive]}>
-            {monthDayShortLabel(hit.month, hit.day)}
+            {feastMonthDayShortLabel(hit.month, hit.day)}
           </Text>
         </View>
       )}
@@ -166,13 +182,15 @@ export const LesserFeastIndex = memo(function LesserFeastIndex({
   selected: string | null;
   onSelect: (slug: string | null) => void;
 }) {
+  const { edition } = useEdition();
+  const tradition = traditionForEdition(edition);
   const deferredQuery = useDeferredValue(query);
   const hits = useMemo(
-    () => searchLesserFeasts(deferredQuery),
-    [deferredQuery],
+    () => searchLesserFeastsForTradition(deferredQuery, tradition),
+    [deferredQuery, tradition],
   );
   const onEnter = useCallback(
-    (_i: number, hit: LesserFeastHit) =>
+    (_i: number, hit: FeastIdentity) =>
       onSelect(hit.slug === selected ? null : hit.slug),
     [selected, onSelect],
   );
@@ -201,18 +219,31 @@ export const LesserFeastIndex = memo(function LesserFeastIndex({
 // the detail card carries only what the app may reproduce: the name, the
 // date, the trial marker, any original biography, and links out to a
 // wikipedia article and the official book
-export function LesserFeastCard({ slug }: { slug: string }) {
+export function LesserFeastCard({
+  feast,
+  tradition,
+}: {
+  feast: FeastIdentity;
+  tradition: "tec" | "coe" | "acc";
+}) {
   const styles = useThemedStyles(styleDef);
   const subheading = useSubheading();
-  const feast = lesserFeastBySlug(slug);
-  if (!feast) return null;
-  const bio = LESSER_FEAST_BIOS[slug];
-  const wikiLinks = LESSER_FEAST_WIKI[slug] ?? [];
-  const date = monthDayLabel(feast.month, feast.day);
+  const bio = tradition === "tec" ? LESSER_FEAST_BIOS[feast.slug] : undefined;
+  const wikiLinks =
+    tradition === "tec" ? (LESSER_FEAST_WIKI[feast.slug] ?? []) : [];
+  const date = feastMonthDayLabel(feast.month, feast.day);
+  const calendar =
+    tradition === "tec"
+      ? "TEC · Lesser Feasts and Fasts 2024"
+      : tradition === "coe"
+        ? "CoE · 1662 daily calendar"
+        : "ACC · 1962 Canadian calendar";
   return (
     <View>
       <Text style={[subheading, styles.lesserFeastTitle]}>{feast.name}</Text>
       <Text style={styles.detailSubtitle}>
+        {calendar}
+        {"\n"}
         {date}
         {feast.trial ? " · Trial use" : ""}
       </Text>
@@ -259,19 +290,21 @@ export function LesserFeastCard({ slug }: { slug: string }) {
           <Text style={styles.lesserLink}>{"Search Wikipedia ›"}</Text>
         </Pressable>
       )}
-      <Pressable
-        style={({ hovered }) => [
-          styles.lesserLinkRow,
-          hovered && styles.rowHover,
-        ]}
-        onPress={() => window.open(LESSER_FEASTS_URL, "_blank", "noreferrer")}
-        accessibilityRole="link"
-        accessibilityLabel="Open the official Lesser Feasts and Fasts 2024 PDF"
-      >
-        <Text style={styles.lesserLink}>
-          {"Lesser Feasts and Fasts 2024, official PDF ›"}
-        </Text>
-      </Pressable>
+      {tradition === "tec" ? (
+        <Pressable
+          style={({ hovered }) => [
+            styles.lesserLinkRow,
+            hovered && styles.rowHover,
+          ]}
+          onPress={() => window.open(LESSER_FEASTS_URL, "_blank", "noreferrer")}
+          accessibilityRole="link"
+          accessibilityLabel="Open the official Lesser Feasts and Fasts 2024 PDF"
+        >
+          <Text style={styles.lesserLink}>
+            {"Lesser Feasts and Fasts 2024, official PDF ›"}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

@@ -6,14 +6,19 @@ import {
   useMemo,
 } from "react";
 import { Pressable, Text, View } from "react-native";
+import { HolyDayCard } from "../../components/office/HolyDayCard";
 import { SanctoraleCard } from "../../components/office/SanctoraleCard";
 import { officeBarStyles } from "../../components/shell/officeBarStyles";
+import { useEdition } from "../../context/EditionContext";
 import { usePalette } from "../../context/PaletteContext";
 import {
-  monthDayShortLabel,
-  sanctoraleBySlug,
-} from "../../lib/calendar/sanctorale";
-import { type SaintHit, searchSaints } from "../../lib/reference/search";
+  type FeastIdentity,
+  feastMonthDayShortLabel,
+  holyDayBySlugForTradition,
+  searchHolyDaysForTradition,
+} from "../../lib/calendar/feastsByTradition";
+import { sanctoraleBySlug } from "../../lib/calendar/sanctorale";
+import { traditionForEdition } from "../../lib/calendar/tradition";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   DetailPage,
@@ -37,18 +42,26 @@ export function SaintsScreen({
   fontScale: number;
   onScrollProgress?: (pct: number) => void;
 }) {
+  const { edition } = useEdition();
+  const tradition = traditionForEdition(edition);
   const { openSaint, saintBio, saintLiturgy } = useReference();
   const styles = useThemedStyles(styleDef);
+  const slug = openSaint ?? defaultSaint(tradition);
+  const feast = holyDayBySlugForTradition(slug, tradition);
+  const detail =
+    tradition === "tec" ? (
+      <SanctoraleCard
+        slug={slug}
+        showBio={saintBio}
+        showLiturgy={saintLiturgy}
+      />
+    ) : feast ? (
+      <HolyDayCard feast={feast} tradition={tradition} />
+    ) : null;
   if (isMobile) {
     return (
       <View style={styles.container}>
-        <DetailPage compact>
-          <SanctoraleCard
-            slug={openSaint ?? defaultSaint()}
-            showBio={saintBio}
-            showLiturgy={saintLiturgy}
-          />
-        </DetailPage>
+        <DetailPage compact>{detail}</DetailPage>
       </View>
     );
   }
@@ -56,14 +69,7 @@ export function SaintsScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      detail={
-        <SanctoraleCard
-          slug={openSaint ?? defaultSaint()}
-          key={openSaint ?? defaultSaint()}
-          showBio={saintBio}
-          showLiturgy={saintLiturgy}
-        />
-      }
+      detail={<View key={`${tradition}:${slug}`}>{detail}</View>}
       detailOpen
     />
   );
@@ -74,6 +80,8 @@ export function SaintsScreen({
 // view toggles (shown once a saint is on screen; bio leads by default,
 // both standalone so each can be on or off independently)
 export function SaintsBar({ leading }: { leading?: ReactNode }) {
+  const { edition } = useEdition();
+  const tradition = traditionForEdition(edition);
   const { openSaint, saintBio, setSaintBio, saintLiturgy, setSaintLiturgy } =
     useReference();
   const palette = usePalette();
@@ -109,19 +117,25 @@ export function SaintsBar({ leading }: { leading?: ReactNode }) {
     </View>
   );
 
-  const sel = sanctoraleBySlug(openSaint ?? defaultSaint());
+  const slug = openSaint ?? defaultSaint(tradition);
+  const sel =
+    tradition === "tec"
+      ? sanctoraleBySlug(slug)
+      : holyDayBySlugForTradition(slug, tradition);
 
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
         {leading}
         <PickerButton
-          label={sel?.title ?? "Holy day"}
-          meta={sel ? monthDayShortLabel(sel.month, sel.day) : undefined}
+          label={sel && "title" in sel ? sel.title : (sel?.name ?? "Holy day")}
+          meta={sel ? feastMonthDayShortLabel(sel.month, sel.day) : undefined}
           onPress={() => palette.open("saints")}
         />
       </View>
-      <View style={styles.barRight}>{toggles}</View>
+      <View style={styles.barRight}>
+        {tradition === "tec" ? toggles : null}
+      </View>
     </View>
   );
 }
@@ -134,7 +148,7 @@ const SaintRow = memo(function SaintRow({
   selected,
   onSelect,
 }: {
-  hit: SaintHit;
+  hit: FeastIdentity;
   active: boolean;
   selected: string | null;
   onSelect: (slug: string | null) => void;
@@ -153,10 +167,10 @@ const SaintRow = memo(function SaintRow({
             ellipsizeMode="tail"
             style={[styles.saintTitle, a && styles.rowTextActive]}
           >
-            {hit.title}
+            {hit.name}
           </Text>
           <Text style={[styles.saintDate, a && styles.rowTextActive]}>
-            {monthDayShortLabel(hit.month, hit.day)}
+            {feastMonthDayShortLabel(hit.month, hit.day)}
           </Text>
         </View>
       )}
@@ -175,10 +189,15 @@ export const SaintIndex = memo(function SaintIndex({
   selected: string | null;
   onSelect: (slug: string | null) => void;
 }) {
+  const { edition } = useEdition();
+  const tradition = traditionForEdition(edition);
   const deferredQuery = useDeferredValue(query);
-  const hits = useMemo(() => searchSaints(deferredQuery), [deferredQuery]);
+  const hits = useMemo(
+    () => searchHolyDaysForTradition(deferredQuery, tradition),
+    [deferredQuery, tradition],
+  );
   const onEnter = useCallback(
-    (_i: number, hit: SaintHit) =>
+    (_i: number, hit: FeastIdentity) =>
       onSelect(hit.slug === selected ? null : hit.slug),
     [selected, onSelect],
   );
