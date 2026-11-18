@@ -12,8 +12,8 @@ export { SYSTEM_UI };
 export const INTER_TIGHT = "Inter Tight";
 
 // the interface face follows the interface-font choice through the var the js
-// resolver and the injected @font-face both write
-export const CHROME_FONT = `var(--chrome-font, ${INTER_TIGHT})`;
+// resolver writes; the system fallback keeps chrome legible before it loads
+export const CHROME_FONT = `var(--chrome-font, ${SYSTEM_UI})`;
 
 // the reader's three registers read the reading face through the same var
 // resolver, so a face change reflows the reader on web and native alike
