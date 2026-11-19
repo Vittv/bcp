@@ -46,7 +46,7 @@ export const KJVA_BOOKS: KjvaBookMeta[] = [
     abbrev: "Sir",
     testament: "DC",
     chapters: 51,
-    dolRefNames: ["Sirach", "Sir"],
+    dolRefNames: ["Sirach", "Sir", "Ecclesiasticus", "Ecclus"],
   },
   {
     book: "Baruch",

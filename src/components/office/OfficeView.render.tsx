@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { useOfficeSettings } from "../../context/OfficeSettingsContext";
 import { getScripturePassagesFromDolRef } from "../../lib/content/bible";
+import { appointmentInCollectTitle } from "../../lib/content/collects";
 import type {
   CanticlePassage,
   KjvPassage,
@@ -300,6 +301,12 @@ export function NodeView({
               slug={node.slug}
             />
           </Text>
+          {node.appointment &&
+          !appointmentInCollectTitle(node.appointment, node.passage.title) ? (
+            <Text style={styles.collectAppointment}>
+              {`Appointed for ${node.appointment}`}
+            </Text>
+          ) : null}
           <Text style={styles.collectText}>{node.passage.text}</Text>
         </View>
       );

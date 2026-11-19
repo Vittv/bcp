@@ -1,45 +1,69 @@
 import { describe, expect, test } from "bun:test";
+import { FEAST_REGISTRY } from "../feastsByTradition";
 import { LESSER_FEAST_BIOS } from "../lesserFeastBios";
-import { LESSER_FEASTS, lesserFeastBySlug } from "../lesserFeasts";
+import { LESSER_FEASTS } from "../lesserFeasts";
 import {
   LESSER_FEAST_WIKI,
   wikipediaArticleUrl,
   wikipediaSearchUrl,
 } from "../lesserFeastWiki";
+import { OLDER_FEAST_BIOS } from "../olderFeastBios";
+import { OLDER_FEAST_WIKI } from "../olderFeastWiki";
+import { SANCTORALE_BIOS } from "../sanctoraleBios";
+import { SANCTORALE_WIKI } from "../sanctoraleWiki";
 
 const january = LESSER_FEASTS.filter((feast) => feast.month === 1);
+const registrySlugs = new Set(FEAST_REGISTRY.map((feast) => feast.slug));
+const bio = (slug: string) =>
+  SANCTORALE_BIOS[slug] ?? LESSER_FEAST_BIOS[slug] ?? OLDER_FEAST_BIOS[slug];
+const wiki = (slug: string) =>
+  SANCTORALE_WIKI[slug] ?? LESSER_FEAST_WIKI[slug] ?? OLDER_FEAST_WIKI[slug];
 
-describe("lesser feast biographies", () => {
+describe("feast biographies", () => {
   test("every biography belongs to a feast", () => {
-    for (const slug of Object.keys(LESSER_FEAST_BIOS)) {
-      expect(lesserFeastBySlug(slug)).toBeDefined();
+    for (const map of [SANCTORALE_BIOS, LESSER_FEAST_BIOS, OLDER_FEAST_BIOS]) {
+      for (const slug of Object.keys(map)) {
+        expect(registrySlugs.has(slug)).toBe(true);
+      }
     }
   });
 
   test("every entry carries an original biography", () => {
-    for (const feast of LESSER_FEASTS) {
-      expect(LESSER_FEAST_BIOS[feast.slug]?.trim().length).toBeGreaterThan(0);
+    for (const feast of FEAST_REGISTRY) {
+      expect(bio(feast.slug)?.trim().length).toBeGreaterThan(0);
     }
   });
 
   test("biographies are prose, not the date fallback", () => {
-    for (const bio of Object.values(LESSER_FEAST_BIOS)) {
-      expect(bio).not.toContain("Commemorated on");
-      expect(bio.length).toBeGreaterThan(80);
+    for (const map of [SANCTORALE_BIOS, LESSER_FEAST_BIOS, OLDER_FEAST_BIOS]) {
+      for (const text of Object.values(map)) {
+        expect(text).not.toContain("Commemorated on");
+        expect(text.length).toBeGreaterThan(80);
+      }
     }
   });
 
   test("biographies use no em dashes", () => {
-    for (const bio of Object.values(LESSER_FEAST_BIOS)) {
-      expect(bio).not.toContain("\u2014");
+    for (const map of [SANCTORALE_BIOS, LESSER_FEAST_BIOS, OLDER_FEAST_BIOS]) {
+      for (const text of Object.values(map)) {
+        expect(text).not.toContain("\u2014");
+      }
     }
   });
 });
 
-describe("lesser feast wikipedia links", () => {
+describe("feast wikipedia links", () => {
   test("every article link belongs to a feast", () => {
-    for (const slug of Object.keys(LESSER_FEAST_WIKI)) {
-      expect(lesserFeastBySlug(slug)).toBeDefined();
+    for (const map of [SANCTORALE_WIKI, LESSER_FEAST_WIKI, OLDER_FEAST_WIKI]) {
+      for (const slug of Object.keys(map)) {
+        expect(registrySlugs.has(slug)).toBe(true);
+      }
+    }
+  });
+
+  test("every entry has a resolved wikipedia link set", () => {
+    for (const feast of FEAST_REGISTRY) {
+      expect(wiki(feast.slug)).toBeDefined();
     }
   });
 
@@ -50,14 +74,16 @@ describe("lesser feast wikipedia links", () => {
   });
 
   test("every article link has a title and a well formed url", () => {
-    for (const links of Object.values(LESSER_FEAST_WIKI)) {
-      for (const link of links) {
-        expect(link.title.trim().length).toBeGreaterThan(0);
-        expect(
-          wikipediaArticleUrl(link.title).startsWith(
-            "https://en.wikipedia.org/wiki/",
-          ),
-        ).toBe(true);
+    for (const map of [SANCTORALE_WIKI, LESSER_FEAST_WIKI, OLDER_FEAST_WIKI]) {
+      for (const links of Object.values(map)) {
+        for (const link of links) {
+          expect(link.title.trim().length).toBeGreaterThan(0);
+          expect(
+            wikipediaArticleUrl(link.title).startsWith(
+              "https://en.wikipedia.org/wiki/",
+            ),
+          ).toBe(true);
+        }
       }
     }
   });

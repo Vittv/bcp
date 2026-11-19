@@ -1,4 +1,4 @@
-import { resolve, sundayOnOrBefore } from "../../calendar";
+import { resolve, sanctoraleBySlug, sundayOnOrBefore } from "../../calendar";
 import type { CalendarDate, DolSlot } from "../../calendar/types";
 import { collectPassage } from "../../content";
 import type { CollectSection } from "../../content/types";
@@ -63,16 +63,25 @@ export function collectNode(ctx: ComposeContext): ComposedNode | undefined {
   if (!passage) return undefined;
   // holy day collects carry the feast slug for the title link
   const slug = found.section === "holy-days" ? ctx.litSlot.holyDay : undefined;
-  return { kind: "collect", passage, slug };
+  return { kind: "collect", passage, slug, appointment: found.appointment };
 }
 
 export function collectForDate(
   date: CalendarDate,
   slot: DolSlot,
-): { title: string; section: CollectSection } | undefined {
+):
+  | { title: string; section: CollectSection; appointment?: string }
+  | undefined {
   if (slot.day.kind === "special") {
     const direct = SPECIAL_COLLECTS[slot.day.name];
-    if (direct) return { title: direct, section: "church-year" };
+    if (direct)
+      return {
+        title: direct,
+        section: "church-year",
+        appointment: slot.day.name
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase()),
+      };
     // the weekdays of the Epiphany season use the Epiphany collect.
     if (
       slot.week.kind === "epiphany-following" &&
@@ -90,19 +99,26 @@ export function collectForDate(
       slot.week.kind === "holy-week" || slot.week.kind === "easter-week";
     if ((!sunday || SUNDAY_FEASTS.has(slot.holyDay)) && !inHolyWeek) {
       const title = HOLY_DAY_COLLECTS[slot.holyDay];
-      if (title) return { title, section: "holy-days" };
+      if (title)
+        return {
+          title,
+          section: "holy-days",
+          appointment: sanctoraleBySlug(slot.holyDay)?.title ?? slot.holyDay,
+        };
     }
   }
   if (slot.week.kind === "holy-week" && slot.day.kind === "weekday") {
     return {
       title: `${WEEKDAY_NAMES[slot.day.weekday]} in Holy Week`,
       section: "church-year",
+      appointment: `${WEEKDAY_NAMES[slot.day.weekday]} in Holy Week`,
     };
   }
   if (slot.week.kind === "easter-week" && slot.day.kind === "weekday") {
     return {
       title: `${WEEKDAY_NAMES[slot.day.weekday]} in Easter Week`,
       section: "church-year",
+      appointment: `${WEEKDAY_NAMES[slot.day.weekday]} in Easter Week`,
     };
   }
   // ordinary weekdays use the collect of their week (the DOL proper week runs

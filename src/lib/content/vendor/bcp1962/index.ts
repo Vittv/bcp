@@ -12,6 +12,7 @@ import citationMapData from "./citation-map.min.json";
 import dailyData from "./lectionary-daily.min.json";
 import collectsProperData from "./office-text/collects-proper.min.json";
 import litanyData from "./office-text/litany.min.json";
+import scripturePropersData from "./office-text/scripture-propers.min.json";
 import rulesData from "./lectionary-rules.min.json";
 import properPsalmsData from "./proper-psalms.min.json";
 import psalterCycleData from "./psalter-cycle.min.json";
@@ -169,6 +170,31 @@ export function getBcp1962ProperCollect(
   name: string,
 ): Bcp1962ProperCollect | undefined {
   return BCP1962_PROPER_COLLECTS.collects.find((c) => c.name === name);
+}
+
+export type Bcp1962ScriptureProper = {
+  name: string;
+  epistle: string | null;
+  gospel: string | null;
+};
+
+const BCP1962_SCRIPTURE_PROPERS =
+  // SAFETY: vendored 1962 Eucharistic propers extracted from the ACC PDF.
+  scripturePropersData as {
+    meta: { edition: string };
+    propers: Bcp1962ScriptureProper[];
+  };
+
+export function getBcp1962ScriptureProper(
+  name: string,
+): Bcp1962ScriptureProper | undefined {
+  const norm = (s: string) =>
+    normalizeBcp1962FeastName(s).replace(/\bst\b/g, "saint");
+  const key = norm(name);
+  return (
+    BCP1962_SCRIPTURE_PROPERS.propers.find((p) => norm(p.name) === key) ??
+    BCP1962_SCRIPTURE_PROPERS.propers.find((p) => norm(p.name).includes(key))
+  );
 }
 
 export const BCP1962_RULES =

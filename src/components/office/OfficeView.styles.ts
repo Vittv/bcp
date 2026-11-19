@@ -184,6 +184,12 @@ export const officeViewStyles = defineThemedStyles({
     color: "var(--text-secondary)",
     marginBottom: 2,
   },
+  collectAppointment: {
+    fontFamily: CHROME_FONT,
+    fontSize: 12,
+    color: "var(--text-secondary)",
+    marginBottom: 4,
+  },
   collectText: {
     fontFamily: SERIF_FONT,
     fontSize: 17,

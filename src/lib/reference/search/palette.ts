@@ -1,4 +1,5 @@
 import {
+  feastNameForTradition,
   searchHolyDaysForTradition,
   searchLesserFeastsForTradition,
 } from "../../calendar/feastsByTradition";
@@ -138,7 +139,7 @@ function saintEntries(
     .map((h) => ({
       id: `saint:${h.slug}`,
       section: "saints",
-      label: h.name,
+      label: feastNameForTradition(h, tradition),
       detail: monthDayShortLabel(h.month, h.day),
       run: { kind: "saint", slug: h.slug },
     }));
@@ -154,7 +155,7 @@ function lesserFeastEntries(
     .map((h) => ({
       id: `lesser-feast:${h.slug}`,
       section: "lesser-feasts",
-      label: h.name,
+      label: feastNameForTradition(h, tradition),
       detail: `${monthDayShortLabel(h.month, h.day)}${h.trial ? " · Trial use" : ""}`,
       run: { kind: "lesserFeast", slug: h.slug },
     }));

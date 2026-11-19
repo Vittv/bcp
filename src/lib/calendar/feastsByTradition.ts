@@ -14,10 +14,28 @@ import type { CalendarDate, CalendarEdition } from "./types";
 
 export type FeastRank = "principal" | "holy-day" | "lesser";
 
+export const CHURCH_CALENDARS: Record<CalendarTradition, string> = {
+  tec: "The Episcopal Church",
+  coe: "Church of England",
+  acc: "Anglican Church of Canada",
+};
+
+export const CHURCH_CALENDAR_BOOKS: Record<CalendarTradition, string> = {
+  tec: "1979 Book of Common Prayer",
+  coe: "1662 Book of Common Prayer",
+  acc: "1962 Canadian Book of Common Prayer",
+};
+
+const ALL_TRADITIONS: readonly CalendarTradition[] = ["tec", "coe", "acc"];
+
+export function calendarLabel(tradition: CalendarTradition): string {
+  return `${CHURCH_CALENDARS[tradition]} · ${CHURCH_CALENDAR_BOOKS[tradition]}`;
+}
+
 export type FeastIdentity = {
   /** canonical cross-tradition identity, when one is known. */
   canonical?: string;
-  /** stable slug for this entry; LFF entries keep their long page slugs. */
+  /** stable slug for this entry; shared feasts use their canonical slug. */
   slug: string;
   /** the name printed by this church's calendar. */
   name: string;
@@ -28,14 +46,33 @@ export type FeastIdentity = {
   /** trial-use marker carried by the 2024 LFF calendar. */
   trial?: boolean;
   tradition: CalendarTradition;
+  /** every church that keeps this feast on this date. */
+  calendars: CalendarTradition[];
+  /** the full church and book this entry comes from. */
+  calendar: string;
   /** the source table this entry came from. */
   source: string;
+  /** one record per church, holding that book's own name and date. */
+  observations: FeastObservation[];
+};
+
+export type FeastObservation = {
+  tradition: CalendarTradition;
+  name: string;
+  month: number;
+  day: number;
+  source: string;
+  optional?: boolean;
+  trial?: boolean;
 };
 
 // ordered specific-first so a named saint is not swallowed by a generic rule
 const canonicalRules: Array<[RegExp, string]> = [
   [/confession of st peter/i, "confession-of-peter"],
-  [/conversion of st paul|convers: of s\. paul/i, "conversion-of-st-paul"],
+  [
+    /conversion of (st|saint) paul|convers: of s\. paul/i,
+    "conversion-of-st-paul",
+  ],
   [/matthias/i, "st-matthias"],
   [
     /philip and st james|philip and james|s\. philip and s\. james|saint philip and saint james/i,
@@ -47,11 +84,11 @@ const canonicalRules: Array<[RegExp, string]> = [
   ],
   [/st james|saint james|s\. james/i, "st-james"],
   [
-    /john (the )?baptist|john Baptist|s\. john bap/i,
+    /nativit.*john.*baptist|^st\.? john baptist$/i,
     "nativity-of-st-john-the-baptist",
   ],
   [
-    /john the evangelist|st john the apostle|s\. john the evangelist/i,
+    /john.*apostle and evangelist|john the evangelist|st john the apostle/i,
     "st-john",
   ],
   [/innocent/i, "holy-innocents"],
@@ -62,10 +99,10 @@ const canonicalRules: Array<[RegExp, string]> = [
   [/epiphany|epiphanie/i, "epiphany"],
   [/annunciation|annunc\. of mary/i, "annunciation"],
   [/visitation|visit:/i, "visitation"],
-  [/joseph/i, "st-joseph"],
+  [/st\.? joseph\b|saint joseph\b/i, "st-joseph"],
   [/mark the evangelist|st mark|saint mark|s\. mark/i, "st-mark"],
   [/barnabas/i, "st-barnabas"],
-  [/peter and st paul|peter and paul|st\.? peter$/i, "peter-and-paul"],
+  [/peter and (st|saint) paul|peter and paul|st\.? peter$/i, "peter-and-paul"],
   [/magdalene/i, "st-mary-magdalene"],
   [/transfiguration/i, "transfiguration"],
   [/bartholomew/i, "st-bartholomew"],
@@ -74,13 +111,19 @@ const canonicalRules: Array<[RegExp, string]> = [
   [/luke/i, "st-luke"],
   [/simon|jude/i, "simon-and-jude"],
   [/all saints/i, "all-saints"],
-  [/andrew/i, "st-andrew"],
-  [/thomas/i, "st-thomas"],
-  [/stephen(?! langton)/i, "st-stephen"],
+  [/st\.? andrew\b|saint andrew\b/i, "st-andrew"],
+  [/st\.? thomas the apostle|saint thomas the apostle/i, "st-thomas"],
+  [/st\.? stephen\b|saint stephen\b/i, "st-stephen"],
+  // Edmund of East Anglia is printed three ways; "Edmund James Peck" is a
+  // different commemoration and must not fold into this identity.
+  [/edmund.*(king|k\.?\s*&|east anglia)/i, "edmund-king-870"],
   [
-    /falling asleep|blessed virgin|nativity of the blessed virgin|conception of the blessed virgin/i,
+    /falling asleep|assumption of the blessed virgin|st\.? mary the virgin/i,
     "st-mary-the-virgin",
   ],
+  [/nativity of the blessed virgin/i, "nativity-of-mary"],
+  [/conception of the blessed virgin/i, "conception-of-mary"],
+  [/parents of the blessed virgin/i, "parents-of-mary"],
   [/christmas|nativity of our lord|nativity of christ/i, "christmas"],
 ];
 
@@ -123,7 +166,10 @@ function identity(
     optional,
     trial,
     tradition,
+    calendars: [tradition],
+    calendar: calendarLabel(tradition),
     source,
+    observations: [{ tradition, name, month, day, source, optional, trial }],
   };
 }
 
@@ -247,12 +293,14 @@ const coeFeasts: FeastIdentity[] = [
 ];
 
 // the 1962 fixed calendar prints holy days and saints' commemorations in the
-// same table. only entries with a shared canonical identity (plus the octave
-// day, whose rule is suppressed by the slug map) are holy days; the rest are
-// lesser commemorations and read quietly in the calendar grid.
+// same table. canonical identity marks a holy day here, but some shared
+// identities are printed as lesser commemorations, so they are held back.
+const accLesserCanonical = new Set(["edmund-king-870"]);
+
 const accFeasts: FeastIdentity[] = BCP1962_FIXED_CALENDAR.map((entry) => {
+  const canonical = canonicalFeastSlug(entry.name);
   const major =
-    Boolean(canonicalFeastSlug(entry.name)) ||
+    (Boolean(canonical) && !accLesserCanonical.has(canonical ?? "")) ||
     /octave day of christmas/i.test(entry.name);
   return identity(
     entry.month,
@@ -265,10 +313,56 @@ const accFeasts: FeastIdentity[] = BCP1962_FIXED_CALENDAR.map((entry) => {
   );
 });
 
-const BY_TRADITION: Record<CalendarTradition, FeastIdentity[]> = {
+// the same canonical feast often falls on the same date in more than one
+// church. carry it once with every observing church in its metadata rather
+// than repeating an identical entry in each calendar.
+const rawByTradition: Record<CalendarTradition, FeastIdentity[]> = {
   tec: tecFeasts,
   coe: coeFeasts,
   acc: accFeasts,
+};
+
+const sharedGroups = new Map<string, FeastIdentity[]>();
+for (const tradition of ALL_TRADITIONS) {
+  for (const feast of rawByTradition[tradition]) {
+    const key = `${feast.canonical ?? feast.slug}|${feast.month}|${feast.day}`;
+    sharedGroups.set(key, [...(sharedGroups.get(key) ?? []), feast]);
+  }
+}
+
+const merged: FeastIdentity[] = [];
+for (const group of sharedGroups.values()) {
+  const traditions = new Set(group.map((f) => f.tradition));
+  if (traditions.size < 2) {
+    merged.push(group[0]);
+    continue;
+  }
+  const first = group[0];
+  const rankOrder: FeastRank[] = ["lesser", "holy-day", "principal"];
+  const rank = group.reduce(
+    (best, f) =>
+      rankOrder.indexOf(f.rank) > rankOrder.indexOf(best) ? f.rank : best,
+    first.rank,
+  );
+  merged.push({
+    ...first,
+    rank,
+    optional: rank === "lesser" ? first.optional : false,
+    slug: first.canonical ?? first.slug,
+    calendars: ALL_TRADITIONS.filter((t) => traditions.has(t)),
+    calendar: [...traditions].map((t) => calendarLabel(t)).join(" · "),
+    observations: group.flatMap((f) => f.observations),
+  });
+}
+
+/** the one authoritative feast list: shared feasts appear once, with every
+ * church kept as an observation on the same entry. */
+export const FEAST_REGISTRY: readonly FeastIdentity[] = merged;
+
+const BY_TRADITION: Record<CalendarTradition, FeastIdentity[]> = {
+  tec: merged.filter((f) => f.calendars.includes("tec")),
+  coe: merged.filter((f) => f.calendars.includes("coe")),
+  acc: merged.filter((f) => f.calendars.includes("acc")),
 };
 
 const byDate = new Map<CalendarTradition, Map<string, FeastIdentity[]>>();
@@ -291,6 +385,30 @@ for (const tradition of ["tec", "coe", "acc"] as const) {
 
 export function allFeasts(tradition: CalendarTradition): FeastIdentity[] {
   return BY_TRADITION[tradition];
+}
+
+/** find a registry entry by its navigation slug, regardless of church. */
+export function feastBySlug(slug: string): FeastIdentity | undefined {
+  return FEAST_REGISTRY.find((f) => f.slug === slug);
+}
+
+/** the selected church's own printed record for a shared feast. */
+export function observationForTradition(
+  feast: FeastIdentity,
+  tradition: CalendarTradition,
+): FeastObservation {
+  return (
+    feast.observations.find((o) => o.tradition === tradition) ??
+    feast.observations[0]
+  );
+}
+
+/** the name the selected church prints for a shared feast. */
+export function feastNameForTradition(
+  feast: FeastIdentity,
+  tradition: CalendarTradition,
+): string {
+  return observationForTradition(feast, tradition).name;
 }
 
 /** every fixed-date observance in a tradition on a given date. */
@@ -393,6 +511,20 @@ export function upcomingHolyDayForTradition(
   );
 }
 
+function matchesFeastQuery(
+  feast: FeastIdentity,
+  tradition: CalendarTradition,
+  q: string,
+): boolean {
+  return (
+    [feast.name, feastNameForTradition(feast, tradition)].some((name) =>
+      name.toLowerCase().includes(q),
+    ) ||
+    feastMonthDayLabel(feast.month, feast.day).toLowerCase().includes(q) ||
+    feastMonthDayShortLabel(feast.month, feast.day).toLowerCase().includes(q)
+  );
+}
+
 export function searchHolyDaysForTradition(
   query: string,
   tradition: CalendarTradition,
@@ -400,12 +532,7 @@ export function searchHolyDaysForTradition(
   const q = query.trim().toLowerCase();
   const all = holyDaysForTradition(tradition);
   if (!q) return all;
-  return all.filter(
-    (f) =>
-      f.name.toLowerCase().includes(q) ||
-      feastMonthDayLabel(f.month, f.day).toLowerCase().includes(q) ||
-      feastMonthDayShortLabel(f.month, f.day).toLowerCase().includes(q),
-  );
+  return all.filter((f) => matchesFeastQuery(f, tradition, q));
 }
 
 export function lesserFeastsForTradition(
@@ -464,10 +591,5 @@ export function searchLesserFeastsForTradition(
   const q = query.trim().toLowerCase();
   const all = lesserFeastsForTradition(tradition);
   if (!q) return all;
-  return all.filter(
-    (f) =>
-      f.name.toLowerCase().includes(q) ||
-      feastMonthDayLabel(f.month, f.day).toLowerCase().includes(q) ||
-      feastMonthDayShortLabel(f.month, f.day).toLowerCase().includes(q),
-  );
+  return all.filter((f) => matchesFeastQuery(f, tradition, q));
 }

@@ -1,0 +1,282 @@
+import { useEffect, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { useTranslation } from "../../context/TranslationContext";
+import type { FeastIdentity } from "../../lib/calendar/feastsByTradition";
+import {
+  CHURCH_CALENDARS,
+  feastMonthDayLabel,
+  observationForTradition,
+} from "../../lib/calendar/feastsByTradition";
+import { LESSER_FEAST_BIOS } from "../../lib/calendar/lesserFeastBios";
+import {
+  LESSER_FEAST_WIKI,
+  wikipediaArticleUrl,
+  wikipediaSearchUrl,
+} from "../../lib/calendar/lesserFeastWiki";
+import { OLDER_FEAST_BIOS } from "../../lib/calendar/olderFeastBios";
+import { OLDER_FEAST_WIKI } from "../../lib/calendar/olderFeastWiki";
+import { SANCTORALE_BIOS } from "../../lib/calendar/sanctoraleBios";
+import { SANCTORALE_WIKI } from "../../lib/calendar/sanctoraleWiki";
+import type { CalendarTradition } from "../../lib/calendar/tradition";
+import { getScripturePassagesFromDolRef } from "../../lib/content/bible";
+import { appointmentInCollectTitle } from "../../lib/content/collects";
+import { propersForFeast } from "../../lib/content/feastPropers";
+import { parsePsalmCitation } from "../../lib/content/psalms";
+import { psalmPassage } from "../../lib/content/psalter";
+import type { KjvPassage, PsalmPassage } from "../../lib/content/types";
+import { getBcp1662PsalmPassage } from "../../lib/content/vendor/bcp1662";
+import {
+  getBcp1962PsalmPassages,
+  parseBcp1962PsalmAppointment,
+} from "../../lib/content/vendor/bcp1962";
+import { useThemedStyles } from "../../lib/theme/themedStyles";
+import { useSubheading } from "./contentHeadings";
+import { PsalmText } from "./PsalmText";
+import { sanctoraleCardStyles } from "./SanctoraleCard.styles";
+import { ScriptureView } from "./ScriptureView";
+
+const BOOK_LINK: Record<CalendarTradition, { label: string; url: string }> = {
+  tec: {
+    label: "The Episcopal Church Lesser Feasts and Fasts 2024, official PDF ›",
+    url: "https://www.episcopalchurch.org/resources/lesser-feasts-and-fasts-english/",
+  },
+  coe: {
+    label: "1662 Book of Common Prayer Calendar, official PDF ›",
+    url: "https://www.churchofengland.org/sites/default/files/2026-10/bcp-the-calendar.pdf",
+  },
+  acc: {
+    label: "1962 Canadian Book of Common Prayer Calendar, official PDF ›",
+    url: "https://www.anglican.ca/wp-content/uploads/bcp.pdf#page=9",
+  },
+};
+
+function WikiLinks({ name, slug }: { name: string; slug: string }) {
+  const styles = useThemedStyles(sanctoraleCardStyles);
+  const article =
+    SANCTORALE_WIKI[slug] ??
+    LESSER_FEAST_WIKI[slug] ??
+    OLDER_FEAST_WIKI[slug] ??
+    [];
+  if (article.length === 0) {
+    return (
+      <Pressable
+        style={({ hovered }) => [
+          styles.linkRow,
+          hovered && { backgroundColor: "var(--control-hover)" },
+        ]}
+        onPress={() =>
+          window.open(wikipediaSearchUrl(name), "_blank", "noreferrer")
+        }
+        accessibilityRole="link"
+        accessibilityLabel={`Search Wikipedia for ${name}`}
+      >
+        <Text style={styles.link}>{"Search Wikipedia ›"}</Text>
+      </Pressable>
+    );
+  }
+  return (
+    <>
+      {article.map((link) => (
+        <Pressable
+          key={link.title}
+          style={({ hovered }) => [
+            styles.linkRow,
+            hovered && { backgroundColor: "var(--control-hover)" },
+          ]}
+          onPress={() =>
+            window.open(wikipediaArticleUrl(link.title), "_blank", "noreferrer")
+          }
+          accessibilityRole="link"
+          accessibilityLabel={`Read ${link.label ?? link.title} on Wikipedia`}
+        >
+          <Text style={styles.link}>
+            {`${link.label ?? link.title} on Wikipedia ›`}
+          </Text>
+        </Pressable>
+      ))}
+    </>
+  );
+}
+
+// a psalm appointment resolved through the selected church's psalter. refs
+// that cannot be read stay visible as citations rather than vanishing.
+function PsalmRow({
+  ref,
+  tradition,
+}: {
+  ref: string;
+  tradition: CalendarTradition;
+}) {
+  const styles = useThemedStyles(sanctoraleCardStyles);
+  const passages: PsalmPassage[] = [];
+  if (tradition === "tec") {
+    const parsed = parsePsalmCitation(ref);
+    const passage = parsed ? psalmPassage(parsed) : undefined;
+    if (passage) passages.push(passage);
+  } else if (tradition === "coe") {
+    const passage = getBcp1662PsalmPassage(ref);
+    if (passage) passages.push(passage);
+  } else {
+    passages.push(
+      ...getBcp1962PsalmPassages(parseBcp1962PsalmAppointment(ref)),
+    );
+  }
+  if (passages.length === 0) {
+    return <Text style={styles.lessonMissing}>Psalm {ref}</Text>;
+  }
+  return (
+    <View style={styles.psalmBlock}>
+      {passages.map((passage, i) => (
+        <View
+          // biome-ignore lint/suspicious/noArrayIndexKey: an appointment can name the same psalm twice
+          key={`${passage.psalm}-${i}`}
+        >
+          <Text style={styles.psalmRef}>{`Psalm ${passage.psalm}`}</Text>
+          <PsalmText passage={passage} size="body" />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// a reading citation resolved to scripture with the reader's current settings.
+function ReadingRow({ ref }: { ref: string }) {
+  const styles = useThemedStyles(sanctoraleCardStyles);
+  const { translation, apocrypha } = useTranslation();
+  const [passages, setPassages] = useState<KjvPassage[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getScripturePassagesFromDolRef({ translation, apocrypha }, ref).then(
+      (ps) => {
+        if (!cancelled) setPassages(ps);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [ref, translation, apocrypha]);
+
+  if (passages.length === 0) {
+    return <Text style={styles.lessonMissing}>{ref}</Text>;
+  }
+  return (
+    <View style={styles.lessonRow}>
+      {passages.map((passage) => {
+        const first = passage.verses[0]?.number;
+        const last = passage.verses[passage.verses.length - 1]?.number;
+        return (
+          <ScriptureView
+            key={`${passage.book}-${passage.chapter}-${first ?? "x"}-${last ?? "x"}`}
+            passage={passage}
+            size="body"
+          />
+        );
+      })}
+    </View>
+  );
+}
+
+/** one card for a holy day or a lesser feast, composed from the church's own
+ * observation. sections only render when that book actually supplies them. */
+export function FeastCard({
+  feast,
+  tradition,
+  showTitle = true,
+  showBio = true,
+  showLiturgy = true,
+}: {
+  feast: FeastIdentity;
+  tradition: CalendarTradition;
+  showTitle?: boolean;
+  showBio?: boolean;
+  showLiturgy?: boolean;
+}) {
+  const styles = useThemedStyles(sanctoraleCardStyles);
+  const subheading = useSubheading();
+  const observation = observationForTradition(feast, tradition);
+  const name = observation.name;
+  const date = feastMonthDayLabel(observation.month, observation.day);
+  const calendarLine = `${CHURCH_CALENDARS[tradition]} Calendar`;
+  const bio =
+    SANCTORALE_BIOS[feast.slug] ??
+    LESSER_FEAST_BIOS[feast.slug] ??
+    OLDER_FEAST_BIOS[feast.slug];
+  const propers = showLiturgy ? propersForFeast(feast, tradition) : null;
+  const link = BOOK_LINK[tradition];
+  // lesser feasts keep the subheading voice; only holy days take the heading
+  const titleStyle =
+    feast.rank === "lesser"
+      ? [subheading, styles.lesserFeastTitle]
+      : styles.detailTitle;
+
+  return (
+    <View>
+      {showTitle ? <Text style={titleStyle}>{name}</Text> : null}
+      <Text style={styles.detailSubtitle}>
+        {showTitle ? `${calendarLine}\n` : null}
+        {date}
+        {feast.trial ? " · Trial use" : ""}
+      </Text>
+
+      {showBio ? (
+        <View style={styles.group}>
+          {bio ? (
+            <Text style={styles.bioText}>{bio}</Text>
+          ) : (
+            <Text style={styles.bioText}>{`Commemorated on ${date}.`}</Text>
+          )}
+          <WikiLinks name={name} slug={feast.slug} />
+          {link ? (
+            <Pressable
+              style={({ hovered }) => [
+                styles.linkRow,
+                hovered && { backgroundColor: "var(--control-hover)" },
+              ]}
+              onPress={() => window.open(link.url, "_blank", "noreferrer")}
+              accessibilityRole="link"
+              accessibilityLabel={link.label}
+            >
+              <Text style={styles.link}>{link.label}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+
+      {propers && propers.psalms.length > 0 ? (
+        <View style={styles.group}>
+          <Text style={[subheading, styles.tightSubheading]}>
+            {propers.psalmSource === "course"
+              ? "Psalms (ordinary course)"
+              : "Psalms"}
+          </Text>
+          {propers.psalms.map((ref, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: an appointment can repeat a citation
+            <PsalmRow key={`${ref}-${i}`} ref={ref} tradition={tradition} />
+          ))}
+        </View>
+      ) : null}
+
+      {propers && propers.readings.length > 0 ? (
+        <View style={styles.group}>
+          <Text style={[subheading, styles.tightSubheading]}>Readings</Text>
+          {propers.readings.map((ref, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: an appointment can repeat a citation
+            <ReadingRow key={`${ref}-${i}`} ref={ref} />
+          ))}
+        </View>
+      ) : null}
+
+      {propers?.collect ? (
+        <View style={styles.group}>
+          <Text style={[subheading, styles.tightSubheading]}>Collect</Text>
+          <Text style={styles.collectRite}>{propers.collect.title}</Text>
+          {appointmentInCollectTitle(name, propers.collect.title) ? null : (
+            <Text style={styles.lessonRef}>{`Appointed for ${name}`}</Text>
+          )}
+          <Text style={styles.collectText}>{propers.collect.text}</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}

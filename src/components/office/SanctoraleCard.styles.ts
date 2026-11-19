@@ -24,6 +24,11 @@ export const sanctoraleCardStyles = defineThemedStyles({
   timeLabel: {
     marginTop: 0,
   },
+  // feast-card subheadings hug the Appointment/Collect text they introduce
+  tightSubheading: {
+    marginTop: 18,
+    marginBottom: 2,
+  },
   // consecutive psalms sit apart; the leading one after a time marker adds no
   // top margin of its own, so the shared subheading above keeps its small gap
   // below and hugs the psalm it introduces
@@ -87,6 +92,11 @@ export const sanctoraleCardStyles = defineThemedStyles({
     lineHeight: 38,
     color: "var(--text)",
     marginBottom: 4,
+  },
+  // a lesser feast's name is a block title, not the page heading, so it keeps
+  // the shared subheading voice with its opening top margin dropped
+  lesserFeastTitle: {
+    marginTop: 0,
   },
   detailSubtitle: {
     fontFamily: "var(--ui-font, system-ui)",

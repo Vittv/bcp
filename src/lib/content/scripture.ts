@@ -314,6 +314,15 @@ export async function getPassagesFromDolRef(
   let lastChapter = firstParsed.chapter;
 
   for (const group of groups) {
+    // a group that names its own book and carries only a chapter ("Proverbs
+    // 20") appoints the whole chapter. without this the chapter number would
+    // be reused as a verse in the next loop ("Proverbs 20:20").
+    const own = parseDolRef(books, group);
+    if (own && own.verseStart === undefined && own.endChapter === undefined) {
+      const passage = await getPassageFromDolRef(books, loadBook, group);
+      if (passage) results.push(passage);
+      continue;
+    }
     for (let range of group.split(",").map((s) => s.trim())) {
       // only the first range of the ref carries the book name; strip it so we
       // always rebuild fullRef from the running chapter

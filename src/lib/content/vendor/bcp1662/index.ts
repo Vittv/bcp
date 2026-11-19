@@ -371,7 +371,7 @@ export function isBcp1662DailyAllNull(entry: Bcp1662DailyEntry): boolean {
   return !m.first && !m.second && !e.first && !e.second;
 }
 
-function normalizeFeastKey(name: string): string {
+export function normalizeFeastKey(name: string): string {
   return name
     .toLowerCase()
     .replace(/&/g, "and")

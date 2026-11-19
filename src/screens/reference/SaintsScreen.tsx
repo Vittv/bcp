@@ -6,14 +6,14 @@ import {
   useMemo,
 } from "react";
 import { Pressable, Text, View } from "react-native";
-import { HolyDayCard } from "../../components/office/HolyDayCard";
-import { SanctoraleCard } from "../../components/office/SanctoraleCard";
+import { FeastCard } from "../../components/office/FeastCard";
 import { officeBarStyles } from "../../components/shell/officeBarStyles";
 import { useEdition } from "../../context/EditionContext";
 import { usePalette } from "../../context/PaletteContext";
 import {
   type FeastIdentity,
   feastMonthDayShortLabel,
+  feastNameForTradition,
   holyDayBySlugForTradition,
   searchHolyDaysForTradition,
 } from "../../lib/calendar/feastsByTradition";
@@ -48,16 +48,16 @@ export function SaintsScreen({
   const styles = useThemedStyles(styleDef);
   const slug = openSaint ?? defaultSaint(tradition);
   const feast = holyDayBySlugForTradition(slug, tradition);
-  const detail =
-    tradition === "tec" ? (
-      <SanctoraleCard
-        slug={slug}
-        showBio={saintBio}
-        showLiturgy={saintLiturgy}
-      />
-    ) : feast ? (
-      <HolyDayCard feast={feast} tradition={tradition} />
-    ) : null;
+  // a shared feast keeps one page; the card shows the selected church's
+  // printed name, date, biography and propers.
+  const detail = feast ? (
+    <FeastCard
+      feast={feast}
+      tradition={tradition}
+      showBio={saintBio}
+      showLiturgy={saintLiturgy}
+    />
+  ) : null;
   if (isMobile) {
     return (
       <View style={styles.container}>
@@ -128,7 +128,13 @@ export function SaintsBar({ leading }: { leading?: ReactNode }) {
       <View style={styles.barLeft}>
         {leading}
         <PickerButton
-          label={sel && "title" in sel ? sel.title : (sel?.name ?? "Holy day")}
+          label={
+            sel && "title" in sel
+              ? sel.title
+              : sel
+                ? feastNameForTradition(sel, tradition)
+                : "Holy day"
+          }
           meta={sel ? feastMonthDayShortLabel(sel.month, sel.day) : undefined}
           onPress={() => palette.open("saints")}
         />
@@ -144,11 +150,13 @@ export function SaintsBar({ leading }: { leading?: ReactNode }) {
 // active state changed, instead of rebuilding the whole list every move
 const SaintRow = memo(function SaintRow({
   hit,
+  name,
   active,
   selected,
   onSelect,
 }: {
   hit: FeastIdentity;
+  name: string;
   active: boolean;
   selected: string | null;
   onSelect: (slug: string | null) => void;
@@ -167,7 +175,7 @@ const SaintRow = memo(function SaintRow({
             ellipsizeMode="tail"
             style={[styles.saintTitle, a && styles.rowTextActive]}
           >
-            {hit.name}
+            {name}
           </Text>
           <Text style={[styles.saintDate, a && styles.rowTextActive]}>
             {feastMonthDayShortLabel(hit.month, hit.day)}
@@ -212,6 +220,7 @@ export const SaintIndex = memo(function SaintIndex({
         <SaintRow
           key={hit.slug}
           hit={hit}
+          name={feastNameForTradition(hit, tradition)}
           active={i === cursor}
           selected={selected}
           onSelect={onSelect}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { useTranslation } from "../../context/TranslationContext";
+import { calendarLabel } from "../../lib/calendar/feastsByTradition";
 import {
   wikipediaArticleUrl,
   wikipediaSearchUrl,
@@ -73,11 +74,14 @@ function LessonRow({ ref, first }: { ref: string; first?: boolean }) {
 // used by the Saints reference pane and the mention modal.
 export function SanctoraleCard({
   slug,
+  calendar = calendarLabel("tec"),
   showTitle = true,
   showBio = true,
   showLiturgy = true,
 }: {
   slug: string;
+  /** the church and book to name under the title. */
+  calendar?: string;
   showTitle?: boolean;
   /** render the biographical note. */
   showBio?: boolean;
@@ -130,6 +134,7 @@ export function SanctoraleCard({
     <View>
       {showTitle ? <Text style={styles.detailTitle}>{entry.title}</Text> : null}
       <Text style={styles.detailSubtitle}>
+        {showTitle ? `${calendar}\n` : null}
         {sanctoraleDateLabel(entry)}
         {entry.eveOf ? ` · eve of ${feast?.title ?? entry.eveOf}` : ""}
       </Text>

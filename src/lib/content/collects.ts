@@ -16,6 +16,31 @@ const SECTIONS: CollectSection[] = [
   "various-occasions",
 ];
 
+// a collect already named for the day ("St. Andrew") is its own appointment
+// label; the separate "Appointed for ..." rubric would just repeat it.
+function appointmentKey(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\bst\b/g, "saint")
+    .replace(/[^a-z0-9\s]/g, "")
+    .replace(
+      /\b(the|of|day|holy|apostle|evangelist|martyr|brother|lord)\b/g,
+      "",
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function appointmentInCollectTitle(
+  appointment: string | undefined,
+  title: string,
+): boolean {
+  if (!appointment) return false;
+  const a = appointmentKey(appointment);
+  const t = appointmentKey(title);
+  return a.length > 0 && t.length > 0 && (t.includes(a) || a.includes(t));
+}
+
 function findCollect(
   rite: CollectRite,
   section: CollectSection,

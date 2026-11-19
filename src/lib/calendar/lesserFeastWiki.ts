@@ -403,12 +403,6 @@ export const LESSER_FEAST_WIKI: Record<string, LesserFeastWikiLink[]> = {
   "melania-the-elder-monastic-410": [{ title: "Melania the Elder" }],
   "monica-mother-of-augustine-of-hippo-387": [{ title: "Saint Monica" }],
   "moses-the-black-monastic-and-martyr-400": [{ title: "Moses the Black" }],
-  "nativity-of-the-blessed-virgin-mary": [
-    {
-      title: "Nativity of Mary",
-      label: "The Nativity of the Blessed Virgin Mary",
-    },
-  ],
   "nicholas-ferrar-deacon": [{ title: "Nicholas Ferrar" }],
   "nicholas-of-myra-bishop-342": [
     { title: "Saint Nicholas", label: "Nicholas of Myra" },
@@ -550,6 +544,9 @@ export const LESSER_FEAST_WIKI: Record<string, LesserFeastWikiLink[]> = {
     { title: "Hermione of Ephesus", label: "Hermione" },
   ],
   "zita-of-tuscany-worker-of-charity": [{ title: "Zita" }],
+  // no english article names either commemoration; keep the search fallback
+  "martyrs-of-the-reformation-era": [],
+  "maryam-of-qidun-monastic-fourth-century": [],
 };
 
 /** direct url for a verified english wikipedia article. */
