@@ -1,24 +1,38 @@
 import { Text, View } from "react-native";
+import type { BcpEdition } from "../../context/EditionContext";
 import { CHROME_FONT, HEADING_FONT } from "../../lib/fonts";
 import { dayLabel } from "../../lib/office";
-import type { OfficeDocument } from "../../lib/office/types";
 import {
   defineThemedStyles,
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
 
-// the masthead above every composed office; the Today page and the
-// reference offices page share it verbatim so the two read identically
-export function OfficeHeader({ document }: { document: OfficeDocument }) {
+// the masthead above every composed office; Today and the reference offices
+// page share it verbatim, and each edition supplies only its own label
+export const OFFICE_EDITION_LABELS: Record<BcpEdition, string> = {
+  "1979": "1979 - The Episcopal Church BCP",
+  "1662": "1662 - Church of England BCP",
+  "1962": "1962 - Canadian Book of Common Prayer",
+};
+
+export function OfficeHeader({
+  officeName,
+  date,
+  title,
+  editionLabel,
+}: {
+  officeName: string;
+  date: Parameters<typeof dayLabel>[0];
+  title?: string | null;
+  editionLabel: string;
+}) {
   const styles = useThemedStyles(officeHeaderStyles);
   return (
     <View style={styles.header}>
-      <Text style={styles.officeName}>{document.officeName}</Text>
-      <Text style={styles.dateLabel}>{dayLabel(document.date)}</Text>
-      {document.entryTitle ? (
-        <Text style={styles.entryTitle}>{document.entryTitle}</Text>
-      ) : null}
-      <Text style={styles.editionLabel}>1979 - The Episcopal Church BCP</Text>
+      <Text style={styles.officeName}>{officeName}</Text>
+      <Text style={styles.dateLabel}>{dayLabel(date)}</Text>
+      {title ? <Text style={styles.entryTitle}>{title}</Text> : null}
+      <Text style={styles.editionLabel}>{editionLabel}</Text>
     </View>
   );
 }

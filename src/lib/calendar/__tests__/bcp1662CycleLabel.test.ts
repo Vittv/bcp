@@ -1,5 +1,13 @@
 import { describe, expect, it } from "bun:test";
-import { bcp1662CycleLabel } from "../bcp1662";
+import { bcp1662CycleLabel, bcp1662ShortCycleLabel } from "../bcp1662";
+
+describe("bcp1662ShortCycleLabel", () => {
+  it("keeps the Trinity count without the long Sunday wording", () => {
+    expect(bcp1662ShortCycleLabel({ year: 2026, month: 11, day: 17 })).toBe(
+      "Trinity 24",
+    );
+  });
+});
 
 describe("bcp1662CycleLabel", () => {
   it("counts Sundays after Trinity in the green season", () => {

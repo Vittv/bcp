@@ -541,7 +541,11 @@ export async function expandBcp1962End(
   );
   if (matches.length === 0) return { ref };
   const leadingBook = /^([A-Za-z][A-Za-z .]*?)\s+(?=\d)/.exec(ref.trim());
-  const bookName = (leadingBook?.[1] ?? "").trim();
+  const bookName = (leadingBook?.[1] ?? "")
+    .trim()
+    .replace(/\.$/, "")
+    .replace(/^((?:[123]\s+)?)(?:St\.?\s+|Saint\s+)/i, "$1")
+    .trim();
   // a parenthetical "43–end" inherits the chapter of the main citation
   const chapterFromRef = /(\d{1,3}):(\d{1,3})/.exec(ref)?.[1];
   const book = bookName ? await loadBook(bookName) : null;

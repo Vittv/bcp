@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { type LayoutChangeEvent, Text, View } from "react-native";
 import { useEdition } from "../../context/EditionContext";
 import { seasonLabel } from "../../lib/calendar/observances";
@@ -49,6 +49,8 @@ type StatusBarProps = {
   // 1662 and 1962 use their own Sunday/week counts instead of the 1979
   // Year/Proper segment (e.g. "Twenty-fourth Sunday after Trinity")
   cycleLabel?: string | null;
+  // short year/Sunday count shown once the long label no longer fits
+  compactCycleLabel?: string | null;
   officeName: string;
   scrollPct: number;
   // label of the reference document currently open (e.g. "Psalm 23");
@@ -66,6 +68,7 @@ export function StatusBar({
   seasonColor,
   slot,
   cycleLabel,
+  compactCycleLabel,
   officeName,
   scrollPct,
   reading,
@@ -99,9 +102,14 @@ export function StatusBar({
         {!compact && cycleLabel ? (
           <>
             <Text style={styles.sep}>•</Text>
-            <Text style={styles.text} numberOfLines={1}>
-              {cycleLabel}
-            </Text>
+            {cycleLabel.split(" • ").map((part, i) => (
+              <Fragment key={part}>
+                {i > 0 ? <Text style={styles.sep}>•</Text> : null}
+                <Text style={styles.text} numberOfLines={1}>
+                  {part}
+                </Text>
+              </Fragment>
+            ))}
           </>
         ) : !compact && edition === "1979" ? (
           <>
@@ -110,6 +118,14 @@ export function StatusBar({
             <Text style={styles.sep}>•</Text>
             <Text style={styles.text} numberOfLines={1}>
               {weekLabel(slot)}
+            </Text>
+          </>
+        ) : null}
+        {compact && compactCycleLabel ? (
+          <>
+            {veryCompact ? null : <Text style={styles.sep}>•</Text>}
+            <Text style={styles.text} numberOfLines={1}>
+              {compactCycleLabel}
             </Text>
           </>
         ) : null}

@@ -22,8 +22,10 @@ import {
 import { parseLessonRef } from "./lessons";
 import { getBookMeta, getPassageFromDolRef, parseDolRef } from "./scripture";
 import type { Half, KjvPassage, LessonRef, PsalmPassage } from "./types";
+import { normalizeFeastKey } from "./vendor/bcp1662";
 import {
   BCP1962_OFFICE_TEXT,
+  BCP1962_PROPER_COLLECTS,
   type Bcp1962LessonPair,
   type Bcp1962LessonSet,
   type Bcp1962Office,
@@ -38,6 +40,7 @@ import {
   getBcp1962OfficeText,
   getBcp1962ProperCollect,
   getBcp1962ProperPsalms,
+  getBcp1962PsalmPassage,
   getBcp1962PsalmPassages,
   getBcp1962Section,
   getBcp1962WeekdayPsalms,
@@ -110,12 +113,14 @@ const LESSON_BOOK_IDS: Record<string, string> = {
 export function parseBcp1962LessonRef(ref: string) {
   let text = ref.trim();
   // canonicalize the book id and the witness's dotted chapter.verse notation
+  text = text.replace(/^((?:[123]\s+)?)(?:St\.?|Saint)\s+/i, "$1");
   text = text.replace(/^([A-Za-z][A-Za-z .]*?)\s+(?=\d)/, (whole) => {
     const key = whole.trim().replace(/\.$/, "");
     return `${LESSON_BOOK_IDS[key] ?? key} `;
   });
   text = text
     .replace(/&/g, ",")
+    .replace(/\u2014/g, "–")
     .replace(/([A-Za-z])\.(?=\s|$)/g, "$1")
     .replace(/(\d{1,3})\.\s*(\d{1,3})/g, "$1:$2")
     .replace(/\s+/g, " ")
@@ -206,6 +211,70 @@ function properPsalmId(observance: Bcp1962Observance): string | undefined {
   }
   if (sectionId === "lent-5" && dayKey === "sunday") return "passion-sunday";
   if (getBcp1962ProperPsalms(sectionId)) return sectionId;
+  return undefined;
+}
+
+const COLLECT_ORDINALS = [
+  "",
+  "First",
+  "Second",
+  "Third",
+  "Fourth",
+  "Fifth",
+  "Sixth",
+  "Seventh",
+  "Eighth",
+  "Ninth",
+  "Tenth",
+  "Eleventh",
+  "Twelfth",
+  "Thirteenth",
+  "Fourteenth",
+  "Fifteenth",
+  "Sixteenth",
+  "Seventeenth",
+  "Eighteenth",
+  "Nineteenth",
+  "Twentieth",
+  "Twenty-first",
+  "Twenty-second",
+  "Twenty-third",
+  "Twenty-fourth",
+  "Twenty-fifth",
+  "Twenty-sixth",
+];
+
+// the lectionary calls a Sunday "Trinity 24", while the collect table prints
+// "THE TWENTY-FOURTH SUNDAY AFTER TRINITY"; bridge the two naming schemes
+function bcp1962SundayCollectName(
+  observance: Bcp1962Observance,
+): string | null {
+  const numbered = /^(advent|epiphany|lent|easter|trinity)-(\d+)$/.exec(
+    observance.sectionId,
+  );
+  if (!numbered || observance.dayKey !== "sunday") return null;
+  const ordinal = COLLECT_ORDINALS[Number(numbered[2])] ?? numbered[2];
+  const seasons: Record<string, string> = {
+    advent: "IN ADVENT",
+    epiphany: "AFTER THE EPIPHANY",
+    lent: "IN LENT",
+    easter: "AFTER EASTER",
+    trinity: "AFTER TRINITY",
+  };
+  return `${ordinal.toUpperCase()} SUNDAY ${seasons[numbered[1]]}`;
+}
+
+function findBcp1962Collect(names: Array<string | null | undefined>) {
+  for (const name of names) {
+    if (!name) continue;
+    const direct = getBcp1962ProperCollect(name);
+    if (direct) return direct;
+    const key = normalizeFeastKey(name);
+    const match = BCP1962_PROPER_COLLECTS.collects.find((c) =>
+      normalizeFeastKey(c.name).includes(key),
+    );
+    if (match) return match;
+  }
   return undefined;
 }
 
@@ -512,7 +581,15 @@ export type Bcp1962OfficeSectionKey =
 export type Bcp1962OfficeNode =
   | { kind: "heading"; text: string }
   | { kind: "rubric"; text: string }
-  | { kind: "text"; text: string; speaker?: string }
+  | {
+      kind: "text";
+      text: string;
+      speaker?: string;
+      group?: string;
+      suggested?: boolean;
+      citation?: string;
+      seasonLabel?: string;
+    }
   | {
       kind: "psalm";
       refs: string[];
@@ -573,6 +650,33 @@ function bcp1962OfficeName(office: Bcp1962Office): string {
   return office === "morning" ? "Morning Prayer" : "Evening Prayer";
 }
 
+// the printed citation trails the sentence, so the two can be styled apart
+const OPENING_CITATION_RE =
+  /\s((?:[123]\s+)?(?:St\s+[A-Z][a-z]+|[A-Z][a-z]+)\s+\d+\.\s*\d+(?:,\s*\d+)*\.?)$/;
+
+// the book's opening sentences are grouped by season; the first sentence of
+// the current season is suggested, falling back to the book's first sentence
+function bcp1962OpeningLabel(
+  observance: Bcp1962Observance,
+): string | undefined {
+  const bySeason: Record<string, string> = {
+    advent: "Advent",
+    christmastide: "Christmas",
+    "after-christmas": "Christmas",
+    epiphany: "Epiphany",
+    "pre-lent": "Lent",
+    lent: "Lent",
+    "holy-week": "Good Friday",
+    "easter-week": "Easter",
+    easter: "Easter",
+    ascension: "Ascension",
+    whitsunday: "Whitsunday and Embertide",
+    trinity: "Trinity",
+    "before-advent": "Trinity",
+  };
+  return bySeason[observance.season];
+}
+
 /**
  * Compose a full 1962 Morning or Evening Prayer from the vendored fixed texts,
  * canticles and collects together with the date's lessons and psalms.
@@ -593,12 +697,29 @@ export function composeBcp1962Office(
   if (officeDef?.openingRubric) {
     openingNodes.push({ kind: "rubric", text: officeDef.openingRubric });
   }
-  for (const sentence of common.openingSentences ?? []) {
+  const sentences = common.openingSentences ?? [];
+  const suggestedLabel = bcp1962OpeningLabel(source.observance);
+  const suggestedIndex = sentences.findIndex((s) => s.label === suggestedLabel);
+  const normalizeLabel = (s: string) => s.replace(/[’']/g, "'").toLowerCase();
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i];
+    const label = sentence.label;
+    const prefix = `${label}. `;
+    const printed = normalizeLabel(sentence.text).startsWith(
+      normalizeLabel(prefix),
+    );
+    const body = printed ? sentence.text.slice(prefix.length) : sentence.text;
+    const citation = body.match(OPENING_CITATION_RE);
     openingNodes.push({
       kind: "text",
-      text: `${sentence.label}. ${sentence.text}`,
+      text: citation ? body.slice(0, citation.index).trimEnd() : body,
+      citation: citation?.[1],
+      seasonLabel: printed ? `${label}.` : undefined,
+      group: label,
+      suggested: i === (suggestedIndex >= 0 ? suggestedIndex : 0),
     });
   }
+  openingNodes.push({ kind: "heading", text: "Confession of Sin" });
   if (common.exhortation) {
     openingNodes.push({ kind: "text", text: common.exhortation });
   }
@@ -611,8 +732,12 @@ export function composeBcp1962Office(
   }
   openingNodes.push({ kind: "text", text: common.absolution_priest });
   if (common.amen_rubric) {
-    openingNodes.push({ kind: "rubric", text: common.amen_rubric });
-    openingNodes.push({ kind: "text", text: "Amen." });
+    // the rubric directs the people's response; the response gets its own line
+    openingNodes.push({
+      kind: "rubric",
+      text: common.amen_rubric.replace(/[\s,]*Amen\.?\s*$/, ""),
+    });
+    openingNodes.push({ kind: "text", text: "Amen.", speaker: "people" });
   }
   if (officeDef?.lordsPrayerOpeningRubric) {
     openingNodes.push({
@@ -648,20 +773,31 @@ export function composeBcp1962Office(
     }
     if (common.venite) {
       openingNodes.push({ kind: "heading", text: common.venite.title });
-      if (common.venite.rubric) {
-        openingNodes.push({ kind: "rubric", text: common.venite.rubric });
+      const passage = getBcp1962PsalmPassage("95");
+      if (passage) {
+        openingNodes.push({
+          kind: "psalm",
+          refs: ["95"],
+          passages: [{ ref: "95", passage }],
+        });
+        const lines = common.venite.text.split("\n");
+        const doxology = lines[lines.length - 1];
+        if (doxology?.startsWith("Glory be to the Father")) {
+          openingNodes.push({ kind: "text", text: doxology });
+        }
+      } else {
+        openingNodes.push({ kind: "text", text: common.venite.text });
       }
-      openingNodes.push({ kind: "text", text: common.venite.text });
     }
   }
   if (officeDef?.psalmsRubric) {
     openingNodes.push({ kind: "rubric", text: officeDef.psalmsRubric });
   }
-  if (common.psalms_gloria_rubric && common.gloria_patri) {
-    openingNodes.push({
-      kind: "rubric",
-      text: `${common.psalms_gloria_rubric}\n${common.gloria_patri}`,
-    });
+  if (common.psalms_gloria_rubric) {
+    openingNodes.push({ kind: "rubric", text: common.psalms_gloria_rubric });
+  }
+  if (common.gloria_patri) {
+    openingNodes.push({ kind: "text", text: common.gloria_patri });
   }
 
   const psalmRefs = resolved.psalms ?? [];
@@ -736,6 +872,7 @@ export function composeBcp1962Office(
     }
   }
 
+  // the book appoints the Apostles' Creed; Athanasian is an any-day alternative
   const creedNodes: Bcp1962OfficeNode[] = [
     {
       kind: "creed",
@@ -743,7 +880,7 @@ export function composeBcp1962Office(
       title: "The Apostles' Creed",
       rubric: officeDef?.creedRubric ?? common.creed_rubric,
       text: common.apostles_creed,
-      suggested: !common.athanasian_creed,
+      suggested: true,
     },
   ];
   if (common.athanasian_creed) {
@@ -753,7 +890,7 @@ export function composeBcp1962Office(
       title: "The Creed of Saint Athanasius",
       rubric: common.athanasian_creed_rubric,
       text: common.athanasian_creed,
-      suggested: Boolean(common.athanasian_creed),
+      suggested: false,
     });
   }
 
@@ -780,12 +917,12 @@ export function composeBcp1962Office(
   if (officeDef?.collectsRubric) {
     collectNodes.push({ kind: "rubric", text: officeDef.collectsRubric });
   }
-  const collectCandidates = [resolved.name, source.name, title].filter(
-    (n): n is string => typeof n === "string" && n.length > 0,
-  );
-  const collectOfDay = collectCandidates
-    .map((name) => getBcp1962ProperCollect(name))
-    .find((c) => c !== undefined);
+  const collectOfDay = findBcp1962Collect([
+    resolved.name,
+    source.name,
+    bcp1962SundayCollectName(source.observance),
+    title,
+  ]);
   if (collectOfDay) {
     collectNodes.push({ kind: "heading", text: "The Collect of the Day" });
     collectNodes.push({ kind: "rubric", text: collectOfDay.name });
@@ -872,7 +1009,11 @@ export function composeBcp1962FixedOffice(
     if (entry.kind === "rubric" || entry.kind === "heading") {
       return { kind: entry.kind, text: entry.text };
     }
-    return { kind: "text", text: entry.text, speaker: entry.speaker };
+    return {
+      kind: "text",
+      text: entry.text,
+      speaker: entry.speaker === "answer" ? "people" : entry.speaker,
+    };
   });
   return {
     edition: "1962",
@@ -911,7 +1052,11 @@ export function composeBcp1962FamilyPrayer(
       if (entry.kind === "rubric" || entry.kind === "heading") {
         return { kind: entry.kind, text: entry.text };
       }
-      return { kind: "text", text: entry.text, speaker: entry.speaker };
+      return {
+        kind: "text",
+        text: entry.text,
+        speaker: entry.speaker === "answer" ? "people" : entry.speaker,
+      };
     },
   );
   return {

@@ -206,7 +206,7 @@ export function ReadingsControl({
   value,
   onChange,
 }: {
-  choices: OfficeChoices;
+  choices: Pick<OfficeChoices, "lessonSlots">;
   value: string;
   onChange: (id: string) => void;
 }) {

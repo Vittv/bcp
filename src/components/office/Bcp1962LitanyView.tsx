@@ -6,15 +6,17 @@ import {
   SERIF_FONT,
   SERIF_ITALIC_FONT,
 } from "../../lib/fonts";
-import { dayLabel } from "../../lib/office";
 import {
   defineThemedStyles,
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
+import { OFFICE_EDITION_LABELS, OfficeHeader } from "./OfficeHeader";
 
 const SPEAKERS: Record<string, string> = {
   minister: "Minister",
+  priest: "Priest",
   people: "People",
+  answer: "Answer",
   all: "All",
 };
 
@@ -30,8 +32,11 @@ export function Bcp1962LitanyView({
   const styles = useThemedStyles(litanyStyles);
   return (
     <View>
-      <Text style={styles.header}>{doc.officeName}</Text>
-      <Text style={styles.date}>{dayLabel(doc.date)}</Text>
+      <OfficeHeader
+        officeName={doc.officeName}
+        date={doc.date}
+        editionLabel={OFFICE_EDITION_LABELS["1962"]}
+      />
       {doc.nodes.map((node, i) => {
         if (node.kind === "rubric") {
           if (!showRubrics) return null;
@@ -71,18 +76,6 @@ export function Bcp1962LitanyView({
 }
 
 const litanyStyles = defineThemedStyles({
-  header: {
-    fontFamily: HEADING_FONT,
-    fontSize: 26,
-    color: "var(--text)",
-    marginBottom: 4,
-  },
-  date: {
-    fontFamily: CHROME_FONT,
-    fontSize: 13,
-    color: "var(--text-secondary)",
-    marginBottom: 18,
-  },
   heading: {
     fontFamily: HEADING_FONT,
     fontSize: 18,

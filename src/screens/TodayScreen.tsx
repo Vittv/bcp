@@ -1,5 +1,8 @@
 import { Platform, ScrollView } from "react-native";
-import { OfficeHeader } from "../components/office/OfficeHeader";
+import {
+  OFFICE_EDITION_LABELS,
+  OfficeHeader,
+} from "../components/office/OfficeHeader";
 import { OfficeToc, useOfficeTocVisible } from "../components/office/OfficeToc";
 import { OfficeView } from "../components/office/OfficeView";
 import type { TabId } from "../components/shell/OfficeTabs";
@@ -31,7 +34,12 @@ export function TodayScreen({
 
   const inner = (
     <>
-      <OfficeHeader document={document} />
+      <OfficeHeader
+        officeName={document.officeName}
+        date={document.date}
+        title={document.entryTitle}
+        editionLabel={OFFICE_EDITION_LABELS["1979"]}
+      />
       <OfficeView
         document={document}
         showRubrics={showRubrics}

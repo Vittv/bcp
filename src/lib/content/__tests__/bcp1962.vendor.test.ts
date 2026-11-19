@@ -76,7 +76,7 @@ describe("bcp1962 citation normalization", () => {
 
   it("expands end using a loaded chapter", async () => {
     const load = async (name: string) =>
-      name.trim() === "Isa."
+      name === "Isa" || name === "Isa."
         ? {
             verses: {
               "2": { "1": "a", "8": "b", "22": "c" },

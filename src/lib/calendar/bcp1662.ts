@@ -424,6 +424,15 @@ export function bcp1662CycleLabel(date: CalendarDate): string | null {
   return `${numberToOrdinal(n)} Sunday after Trinity`;
 }
 
+// the narrow status bar keeps the same count without the long Sunday wording
+export function bcp1662ShortCycleLabel(date: CalendarDate): string | null {
+  const m = bcp1662MoveableDays(date.year);
+  const sunday = toDays(sundayOnOrBefore(date));
+  if (sunday < toDays(m.trinity) || sunday >= toDays(m.advent)) return null;
+  const n = (sunday - toDays(m.trinity)) / 7;
+  return n <= 0 ? "Trinity" : `Trinity ${n}`;
+}
+
 export function athanasianCreedDay(obs: Bcp1662Observance): boolean {
   if (
     obs.sunday?.kind === "easter" ||
