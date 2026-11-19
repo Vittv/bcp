@@ -561,11 +561,28 @@ export type Bcp1962LitanyDoc = {
 
 /** compose the 1962 Litany as a standalone office of rubrics and spoken lines. */
 export function composeBcp1962Litany(date: CalendarDate): Bcp1962LitanyDoc {
+  const lines = getBcp1962Litany().lines;
+  const supplicationStart = lines.findIndex(
+    (l) => l.kind === "heading" && l.text === "A Supplication",
+  );
+  const chrysostomStart = lines.findIndex(
+    (l) => l.kind === "heading" && l.text === "A Prayer of Saint Chrysostom",
+  );
+  // the book prints the optional supplication after the Grace, but its rubric
+  // directs it before the Prayer of Saint Chrysostom
+  const ordered =
+    supplicationStart > chrysostomStart && chrysostomStart >= 0
+      ? [
+          ...lines.slice(0, chrysostomStart),
+          ...lines.slice(supplicationStart),
+          ...lines.slice(chrysostomStart, supplicationStart),
+        ]
+      : lines;
   return {
     edition: "1962",
     officeName: "The Litany",
     date,
-    nodes: getBcp1962Litany().lines.map((line) => ({ ...line })),
+    nodes: ordered.map((line) => ({ ...line })),
   };
 }
 

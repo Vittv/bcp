@@ -24,6 +24,14 @@ describe("bcp1962 litany", () => {
     expect(doc.officeName).toBe("The Litany");
     expect(doc.nodes[0].kind).toBe("rubric");
     expect(doc.nodes[doc.nodes.length - 1].kind).toBe("rubric");
+    const heading = (text: string) =>
+      doc.nodes.findIndex((n) => n.kind === "heading" && n.text === text);
+    expect(heading("A Supplication")).toBeLessThan(
+      heading("A Prayer of Saint Chrysostom"),
+    );
+    expect(heading("The Grace")).toBeGreaterThan(
+      heading("A Prayer of Saint Chrysostom"),
+    );
     const speakers = new Set(
       doc.nodes.flatMap((n) =>
         n.kind === "text" && n.speaker ? [n.speaker] : [],
