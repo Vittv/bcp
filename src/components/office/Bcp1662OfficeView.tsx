@@ -5,19 +5,15 @@ import type {
   Bcp1662OfficeNode,
 } from "../../lib/content/bcp1662";
 import { BCP1662_OFFICE_TEXT } from "../../lib/content/vendor/bcp1662";
-import {
-  CHROME_FONT,
-  HEADING_FONT,
-  SERIF_FONT,
-  SERIF_ITALIC_FONT,
-} from "../../lib/fonts";
-import { dayLabel } from "../../lib/office";
+import { SERIF_FONT, SERIF_ITALIC_FONT } from "../../lib/fonts";
 import {
   defineThemedStyles,
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
 import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { ChoiceMenu, MenuAnchor, Segmented } from "./OfficeControls";
+import { OFFICE_EDITION_LABELS, OfficeHeader } from "./OfficeHeader";
+import { officeDocumentStyles } from "./officeDocumentStyles";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 
@@ -311,12 +307,12 @@ export function Bcp1662OfficeView({
   ];
   return (
     <View>
-      <View style={styles.header}>
-        <Text style={styles.officeName}>{doc.officeName}</Text>
-        <Text style={styles.dateLabel}>{dayLabel(doc.date)}</Text>
-        {doc.title ? <Text style={styles.entryTitle}>{doc.title}</Text> : null}
-        <Text style={styles.editionLabel}>1662 - Book of Common Prayer</Text>
-      </View>
+      <OfficeHeader
+        officeName={doc.officeName}
+        date={doc.date}
+        title={doc.title}
+        editionLabel={OFFICE_EDITION_LABELS["1662"]}
+      />
       {doc.sections.map((section) => (
         <MenuAnchor key={section.key} style={styles.section}>
           {section.key === "psalms" && psalmRefs.length > 1 ? (
@@ -498,45 +494,8 @@ export function Bcp1662OfficeView({
 }
 
 const bcp1662Styles = defineThemedStyles({
-  header: {
-    marginBottom: 28,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "var(--border-content)",
-  },
-  officeName: {
-    fontFamily: HEADING_FONT,
-    fontWeight: "500",
-    fontSize: 28,
-    lineHeight: 36,
-    color: "var(--text)",
-    letterSpacing: -0.3,
-  },
-  dateLabel: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 13,
-    color: "var(--text-secondary)",
-    marginTop: 4,
-  },
-  entryTitle: {
-    fontFamily: CHROME_FONT,
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    color: "var(--accent)",
-    marginTop: 8,
-  },
-  editionLabel: {
-    fontFamily: CHROME_FONT,
-    fontSize: 11,
-    fontWeight: "500",
-    color: "var(--text-secondary)",
-    marginTop: 6,
-  },
   section: {
-    marginBottom: 20,
+    ...officeDocumentStyles.section,
     // RNW gives every View z-index 0, so without a positioned, raised
     // ancestor the page paints over an open dropdown inside this section
     position: "relative",
@@ -567,13 +526,7 @@ const bcp1662Styles = defineThemedStyles({
     marginTop: 16,
     marginBottom: 12,
   },
-  text: {
-    fontFamily: SERIF_FONT,
-    fontSize: 18,
-    lineHeight: 30,
-    color: "var(--text)",
-    marginTop: 4,
-  },
+  text: { ...officeDocumentStyles.text, marginTop: 4 },
   // collects read a step smaller and indented, as in the 1979 office
   collectText: {
     fontFamily: SERIF_FONT,
@@ -583,38 +536,15 @@ const bcp1662Styles = defineThemedStyles({
     marginTop: 4,
     paddingLeft: 4,
   },
-  speaker: {
-    fontFamily: SERIF_FONT,
-    fontWeight: "600",
-    fontSize: 15,
-    color: "var(--accent)",
-  },
-  textPeople: {
-    fontWeight: "700",
-  },
+  speaker: officeDocumentStyles.speaker,
+  textPeople: officeDocumentStyles.textPeople,
   citation: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 18,
     color: "var(--text-secondary)",
   },
-  headingRow: {
-    position: "relative",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    marginTop: 18,
-    marginBottom: 8,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "var(--border-content)",
-  },
-  headingText: {
-    marginTop: 0,
-    marginBottom: 0,
-    paddingBottom: 0,
-    borderBottomWidth: 0,
-  },
+  headingRow: { ...officeDocumentStyles.headingRow, position: "relative" },
+  headingText: officeDocumentStyles.headingText,
   controlRow: {
     position: "relative",
     marginTop: 8,
@@ -670,14 +600,7 @@ const bcp1662Styles = defineThemedStyles({
   psalmToggleTextOn: {
     color: "var(--bg)",
   },
-  rubric: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
-    lineHeight: 25,
-    color: "var(--text-secondary)",
-    marginTop: 4,
-    marginBottom: 4,
-  },
+  rubric: officeDocumentStyles.rubric,
   placeholder: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 14,
@@ -697,26 +620,11 @@ const bcp1662Styles = defineThemedStyles({
     color: "var(--text-secondary)",
   },
   lessonRef: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
-    color: "var(--text-secondary)",
+    ...officeDocumentStyles.lessonRef,
     marginTop: 4,
     marginBottom: 4,
   },
-  accent: {
-    color: "var(--accent)",
-  },
-  notes: {
-    marginTop: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "var(--border-content)",
-  },
-  noteText: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 13,
-    lineHeight: 20,
-    color: "var(--text-secondary)",
-    marginTop: 2,
-  },
+  accent: officeDocumentStyles.accent,
+  notes: officeDocumentStyles.notes,
+  noteText: officeDocumentStyles.noteText,
 });

@@ -7,6 +7,7 @@ import {
   composeBcp1962Noonday,
   composeBcp1962OfficeForDate,
   DEFAULT_BCP1962_SCRIPTURE_SETTINGS,
+  parseBcp1962LessonRef,
   resolveBcp1962LessonPassages,
   resolveBcp1962OfficeForDate,
 } from "../bcp1962";
@@ -69,6 +70,14 @@ describe("bcp1962 short offices", () => {
     expect(
       doc.sections.some((s) =>
         s.nodes.some((n) => n.kind === "text" && n.speaker === "minister"),
+      ),
+    ).toBe(true);
+    expect(
+      doc.sections.some((s) =>
+        s.nodes.some(
+          (n) =>
+            n.kind === "text" && n.text === "Amen." && n.speaker === "people",
+        ),
       ),
     ).toBe(true);
   });
@@ -146,6 +155,25 @@ describe("bcp1962 scripture resolution", () => {
     expect(passages[0]?.passages.length).toBeGreaterThan(0);
   });
 
+  it("loads a cross-chapter lesson range", async () => {
+    const passages = await resolveBcp1962LessonPassages(
+      "Acts 12. 25\u201413. 12",
+    );
+    const verses = passages[0]?.passages[0]?.verses ?? [];
+    expect(verses.length).toBe(13);
+    expect(verses[0]?.number).toBe(25);
+    expect(verses.at(-1)?.number).toBe(12);
+    expect(verses.at(-1)?.chapter).toBe(13);
+  });
+
+  it("loads every verse of an end citation", async () => {
+    const passages = await resolveBcp1962LessonPassages("Prov. 25. 11–end");
+    const verses = passages[0]?.passages[0]?.verses ?? [];
+    expect(verses.length).toBe(18);
+    expect(verses[0]?.number).toBe(11);
+    expect(verses.at(-1)?.number).toBe(28);
+  });
+
   it("resolves psalm appointments into citations", async () => {
     const office = await resolveBcp1962OfficeForDate(
       at("2026-11-29"),
@@ -172,6 +200,18 @@ describe("bcp1962 scripture resolution", () => {
   });
 });
 
+describe("bcp1962 citation parsing", () => {
+  it("accepts the book's St-prefixed gospel citations", () => {
+    expect(parseBcp1962LessonRef("St Luke 1. 46.")).toMatchObject({
+      ok: true,
+      ref: {
+        book: "Luke",
+        ranges: [{ from: { chapter: 1, verse: 46 } }],
+      },
+    });
+  });
+});
+
 describe("bcp1962 office composition", () => {
   it("composes a Morning Prayer from vendored 1962 texts", async () => {
     const doc = await composeBcp1962OfficeForDate(at("2026-11-29"), "morning");
@@ -191,6 +231,76 @@ describe("bcp1962 office composition", () => {
           n.kind === "text" && n.text.includes("Our Father who art in heaven"),
       ),
     ).toBe(true);
+    expect(opening).toContainEqual({
+      kind: "text",
+      text: "Amen.",
+      speaker: "people",
+    });
+    expect(
+      opening.some(
+        (n) => n.kind === "rubric" && n.text.includes("people shall answer"),
+      ),
+    ).toBe(true);
+    expect(opening).toContainEqual({
+      kind: "heading",
+      text: "Venite, exultemus Domino",
+    });
+    expect(
+      opening.some((n) => n.kind === "rubric" && n.text === "Psalm 95"),
+    ).toBe(false);
+    expect(
+      opening.some(
+        (n) => n.kind === "text" && n.text.startsWith("Glory be to the Father"),
+      ),
+    ).toBe(true);
+    expect(
+      opening.some(
+        (n) =>
+          n.kind === "rubric" && n.text.startsWith("Glory be to the Father"),
+      ),
+    ).toBe(false);
+    expect(opening).toContainEqual({
+      kind: "psalm",
+      refs: ["95"],
+      passages: [
+        { ref: "95", passage: expect.objectContaining({ psalm: 95 }) },
+      ],
+    });
+    expect(
+      opening.some(
+        (n) => n.kind === "text" && n.text.includes("O come, let us sing"),
+      ),
+    ).toBe(false);
+    expect(
+      opening.some(
+        (n) => n.kind === "heading" && n.text === "Confession of Sin",
+      ),
+    ).toBe(true);
+    const sentences = opening.filter(
+      (n) => n.kind === "text" && n.group !== undefined,
+    );
+    expect(sentences).toHaveLength(26);
+    const advent = sentences.find(
+      (n) => n.kind === "text" && n.seasonLabel === "Advent.",
+    );
+    expect(advent).toMatchObject({
+      kind: "text",
+      group: "Advent",
+      citation: "St Matthew 3. 2.",
+      seasonLabel: "Advent.",
+    });
+    expect(advent?.kind === "text" && advent.text).toBe(
+      "Repent ye; for the kingdom of heaven is at hand.",
+    );
+    const lentContinuation = sentences.find(
+      (n) => n.kind === "text" && n.text.startsWith("Rend your heart"),
+    );
+    expect(
+      lentContinuation?.kind === "text" && lentContinuation.seasonLabel,
+    ).toBeUndefined();
+    expect(
+      sentences.filter((n) => n.kind === "text" && n.suggested),
+    ).toHaveLength(1);
     const lessons = sections.get("lessons")?.nodes ?? [];
     expect(
       lessons.some(
@@ -211,6 +321,28 @@ describe("bcp1962 office composition", () => {
     ).toBe(true);
     const creed = sections.get("creed")?.nodes ?? [];
     expect(creed.filter((n) => n.kind === "creed")).toHaveLength(2);
+    expect(creed).toMatchObject([
+      { kind: "creed", id: "apostles", suggested: true },
+      { kind: "creed", id: "athanasian", suggested: false },
+    ]);
+  });
+
+  it("includes the Collect of the Day for a numbered Sunday", async () => {
+    const doc = await composeBcp1962OfficeForDate(at("2026-11-15"), "morning");
+    const collects =
+      doc.sections.find((s) => s.key === "collects")?.nodes ?? [];
+    expect(
+      collects.some(
+        (n) => n.kind === "heading" && n.text === "The Collect of the Day",
+      ),
+    ).toBe(true);
+    expect(
+      collects.some(
+        (n) =>
+          n.kind === "rubric" &&
+          n.text === "THE TWENTY-FOURTH SUNDAY AFTER TRINITY",
+      ),
+    ).toBe(true);
   });
 
   it("composes an Evening Prayer with the evening canticles", async () => {

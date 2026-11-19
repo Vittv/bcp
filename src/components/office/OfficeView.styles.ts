@@ -1,10 +1,9 @@
 import { CHROME_FONT, SERIF_FONT, SERIF_ITALIC_FONT } from "../../lib/fonts";
 import { defineThemedStyles } from "../../lib/theme/themedStyles";
+import { officeDocumentStyles } from "./officeDocumentStyles";
 
 export const officeViewStyles = defineThemedStyles({
-  section: {
-    marginBottom: 20,
-  },
+  section: officeDocumentStyles.section,
   headingRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -26,13 +25,7 @@ export const officeViewStyles = defineThemedStyles({
   stickyBlock: {
     paddingTop: 3,
   },
-  headingText: {
-    flexShrink: 1,
-    marginTop: 0,
-    marginBottom: 0,
-    paddingBottom: 0,
-    borderBottomWidth: 0,
-  },
+  headingText: { ...officeDocumentStyles.headingText, flexShrink: 1 },
   controlOnlyRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -53,27 +46,12 @@ export const officeViewStyles = defineThemedStyles({
     marginBottom: 24,
     alignItems: "flex-start",
   },
-  rubric: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
-    lineHeight: 25,
-    color: "var(--text-secondary)",
-    marginTop: 4,
-    marginBottom: 4,
-  },
+  rubric: officeDocumentStyles.rubric,
   rubricRepeatAntiphon: {
     marginTop: 16,
   },
-  text: {
-    fontFamily: SERIF_FONT,
-    fontSize: 18,
-    lineHeight: 30,
-    color: "var(--text)",
-    marginTop: 8,
-  },
-  textPeople: {
-    fontWeight: "700",
-  },
+  text: { ...officeDocumentStyles.text, marginTop: 8 },
+  textPeople: officeDocumentStyles.textPeople,
   halfVerse: {
     paddingLeft: 20,
   },
@@ -86,12 +64,7 @@ export const officeViewStyles = defineThemedStyles({
     marginTop: 2,
     marginBottom: 4,
   },
-  speaker: {
-    fontFamily: SERIF_FONT,
-    fontWeight: "600",
-    fontSize: 15,
-    color: "var(--accent)",
-  },
+  speaker: officeDocumentStyles.speaker,
   psalmBlock: {
     marginTop: 22,
     paddingLeft: 4,
@@ -109,11 +82,7 @@ export const officeViewStyles = defineThemedStyles({
   lessonRow: {
     marginTop: 22,
   },
-  lessonRef: {
-    fontFamily: SERIF_ITALIC_FONT,
-    fontSize: 15,
-    color: "var(--text-secondary)",
-  },
+  lessonRef: officeDocumentStyles.lessonRef,
   lessonLabel: {
     color: "var(--accent)",
   },

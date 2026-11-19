@@ -40,7 +40,7 @@ export { REPO_URL };
 
 const EDITION_OPTIONS: readonly { id: BcpEdition; label: string }[] = [
   { id: "1979", label: "1979 - The Episcopal Church BCP" },
-  { id: "1662", label: "1662 - Book of Common Prayer" },
+  { id: "1662", label: "1662 - Church of England BCP" },
   { id: "1962", label: "1962 - Anglican Church of Canada BCP" },
 ];
 

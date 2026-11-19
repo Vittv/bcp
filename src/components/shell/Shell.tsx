@@ -35,8 +35,14 @@ import {
   resolve,
   seasonFor,
 } from "../../lib/calendar";
-import { bcp1662CycleLabel } from "../../lib/calendar/bcp1662";
-import { bcp1962CycleLabel } from "../../lib/calendar/bcp1962";
+import {
+  bcp1662CycleLabel,
+  bcp1662ShortCycleLabel,
+} from "../../lib/calendar/bcp1662";
+import {
+  bcp1962CycleLabel,
+  bcp1962ShortCycleLabel,
+} from "../../lib/calendar/bcp1962";
 import {
   upcomingHolyDayForTradition,
   upcomingLesserFeastForTradition,
@@ -424,6 +430,12 @@ export function Shell() {
       : edition === "1962"
         ? bcp1962CycleLabel(today())
         : null;
+  const compactCycleLabel =
+    edition === "1662"
+      ? bcp1662ShortCycleLabel(today())
+      : edition === "1962"
+        ? bcp1962ShortCycleLabel(today())
+        : null;
   const { days: daysUntilNext, label: nextSeason } = daysUntilNextSeason(
     today(),
   );
@@ -753,6 +765,7 @@ export function Shell() {
                           seasonColor={seasonColor}
                           slot={slot}
                           cycleLabel={cycleLabel}
+                          compactCycleLabel={compactCycleLabel}
                           officeName={
                             page === "today" && edition === "1662"
                               ? tab === "morning"

@@ -4,6 +4,7 @@ import {
   bcp1962EcclesiasticalYear,
   bcp1962FirstAdvent,
   bcp1962MoveableDays,
+  bcp1962ShortCycleLabel,
   bcp1962YearForDate,
   resolveBcp1962Observance,
 } from "../bcp1962";
@@ -13,20 +14,27 @@ const at = (value: string) => {
   return { year, month, day };
 };
 
+describe("bcp1962 narrow status-bar cycle label", () => {
+  it("shortens the year and numbered Sunday", () => {
+    expect(bcp1962ShortCycleLabel(at("2026-11-29"))).toBe("Y1 Ad 1");
+    expect(bcp1962ShortCycleLabel(at("2027-10-17"))).toBe("Y1 Tr 21");
+  });
+});
+
 describe("bcp1962 status-bar cycle label", () => {
   it("names the year and the numbered Sunday", () => {
     expect(bcp1962CycleLabel(at("2026-11-29"))).toBe(
-      "Year I · First Sunday in Advent",
+      "Year I • First Sunday in Advent",
     );
     expect(bcp1962CycleLabel(at("2027-10-17"))).toBe(
-      "Year I · Twenty-first Sunday after Trinity",
+      "Year I • Twenty-first Sunday after Trinity",
     );
   });
 
   it("names named seasons and the Sunday next before Advent", () => {
     expect(bcp1962CycleLabel(at("2026-12-25"))).toContain("Christmastide");
     expect(bcp1962CycleLabel(at("2028-03-12"))).toBe(
-      "Year II · Second Sunday in Lent",
+      "Year II • Second Sunday in Lent",
     );
   });
 });

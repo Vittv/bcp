@@ -414,5 +414,39 @@ export function bcp1962CycleLabel(date: CalendarDate): string | null {
     };
     count = named[obs.sectionId] ?? null;
   }
-  return count ? `${year} · ${count}` : year;
+  return count ? `${year} • ${count}` : year;
+}
+
+// the narrow status bar needs a shorter form of the year and Sunday count
+export function bcp1962ShortCycleLabel(date: CalendarDate): string {
+  const obs = resolveBcp1962Observance(date);
+  const year = `Y${obs.year}`;
+  const numbered = /^(advent|epiphany|lent|easter|trinity)-(\d+)$/.exec(
+    obs.sectionId,
+  );
+  if (numbered) {
+    const short: Record<string, string> = {
+      advent: "Ad",
+      epiphany: "Ep",
+      lent: "Lent",
+      easter: "Ea",
+      trinity: "Tr",
+    };
+    return `${year} ${short[numbered[1]]} ${numbered[2]}`;
+  }
+  const named: Record<string, string> = {
+    christmastide: "Christmas",
+    "after-christmas-2": "Christmas 2",
+    epiphany: "Epiphany",
+    septuagesima: "Septuagesima",
+    sexagesima: "Sexagesima",
+    quinquagesima: "Quinquagesima",
+    "holy-week": "Holy Week",
+    "easter-week": "Easter Week",
+    "ascension-sunday": "Ascension",
+    whitsunday: "Whitsunday",
+    trinity: "Trinity",
+    "before-advent": "Before Advent",
+  };
+  return `${year} ${named[obs.sectionId] ?? ""}`.trim();
 }

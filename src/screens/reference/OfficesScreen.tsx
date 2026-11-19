@@ -11,7 +11,10 @@ import { Bcp1662OfficeView } from "../../components/office/Bcp1662OfficeView";
 import { Bcp1962LitanyView } from "../../components/office/Bcp1962LitanyView";
 import { Bcp1962OfficeView } from "../../components/office/Bcp1962OfficeView";
 import { Segmented } from "../../components/office/OfficeControls";
-import { OfficeHeader } from "../../components/office/OfficeHeader";
+import {
+  OFFICE_EDITION_LABELS,
+  OfficeHeader,
+} from "../../components/office/OfficeHeader";
 import { OfficeView } from "../../components/office/OfficeView";
 import { useEdition } from "../../context/EditionContext";
 import { useOfficeSettings } from "../../context/OfficeSettingsContext";
@@ -356,7 +359,12 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
         />
       </View>
       {/* same masthead as Today: name, date, feast line */}
-      <OfficeHeader document={document} />
+      <OfficeHeader
+        officeName={document.officeName}
+        date={document.date}
+        title={document.entryTitle}
+        editionLabel={OFFICE_EDITION_LABELS["1979"]}
+      />
       <OfficeView
         document={document}
         showRubrics={showRubrics}

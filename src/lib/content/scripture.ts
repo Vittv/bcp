@@ -148,6 +148,8 @@ function normalizeDolRefInput(ref: string): string {
     .replace(/^2nd\s+/i, "2 ")
     .replace(/^1st\s+/i, "1 ")
     .replace(/^([123])(?=[A-Za-z])/, "$1 ")
+    .replace(/^((?:[123]\s+)?)(?:St\.?|Saint)\s+/i, "$1")
+    .replace(/(\d+)\.\s*(?=\d)/g, "$1:")
     .replace(/\.(?=\s*\d)/g, "");
 }
 
@@ -268,11 +270,12 @@ export function parseDolRef(
   books: readonly ScriptureBookMeta[],
   ref: string,
 ): ParseResult | null {
-  const direct = parseDolRefInner(books, ref);
-  if (direct) return direct;
   const normalized = normalizeDolRefInput(ref);
-  if (normalized === ref) return null;
-  return parseDolRefInner(books, normalized);
+  if (normalized !== ref) {
+    const fromNormalized = parseDolRefInner(books, normalized);
+    if (fromNormalized) return fromNormalized;
+  }
+  return parseDolRefInner(books, ref);
 }
 
 export async function getPassageFromDolRef(
@@ -326,8 +329,17 @@ export async function getPassagesFromDolRef(
     for (let range of group.split(",").map((s) => s.trim())) {
       // only the first range of the ref carries the book name; strip it so we
       // always rebuild fullRef from the running chapter
-      if (range.toLowerCase().startsWith(book.toLowerCase())) {
-        range = range.slice(book.length).trim();
+      const own = parseDolRef(books, range);
+      if (own && own.book === book) {
+        const named = range.match(
+          /^(?:[123]\s+)?(?:St\.?\s+|Saint\s+)?[A-Za-z][A-Za-z .]*?(?=\d)/,
+        );
+        if (named) {
+          range = range
+            .slice(named[0].length)
+            .trim()
+            .replace(/(\d+)\.\s*(?=\d)/g, "$1:");
+        }
       }
       if (/:/.test(range)) {
         const parsed = parseDolRef(books, `${book} ${range}`);
