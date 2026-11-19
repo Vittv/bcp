@@ -1,0 +1,453 @@
+{
+  "meta": {
+    "edition": "1962",
+    "title": "1962 Canadian BCP, Morning and Evening Prayer fixed texts",
+    "status": "curated-from-witness",
+    "sources": [
+      {
+        "role": "primary witness",
+        "ref": "The Book of Common Prayer (1962, Canada), The Order for Morning Prayer and The Order for Evening Prayer, printed pages 1 to 24",
+        "url": "https://www.anglican.ca/wp-content/uploads/bcp.pdf",
+        "note": "Text extracted with pdftotext -layout from the official ACC PDF; line wrapping, page numbers and running heads removed, joined words and obvious scan artifacts repaired."
+      }
+    ],
+    "caveats": [
+      "The Lord's Prayer opening form includes the doxology; the form after the Creed omits it.",
+      "Jubilate and Deus Misereatur are appointed from the Psalter (Psalms 100 and 67) rather than printed as canticles here.",
+      "The 1962 book appoints the Athanasian Creed on any day in the year at the minister's discretion, with no feast-day list."
+    ]
+  },
+  "common": {
+    "exhortation": "Dearly beloved brethren, the Scripture moveth us in sundry places to acknowledge and confess our manifold sins and wickedness; and that we should not dissemble nor cloke them before the face of Almighty God our heavenly Father; but confess them with an humble, lowly, penitent, and obedient heart; to the end that we may obtain forgiveness of the same, by his infinite goodness and mercy. And although we ought at all times humbly to acknowledge our sins before God; yet ought we most chiefly so to do, when we assemble and meet together to render thanks for the great benefits that we have received at his hands, to set forth his most worthy praise, to hear his most holy Word, and to ask those things which are requisite and necessary, as well for the body as the soul. Wherefore I pray and beseech you, as many as are here present, to accompany me with a pure heart and humble voice unto the throne of the heavenly grace.",
+    "confession_rubric": "A general Confession to be said of the whole Congregation with the Minister, all kneeling.",
+    "confession": "Almighty and most merciful Father, We have erred and strayed from thy ways like lost sheep, We have followed too much the devices and desires of our own hearts, We have offended against thy holy laws, We have left undone those things which we ought to have one, And we have done those things which we ought not to have done; And there is no health in us. But thou, O Lord, have mercy upon us, miserable offenders. Spare thou them, O God, which confess their faults. Restore thou them that are penitent; According to thy promises declared unto mankind in Christ Jesu our Lord. And grant, O most merciful Father, for his sake, That we may hereafter live a godly, righteous, and sober life, To the glory of thy holy Name. Amen.",
+    "absolution_rubric": "The Absolution, or Remission of sins, to be pronounced by the Priest alone, standing: the people still kneeling.",
+    "absolution_priest": "Almighty God, the Father of our Lord Jesus Christ, who desireth not the death of a sinner, but rather that he may turn from his wickedness, and live, hath given power and commandment to his Ministers, to declare and pronounce to his people, being penitent, the Absolution and Remission of their sins. He pardoneth and absolveth all them that truly repent and unfeignedly believe his holy Gospel. Wherefore we beseech him to grant us true repentance and his Holy Spirit, that those things may please him which we do at this present, and that the rest of our life hereafter may be pure and holy; so that at the last we may come to his eternal joy; through Jesus Christ our Lord.",
+    "amen_rubric": "The people shall answer here, and at the end of all other prayers: Amen.",
+    "lords_prayer_opening": "Our Father who art in heaven, Hallowed be thy Name, Thy kingdom come, Thy will be done, on earth as it is in heaven. Give us this day our daily bread; And forgive us our trespasses, As we forgive them that trespass against us; And lead us not into temptation, But deliver us from evil. For thine is the kingdom, the power, and the glory, For ever and ever. Amen.",
+    "lords_prayer": "Our Father who art in heaven, Hallowed be thy Name, Thy kingdom come, Thy will be done, on earth as it is in heaven. Give us this day our daily bread; And forgive us our trespasses, As we forgive them that trespass against us; And lead us not into temptation, But deliver us from evil. Amen.",
+    "apostles_creed": "I believe in God the Father Almighty, Maker of heaven and earth: And in Jesus Christ his only Son our Lord, Who was conceived by the Holy Ghost, Born of the Virgin Mary, Suffered under Pontius Pilate, Was crucified, dead, and buried: He descended into hell; The third day he rose again from the dead; He ascended into heaven, And sitteth on the right hand of God the Father Almighty; From thence he shall come to judge the quick and the dead. I believe in the Holy Ghost; The holy Catholic Church; The Communion of Saints; The Forgiveness of sins; The Resurrection of the body, And the Life everlasting. Amen.",
+    "athanasian_creed": "Whosoever would be saved / needeth before all things to hold fast the Catholic 2 Which Faith except a man keep whole and undefiled, / without doubt he will perish eternally. 3 Now the Catholic Faith is this, / that we worship one God in Trinity, and the Trinity in Unity; 4 Neither confusing the Persons, / nor dividing the Substance. 5 For there is one Person of the Father, another of the Son, / another of the Holy Ghost; 6 But the Godhead of the Father, and of the Son, and of the Holy Ghost is all one, / the glory equal, the majesty co-eternal. 7 Such as the Father is, such is the Son, / and such is the Holy Ghost; 8 The Father uncreated, the Son uncreated, / the Holy Ghost uncreated; 9 The Father infinite, the Son infinite, / the Holy Ghost infinite; 10 The Father eternal, the Son eternal, / the Holy Ghost eternal; 11 And yet there are not three eternals, / but one eternal; 12 As also there are not three uncreated, nor three infinites, / but one infinite, and one uncreated. 13 So likewise the Father is almighty, the Son almighty, / the Holy Ghost almighty; 14 And yet there are not three almighties, / but one almighty. 15 So the Father is God, the Son God, / the Holy Ghost God; 16 And yet there are not three Gods, / but one God. 17 So the Father is Lord, the Son Lord, / the Holy Ghost Lord; 18 And yet there are not three Lords, / but one Lord. 19 For like as we are compelled by the Christian verity / to confess each Person by himself to be both God and Lord; 20 So are we forbidden by the Catholic Religion / to speak of three Gods or three Lords. 21 The Father is made of none, / nor created, nor begotten. 22 The Son is of the Father alone; / not made, nor created, but begotten. 23 The Holy Ghost is of the Father and the Son; / not made, nor created, nor begotten, but proceeding. 24 There is therefore one Father, not three Fathers; one Son, not three Sons; / one Holy Ghost, not three Holy Ghosts. 25 And in this Trinity there is no before or after, / no greater or less; 26 But all three Persons are co-eternal together, / and co-equal. 27 So that in all ways, as is aforesaid, / both the Trinity is to be worshipped in Unity, and the Unity in Trinity. 28 He therefore that would be saved, / let him thus think of the Trinity. 29 FURTHERMORE, it is necessary to eternal salvation, / that he also believe faithfully the Incarnation of our Lord Jesus Christ. 30 Now the right Faith is that we believe and confess / that our Lord Jesus Christ, the Son of God, is both God and Man. 31 He is God, of the Substance of the Father, begotten before the worlds; / and he is Man, of the Substance of his Mother, born in the world; 32 Perfect God; / perfect Man, of reasoning soul and human flesh subsisting; 33 Equal to the Father as touching his Godhead;/ less than the Father as touching his Manhood. 34 Who although he be God and Man, / yet he is not two, but is one Christ; 35 One, however, not by conversion of Godhead into flesh, / but by taking of Manhood into God; 36 One altogether; / not by confusion of Substance, but by unity of Person. 37 For as reasoning soul and flesh is one man, / so God and Man is one Christ; 38 Who suffered for our salvation, / descended into hell, rose again from the dead; 39 Ascended into heaven, sat down at the right hand of the Father, / from whence he shall come to judge the quick and the dead. 40 At whose coming all men must rise again with their bodies, / and shall give account for their own deeds. 41 And they that have done good will go into life eternal; / they that have done evil into eternal fire. 42 THIS is the Catholic Faith, / which except a man do faithfully and stedfastly believe, he cannot be saved. GLORY be to the Father, and to the Son, / and to the Holy Ghost; As it was in the beginning, is now, and ever shall be, / world without end. Amen.",
+    "athanasian_creed_rubric": "Upon any day in the year, may be sung or said at Morning Prayer, instead of the Apostles' Creed, this Confession of our Christian Faith, commonly called the Creed of Saint Athanasius, by the Minister and people standing.",
+    "creed_rubric": "Then shall be said or sung the Confession of the Faith, called the Apostles' Creed.",
+    "grace": "The grace of our Lord Jesus Christ, and the love of God, and the fellowship of the Holy Ghost, be with us all evermore. Amen.",
+    "anthem_rubric": "Here may follow an Anthem or a Hymn.",
+    "state_prayers_rubric_morning": "Then shall be read one of the Prayers for the Queen, and the Prayer for the Clergy and People. Then may be read any of the Occasional Prayers or Thanksgivings, always ending with the Prayer of St Chrysostom and the Grace.",
+    "state_prayers_rubric_evening": "Here may be said the prayers found at this point in Morning Prayer or selections from the Prayers and Thanksgivings, always ending with the Prayer of St Chrysostom and the Grace.",
+    "gloria_patri": "Glory be to the Father, and to the Son, and to the Holy Ghost; As it was in the beginning, is now, and ever shall be, world without end. Amen.",
+    "lesson_note": "Before each Lesson the Minister shall say, The First [or Second] Lesson is written in such a book, in such a chapter, beginning at such a verse. And after the Lesson he shall say, Here endeth the First [or Second] Lesson.",
+    "psalms_gloria_rubric": "The Gloria Patri is to be said or sung after each Psalm, or numbered portion of a Psalm, or after the whole selection of Psalms.",
+    "venite": {
+      "title": "Venite, exultemus Domino",
+      "rubric": "Psalm 95",
+      "text": "O come, let us sing unto the Lord: / let us heartily rejoice in the strength of our salvation.\n2: Let us come before his presence with thanksgiving, / and show ourselves glad in him with psalms.\n3: For the LORD is a great God, / and a great King above all gods.\n4: In his hand are all the corners of the earth: / and the strength of the hills is his also.\n5: The sea is his, and he made it: / and his hands prepared the dry land.\n6: Come, let us worship, and fall down, / and kneel before the LORD our Maker.\n7: For he is the Lord our God; / and we are the people of his pasture, and the sheep of his hand.\n8: To-day, O that ye would hear his voice: / ‘Harden not your hearts as in the Provocation, and as in the day of Temptation in the wilderness;\n9: When your fathers tempted me, / proved me, and saw my works.\n10: Forty years long was I grieved with that generation, and said, / “It is a people that do err in their hearts, for they have not known my ways”;\n11: Unto whom I sware in my wrath, / that they should not enter into my rest.”\nGlory be to the Father, and to the Son, / and to the Holy Ghost; As it was in the beginning, is now, and ever shall be, / world without end. Amen."
+    },
+    "openingSentences": [
+      {
+        "label": "Advent",
+        "text": "Advent. Repent ye; for the kingdom of heaven is at hand. St Matthew 3. 2."
+      },
+      {
+        "label": "Christmas",
+        "text": "Christmas. Behold, I bring you good tidings of great joy which shall be to all people. For unto you is born this day in the city of David a Saviour, which is Christ the Lord. St Luke 2. 10, 11."
+      },
+      {
+        "label": "Epiphany",
+        "text": "Epiphany. The earth shall be filled with the knowledge of the glory of the LORD, as the waters cover the sea. Habakkuk 2. 14."
+      },
+      {
+        "label": "Lent",
+        "text": "Lent. The sacrifices of God are a broken spirit: a broken and a contrite heart, O God, thou wilt not despise. Psalm 51. 17."
+      },
+      {
+        "label": "Lent",
+        "text": "Rend your heart, and not your garments, and turn unto the LORD your God; for he is gracious and merciful, slow to anger, and of great kindness, and repenteth him of the evil. Joel 2. 13."
+      },
+      {
+        "label": "Passiontide",
+        "text": "Passiontide. God commendeth his love toward us, in that, while we were yet sinners, Christ died for us. Romans 5. 8."
+      },
+      {
+        "label": "Good Friday",
+        "text": "Good Friday. All we like sheep have gone astray; we have turned every one to his own way; and the LORD hath laid on him the iniquity of us all. Isaiah 53. 6."
+      },
+      {
+        "label": "Easter",
+        "text": "Easter. The Lord is risen indeed. St Luke 24. 34."
+      },
+      {
+        "label": "Easter",
+        "text": "Thanks be to God, which giveth us the victory through our Lord Jesus Christ. 1 Corinthians 15. 57."
+      },
+      {
+        "label": "Ascension",
+        "text": "Ascension. Seeing that we have a great high priest that is passed into the heavens, Jesus the Son of God, let us come boldly unto the throne of grace, that we may obtain mercy and find grace to help in time of need. Hebrews 4. 14, 16."
+      },
+      {
+        "label": "Whitsunday and Embertide",
+        "text": "Whitsunday and Embertide. The love of God hath been shed abroad in our hearts through the Holy Spirit which was given unto us. Romans 5. 5."
+      },
+      {
+        "label": "Whitsunday and Embertide",
+        "text": "Ye shall receive power, after that the Holy Spirit is come upon you: and ye shall be witnesses unto me both in Jerusalem and in all Judæa, and in Samaria, and unto the uttermost part of the earth. Acts 1. 8."
+      },
+      {
+        "label": "Trinity",
+        "text": "Trinity. God is love; and he that abideth in love abideth in God, and God in him. 1 St John 4. 16."
+      },
+      {
+        "label": "Saints' Days",
+        "text": "Saints’ Days. Wherefore seeing we also are compassed about with so great a cloud of witnesses, let us lay aside every weight, and the sin which doth so easily beset us, and let us run with patience the race which is set before us, looking unto Jesus the author and finisher of our faith. Hebrews 12. 1, 2."
+      },
+      {
+        "label": "Rogation Days",
+        "text": "Rogation Days. The LORD is nigh unto all them that call upon him, to all that call upon him in truth. Psalm 145. 18."
+      },
+      {
+        "label": "On National Occasions",
+        "text": "On National Occasions. O let the nations rejoice and be glad; for thou shalt judge the folk righteously, and govern the nations upon earth. Psalm 67. 4."
+      },
+      {
+        "label": "Of Missions",
+        "text": "Of Missions. Go ye into all the world, and preach the Gospel to every creature. St Mark 16. 15."
+      },
+      {
+        "label": "Of Worship",
+        "text": "Of Worship. The LORD is in his holy temple: let all the earth keep silence before him. Habakkuk 2. 20."
+      },
+      {
+        "label": "Of Worship",
+        "text": "O worship the LORD in the beauty of holiness: let the whole earth stand in awe of him. Psalm 96. 9."
+      },
+      {
+        "label": "Of Worship",
+        "text": "Thus saith the high and lofty One that inhabiteth eternity, whose name is Holy: I dwell in the high and holy place, with him also that is of a contrite and humble spirit. Isaiah 57. 15."
+      },
+      {
+        "label": "Of Worship",
+        "text": "I was glad when they said unto me, Let us go into the house of the LORD. Psalm 122. 1."
+      },
+      {
+        "label": "Of Worship",
+        "text": "The hour cometh, and now is, when the true worshippers shall worship the Father in spirit in truth; for the Father seeketh such to worship him. St John 4. 23."
+      },
+      {
+        "label": "Of Penitence",
+        "text": "Of Penitence. I will arise and go to my father, and will say unto him, Father, I have sinned against heaven, and before thee, and am no more worthy to be called thy son. St Luke 15. 18, 19."
+      },
+      {
+        "label": "Of Penitence",
+        "text": "If we say that we have no sin, we deceive ourselves, and the truth is not in us: but if we confess our sins, he is faithful and just to forgive us our sins, and to cleanse us from all unrighteousness. 1 St John 1. 8, 9."
+      },
+      {
+        "label": "Of Penitence",
+        "text": "To the Lord our God belong mercies and forgivenesses, though we have rebelled against him: neither have we obeyed the voice of the LORD our God, to walk in his laws which he set before us. Daniel 9. 9, 10."
+      },
+      {
+        "label": "Of Penitence",
+        "text": "Seek ye the LORD while he may be found, call ye upon him while he is near: let the wicked forsake his way and the unrighteous man his thoughts: and let him return unto the LORD, and he will have mercy upon him; and to our God, for he will abundantly pardon. Isaiah 55. 6, 7"
+      }
+    ],
+    "suffrages": [
+      {
+        "speaker": "minister",
+        "text": "O Lord, show thy mercy upon us;"
+      },
+      {
+        "speaker": "people",
+        "text": "And grant us thy salvation."
+      },
+      {
+        "speaker": "minister",
+        "text": "O Lord, save the Queen;"
+      },
+      {
+        "speaker": "people",
+        "text": "And mercifully hear us when we call upon thee."
+      },
+      {
+        "speaker": "minister",
+        "text": "Endue thy Ministers with righteousness;"
+      },
+      {
+        "speaker": "people",
+        "text": "And make thy chosen people joyful."
+      },
+      {
+        "speaker": "minister",
+        "text": "O Lord, save thy people;"
+      },
+      {
+        "speaker": "people",
+        "text": "And bless thine inheritance."
+      },
+      {
+        "speaker": "minister",
+        "text": "Give peace in our time, O Lord;"
+      },
+      {
+        "speaker": "people",
+        "text": "And evermore mightily defend us."
+      },
+      {
+        "speaker": "minister",
+        "text": "O God, make clean our hearts within us;"
+      },
+      {
+        "speaker": "people",
+        "text": "And take not thy Holy Spirit from us."
+      }
+    ],
+    "prayers": [
+      {
+        "id": "queen",
+        "title": "A Prayer for the Queen's Majesty",
+        "text": "O LORD our heavenly Father, high and mighty, King of kings, Lord of lords, the only Ruler of princes, who dost from thy throne behold all the dwellers upon earth: Most heartily we beseech thee with thy favour to behold our most gracious Sovereign Lady, Queen ELIZABETH; and so replenish her with the grace of thy Holy Spirit, that she may alway incline to thy will, and walk in thy way: Endue her plenteously with heavenly gifts; grant her in health and wealth long to live; strengthen her that she may vanquish and overcome all her enemies, and finally after this life she may attain everlasting joy and felicity; through Jesus Christ our Lord. Amen."
+      },
+      {
+        "id": "queen-commonwealth",
+        "title": "A Prayer for the Queen and the Commonwealth",
+        "text": "Almighty God, the fountain of all goodness, we humbly beseech thee to bless our Sovereign Lady, Queen ELIZABETH, the Parliaments of the Commonwealth, and all who are set in authority under her; that they may order all things in wisdom, righteousness, and peace, to the honour of thy holy Name, and the good of thy Church and people; through Jesus Christ our Lord. Amen."
+      },
+      {
+        "id": "queen-authority",
+        "title": "A Prayer for the Queen and all in Authority",
+        "text": "O LORD God Almighty, who rulest the nations of the earth, we humbly beseech thee with thy favour to behold our Sovereign Lady, Queen ELIZABETH, that in all things she may be led by thy guidance and protected by thy power. We pray thee also to bless [*……..] and all the Royal Family. Endue with wisdom the Governor-General of this Dominion, the Lieutenant-Governors of the Provinces, the Legislators of the Commonwealth and Empire, and all who are set in authority; that all things may be so ordered and settled by their endeavours upon the best and surest foundations, that peace and happiness, truth and justice, religion and piety, may be established among us for all generations; through Jesus Christ our Lord. Amen."
+      },
+      {
+        "id": "clergy-people",
+        "title": "A Prayer for the Clergy and People",
+        "text": "Almighty and everlasting God, from whom cometh every good and perfect gift: Send down upon our Bishops and Clergy, and all Congregations committed to their charge, the healthful Spirit of thy grace; and that they may truly please thee, pour upon them the continual dew of thy blessing. Grant this, O Lord, for the honour of our Advocate and Mediator, Jesus Christ Amen."
+      },
+      {
+        "id": "all-conditions",
+        "title": "A Prayer for all Conditions of men",
+        "text": "O God, the Creator and Preserver of all mankind, we humbly beseech thee for all sorts and conditions of men; that thou wouldest be pleased to make thy ways known unto them, thy saving health unto all nations. More especially we pray for the good estate of the Catholic Church; that it may be so guided and governed by thy good Spirit, that all who profess and call themselves Christians may be led into the way of truth, and hold the faith in unity of spirit, in the bond of peace, and in righteousness of life. Finally we commend to thy fatherly goodness all those, who are any ways afflicted or distressed in mind, body, or estate; [*especially * This to be those for whom our prayers are desaid when any desire the Praysired;] that it may please thee to ers of the Congregation. comfort and relieve them, according to their several necessities, giving them patience under their sufferings, and a happy issue out of all their afflictions. And this we beg for Jesus Christ his sake. Amen."
+      },
+      {
+        "id": "general-thanksgiving",
+        "title": "A General Thanksgiving",
+        "text": "Almighty God, Father of all mercies, We thine unworthy servants do give thee most humble and hearty thanks For all thy goodness and loving-kindness To us *saidThis to be when any and to all men; [*particularly to that have been prayed for dethose who desire now to offer up their sire to return thanks. praises and thanksgivings.] We bless thee for our creation, preservation, and all the blessings of this life; But above all for thine inestimable love In the redemption of the world by our Lord Jesus Christ; For the means of grace, And for the hope of glory. And we beseech thee, give us that due sense of all thy mercies, That our hearts may be unfeignedly thankful, And that we show forth thy praise, Not only with our lips, but in our lives; By giving up ourselves to thy service, And by walking before thee in holiness and righteousness all our days; Through Jesus Christ our Lord, To whom, with thee and the Holy Ghost, be all honour and glory, world without end. Amen."
+      },
+      {
+        "id": "chrysostom",
+        "title": "A Prayer of Saint Chrysostom",
+        "text": "Almighty God, who hast given us grace at this time with one accord to make our common supplications unto thee; and dost promise that when two or three are gathered together in thy Name thou wilt grant their requests: Fulfil now, O Lord, the desires and petitions of thy servants, as may be most expedient for them; granting us in this world knowledge of thy truth, and in the world to come life everlasting. Amen."
+      }
+    ]
+  },
+  "offices": [
+    {
+      "id": "morning",
+      "name": "Morning Prayer",
+      "openingRubric": "The Minister shall read aloud one or more of these Sentences of the Scriptures that follow.",
+      "openingVersiclesRubric": "Minister and People",
+      "gloriaStandingRubric": "Here, all standing up, the Minister shall say:",
+      "lordsPrayerOpeningRubric": "Here the Lord's Prayer may be said; the people repeating it with the Minister.",
+      "openingVersicles": [
+        {
+          "speaker": "minister",
+          "text": "O Lord, open thou our lips;"
+        },
+        {
+          "speaker": "people",
+          "text": "And our mouth shall show forth thy praise."
+        },
+        {
+          "speaker": "minister",
+          "text": "O God, make speed to save us;"
+        },
+        {
+          "speaker": "people",
+          "text": "O Lord, make haste to help us."
+        },
+        {
+          "speaker": "minister",
+          "text": "Glory be to the Father, and to the Son, and to the Holy Ghost;"
+        },
+        {
+          "speaker": "people",
+          "text": "As it was in the beginning, is now, and ever shall be, world without end. Amen."
+        },
+        {
+          "speaker": "minister",
+          "text": "Praise ye the Lord;"
+        },
+        {
+          "speaker": "people",
+          "text": "The Lord's Name be praised."
+        }
+      ],
+      "invitatory": {
+        "default": "Venite, exultemus Domino",
+        "options": [
+          "Our King and Saviour draweth nigh: / O come, let us worship.",
+          "Unto us a Child is born: / O come, let us worship.",
+          "The Lord hath manifested forth his glory: / O come, let us worship.",
+          "The goodness of God leadeth to repentance: / O come, let us worship.",
+          "Christ our Lord became obedient unto death: / O come, let us worship.",
+          "Alleluia. Christ is risen: / O come, let us worship. Alleluia.",
+          "Alleluia. Christ hath ascended into heaven: / O come, let us worship. Alleluia.",
+          "Alleluia. God hath sent forth the Spirit of his Son: / O come, let us worship. Alleluia.",
+          "Holy and reverend is his Name: / O come, let us worship.",
+          "The Word was made flesh: / O come, let us worship.",
+          "The Lord is glorious in his Saints: / O come, let us worship.",
+          "The Lord is in his holy temple: / O come, let us worship.",
+          "The Lord God omnipotent reigneth: / O come, let us worship.",
+          "The Lord is gracious and merciful: / O come, let us worship."
+        ],
+        "rubric": "On the days hereafter named, before Venite, Exultemus Domino, Psalm 95, and after the Gloria Patri which follows it, may be said or sung the Invitatory."
+      },
+      "psalmsRubric": "Then shall follow THE PSALMS.",
+      "firstLessonRubric": "Then shall be read THE FIRST LESSON as appointed.",
+      "secondLessonRubric": "Then shall be read in like manner THE SECOND LESSON as appointed.",
+      "canticles": {
+        "afterFirst": [
+          "te-deum",
+          "benedicite"
+        ],
+        "afterSecond": [
+          "benedictus",
+          "jubilate"
+        ]
+      },
+      "prayersRubric": "And after the Creed these prayers following, all devoutly kneeling, the Minister first pronouncing:",
+      "preces": [
+        {
+          "speaker": "minister",
+          "text": "The Lord be with you;"
+        },
+        {
+          "speaker": "people",
+          "text": "And with thy spirit."
+        },
+        {
+          "speaker": "minister",
+          "text": "Let us pray."
+        },
+        {
+          "speaker": "all",
+          "text": "Lord, have mercy upon us."
+        },
+        {
+          "speaker": "all",
+          "text": "Christ, have mercy upon us."
+        },
+        {
+          "speaker": "all",
+          "text": "Lord, have mercy upon us."
+        }
+      ],
+      "lordsPrayerRubric": "Our Father who art in heaven,",
+      "suffragesRubric": "Then the Priest standing up shall say:",
+      "collectsRubric": "Then shall follow THE COLLECT OF THE DAY, together with any other Collects appointed to be said, and these two prayers in order.",
+      "endRubric": "A Sermon may be preached here and the offerings of the people received and presented at the Lord's Table."
+    },
+    {
+      "id": "evening",
+      "name": "Evening Prayer",
+      "openingRubric": "The Minister shall read aloud one or more of these Sentences of the Scriptures that follow.",
+      "openingVersiclesRubric": "Minister and People",
+      "gloriaStandingRubric": "Here, all standing up, the Minister shall say:",
+      "lordsPrayerOpeningRubric": "Here the Lord's Prayer may be said; the people repeating it with the Minister.",
+      "openingVersicles": [
+        {
+          "speaker": "minister",
+          "text": "O Lord, open thou our lips;"
+        },
+        {
+          "speaker": "people",
+          "text": "And our mouth shall show forth thy praise."
+        },
+        {
+          "speaker": "minister",
+          "text": "O God, make speed to save us;"
+        },
+        {
+          "speaker": "people",
+          "text": "O Lord, make haste to help us."
+        },
+        {
+          "speaker": "minister",
+          "text": "Glory be to the Father, and to the Son, and to the Holy Ghost;"
+        },
+        {
+          "speaker": "people",
+          "text": "As it was in the beginning, is now, and ever shall be, world without end. Amen."
+        },
+        {
+          "speaker": "minister",
+          "text": "Praise ye the Lord;"
+        },
+        {
+          "speaker": "people",
+          "text": "The Lord's Name be praised."
+        }
+      ],
+      "invitatory": {
+        "default": "Venite, exultemus Domino",
+        "options": [
+          "Our King and Saviour draweth nigh: / O come, let us worship.",
+          "Unto us a Child is born: / O come, let us worship.",
+          "The Lord hath manifested forth his glory: / O come, let us worship.",
+          "The goodness of God leadeth to repentance: / O come, let us worship.",
+          "Christ our Lord became obedient unto death: / O come, let us worship.",
+          "Alleluia. Christ is risen: / O come, let us worship. Alleluia.",
+          "Alleluia. Christ hath ascended into heaven: / O come, let us worship. Alleluia.",
+          "Alleluia. God hath sent forth the Spirit of his Son: / O come, let us worship. Alleluia.",
+          "Holy and reverend is his Name: / O come, let us worship.",
+          "The Word was made flesh: / O come, let us worship.",
+          "The Lord is glorious in his Saints: / O come, let us worship.",
+          "The Lord is in his holy temple: / O come, let us worship.",
+          "The Lord God omnipotent reigneth: / O come, let us worship.",
+          "The Lord is gracious and merciful: / O come, let us worship."
+        ],
+        "rubric": "On the days hereafter named, before Venite, Exultemus Domino, Psalm 95, and after the Gloria Patri which follows it, may be said or sung the Invitatory."
+      },
+      "psalmsRubric": "Then shall follow THE PSALMS.",
+      "firstLessonRubric": "Then THE FIRST LESSON as appointed.",
+      "secondLessonRubric": "Then THE SECOND LESSON as appointed.",
+      "canticles": {
+        "afterFirst": [
+          "magnificat",
+          "cantate-domino"
+        ],
+        "afterSecond": [
+          "nunc-dimittis",
+          "deus-misereatur"
+        ]
+      },
+      "prayersRubric": "And after the Creed these prayers following, all devoutly kneeling, the Minister first pronouncing:",
+      "preces": [
+        {
+          "speaker": "minister",
+          "text": "The Lord be with you;"
+        },
+        {
+          "speaker": "people",
+          "text": "And with thy spirit."
+        },
+        {
+          "speaker": "minister",
+          "text": "Let us pray."
+        },
+        {
+          "speaker": "all",
+          "text": "Lord, have mercy upon us."
+        },
+        {
+          "speaker": "all",
+          "text": "Christ, have mercy upon us."
+        },
+        {
+          "speaker": "all",
+          "text": "Lord, have mercy upon us."
+        }
+      ],
+      "lordsPrayerRubric": "Our Father who art in heaven,",
+      "suffragesRubric": "Then the Priest standing up shall say:",
+      "collectsRubric": "Then shall follow THE COLLECT OF THE DAY, together with any other Collects appointed to be said, and these two prayers in order.",
+      "endRubric": "A Sermon may be preached here and the offerings of the people received and presented at the Lord's Table."
+    }
+  ]
+}

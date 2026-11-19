@@ -86,6 +86,19 @@ describe("parseLessonRef", () => {
     expect(parseLessonRef("matt 5:1–12").ok).toBe(true);
   });
 
+  test("half-verse suffixes are preserved", () => {
+    const r = parseLessonRef("John 12:20–36a");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.ref.ranges[0].to?.half).toBe("a");
+  });
+
+  test("apocryphal additions used by 1962 citations", () => {
+    expect(parseLessonRef("S3Y 29–37").ok).toBe(true);
+    expect(parseLessonRef("Pr Man 1–15").ok).toBe(true);
+    expect(parseLessonRef("Song of Three Children 29–37").ok).toBe(true);
+  });
+
   test("errors", () => {
     expect(parseLessonRef("").ok).toBe(false);
     expect(parseLessonRef("Foo 1:1").ok).toBe(false);
@@ -108,5 +121,12 @@ describe("formatLessonRef", () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(formatLessonRef(r.ref)).toBe("Isa 6:1–8; (6:9–13)");
+  });
+
+  test("round-trips a half verse", () => {
+    const r = parseLessonRef("John 12:20–36a");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(formatLessonRef(r.ref)).toBe("John 12:20–36a");
   });
 });

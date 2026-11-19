@@ -41,6 +41,8 @@ const SINGLE_BOOKS = [
   "Mal",
   "1 Esd",
   "2 Esd",
+  "Pr Man",
+  "S3Y",
   "Tob",
   "Jdt",
   "Wis",
@@ -85,7 +87,13 @@ const ALIASES = new Map<string, string>([
   ["JAMES", "Jas"],
   ["ECCLES", "Eccl"],
   ["ECCLESIASTICUS", "Sir"],
+  ["SIRACH", "Sir"],
+  ["WISDOM", "Wis"],
   ["BARUCH", "Bar"],
+  ["SONG OF THREE CHILDREN", "S3Y"],
+  ["SONG OF SONGS", "Song"],
+  ["WISDOM OF SOLOMON", "Wis"],
+  ["PRAYER OF MANASSES", "Pr Man"],
   ["PSALMS", "Ps"],
   ["PS", "Ps"],
 ]);
@@ -96,6 +104,8 @@ const SINGLE_CHAPTER_BOOKS = new Set([
   "2 John",
   "3 John",
   "Jude",
+  "Pr Man",
+  "S3Y",
 ]);
 
 function canonicalBook(token: string): string | null {
@@ -118,7 +128,10 @@ export type LessonParse =
 
 export function parseLessonRef(input: string): LessonParse {
   const trimmed = input.trim();
-  const bookMatch = /^(\d ?[A-Za-z]+|[A-Za-z]+)(?: |$)/.exec(trimmed);
+  const bookMatch =
+    /^(Pr Man|Song of Three Children|Song of Songs|Wisdom of Solomon|\d?\s?[A-Za-z][A-Za-z0-9]*)(?: |$)/i.exec(
+      trimmed,
+    );
   if (!bookMatch) return { ok: false, error: "no book abbreviation" };
   const book = canonicalBook(bookMatch[1]);
   if (!book) return { ok: false, error: `unknown book '${bookMatch[1]}'` };

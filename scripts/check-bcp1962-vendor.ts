@@ -97,6 +97,49 @@ type ProperCollects = {
   meta?: { edition?: string };
   collects?: ProperCollect[];
 };
+type OfficeTextMeta = { edition?: string; sources?: unknown[] };
+type OfficeVersicle = { speaker?: string; text?: string };
+type OfficesFile = {
+  meta?: OfficeTextMeta;
+  common?: {
+    exhortation?: string;
+    confession?: string;
+    absolution_priest?: string;
+    lords_prayer?: string;
+    lords_prayer_opening?: string;
+    apostles_creed?: string;
+    athanasian_creed?: string;
+    grace?: string;
+    venite?: { title?: string; text?: string };
+    openingSentences?: Array<{ label?: string; text?: string }>;
+    suffrages?: OfficeVersicle[];
+    prayers?: Array<{ id?: string; title?: string; text?: string }>;
+  };
+  offices?: Array<{
+    id?: string;
+    name?: string;
+    openingVersicles?: OfficeVersicle[];
+    preces?: OfficeVersicle[];
+    canticles?: { afterFirst?: string[]; afterSecond?: string[] };
+  }>;
+};
+type CanticlesFile = {
+  meta?: OfficeTextMeta;
+  canticles?: Array<{ id?: string; title?: string; text?: string }>;
+};
+type FixedCollectsFile = {
+  meta?: OfficeTextMeta;
+  collects?: Array<{
+    id?: string;
+    office?: string;
+    title?: string;
+    text?: string;
+  }>;
+};
+type FixedOfficeFile = {
+  meta?: OfficeTextMeta;
+  lines?: Array<{ kind?: string; text?: string; speaker?: string }>;
+};
 
 type VendorTable = {
   meta?: { edition?: string; sources?: unknown[] };
@@ -475,13 +518,247 @@ async function main() {
     }
   }
 
+  const offices = await readJson<OfficesFile>("office-text/offices.json");
+  const officesMin = await readJson<OfficesFile>(
+    "office-text/offices.min.json",
+  );
+  if (JSON.stringify(offices) !== JSON.stringify(officesMin)) {
+    fail("office-text/offices.min.json does not match offices.json", failures);
+  }
+  if (offices.meta?.edition !== "1962") {
+    fail("offices.meta.edition !== 1962", failures);
+  }
+  const common = offices.common;
+  if (!common) {
+    fail("offices.common missing", failures);
+  } else {
+    for (const key of [
+      "exhortation",
+      "confession",
+      "absolution_priest",
+      "lords_prayer",
+      "lords_prayer_opening",
+      "apostles_creed",
+      "athanasian_creed",
+      "grace",
+    ] as const) {
+      if (typeof common[key] !== "string" || !common[key]?.trim()) {
+        fail(`offices.common.${key} missing/empty`, failures);
+      }
+    }
+    if (!common.venite?.title?.trim() || !common.venite?.text?.trim()) {
+      fail("offices.common.venite missing/empty", failures);
+    }
+    if (
+      !Array.isArray(common.openingSentences) ||
+      !common.openingSentences.length
+    ) {
+      fail("offices.common.openingSentences missing/empty", failures);
+    }
+    if (!Array.isArray(common.suffrages) || !common.suffrages.length) {
+      fail("offices.common.suffrages missing/empty", failures);
+    } else {
+      for (const [i, v] of common.suffrages.entries()) {
+        if (!v.text?.trim())
+          fail(`offices.common.suffrages ${i} empty`, failures);
+        if (v.speaker && !["minister", "people", "all"].includes(v.speaker)) {
+          fail(`offices.common.suffrages ${i} invalid speaker`, failures);
+        }
+      }
+    }
+    const prayerIds = new Set<string>();
+    for (const [i, p] of (common.prayers ?? []).entries()) {
+      if (!p.id?.trim() || !p.title?.trim() || !p.text?.trim()) {
+        fail(`offices.common.prayers ${i} incomplete`, failures);
+      } else if (prayerIds.has(p.id)) {
+        fail(`offices.common.prayers duplicate id: ${p.id}`, failures);
+      } else {
+        prayerIds.add(p.id);
+      }
+    }
+    if (!prayerIds.has("chrysostom")) {
+      fail("offices.common.prayers missing chrysostom", failures);
+    }
+  }
+  const officeList = offices.offices ?? [];
+  if (officeList.length !== 2) {
+    fail(`offices has ${officeList.length} offices, expected 2`, failures);
+  }
+  const officeIds = new Set<string>();
+  for (const [i, office] of officeList.entries()) {
+    if (office.id !== "morning" && office.id !== "evening") {
+      fail(`offices ${i} invalid id: ${office.id}`, failures);
+    } else if (officeIds.has(office.id)) {
+      fail(`offices duplicate id: ${office.id}`, failures);
+    } else {
+      officeIds.add(office.id);
+    }
+    if (!office.name?.trim()) fail(`offices ${i} missing name`, failures);
+    for (const [j, v] of (office.openingVersicles ?? []).entries()) {
+      if (!v.text?.trim())
+        fail(`offices ${i} openingVersicles ${j} empty`, failures);
+    }
+    for (const key of ["afterFirst", "afterSecond"] as const) {
+      const ids = office.canticles?.[key];
+      if (!Array.isArray(ids) || !ids.length) {
+        fail(`offices ${i} canticles.${key} missing/empty`, failures);
+      }
+    }
+  }
+
+  const canticles = await readJson<CanticlesFile>("office-text/canticles.json");
+  const canticlesMin = await readJson<CanticlesFile>(
+    "office-text/canticles.min.json",
+  );
+  if (JSON.stringify(canticles) !== JSON.stringify(canticlesMin)) {
+    fail(
+      "office-text/canticles.min.json does not match canticles.json",
+      failures,
+    );
+  }
+  if (canticles.meta?.edition !== "1962") {
+    fail("canticles.meta.edition !== 1962", failures);
+  }
+  const canticleIds = new Set<string>();
+  for (const [i, c] of (canticles.canticles ?? []).entries()) {
+    if (!c.id?.trim() || !c.title?.trim() || !c.text?.trim()) {
+      fail(`canticles ${i} incomplete`, failures);
+    } else if (canticleIds.has(c.id)) {
+      fail(`canticles duplicate id: ${c.id}`, failures);
+    } else {
+      canticleIds.add(c.id);
+    }
+  }
+  for (const office of officeList) {
+    for (const key of ["afterFirst", "afterSecond"] as const) {
+      for (const id of office.canticles?.[key] ?? []) {
+        if (!canticleIds.has(id)) {
+          fail(
+            `offices ${office.id} references missing canticle: ${id}`,
+            failures,
+          );
+        }
+      }
+    }
+  }
+
+  const collects = await readJson<FixedCollectsFile>(
+    "office-text/collects.json",
+  );
+  const collectsMin = await readJson<FixedCollectsFile>(
+    "office-text/collects.min.json",
+  );
+  if (JSON.stringify(collects) !== JSON.stringify(collectsMin)) {
+    fail(
+      "office-text/collects.min.json does not match collects.json",
+      failures,
+    );
+  }
+  if (collects.meta?.edition !== "1962") {
+    fail("collects.meta.edition !== 1962", failures);
+  }
+  const collectIds = new Set<string>();
+  for (const [i, c] of (collects.collects ?? []).entries()) {
+    if (!c.id?.trim() || !c.title?.trim() || !c.text?.trim()) {
+      fail(`collects ${i} incomplete`, failures);
+    } else if (collectIds.has(c.id)) {
+      fail(`collects duplicate id: ${c.id}`, failures);
+    } else {
+      collectIds.add(c.id);
+    }
+    if (c.office !== "morning" && c.office !== "evening") {
+      fail(`collects ${i} invalid office: ${c.office}`, failures);
+    }
+  }
+  if ((collects.collects ?? []).length !== 4) {
+    fail(
+      `collects has ${(collects.collects ?? []).length} entries, expected 4`,
+      failures,
+    );
+  }
+
+  for (const name of ["mid-day", "compline"] as const) {
+    const fixed = await readJson<FixedOfficeFile>(`office-text/${name}.json`);
+    const fixedMin = await readJson<FixedOfficeFile>(
+      `office-text/${name}.min.json`,
+    );
+    if (JSON.stringify(fixed) !== JSON.stringify(fixedMin)) {
+      fail(
+        `office-text/${name}.min.json does not match ${name}.json`,
+        failures,
+      );
+    }
+    if (fixed.meta?.edition !== "1962") {
+      fail(`${name}.meta.edition !== 1962`, failures);
+    }
+    const fixedLines = fixed.lines ?? [];
+    if (!fixedLines.length) {
+      fail(`${name}.lines missing/empty`, failures);
+    }
+    for (const [i, entry] of fixedLines.entries()) {
+      if (!["rubric", "heading", "text"].includes(entry.kind ?? "")) {
+        fail(`${name} line ${i} invalid kind: ${entry.kind}`, failures);
+      }
+      if (typeof entry.text !== "string" || !entry.text.trim()) {
+        fail(`${name} line ${i} empty/non-string text`, failures);
+      }
+      if (
+        entry.speaker &&
+        !["minister", "answer", "people", "all"].includes(entry.speaker)
+      ) {
+        fail(`${name} line ${i} invalid speaker: ${entry.speaker}`, failures);
+      }
+    }
+    if (fixedLines[0]?.kind !== "rubric") {
+      fail(`${name} first line is not a rubric`, failures);
+    }
+  }
+
+  const familyPrayer = await readJson<{
+    meta?: OfficeTextMeta;
+    forms?: Partial<Record<"morning" | "evening", FixedOfficeFile["lines"]>>;
+  }>("office-text/family-prayer.json");
+  const familyPrayerMin = await readJson<typeof familyPrayer>(
+    "office-text/family-prayer.min.json",
+  );
+  if (JSON.stringify(familyPrayer) !== JSON.stringify(familyPrayerMin)) {
+    fail(
+      "office-text/family-prayer.min.json does not match family-prayer.json",
+      failures,
+    );
+  }
+  if (familyPrayer.meta?.edition !== "1962") {
+    fail("family-prayer.meta.edition !== 1962", failures);
+  }
+  for (const form of ["morning", "evening"] as const) {
+    const formLines = familyPrayer.forms?.[form];
+    if (!Array.isArray(formLines) || !formLines.length) {
+      fail(`family-prayer.forms.${form} missing/empty`, failures);
+      continue;
+    }
+    for (const [i, entry] of formLines.entries()) {
+      if (!["rubric", "heading", "text"].includes(entry.kind ?? "")) {
+        fail(`family-prayer ${form} line ${i} invalid kind`, failures);
+      }
+      if (typeof entry.text !== "string" || !entry.text.trim()) {
+        fail(`family-prayer ${form} line ${i} empty/non-string text`, failures);
+      }
+    }
+    if (formLines[0]?.kind !== "rubric" && formLines[0]?.kind !== "heading") {
+      fail(
+        `family-prayer ${form} first line is not a rubric or heading`,
+        failures,
+      );
+    }
+  }
+
   if (failures.length) {
     console.error("bcp1962 vendor check failed:");
     for (const f of failures) console.error(`  - ${f}`);
     process.exit(1);
   }
   console.log(
-    `✓ bcp1962 vendor tables OK (daily ${sections?.length} sections/407 rows/1860 refs, proper psalms ${psalmDays?.length} days, occasions ${occasions?.length}, cycle 2x31 days/24 selections, rules ${rules?.length}, calendar ${fixed?.length} commemorations, psalter ${psalmKeys.length} psalms/${verseCount} verses, litany ${litanyLines?.length} lines, proper collects ${properList?.length})`,
+    `✓ bcp1962 vendor tables OK (daily ${sections?.length} sections/407 rows/1860 refs, proper psalms ${psalmDays?.length} days, occasions ${occasions?.length}, cycle 2x31 days/24 selections, rules ${rules?.length}, calendar ${fixed?.length} commemorations, psalter ${psalmKeys.length} psalms/${verseCount} verses, litany ${litanyLines?.length} lines, proper collects ${properList?.length}, office texts ${officeList.length}, canticles ${canticleIds.size}, fixed collects ${(collects.collects ?? []).length}, short offices 2, family prayer forms 2)`,
   );
 }
 

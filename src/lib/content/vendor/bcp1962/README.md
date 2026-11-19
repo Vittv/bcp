@@ -6,4 +6,6 @@ The data is edition scoped. It is not a set of readings to drop into the 1979 or
 
 Each table has a pretty and a minified twin. Run `bun run check:bcp1962` after editing any table.
 
-The 1962 Coverdale psalter text is vendored in psalter.json (149 psalms, Psalm 58 omitted, with the printed verse renumbering). Appointments are stored as citation strings and resolved to this text for rendering. The Litany is vendored in office-text/litany.json and composed as a standalone office. The 107 proper collects are vendored in office-text/collects-proper.json. The rest of the 1962 office text is not vendored yet.
+The 1962 Coverdale psalter text is vendored in psalter.json (149 psalms, Psalm 58 omitted, with the printed verse renumbering). Appointments are stored as citation strings and resolved to this text for rendering.
+
+The office texts are vendored under office-text/ in the 1662 shape: offices.json holds the fixed texts of Morning and Evening Prayer, canticles.json the appointed canticles, collects.json the four fixed collects, litany.json the Litany, mid-day.json the Prayers at Mid-day, compline.json the Order for Compline, family-prayer.json the Morning and Evening family forms, and collects-proper.json the 107 proper collects. The compose layer in src/lib/content/bcp1962.ts builds a full office from these files plus the date's lessons and psalms; Today and the reference Offices screen render it instead of falling back to 1979.

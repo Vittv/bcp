@@ -93,9 +93,11 @@ export const BCP1662_BASE_OFFICES: {
 ];
 
 export const BCP1962_BASE_OFFICES: typeof BCP1662_BASE_OFFICES = [
-  { id: "morning", label: "Matins", name: "Matins" },
+  { id: "morning", label: "Morning", name: "Morning Prayer" },
+  { id: "noonday", label: "Mid-day", name: "Prayers at Mid-day" },
   { id: "litany", label: "The Litany", name: "The Litany" },
-  { id: "evening", label: "Evensong", name: "Evensong" },
+  { id: "evening", label: "Evening", name: "Evening Prayer" },
+  { id: "compline", label: "Compline", name: "Compline" },
 ];
 
 export function refOfficeId(

@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "edition": "1962",
+    "title": "1962 Canadian BCP, Family Prayer",
+    "status": "curated-from-witness",
+    "sources": [
+      {
+        "role": "primary witness",
+        "ref": "The Book of Common Prayer (1962, Canada), Forms of Prayer to be Used in Families, printed pages 728 to 731",
+        "url": "https://www.anglican.ca/wp-content/uploads/bcp.pdf",
+        "note": "Text extracted with pdftotext -layout from the official ACC PDF; the Morning and Evening forms are curated, the topical Additional Prayers are not."
+      }
+    ],
+    "caveats": [
+      "The book invites a selection from its forms rather than a fixed daily sequence; the two daily forms are provided in full."
+    ]
+  },
+  "forms": {
+    "morning": [
+      {
+        "kind": "rubric",
+        "text": "Not all the prayers here provided need be used every day. The reader should make a selection of those suitable."
+      },
+      {
+        "kind": "heading",
+        "text": "Morning"
+      },
+      {
+        "kind": "rubric",
+        "text": "After the reading of a portion of holy Scripture, let the head of the household, or some other member of the family, say:"
+      },
+      {
+        "kind": "text",
+        "text": "O GOD, thou art my God, early will I seek thee. In the morning I will direct my prayer unto thee, and will look up."
+      },
+      {
+        "kind": "text",
+        "text": "Let us pray."
+      },
+      {
+        "kind": "text",
+        "text": "Our Father who art in heaven, Hallowed be thy Name, Thy kingdom come, Thy will be done, on earth as it is in heaven. Give us this day our daily bread; And forgive us our trespasses, As we forgive them that trespass against us; And lead us not into temptation, But deliver us from evil. For thine is the kingdom, the power, and the glory, For ever and ever. Amen."
+      },
+      {
+        "kind": "heading",
+        "text": "Thanksgiving for the gift of another day"
+      },
+      {
+        "kind": "text",
+        "text": "W E give thee hearty thanks, O heavenly Father, for the rest of the past night, and for the gift of a new day. Grant that we may so pass its hours in the perfect freedom of thy service, that at eventide we may again give thanks unto thee; through Jesus Christ our Lord. Amen."
+      },
+      {
+        "kind": "rubric",
+        "text": "Here may follow the Collect of the day."
+      },
+      {
+        "kind": "heading",
+        "text": "Prayer and Intercession"
+      },
+      {
+        "kind": "text",
+        "text": "O LORD God, who hast bidden light to shine out of darkness, and who hast again wakened us to praise thee for thy goodness and to ask for thy grace: Accept now the offering of our worship and thanksgiving, and grant unto us all such requests as may be acceptable to thy holy will. Make us to live as children of the light, and heirs of thy everlasting kingdom. Remember, O Lord, according to the multitude of thy mercies, thy whole Church, all who join with us in prayer, and all our brethren, wherever they may be, who stand in need of thine aid. Pour down upon us all the riches of thy grace, so that, redeemed in soul and body, and stedfast in faith, we may ever praise thy wonderful and holy Name; through Jesus Christ our Lord. Amen."
+      },
+      {
+        "kind": "rubric",
+        "text": "Before the Grace there may be said by all:"
+      },
+      {
+        "kind": "text",
+        "text": "O GOD, Most High and Holy, Three in One, Father, Son, and Holy Spirit: We offer to thee this day Ourselves, our souls and bodies, To be a reasonable, holy, and living sacrifice unto thee; To whom be all praise and glory. Amen."
+      },
+      {
+        "kind": "text",
+        "text": "2 Corinthians 13. 14"
+      },
+      {
+        "kind": "text",
+        "text": "The grace of our Lord Jesus Christ, and the love of God, and the fellowship of the Holy Ghost, be with us all evermore. Amen."
+      }
+    ],
+    "evening": [
+      {
+        "kind": "heading",
+        "text": "Evening"
+      },
+      {
+        "kind": "rubric",
+        "text": "After the reading of a portion of holy Scripture, let the head of the household, or some other member of the family, say:"
+      },
+      {
+        "kind": "text",
+        "text": "O LORD, let our prayer be set forth in thy sight as the incense, and the lifting up of our hands as an evening sacrifice. Let us confess our sins to Almighty God."
+      },
+      {
+        "kind": "text",
+        "text": "Let us confess our sins to Almighty God."
+      },
+      {
+        "kind": "text",
+        "text": "O ALMIGHTY Father, Lord of heaven and earth, We confess that we have sinned against thee in thought, word, and deed. Have mercy upon us, O Lord, have mercy upon us after thy great goodness; According to the multitude of thy mercies do away our offences; Wash us throughly from our wickedness, And cleanse us from our sins; For Jesus Christ’s sake. Amen."
+      },
+      {
+        "kind": "heading",
+        "text": "For Pardon through the Cross"
+      },
+      {
+        "kind": "text",
+        "text": "A LMIGHTY Father who of thy great love to men didst give thy dearly beloved Son to die for us: Grant that through his Cross our sins may be put away, and remembered no more against us, and that, cleansed by his Blood, and mindful of his sufferings, we may take up our cross daily, and follow him in newness of life, until we come to his everlasting kingdom; through the same thy Son Jesus Christ our Lord. Amen."
+      },
+      {
+        "kind": "rubric",
+        "text": "Here may follow the Collect of the day."
+      },
+      {
+        "kind": "heading",
+        "text": "For Freedom from Worry"
+      },
+      {
+        "kind": "text",
+        "text": "O LORD, who hast pity for all our weakness: Put away from us worry and every anxious fear, that, having ended the labours of the day as in thy sight, and committing our tasks, ourselves, and all we love into thy keeping, we may, now that night cometh, receive as from thee thy priceless gift of sleep; through Jesus Christ our Lord. Amen."
+      },
+      {
+        "kind": "text",
+        "text": "Our Father who art in heaven, Hallowed be thy Name, Thy kingdom come, Thy will be done, on earth as it is in heaven. Give us this day our daily bread; And forgive us our trespasses, As we forgive them that trespass against us; And lead us not into temptation, But deliver us from evil. For thine is the kingdom, the power, and the glory, For ever and ever. Amen."
+      },
+      {
+        "kind": "rubric",
+        "text": "Before the Commendation there may be said by all:"
+      },
+      {
+        "kind": "text",
+        "text": "W E will lay us down in peace and take our rest; for it is thou, Lord, only, that makest us dwell in safety. Thou, O Lord, art in the midst of us, and we are called by thy name. Leave us not, O Lord our God. Preserve us, O Lord, waking, and guard us sleeping, that awake we may watch with Christ, and asleep we may rest in peace. Amen."
+      },
+      {
+        "kind": "heading",
+        "text": "Commendation"
+      },
+      {
+        "kind": "text",
+        "text": "T HE Lord Almighty grant us a quiet night, and at the last a perfect end; and the blessing of God Almighty, the Father, the Son, and the Holy Ghost, be with us this night, and for evermore. Amen."
+      }
+    ]
+  }
+}

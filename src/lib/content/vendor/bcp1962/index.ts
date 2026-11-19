@@ -10,8 +10,14 @@
 import calendarRulesData from "./calendar-rules.min.json";
 import citationMapData from "./citation-map.min.json";
 import dailyData from "./lectionary-daily.min.json";
+import canticlesData from "./office-text/canticles.min.json";
+import collectsData from "./office-text/collects.min.json";
+import familyPrayerData from "./office-text/family-prayer.min.json";
 import collectsProperData from "./office-text/collects-proper.min.json";
+import complineData from "./office-text/compline.min.json";
 import litanyData from "./office-text/litany.min.json";
+import midDayData from "./office-text/mid-day.min.json";
+import officesData from "./office-text/offices.min.json";
 import scripturePropersData from "./office-text/scripture-propers.min.json";
 import rulesData from "./lectionary-rules.min.json";
 import properPsalmsData from "./proper-psalms.min.json";
@@ -170,6 +176,172 @@ export function getBcp1962ProperCollect(
   name: string,
 ): Bcp1962ProperCollect | undefined {
   return BCP1962_PROPER_COLLECTS.collects.find((c) => c.name === name);
+}
+
+export type Bcp1962OfficeTextVersicle = {
+  speaker: string;
+  text: string;
+};
+
+export type Bcp1962OfficeTextOffice = {
+  id: "morning" | "evening";
+  name: string;
+  openingRubric?: string;
+  openingVersicles?: Bcp1962OfficeTextVersicle[];
+  openingVersiclesRubric?: string;
+  gloriaStandingRubric?: string;
+  lordsPrayerOpeningRubric?: string;
+  psalmsRubric?: string;
+  firstLessonRubric?: string;
+  secondLessonRubric?: string;
+  creedRubric?: string;
+  prayersRubric?: string;
+  lordsPrayerRubric?: string;
+  suffragesRubric?: string;
+  collectsRubric?: string;
+  endRubric?: string;
+  invitatory?: {
+    default?: string;
+    options?: string[];
+    rubric?: string;
+  };
+  canticles?: {
+    afterFirst?: string[];
+    afterSecond?: string[];
+  };
+  preces?: Bcp1962OfficeTextVersicle[];
+};
+
+export type Bcp1962InvitatoryText = {
+  title: string;
+  rubric?: string;
+  text: string;
+};
+
+export type Bcp1962CommonPrayer = {
+  id: string;
+  title: string;
+  text: string;
+};
+
+export type Bcp1962OpeningSentence = {
+  label: string;
+  text: string;
+};
+
+export const BCP1962_OFFICE_TEXT =
+  // SAFETY: vendored 1962 office text curated from the ACC PDF, matching the declared shape.
+  officesData as {
+    meta: { edition: string; title: string; status?: string };
+    common: {
+      exhortation?: string;
+      confession: string;
+      confession_rubric?: string;
+      absolution_priest: string;
+      absolution_rubric?: string;
+      amen_rubric?: string;
+      lords_prayer: string;
+      lords_prayer_opening?: string;
+      apostles_creed: string;
+      athanasian_creed?: string;
+      athanasian_creed_rubric?: string;
+      creed_rubric?: string;
+      grace: string;
+      venite?: Bcp1962InvitatoryText;
+      openingSentences?: Bcp1962OpeningSentence[];
+      suffrages?: Bcp1962OfficeTextVersicle[];
+      prayers?: Bcp1962CommonPrayer[];
+      anthem_rubric?: string;
+      state_prayers_rubric_morning?: string;
+      state_prayers_rubric_evening?: string;
+      gloria_patri?: string;
+      lesson_note?: string;
+      psalms_gloria_rubric?: string;
+    };
+    offices: Bcp1962OfficeTextOffice[];
+  };
+
+export type Bcp1962Canticle = {
+  id: string;
+  title: string;
+  rubric?: string;
+  text: string;
+};
+
+export const BCP1962_CANTICLES =
+  // SAFETY: vendored 1962 canticles curated from the ACC PDF, matching the declared shape.
+  canticlesData as {
+    meta: { edition: string; title: string; status?: string };
+    canticles: Bcp1962Canticle[];
+  };
+
+export type Bcp1962FixedCollect = {
+  id: string;
+  office: "morning" | "evening";
+  title: string;
+  text: string;
+};
+
+export const BCP1962_FIXED_COLLECTS =
+  // SAFETY: vendored 1962 fixed collects curated from the ACC PDF, matching the declared shape.
+  collectsData as {
+    meta: { edition: string; title: string; status?: string };
+    collects: Bcp1962FixedCollect[];
+  };
+
+export function getBcp1962OfficeText(office: Bcp1962Office) {
+  return BCP1962_OFFICE_TEXT.offices.find((o) => o.id === office);
+}
+
+export function getBcp1962Canticle(id: string) {
+  return BCP1962_CANTICLES.canticles.find((c) => c.id === id);
+}
+
+export function getBcp1962FixedCollects(office: Bcp1962Office) {
+  return BCP1962_FIXED_COLLECTS.collects.filter((c) => c.office === office);
+}
+
+export type Bcp1962FixedOfficeLine =
+  | { kind: "rubric"; text: string }
+  | { kind: "heading"; text: string }
+  | {
+      kind: "text";
+      text: string;
+      speaker?: "minister" | "answer" | "people" | "all";
+    };
+
+export type Bcp1962FixedOffice = {
+  meta: { edition: string; title: string; status?: string };
+  lines: Bcp1962FixedOfficeLine[];
+};
+
+const BCP1962_MID_DAY =
+  // SAFETY: vendored 1962 Prayers at Mid-day curated from the ACC PDF.
+  midDayData as Bcp1962FixedOffice;
+
+const BCP1962_COMPLINE =
+  // SAFETY: vendored 1962 Order for Compline curated from the ACC PDF.
+  complineData as Bcp1962FixedOffice;
+
+export function getBcp1962MidDayOffice(): Bcp1962FixedOffice {
+  return BCP1962_MID_DAY;
+}
+
+export function getBcp1962Compline(): Bcp1962FixedOffice {
+  return BCP1962_COMPLINE;
+}
+
+const BCP1962_FAMILY_PRAYER =
+  // SAFETY: vendored 1962 Family Prayer forms curated from the ACC PDF.
+  familyPrayerData as {
+    meta: { edition: string; title: string; status?: string };
+    forms: Record<"morning" | "evening", Bcp1962FixedOfficeLine[]>;
+  };
+
+export function getBcp1962FamilyPrayer(
+  form: "morning" | "evening",
+): Bcp1962FixedOfficeLine[] {
+  return BCP1962_FAMILY_PRAYER.forms[form];
 }
 
 export type Bcp1962ScriptureProper = {
@@ -364,30 +536,40 @@ export async function expandBcp1962End(
   ref: string,
   loadBook: (name: string) => Promise<Bcp1962BookLike | null>,
 ): Promise<{ ref: string; note?: string }> {
-  const bookMatch = ref.match(/^(.+?)\s+\d{1,3}:\d{1,3}\s*[–-]\s*end\b/i);
-  const rangeMatch = ref.match(/(\d{1,3}):(\d{1,3})\s*[–-]\s*end\b/i);
-  if (!bookMatch || !rangeMatch) return { ref };
-  const bookName = bookMatch[1].trim();
-  const chapterNumber = rangeMatch[1];
-  const startVerse = rangeMatch[2];
-  const book = await loadBook(bookName);
-  const verses = book?.verses?.[chapterNumber];
-  if (!verses) {
-    return {
-      ref,
-      note: `could not expand end for ${bookName} ${chapterNumber}`,
-    };
+  const matches = Array.from(
+    ref.matchAll(/(\d{1,3})(?::(\d{1,3}))?\s*[–-]\s*end\b/gi),
+  );
+  if (matches.length === 0) return { ref };
+  const leadingBook = /^([A-Za-z][A-Za-z .]*?)\s+(?=\d)/.exec(ref.trim());
+  const bookName = (leadingBook?.[1] ?? "").trim();
+  // a parenthetical "43–end" inherits the chapter of the main citation
+  const chapterFromRef = /(\d{1,3}):(\d{1,3})/.exec(ref)?.[1];
+  const book = bookName ? await loadBook(bookName) : null;
+  let out = "";
+  let cursor = 0;
+  const notes: string[] = [];
+  for (const match of matches) {
+    const index = match.index ?? 0;
+    out += ref.slice(cursor, index);
+    const chapter = match[2] ? match[1] : (chapterFromRef ?? match[1]);
+    const startVerse = match[2] ?? match[1];
+    const verses = book?.verses?.[chapter];
+    if (!verses) {
+      out += match[0];
+      notes.push(`could not expand end for ${bookName} ${chapter}`);
+    } else {
+      const numbers = Object.keys(verses)
+        .map(Number)
+        .filter((n) => Number.isFinite(n));
+      out +=
+        numbers.length > 0
+          ? `${chapter}:${startVerse}–${Math.max(...numbers)}`
+          : match[0];
+    }
+    cursor = index + match[0].length;
   }
-  const numbers = Object.keys(verses)
-    .map(Number)
-    .filter((n) => Number.isFinite(n));
-  if (numbers.length === 0) {
-    return { ref, note: `no verses for ${bookName} ${chapterNumber}` };
-  }
-  const last = Math.max(...numbers);
-  return {
-    ref: ref.replace(rangeMatch[0], `${chapterNumber}:${startVerse}–${last}`),
-  };
+  out += ref.slice(cursor);
+  return { ref: out, note: notes.length ? notes.join("; ") : undefined };
 }
 
 function partRange(chapter: string, part: number): string {

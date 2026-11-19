@@ -36,6 +36,7 @@ import {
   seasonFor,
 } from "../../lib/calendar";
 import { bcp1662CycleLabel } from "../../lib/calendar/bcp1662";
+import { bcp1962CycleLabel } from "../../lib/calendar/bcp1962";
 import {
   upcomingHolyDayForTradition,
   upcomingLesserFeastForTradition,
@@ -47,6 +48,10 @@ import {
   composeBcp1662Litany,
   composeBcp1662OfficeForDate,
 } from "../../lib/content/bcp1662";
+import {
+  type Bcp1962ComposedOffice,
+  composeBcp1962OfficeForDate,
+} from "../../lib/content/bcp1962";
 import { prefetchAllScripture } from "../../lib/content/prefetchScripture";
 import { psalterDayForDate } from "../../lib/content/psalterDays";
 import {
@@ -337,10 +342,13 @@ export function Shell() {
   const [bcp1662TodayDoc, setBcp1662TodayDoc] =
     useState<Bcp1662ComposedOffice | null>(null);
   const [bcp1662TodayLoading, setBcp1662TodayLoading] = useState(false);
+  const [bcp1962TodayDoc, setBcp1962TodayDoc] =
+    useState<Bcp1962ComposedOffice | null>(null);
+  const [bcp1962TodayLoading, setBcp1962TodayLoading] = useState(false);
 
   useEffect(() => {
     if (edition !== "1662" && edition !== "1962") return;
-    if (devotions) {
+    if (edition === "1662" && devotions) {
       setDevotions(false);
     }
     if (edition === "1662" && !is1662OfficeTab(tab)) {
@@ -379,13 +387,43 @@ export function Shell() {
       cancelled = true;
     };
   }, [edition, page, tab, date]);
+
+  useEffect(() => {
+    if (edition !== "1962" || page !== "today") return;
+    if (tab !== "morning" && tab !== "evening") {
+      setBcp1962TodayDoc(null);
+      setBcp1962TodayLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setBcp1962TodayDoc(null);
+    setBcp1962TodayLoading(true);
+    void composeBcp1962OfficeForDate(date, tab)
+      .then((doc) => {
+        if (!cancelled) setBcp1962TodayDoc(doc);
+      })
+      .catch(() => {
+        if (!cancelled) setBcp1962TodayDoc(null);
+      })
+      .finally(() => {
+        if (!cancelled) setBcp1962TodayLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [edition, page, tab, date]);
   // the app's season context (top bar and status bar) always reflects the
   // real current date, never a date a page happened to be scrolled to; only
   // the Today office body (`document` above) follows the stepped office date
   const season = seasonFor(today());
   const seasonColor = colorFor(today());
   const slot = resolve(today());
-  const cycleLabel = edition === "1662" ? bcp1662CycleLabel(today()) : null;
+  const cycleLabel =
+    edition === "1662"
+      ? bcp1662CycleLabel(today())
+      : edition === "1962"
+        ? bcp1962CycleLabel(today())
+        : null;
   const { days: daysUntilNext, label: nextSeason } = daysUntilNextSeason(
     today(),
   );
@@ -510,6 +548,8 @@ export function Shell() {
     edition,
     bcp1662TodayDoc,
     bcp1662TodayLoading,
+    bcp1962TodayDoc,
+    bcp1962TodayLoading,
     showRubrics,
     showSpeakers,
     showSections,
@@ -714,14 +754,26 @@ export function Shell() {
                           slot={slot}
                           cycleLabel={cycleLabel}
                           officeName={
-                            edition === "1662" && page === "today"
+                            page === "today" && edition === "1662"
                               ? tab === "morning"
                                 ? "Matins"
                                 : tab === "evening"
                                   ? "Evensong"
                                   : (bcp1662TodayDoc?.officeName ??
                                     document.officeName)
-                              : document.officeName
+                              : page === "today" &&
+                                  edition === "1962" &&
+                                  devotions
+                                ? "Family Prayers"
+                                : page === "today" && edition === "1962"
+                                  ? ({
+                                      morning: "Morning Prayer",
+                                      noonday: "Prayers at Mid-day",
+                                      evening: "Evening Prayer",
+                                      compline: "The Order for Compline",
+                                      litany: "The Litany",
+                                    }[tab] ?? "")
+                                  : document.officeName
                           }
                           scrollPct={scrollPct}
                           reading={

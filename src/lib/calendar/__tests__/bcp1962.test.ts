@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+  bcp1962CycleLabel,
   bcp1962EcclesiasticalYear,
   bcp1962FirstAdvent,
   bcp1962MoveableDays,
@@ -11,6 +12,24 @@ const at = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
   return { year, month, day };
 };
+
+describe("bcp1962 status-bar cycle label", () => {
+  it("names the year and the numbered Sunday", () => {
+    expect(bcp1962CycleLabel(at("2026-11-29"))).toBe(
+      "Year I · First Sunday in Advent",
+    );
+    expect(bcp1962CycleLabel(at("2027-10-17"))).toBe(
+      "Year I · Twenty-first Sunday after Trinity",
+    );
+  });
+
+  it("names named seasons and the Sunday next before Advent", () => {
+    expect(bcp1962CycleLabel(at("2026-12-25"))).toContain("Christmastide");
+    expect(bcp1962CycleLabel(at("2028-03-12"))).toBe(
+      "Year II · Second Sunday in Lent",
+    );
+  });
+});
 
 describe("bcp1962 year rule", () => {
   it("uses the nearest Sunday to St Andrew for Advent", () => {

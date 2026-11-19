@@ -38,6 +38,12 @@ Lectionary Central, "The Table of Daily Lessons from The Book of Common Prayer C
 | psalter.json | The 1962 Coverdale psalter text: 149 psalms (Psalm 58 omitted) and 2489 renumbered verses |
 | office-text/litany.json | The Litany, 123 lines: opening rubrics, invocations, deprecation, supplication, Lord's Prayer, Chrysostom prayer, Grace, and the appended Supplication |
 | office-text/collects-proper.json | 107 proper collects from the Collects, Epistles, and Gospels, including votive and national occasions |
+| office-text/offices.json | Morning and Evening Prayer fixed texts: 26 seasonal opening sentences, exhortation, confession, absolution, both forms of the Lord's Prayer, opening versicles, Venite, rubrics, suffrages, the prayers after the Creed, the Apostles' and Athanasian Creeds, and the Grace |
+| office-text/canticles.json | Ten canticles: Te Deum, Benedicite, Benedictus, Jubilate (Psalm 100), Magnificat, Cantate Domino (Psalm 98), Nunc Dimittis, Deus Misereatur (Psalm 67), Cantate Domino from Isaiah 42, and Surge, Illuminare |
+| office-text/collects.json | The four fixed collects: Peace and Grace at Morning Prayer, Peace and Aid against all Perils at Evening Prayer |
+| office-text/mid-day.json | The Prayers at Mid-day, printed page 16: Lord's Prayer, three mission sentences with collects, and the pointer to Prayers and Thanksgivings |
+| office-text/compline.json | An Order for Compline, printed pages 722 to 727: opening versicles, short lessons, the respond, Te lucis, Nunc Dimittis, anthems, Creed, confession, collect and blessing |
+| office-text/family-prayer.json | The Morning and Evening forms of Family Prayer, printed pages 728 to 731, with the Lord's Prayer and Grace reused from offices.json |
 
 Every table has a minified twin. The check script at scripts/check-bcp1962-vendor.ts validates parity and structural invariants.
 
@@ -72,6 +78,24 @@ These were confirmed against rendered page images from the witness. They are lik
 ## Proper collects curation
 
 `office-text/collects-proper.json` was extracted from the Collects, Epistles, and Gospels, printed pages 94 to 330. Each printed Collect or Collects heading became one `{name, text}` record, matching the 1662 proper-collect shape. Three propers print two collects under one heading (Maundy Thursday, Good Friday, Saint Peter and Saint Paul) and were split with numbered suffixes; the Octave Day of Christmas prints two additional collects split into "Of the Circumcision" and "For the New Year". Votive collects whose title appears only in an explanatory rubric were named from that rubric (for example "For Peace in the World" and "For Labour and Industry"). Margin cross-references, feast-date annotations, and interleaved psalter footnotes were removed where the text layer had displaced them into the collect. The check script validates pretty/min parity, edition, and unique non-empty names and texts.
+
+A later pass repaired Psalm 95 verse 1, where the text layer read `O tion. COME ... salva-`; the Venite in `offices.json` uses the same repaired reading. The verse count is unchanged.
+
+## Daily office text curation
+
+`office-text/offices.json`, `canticles.json` and `collects.json` were extracted from the same ACC PDF, printed pages 1 to 24 (Morning and Evening Prayer), 25 to 29 (Additional Canticles and Invitatories), and 694 to 697 (the Creed of Saint Athanasius). They follow the 1662 office-text JSON shapes so the same compose layer can consume either edition.
+
+Text was extracted with `pdftotext -layout` from the official PDF. Page numbers, running heads and dropped-capital artifacts were removed; words broken by line wrapping were rejoined and unambiguous text-layer damage was repaired. The `/` cantillation mark is preserved in canticles and in the Venite. The Venite uses the clean vendored Psalm 95 text because the psalter text layer damaged its first verse. Jubilate, Cantate Domino (Psalm 98) and Deus Misereatur use the vendored psalter texts; the witness appoints them as psalms from the Psalter rather than printing them as canticles. The "Cantate Domino" among the Additional Canticles is a different text from Isaiah 42.10 and is stored under its own id.
+
+The 1962 wording is retained where it differs from 1662: the Lord's Prayer opening form includes the doxology while the form after the Creed omits it, the suffrages and state prayers name the Queen, the Athanasian Creed is appointed on any day in the year with no feast-day list, and the Apostles' Creed reads "Catholic" rather than "Catholick". The 26 opening sentences are keyed by the printed season labels. The check script validates pretty/min parity, edition, the required fixed texts, office ids, canticle referential integrity, and the four fixed collects.
+
+## Short office curation
+
+`office-text/mid-day.json` and `office-text/compline.json` were extracted from the same ACC PDF, printed pages 16 and 722 to 727. They use the same `lines` shape as the Litany so the app can compose fixed offices without a lesson or psalm resolution. Speaker labels are inferred from the printed Minister and Answer alternation, and the Nunc Dimittis and Apostles' Creed reuse the texts already vendored in `canticles.json` and `offices.json`. The check script validates pretty/min parity, edition, line kinds, non-empty text, speaker values, and the leading rubric on each file.
+
+## Family Prayer curation
+
+`office-text/family-prayer.json` was extracted from the same ACC PDF, printed pages 728 to 731. The book prints a selection of forms for family use rather than a fixed daily sequence; the Morning and Evening forms are curated in full and the topical Additional Prayers are not. The Lord's Prayer and Grace reuse the texts already vendored in `offices.json`. This is the 1962 counterpart of the 1979 daily devotions toggle and is exposed only under the 1962 edition. The check script validates pretty/min parity, edition, and the line kinds and non-empty text of both forms.
 
 ## Known limitations
 

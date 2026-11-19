@@ -19,7 +19,10 @@ import { lectionaryStyles } from "./LectionaryScreen.styles";
 
 const IS_WEB = Platform.OS === "web";
 
-const OFFICE_LABEL = { morning: "Matins", evening: "Evensong" } as const;
+const OFFICE_LABEL = {
+  morning: "Morning Prayer",
+  evening: "Evening Prayer",
+} as const;
 const LESSON_LABEL = ["First Lesson", "Second Lesson"];
 
 function LessonRow({
@@ -36,6 +39,20 @@ function LessonRow({
         <Text style={styles.lessonLabel}>{label}: </Text>
         {lesson.ref}
       </Text>
+      {lesson.ranges
+        ?.filter((range) => range.optional)
+        .map((range) => (
+          <Text key={`alt-${range.ref}`} style={styles.officeNote}>
+            Alternative appointed in parentheses: {range.ref}
+          </Text>
+        ))}
+      {lesson.ranges
+        ?.filter((range) => range.half)
+        .map((range) => (
+          <Text key={`half-${range.ref}`} style={styles.officeNote}>
+            Verse half as printed: {range.ref}
+          </Text>
+        ))}
       {lesson.passages.length === 0 ? (
         <Text style={styles.lessonMissing}>
           {lesson.error ?? "Reading text not available"}
