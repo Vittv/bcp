@@ -3,7 +3,13 @@ import { Text, View } from "react-native";
 import type { BcpEdition } from "../../../context/EditionContext";
 import type { CalendarDate } from "../../../lib/calendar/types";
 import type { Bcp1662ComposedOffice } from "../../../lib/content/bcp1662";
-import { composeBcp1962Litany } from "../../../lib/content/bcp1962";
+import {
+  type Bcp1962ComposedOffice,
+  composeBcp1962Compline,
+  composeBcp1962FamilyPrayer,
+  composeBcp1962Litany,
+  composeBcp1962Noonday,
+} from "../../../lib/content/bcp1962";
 import type { OfficeDocument, OfficeRite } from "../../../lib/office/types";
 import {
   BibleBar,
@@ -35,9 +41,15 @@ import {
 import { TodayScreen } from "../../../screens/TodayScreen";
 import { Bcp1662OfficeView } from "../../office/Bcp1662OfficeView";
 import { Bcp1962LitanyView } from "../../office/Bcp1962LitanyView";
+import { Bcp1962OfficeView } from "../../office/Bcp1962OfficeView";
 import { OfficeTabs } from "../OfficeTabs";
 import type { PageId } from "../Sidebar";
-import { is1662OfficeTab, type TabId, today } from "./shellUtils";
+import {
+  is1662OfficeTab,
+  is1962OfficeTab,
+  type TabId,
+  today,
+} from "./shellUtils";
 
 export type AuxRowContext = {
   page: PageId;
@@ -148,6 +160,8 @@ export type ContentContext = {
   edition: BcpEdition;
   bcp1662TodayDoc: Bcp1662ComposedOffice | null;
   bcp1662TodayLoading: boolean;
+  bcp1962TodayDoc: Bcp1962ComposedOffice | null;
+  bcp1962TodayLoading: boolean;
   showRubrics: boolean;
   showSpeakers: boolean;
   showSections: boolean;
@@ -170,6 +184,8 @@ export function renderContent(ctx: ContentContext): ReactNode {
     edition,
     bcp1662TodayDoc,
     bcp1662TodayLoading,
+    bcp1962TodayDoc,
+    bcp1962TodayLoading,
     showRubrics,
     showSpeakers,
     showSections,
@@ -182,10 +198,62 @@ export function renderContent(ctx: ContentContext): ReactNode {
 
   switch (page) {
     case "today":
-      if (edition === "1962" && tab === "litany") {
+      if (edition === "1962" && devotions) {
         return (
-          <Bcp1962LitanyView
-            doc={composeBcp1962Litany(date)}
+          <Bcp1962OfficeView
+            doc={composeBcp1962FamilyPrayer(
+              tab === "litany" ? "morning" : tab,
+              date,
+            )}
+            showRubrics={showRubrics}
+            showSpeakers={showSpeakers}
+          />
+        );
+      }
+      if (edition === "1962") {
+        if (tab === "litany") {
+          return (
+            <Bcp1962LitanyView
+              doc={composeBcp1962Litany(date)}
+              showRubrics={showRubrics}
+              showSpeakers={showSpeakers}
+            />
+          );
+        }
+        if (tab === "noonday" || tab === "compline") {
+          return (
+            <Bcp1962OfficeView
+              doc={
+                tab === "noonday"
+                  ? composeBcp1962Noonday(date)
+                  : composeBcp1962Compline(date)
+              }
+              showRubrics={showRubrics}
+              showSpeakers={showSpeakers}
+            />
+          );
+        }
+        if (!is1962OfficeTab(tab)) {
+          return (
+            <View>
+              <Text style={{ opacity: 0.7 }}>
+                This office is not yet available in the 1962 Book of Common
+                Prayer.
+              </Text>
+            </View>
+          );
+        }
+        if (bcp1962TodayLoading && !bcp1962TodayDoc) {
+          return (
+            <View>
+              <Text style={{ opacity: 0.7 }}>Composing office…</Text>
+            </View>
+          );
+        }
+        if (!bcp1962TodayDoc) return null;
+        return (
+          <Bcp1962OfficeView
+            doc={bcp1962TodayDoc}
             showRubrics={showRubrics}
             showSpeakers={showSpeakers}
           />

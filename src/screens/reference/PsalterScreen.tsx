@@ -16,7 +16,11 @@ import {
 import type { PsalterDay } from "../../lib/content/types";
 import { getBcp1662PsalmPassages } from "../../lib/content/vendor/bcp1662";
 import bcp1662PsalterCycle from "../../lib/content/vendor/bcp1662/psalter-cycle.json";
-import { getBcp1962PsalmPassages } from "../../lib/content/vendor/bcp1962";
+import {
+  getBcp1962PsalmPassages,
+  getBcp1962WeekdayPsalms,
+  parseBcp1962PsalmAppointment,
+} from "../../lib/content/vendor/bcp1962";
 import { searchPsalterDays } from "../../lib/reference/search";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
@@ -39,10 +43,70 @@ function currentDay(edition: string): number {
     const d = today();
     return Math.min(Math.max(d.day, 1), 30);
   }
+  if (edition === "1962") return Math.min(Math.max(today().day, 1), 31);
   return psalterDayForDate(today());
 }
 
 const BCP1662_PSLATER_DAY_COUNT = 30;
+const BCP1962_PSALTER_DAY_COUNT = 31;
+
+// the 1962 book appoints the Psalter by day of the month, with two alternating
+// month sets. The picker follows its 31-day month; each day shows both sets.
+type Bcp1962PsalterRow = {
+  day: number;
+  oddMonths: { morning: string[]; evening: string[] };
+  evenMonths: { morning: string[]; evening: string[] };
+};
+
+function bcp1962PsalterDay(day: number): Bcp1962PsalterRow | null {
+  const d = Math.min(Math.max(day, 1), BCP1962_PSALTER_DAY_COUNT);
+  const odd = getBcp1962WeekdayPsalms(1, d);
+  const even = getBcp1962WeekdayPsalms(2, d);
+  if (!odd || !even) return null;
+  return {
+    day: d,
+    oddMonths: {
+      morning: parseBcp1962PsalmAppointment(odd.mattins),
+      evening: parseBcp1962PsalmAppointment(odd.evensong),
+    },
+    evenMonths: {
+      morning: parseBcp1962PsalmAppointment(even.mattins),
+      evening: parseBcp1962PsalmAppointment(even.evensong),
+    },
+  };
+}
+
+function bcp1962PsalterDays(): PsalterDay[] {
+  const out: PsalterDay[] = [];
+  for (let day = 1; day <= BCP1962_PSALTER_DAY_COUNT; day++) {
+    const row = bcp1962PsalterDay(day);
+    if (row)
+      out.push({
+        day,
+        morning: row.oddMonths.morning,
+        evening: row.oddMonths.evening,
+      });
+  }
+  return out;
+}
+
+function searchBcp1962PsalterDays(query: string): PsalterDay[] {
+  const q = query.trim().toLowerCase();
+  return bcp1962PsalterDays().filter((day) => {
+    if (!q) return true;
+    if (String(day.day) === q) return true;
+    const row = bcp1962PsalterDay(day.day);
+    const citations = row
+      ? [
+          ...row.oddMonths.morning,
+          ...row.oddMonths.evening,
+          ...row.evenMonths.morning,
+          ...row.evenMonths.evening,
+        ]
+      : [];
+    return citations.some((p) => p.toLowerCase().includes(q));
+  });
+}
 
 function bcp1662PsalterDay(
   day: number,
@@ -119,9 +183,27 @@ export function PsalterBar({ leading }: { leading?: ReactNode }) {
   const styles = useThemedStyles(styleDef);
   const n = openPsalterDay ?? currentDay(edition);
   const dayCount =
-    edition === "1662" ? BCP1662_PSLATER_DAY_COUNT : PSALTER_DAY_COUNT;
-  const row = edition === "1662" ? bcp1662PsalterDay(n) : psalterDay(n);
-  const psalms = (row?.morning.length ?? 0) + (row?.evening.length ?? 0);
+    edition === "1662"
+      ? BCP1662_PSLATER_DAY_COUNT
+      : edition === "1962"
+        ? BCP1962_PSALTER_DAY_COUNT
+        : PSALTER_DAY_COUNT;
+  const row =
+    edition === "1662"
+      ? bcp1662PsalterDay(n)
+      : edition === "1962"
+        ? bcp1962PsalterDay(n)
+        : psalterDay(n);
+  let psalms = 0;
+  if (edition === "1962") {
+    // SAFETY: the 1962 branch above calls bcp1962PsalterDay, which returns this shape.
+    const r = row as Bcp1962PsalterRow | null;
+    psalms = r ? r.oddMonths.morning.length + r.oddMonths.evening.length : 0;
+  } else if (row) {
+    // SAFETY: the 1662 and 1979 day helpers both return morning/evening arrays.
+    const r = row as { morning: string[]; evening: string[] };
+    psalms = r.morning.length + r.evening.length;
+  }
   const atStart = n <= 1;
   const atEnd = n >= dayCount;
   return (
@@ -219,7 +301,9 @@ export function PsalterIndex({
     () =>
       edition === "1662"
         ? searchBcp1662PsalterDays(query)
-        : searchPsalterDays(query),
+        : edition === "1962"
+          ? searchBcp1962PsalterDays(query)
+          : searchPsalterDays(query),
     [edition, query],
   );
   const onEnter = useCallback(
@@ -258,12 +342,72 @@ const PsalterDetailBody = memo(function PsalterDetailBody({
   edition: string;
 }) {
   const is1662 = edition === "1662";
-  const dayCount = is1662 ? BCP1662_PSLATER_DAY_COUNT : PSALTER_DAY_COUNT;
-  const row = is1662 ? bcp1662PsalterDay(day) : psalterDay(day);
+  const is1962 = edition === "1962";
+  const dayCount = is1662
+    ? BCP1662_PSLATER_DAY_COUNT
+    : is1962
+      ? BCP1962_PSALTER_DAY_COUNT
+      : PSALTER_DAY_COUNT;
+  const row = is1662
+    ? bcp1662PsalterDay(day)
+    : is1962
+      ? bcp1962PsalterDay(day)
+      : psalterDay(day);
   const styles = useThemedStyles(styleDef);
   if (!row) return null;
   // the 31st repeats day 30, so say so instead of silently showing it twice
   const repeats = day === dayCount && today().day > dayCount;
+  if (is1962) {
+    // SAFETY: the 1962 branch above calls bcp1962PsalterDay, which returns this shape.
+    const bcp1962Row = row as Bcp1962PsalterRow;
+    return (
+      <>
+        <Text style={styles.detailTitle}>Day {day}</Text>
+        <Text style={styles.detailSubtitle}>
+          1962 Psalter · monthly appointment tables · Morning and Evening
+          portions
+        </Text>
+        <Text style={styles.canticleNote}>
+          Odd months: January, March, May, July, September, November
+        </Text>
+        <PsalterPortion
+          label="Morning Prayer"
+          citations={bcp1962Row.oddMonths.morning}
+          edition={edition}
+        />
+        <PsalterPortion
+          label="Evening Prayer"
+          citations={bcp1962Row.oddMonths.evening}
+          edition={edition}
+        />
+        <Text style={styles.canticleNote}>
+          Even months: February, April, June, August, October, December
+        </Text>
+        <PsalterPortion
+          label="Morning Prayer"
+          citations={bcp1962Row.evenMonths.morning}
+          edition={edition}
+        />
+        <PsalterPortion
+          label="Evening Prayer"
+          citations={bcp1962Row.evenMonths.evening}
+          edition={edition}
+        />
+        {day === 31 ? (
+          <Text style={styles.canticleNote}>
+            On the thirty-first day, use the thirtieth day's psalms or one of
+            the twenty-four selections.
+          </Text>
+        ) : null}
+        <Text style={styles.canticleNote}>
+          On a weekday with no proper psalms, one psalm may be omitted provided
+          one psalm or numbered portion is retained.
+        </Text>
+      </>
+    );
+  }
+  // SAFETY: the 1662 and 1979 day helpers both return a PsalterDay.
+  const psalterRow = row as PsalterDay;
   return (
     <>
       <Text style={styles.detailTitle}>Day {day}</Text>
@@ -277,12 +421,12 @@ const PsalterDetailBody = memo(function PsalterDetailBody({
       ) : null}
       <PsalterPortion
         label="Morning Prayer"
-        citations={row.morning}
+        citations={psalterRow.morning}
         edition={edition}
       />
       <PsalterPortion
         label="Evening Prayer"
-        citations={row.evening}
+        citations={psalterRow.evening}
         edition={edition}
       />
     </>

@@ -92,13 +92,21 @@ export function OfficeTabs({
   const { width } = useViewport();
   const tabs = useMemo(
     () =>
-      edition === "1662" || edition === "1962"
+      edition === "1662"
         ? ([
             { id: "morning", label: "Matins" },
             { id: "litany", label: "The Litany" },
             { id: "evening", label: "Evensong" },
           ] as const)
-        : TABS,
+        : edition === "1962"
+          ? ([
+              { id: "morning", label: "Morning" },
+              { id: "noonday", label: "Mid-day" },
+              { id: "evening", label: "Evening" },
+              { id: "compline", label: "Compline" },
+              { id: "litany", label: "The Litany" },
+            ] as const)
+          : TABS,
     [edition],
   );
   useEffect(() => {
@@ -116,13 +124,23 @@ export function OfficeTabs({
   const shortLabels = width < 640;
   const compact = width < WIDTH_COMPACT;
   const devotionsLabel =
-    width >= 640 ? "Daily Devotions" : width < 400 ? "Dev" : "Devotions";
+    edition === "1962"
+      ? width >= 640
+        ? "Family Prayers"
+        : width < 400
+          ? "Family"
+          : "Prayers"
+      : width >= 640
+        ? "Daily Devotions"
+        : width < 400
+          ? "Dev"
+          : "Devotions";
   const showRite =
     edition !== "1662" &&
     edition !== "1962" &&
     !devotions &&
     (active === "morning" || active === "evening");
-  const showDevotionsToggle = edition !== "1662" && edition !== "1962";
+  const showDevotionsToggle = edition !== "1662";
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={[styles.tabsLeft, compact && styles.groupCompact]}>
@@ -139,7 +157,9 @@ export function OfficeTabs({
             onPress={onToggleDevotions}
             accessibilityRole="button"
             accessibilityState={{ selected: devotions }}
-            accessibilityLabel="Daily Devotions"
+            accessibilityLabel={
+              edition === "1962" ? "Family Prayers" : "Daily Devotions"
+            }
           >
             <SteadyToggleText text={devotionsLabel} on={devotions} />
           </Pressable>

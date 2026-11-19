@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "edition": "1962",
+    "title": "1962 Canadian BCP, Prayers at Mid-day",
+    "status": "curated-from-witness",
+    "sources": [
+      {
+        "role": "primary witness",
+        "ref": "The Book of Common Prayer (1962, Canada), Prayers at Mid-day, printed pages 16",
+        "url": "https://www.anglican.ca/wp-content/uploads/bcp.pdf",
+        "note": "Text extracted with pdftotext -layout from the official ACC PDF; line wrapping, page numbers and running heads removed, obvious scan artifacts repaired."
+      }
+    ],
+    "caveats": [
+      "Speaker labels are inferred from the printed Minister and Answer alternation where the book does not mark them."
+    ]
+  },
+  "lines": [
+    {
+      "kind": "rubric",
+      "text": "Prayers at Mid-day. For Missions."
+    },
+    {
+      "kind": "text",
+      "text": "Our Father who art in heaven, Hallowed be thy Name, Thy kingdom come, Thy will be done, on earth as it is in heaven. Give us this day our daily bread; And forgive us our trespasses, As we forgive them that trespass against us; And lead us not into temptation, But deliver us from evil. For thine is the kingdom, the power, and the glory, For ever and ever. Amen."
+    },
+    {
+      "kind": "heading",
+      "text": "And I, if I be lifted up, will draw all men unto me."
+    },
+    {
+      "kind": "text",
+      "text": "Blessed Saviour, who at this hour didst hang upon the cross stretching out thy loving arms: Grant that all mankind may look unto thee and be saved; who livest and reignest with the Father and the Holy Ghost, ever one God, world without end. Amen."
+    },
+    {
+      "kind": "heading",
+      "text": "At mid-day, O king, I saw a light above the brightness of the sun."
+    },
+    {
+      "kind": "text",
+      "text": "Almighty Saviour, who at mid-day didst call thy servant Saint Paul to be an Apostle to the Gentiles: We beseech thee to illumine the world with the radiance of thy glory, that all nations may come and worship thee; who art, with the Father and the Holy Ghost, one God, world without end. Amen."
+    },
+    {
+      "kind": "heading",
+      "text": "Peter went up upon the house-top to pray, about the sixth hour."
+    },
+    {
+      "kind": "text",
+      "text": "Father of mercies, who to thine Apostle Saint Peter didst reveal in three-fold vision thy boundless compassion: Forgive, we pray thee, our unbelief, and so enlarge our hearts, and enkindle our zeal, that we may fervently desire the salvation of all men, and with more ready diligence labour in the extension of thy kingdom; for his sake, who gave himself for the life of the world, thy Son our Saviour Jesus Christ. Amen."
+    },
+    {
+      "kind": "text",
+      "text": "Suitable additional prayers are to be found in Prayers and Thanksgivings, pages 37 to 61."
+    }
+  ]
+}

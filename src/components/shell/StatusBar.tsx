@@ -46,8 +46,8 @@ type StatusBarProps = {
   season: Season;
   seasonColor: Color;
   slot: DolSlot;
-  // 1662 has no Year 1/2 or numbered Propers; this replaces the Year/week
-  // segment with its own cycle label (e.g. "Twenty-fourth Sunday after Trinity")
+  // 1662 and 1962 use their own Sunday/week counts instead of the 1979
+  // Year/Proper segment (e.g. "Twenty-fourth Sunday after Trinity")
   cycleLabel?: string | null;
   officeName: string;
   scrollPct: number;

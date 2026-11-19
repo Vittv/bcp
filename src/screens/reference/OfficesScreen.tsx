@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Bcp1662OfficeView } from "../../components/office/Bcp1662OfficeView";
 import { Bcp1962LitanyView } from "../../components/office/Bcp1962LitanyView";
+import { Bcp1962OfficeView } from "../../components/office/Bcp1962OfficeView";
 import { Segmented } from "../../components/office/OfficeControls";
 import { OfficeHeader } from "../../components/office/OfficeHeader";
 import { OfficeView } from "../../components/office/OfficeView";
@@ -19,7 +20,13 @@ import {
   composeBcp1662Litany,
   composeBcp1662OfficeForDate,
 } from "../../lib/content/bcp1662";
-import { composeBcp1962Litany } from "../../lib/content/bcp1962";
+import {
+  type Bcp1962ComposedOffice,
+  composeBcp1962Compline,
+  composeBcp1962Litany,
+  composeBcp1962Noonday,
+  composeBcp1962OfficeForDate,
+} from "../../lib/content/bcp1962";
 import type { OfficeId } from "../../lib/content/types";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
@@ -157,8 +164,7 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
   ) as OfficeId;
   const customization = customizationFor(officeId);
   const document = useMemo(() => {
-    if (edition === "1662" || (edition === "1962" && base === "litany"))
-      return null;
+    if (edition === "1662" || edition === "1962") return null;
     return composeOffice(officeDate, officeId, {
       ...DEFAULT_PREFS,
       rite: officeRite,
@@ -169,7 +175,6 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     });
   }, [
     edition,
-    base,
     officeDate,
     officeId,
     officeRite,
@@ -221,6 +226,43 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     };
   }, [edition, base, officeDate]);
 
+  const [bcp1962Doc, setBcp1962Doc] = useState<Bcp1962ComposedOffice | null>(
+    null,
+  );
+  const [bcp1962Loading, setBcp1962Loading] = useState(false);
+  const [bcp1962Error, setBcp1962Error] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (edition !== "1962") return;
+    if (base !== "morning" && base !== "evening") {
+      setBcp1962Doc(null);
+      setBcp1962Error(null);
+      setBcp1962Loading(false);
+      return;
+    }
+    let cancelled = false;
+    setBcp1962Loading(true);
+    setBcp1962Error(null);
+    void composeBcp1962OfficeForDate(officeDate, base)
+      .then((doc) => {
+        if (!cancelled) setBcp1962Doc(doc);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setBcp1962Doc(null);
+          setBcp1962Error(
+            e instanceof Error ? e.message : "Failed to compose 1962 office",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setBcp1962Loading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [edition, base, officeDate]);
+
   if (edition === "1662") {
     if (base !== "morning" && base !== "evening" && base !== "litany") {
       return (
@@ -245,10 +287,46 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     );
   }
 
-  if (edition === "1962" && base === "litany") {
+  if (edition === "1962") {
+    if (base === "litany") {
+      return (
+        <Bcp1962LitanyView
+          doc={composeBcp1962Litany(officeDate)}
+          showRubrics={showRubrics}
+          showSpeakers={showSpeakers}
+        />
+      );
+    }
+    if (base === "noonday" || base === "compline") {
+      return (
+        <Bcp1962OfficeView
+          doc={
+            base === "noonday"
+              ? composeBcp1962Noonday(officeDate)
+              : composeBcp1962Compline(officeDate)
+          }
+          showRubrics={showRubrics}
+          showSpeakers={showSpeakers}
+        />
+      );
+    }
+    if (base !== "morning" && base !== "evening") {
+      return (
+        <Text style={{ opacity: 0.7 }}>
+          This office is not yet available in the 1962 Book of Common Prayer.
+        </Text>
+      );
+    }
+    if (bcp1962Loading && !bcp1962Doc) {
+      return <Text style={{ opacity: 0.7 }}>Composing office…</Text>;
+    }
+    if (bcp1962Error) {
+      return <Text style={{ opacity: 0.7 }}>{bcp1962Error}</Text>;
+    }
+    if (!bcp1962Doc) return null;
     return (
-      <Bcp1962LitanyView
-        doc={composeBcp1962Litany(officeDate)}
+      <Bcp1962OfficeView
+        doc={bcp1962Doc}
         showRubrics={showRubrics}
         showSpeakers={showSpeakers}
       />

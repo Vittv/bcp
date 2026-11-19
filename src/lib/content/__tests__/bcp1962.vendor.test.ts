@@ -93,6 +93,15 @@ describe("bcp1962 citation normalization", () => {
     expect(expanded.ref).toBe("Isa. 2:10–end");
     expect(expanded.note).toContain("could not expand end");
   });
+
+  it("expands an end inside a parenthetical alternative", async () => {
+    const load = async () => ({
+      verses: { "2": { "1": "a", "42": "b", "47": "c" } },
+    });
+    const expanded = await expandBcp1962End("Acts. 2:22–42 (43–end)", load);
+    expect(expanded.ref).toBe("Acts. 2:22–42 (2:43–47)");
+    expect(expanded.note).toBeUndefined();
+  });
 });
 
 describe("bcp1962 psalm appointments", () => {

@@ -19,16 +19,26 @@ import {
   loadScriptureBook,
   type ScriptureSettings,
 } from "./bible";
+import { parseLessonRef } from "./lessons";
 import { getBookMeta, getPassageFromDolRef, parseDolRef } from "./scripture";
-import type { KjvPassage } from "./types";
+import type { Half, KjvPassage, LessonRef, PsalmPassage } from "./types";
 import {
+  BCP1962_OFFICE_TEXT,
   type Bcp1962LessonPair,
   type Bcp1962LessonSet,
   type Bcp1962Office,
   expandBcp1962End,
   getBcp1962AlternativeFirstLesson,
+  getBcp1962Canticle,
+  getBcp1962Compline,
+  getBcp1962FamilyPrayer,
+  getBcp1962FixedCollects,
   getBcp1962Litany,
+  getBcp1962MidDayOffice,
+  getBcp1962OfficeText,
+  getBcp1962ProperCollect,
   getBcp1962ProperPsalms,
+  getBcp1962PsalmPassages,
   getBcp1962Section,
   getBcp1962WeekdayPsalms,
   normalizeBcp1962Citation,
@@ -55,14 +65,89 @@ export type Bcp1962ComposedDate = {
   notes: string[];
 };
 
+export type Bcp1962LessonPassage = {
+  ref: string;
+  passage: KjvPassage;
+  optional: boolean;
+  half?: Half;
+};
+
 export type Bcp1962ResolvedPassage = {
   ref: string;
   normalized: string;
+  /** Structured parse of the citation, keeping optional ranges and verse halves. */
+  parsed?: LessonRef;
+  /** Each appointed range with its alternative/half markers intact. */
+  ranges?: Bcp1962LessonPassage[];
   passage: KjvPassage | null;
   passages: KjvPassage[];
   psalmCitations?: string[];
   error?: string;
 };
+
+// app corpus ids used by the 1962 table -> ids understood by parseLessonRef
+const LESSON_BOOK_IDS: Record<string, string> = {
+  Sirach: "Sir",
+  Ecclesiasticus: "Sir",
+  Ecclus: "Sir",
+  Wisdom: "Wis",
+  "Wisdom of Solomon": "Wis",
+  "Song of Songs": "Song",
+  Canticles: "Song",
+  "S. of Sol.": "Song",
+  Song: "Song",
+  S3Y: "S3Y",
+  "Pr Man": "Pr Man",
+  "2 Esd": "2 Esd",
+  Rev: "Rev",
+};
+
+/**
+ * Parse a normalized 1962 lesson citation into the structured LessonRef form.
+ * Parenthetical alternatives and a/b verse halves survive this parse; refs that
+ * fall outside its grammar return ok:false so the caller can keep the raw text.
+ */
+export function parseBcp1962LessonRef(ref: string) {
+  let text = ref.trim();
+  // canonicalize the book id and the witness's dotted chapter.verse notation
+  text = text.replace(/^([A-Za-z][A-Za-z .]*?)\s+(?=\d)/, (whole) => {
+    const key = whole.trim().replace(/\.$/, "");
+    return `${LESSON_BOOK_IDS[key] ?? key} `;
+  });
+  text = text
+    .replace(/&/g, ",")
+    .replace(/([A-Za-z])\.(?=\s|$)/g, "$1")
+    .replace(/(\d{1,3})\.\s*(\d{1,3})/g, "$1:$2")
+    .replace(/\s+/g, " ")
+    .trim();
+  return parseLessonRef(text);
+}
+
+async function loadLessonRefPassages(
+  ref: LessonRef,
+  settings: ScriptureSettings,
+): Promise<Bcp1962LessonPassage[]> {
+  const out: Bcp1962LessonPassage[] = [];
+  for (const range of ref.ranges) {
+    const from = `${ref.book} ${range.from.chapter}:${range.from.verse}`;
+    const to = range.to ? `–${range.to.chapter}:${range.to.verse}` : "";
+    const refString = `${from}${to}`;
+    const passage = await getPassageFromDolRef(
+      ALL_SCRIPTURE_BOOKS,
+      (b) => loadScriptureBook(settings, b),
+      refString,
+    );
+    if (passage) {
+      out.push({
+        ref: refString,
+        passage,
+        optional: Boolean(range.optional),
+        half: range.from.half ?? range.to?.half,
+      });
+    }
+  }
+  return out;
+}
 
 export type Bcp1962ResolvedOffice = {
   date: CalendarDate;
@@ -231,45 +316,82 @@ export function getBcp1962LessonsForDate(
 async function resolveSegmentPassages(
   segment: string,
   settings: ScriptureSettings,
-): Promise<KjvPassage[]> {
+): Promise<{
+  passages: KjvPassage[];
+  ranges: Bcp1962LessonPassage[];
+  parsed?: LessonRef;
+}> {
   const normalized = normalizeBcp1962Citation(segment);
   const expanded = await expandBcp1962End(normalized, async (name) => {
     const meta = getBookMeta(ALL_SCRIPTURE_BOOKS, name);
     return meta ? await loadScriptureBook(settings, meta.abbrev) : null;
   });
   const ref = expanded.ref;
+  const lesson = parseBcp1962LessonRef(ref);
+  if (lesson.ok) {
+    const ranges = await loadLessonRefPassages(lesson.ref, settings);
+    if (ranges.length > 0) {
+      return {
+        passages: ranges.map((r) => r.passage),
+        ranges,
+        parsed: lesson.ref,
+      };
+    }
+  }
+  const fallbackRange = (passage: KjvPassage): Bcp1962LessonPassage => ({
+    ref,
+    passage,
+    optional: false,
+  });
   const parsed = parseDolRef(ALL_SCRIPTURE_BOOKS, ref);
   if (!parsed) {
     const meta = getBookMeta(ALL_SCRIPTURE_BOOKS, ref);
     if (meta && meta.chapters === 1) {
       const book = await loadScriptureBook(settings, meta.abbrev);
-      if (!book) return [];
+      if (!book) return { passages: [], ranges: [] };
       const chapterKey = Object.keys(book.verses)[0] ?? "1";
       const verses = book.verses[chapterKey];
-      if (!verses) return [];
+      if (!verses) return { passages: [], ranges: [] };
       const nums = Object.keys(verses)
         .map((k) => Number.parseInt(k, 10))
         .sort((a, b) => a - b);
-      return [
-        {
-          book: book.book,
-          abbrev: book.abbrev,
-          testament: book.testament,
-          chapter: Number.parseInt(chapterKey, 10) || 1,
-          verses: nums.map((n) => ({ number: n, text: verses[String(n)] })),
-        },
-      ];
+      const passage: KjvPassage = {
+        book: book.book,
+        abbrev: book.abbrev,
+        testament: book.testament,
+        chapter: Number.parseInt(chapterKey, 10) || 1,
+        verses: nums.map((n) => ({ number: n, text: verses[String(n)] })),
+      };
+      return {
+        passages: [passage],
+        ranges: [fallbackRange(passage)],
+        parsed: lesson.ok ? lesson.ref : undefined,
+      };
     }
-    return [];
+    return {
+      passages: [],
+      ranges: [],
+      parsed: lesson.ok ? lesson.ref : undefined,
+    };
   }
   const passages = await getScripturePassagesFromDolRef(settings, ref);
-  if (passages.length > 0) return passages;
+  if (passages.length > 0) {
+    return {
+      passages,
+      ranges: passages.map(fallbackRange),
+      parsed: lesson.ok ? lesson.ref : undefined,
+    };
+  }
   const passage = await getPassageFromDolRef(
     ALL_SCRIPTURE_BOOKS,
     (b) => loadScriptureBook(settings, b),
     ref,
   );
-  return passage ? [passage] : [];
+  return {
+    passages: passage ? [passage] : [],
+    ranges: passage ? [fallbackRange(passage)] : [],
+    parsed: lesson.ok ? lesson.ref : undefined,
+  };
 }
 
 export async function resolveBcp1962LessonPassages(
@@ -292,12 +414,19 @@ export async function resolveBcp1962LessonPassages(
         .map((s) => s.trim())
         .filter(Boolean);
       const passages: KjvPassage[] = [];
+      const ranges: Bcp1962LessonPassage[] = [];
+      let parsed: LessonRef | undefined;
       for (const segment of segments) {
-        passages.push(...(await resolveSegmentPassages(segment, settings)));
+        const resolved = await resolveSegmentPassages(segment, settings);
+        passages.push(...resolved.passages);
+        ranges.push(...resolved.ranges);
+        parsed ??= resolved.parsed;
       }
       results.push({
         ref,
         normalized,
+        parsed,
+        ranges,
         passage: passages[0] ?? null,
         passages,
         error: passages.length === 0 ? "unresolved reference" : undefined,
@@ -349,14 +478,6 @@ export async function resolveBcp1962OfficeForDate(
   };
 }
 
-export function composeBcp1962OfficeForDate(
-  date: CalendarDate,
-  office: Bcp1962Office,
-  settings: ScriptureSettings = DEFAULT_BCP1962_SCRIPTURE_SETTINGS,
-): Promise<Bcp1962ResolvedOffice> {
-  return resolveBcp1962OfficeForDate(date, office, settings);
-}
-
 export type Bcp1962LitanyNode =
   | { kind: "rubric"; text: string }
   | { kind: "heading"; text: string }
@@ -376,5 +497,429 @@ export function composeBcp1962Litany(date: CalendarDate): Bcp1962LitanyDoc {
     officeName: "The Litany",
     date,
     nodes: getBcp1962Litany().lines.map((line) => ({ ...line })),
+  };
+}
+
+export type Bcp1962OfficeSectionKey =
+  | "opening"
+  | "psalms"
+  | "lessons"
+  | "creed"
+  | "prayers"
+  | "collects"
+  | "closing";
+
+export type Bcp1962OfficeNode =
+  | { kind: "heading"; text: string }
+  | { kind: "rubric"; text: string }
+  | { kind: "text"; text: string; speaker?: string }
+  | {
+      kind: "psalm";
+      refs: string[];
+      passages: Array<{ ref: string; passage: PsalmPassage }>;
+    }
+  | {
+      kind: "lesson";
+      slot: "first" | "second";
+      label: string;
+      ref?: string;
+      normalized?: string;
+      passages: KjvPassage[];
+      error?: string;
+    }
+  | {
+      kind: "canticle";
+      slot: "first" | "second";
+      id: string;
+      title: string;
+      rubric?: string;
+      text: string;
+      suggested: boolean;
+    }
+  | {
+      kind: "creed";
+      id: "apostles" | "athanasian";
+      title: string;
+      rubric?: string;
+      text: string;
+      suggested: boolean;
+    }
+  | {
+      kind: "occasional";
+      id: string;
+      title: string;
+      text: string;
+    };
+
+export type Bcp1962ComposedSection = {
+  key: Bcp1962OfficeSectionKey;
+  heading?: string;
+  nodes: Bcp1962OfficeNode[];
+};
+
+export type Bcp1962OfficeId = Bcp1962Office | "noonday" | "compline";
+
+export type Bcp1962ComposedOffice = {
+  edition: "1962";
+  office: Bcp1962OfficeId;
+  officeName: string;
+  date: CalendarDate;
+  title?: string;
+  sections: Bcp1962ComposedSection[];
+  notes: string[];
+};
+
+function bcp1962OfficeName(office: Bcp1962Office): string {
+  return office === "morning" ? "Morning Prayer" : "Evening Prayer";
+}
+
+/**
+ * Compose a full 1962 Morning or Evening Prayer from the vendored fixed texts,
+ * canticles and collects together with the date's lessons and psalms.
+ */
+export function composeBcp1962Office(
+  date: CalendarDate,
+  office: Bcp1962Office,
+  resolved: Bcp1962ResolvedOffice,
+  composed?: Bcp1962ComposedDate,
+): Bcp1962ComposedOffice {
+  const source = composed ?? composeBcp1962ForDate(date);
+  const officeDef = getBcp1962OfficeText(office);
+  const common = BCP1962_OFFICE_TEXT.common;
+  const officeName = officeDef?.name ?? bcp1962OfficeName(office);
+  const title = resolved.name ?? source.name;
+
+  const openingNodes: Bcp1962OfficeNode[] = [];
+  if (officeDef?.openingRubric) {
+    openingNodes.push({ kind: "rubric", text: officeDef.openingRubric });
+  }
+  for (const sentence of common.openingSentences ?? []) {
+    openingNodes.push({
+      kind: "text",
+      text: `${sentence.label}. ${sentence.text}`,
+    });
+  }
+  if (common.exhortation) {
+    openingNodes.push({ kind: "text", text: common.exhortation });
+  }
+  if (common.confession_rubric) {
+    openingNodes.push({ kind: "rubric", text: common.confession_rubric });
+  }
+  openingNodes.push({ kind: "text", text: common.confession });
+  if (common.absolution_rubric) {
+    openingNodes.push({ kind: "rubric", text: common.absolution_rubric });
+  }
+  openingNodes.push({ kind: "text", text: common.absolution_priest });
+  if (common.amen_rubric) {
+    openingNodes.push({ kind: "rubric", text: common.amen_rubric });
+    openingNodes.push({ kind: "text", text: "Amen." });
+  }
+  if (officeDef?.lordsPrayerOpeningRubric) {
+    openingNodes.push({
+      kind: "rubric",
+      text: officeDef.lordsPrayerOpeningRubric,
+    });
+  }
+  openingNodes.push({ kind: "heading", text: "The Lord's Prayer" });
+  openingNodes.push({
+    kind: "text",
+    text: common.lords_prayer_opening ?? common.lords_prayer,
+  });
+  if (officeDef?.openingVersiclesRubric) {
+    openingNodes.push({
+      kind: "rubric",
+      text: officeDef.openingVersiclesRubric,
+    });
+  }
+  for (let i = 0; i < (officeDef?.openingVersicles?.length ?? 0); i++) {
+    const v = officeDef?.openingVersicles?.[i];
+    if (v && i === 4 && officeDef?.gloriaStandingRubric) {
+      openingNodes.push({
+        kind: "rubric",
+        text: officeDef.gloriaStandingRubric,
+      });
+    }
+    if (v)
+      openingNodes.push({ kind: "text", text: v.text, speaker: v.speaker });
+  }
+  if (office === "morning") {
+    if (officeDef?.invitatory?.rubric) {
+      openingNodes.push({ kind: "rubric", text: officeDef.invitatory.rubric });
+    }
+    if (common.venite) {
+      openingNodes.push({ kind: "heading", text: common.venite.title });
+      if (common.venite.rubric) {
+        openingNodes.push({ kind: "rubric", text: common.venite.rubric });
+      }
+      openingNodes.push({ kind: "text", text: common.venite.text });
+    }
+  }
+  if (officeDef?.psalmsRubric) {
+    openingNodes.push({ kind: "rubric", text: officeDef.psalmsRubric });
+  }
+  if (common.psalms_gloria_rubric && common.gloria_patri) {
+    openingNodes.push({
+      kind: "rubric",
+      text: `${common.psalms_gloria_rubric}\n${common.gloria_patri}`,
+    });
+  }
+
+  const psalmRefs = resolved.psalms ?? [];
+  const passages = psalmRefs.flatMap((ref) => {
+    const passage = getBcp1962PsalmPassages([ref])?.[0];
+    return passage ? [{ ref, passage }] : [];
+  });
+  const psalmNodes: Bcp1962OfficeNode[] =
+    psalmRefs.length > 0
+      ? [
+          {
+            kind: "psalm",
+            refs: psalmRefs,
+            passages,
+          },
+        ]
+      : [
+          {
+            kind: "rubric",
+            text: "No psalms appointed for this date.",
+          },
+        ];
+
+  const lessonsAndCanticles: Bcp1962OfficeNode[] = [];
+  if (common.lesson_note) {
+    lessonsAndCanticles.push({ kind: "rubric", text: common.lesson_note });
+  }
+  const slots: Array<
+    ["first" | "second", string, "afterFirst" | "afterSecond"]
+  > = [
+    ["first", "First Lesson", "afterFirst"],
+    ["second", "Second Lesson", "afterSecond"],
+  ];
+  for (let i = 0; i < slots.length; i++) {
+    const [slot, label, canticleKey] = slots[i];
+    const rubric =
+      slot === "first"
+        ? officeDef?.firstLessonRubric
+        : officeDef?.secondLessonRubric;
+    if (rubric) lessonsAndCanticles.push({ kind: "rubric", text: rubric });
+    const lesson = resolved.lessons[i];
+    if (lesson) {
+      lessonsAndCanticles.push({
+        kind: "lesson",
+        slot,
+        label,
+        ref: lesson.ref,
+        normalized: lesson.normalized,
+        passages: lesson.passages,
+        error: lesson.error,
+      });
+    }
+    const canticleIds =
+      canticleKey === "afterFirst"
+        ? (officeDef?.canticles?.afterFirst ?? [])
+        : (officeDef?.canticles?.afterSecond ?? []);
+    const canticles = canticleIds.flatMap((id) => {
+      const canticle = getBcp1962Canticle(id);
+      return canticle ? [canticle] : [];
+    });
+    for (let i = 0; i < canticles.length; i++) {
+      const canticle = canticles[i];
+      lessonsAndCanticles.push({
+        kind: "canticle",
+        slot,
+        id: canticle.id,
+        title: canticle.title,
+        rubric: canticle.rubric,
+        text: canticle.text,
+        suggested: i === 0,
+      });
+    }
+  }
+
+  const creedNodes: Bcp1962OfficeNode[] = [
+    {
+      kind: "creed",
+      id: "apostles",
+      title: "The Apostles' Creed",
+      rubric: officeDef?.creedRubric ?? common.creed_rubric,
+      text: common.apostles_creed,
+      suggested: !common.athanasian_creed,
+    },
+  ];
+  if (common.athanasian_creed) {
+    creedNodes.push({
+      kind: "creed",
+      id: "athanasian",
+      title: "The Creed of Saint Athanasius",
+      rubric: common.athanasian_creed_rubric,
+      text: common.athanasian_creed,
+      suggested: Boolean(common.athanasian_creed),
+    });
+  }
+
+  const prayersNodes: Bcp1962OfficeNode[] = [];
+  if (officeDef?.prayersRubric) {
+    prayersNodes.push({ kind: "rubric", text: officeDef.prayersRubric });
+  }
+  for (const v of officeDef?.preces ?? []) {
+    prayersNodes.push({ kind: "text", text: v.text, speaker: v.speaker });
+  }
+  prayersNodes.push({ kind: "heading", text: "The Lord's Prayer" });
+  prayersNodes.push({ kind: "text", text: common.lords_prayer });
+  if (officeDef?.suffragesRubric) {
+    prayersNodes.push({ kind: "rubric", text: officeDef.suffragesRubric });
+  }
+  if (common.suffrages?.length) {
+    prayersNodes.push({ kind: "heading", text: "Suffrages" });
+    for (const v of common.suffrages) {
+      prayersNodes.push({ kind: "text", text: v.text, speaker: v.speaker });
+    }
+  }
+
+  const collectNodes: Bcp1962OfficeNode[] = [];
+  if (officeDef?.collectsRubric) {
+    collectNodes.push({ kind: "rubric", text: officeDef.collectsRubric });
+  }
+  const collectCandidates = [resolved.name, source.name, title].filter(
+    (n): n is string => typeof n === "string" && n.length > 0,
+  );
+  const collectOfDay = collectCandidates
+    .map((name) => getBcp1962ProperCollect(name))
+    .find((c) => c !== undefined);
+  if (collectOfDay) {
+    collectNodes.push({ kind: "heading", text: "The Collect of the Day" });
+    collectNodes.push({ kind: "rubric", text: collectOfDay.name });
+    collectNodes.push({ kind: "text", text: collectOfDay.text });
+  }
+  for (const c of getBcp1962FixedCollects(office)) {
+    collectNodes.push({ kind: "heading", text: c.title });
+    collectNodes.push({ kind: "text", text: c.text });
+  }
+
+  const closingNodes: Bcp1962OfficeNode[] = [];
+  const stateRubric =
+    office === "morning"
+      ? common.state_prayers_rubric_morning
+      : common.state_prayers_rubric_evening;
+  if (stateRubric) closingNodes.push({ kind: "rubric", text: stateRubric });
+  if (common.anthem_rubric) {
+    closingNodes.push({ kind: "rubric", text: common.anthem_rubric });
+  }
+  for (const p of common.prayers ?? []) {
+    closingNodes.push({
+      kind: "occasional",
+      id: p.id,
+      title: p.title,
+      text: p.text,
+    });
+  }
+  closingNodes.push({ kind: "heading", text: "The Grace" });
+  closingNodes.push({ kind: "text", text: common.grace });
+  if (officeDef?.endRubric) {
+    closingNodes.push({ kind: "rubric", text: officeDef.endRubric });
+  }
+
+  return {
+    edition: "1962",
+    office,
+    officeName,
+    date,
+    title,
+    sections: [
+      { key: "opening", nodes: openingNodes },
+      { key: "psalms", heading: "The Psalms", nodes: psalmNodes },
+      { key: "lessons", heading: "The Lessons", nodes: lessonsAndCanticles },
+      { key: "creed", heading: "The Creed", nodes: creedNodes },
+      { key: "prayers", heading: "The Prayers", nodes: prayersNodes },
+      { key: "collects", nodes: collectNodes },
+      { key: "closing", nodes: closingNodes },
+    ],
+    notes: [...new Set([...source.notes, ...resolved.notes])],
+  };
+}
+
+/** Resolve and compose a sectioned 1962 office for a date. */
+export async function composeBcp1962OfficeForDate(
+  date: CalendarDate,
+  office: Bcp1962Office,
+  settings: ScriptureSettings = DEFAULT_BCP1962_SCRIPTURE_SETTINGS,
+): Promise<Bcp1962ComposedOffice> {
+  const composed = composeBcp1962ForDate(date);
+  const resolved = await resolveBcp1962OfficeForDate(date, office, settings);
+  return composeBcp1962Office(date, office, resolved, composed);
+}
+
+export const BCP1962_OFFICE_SECTION_ORDER: Bcp1962OfficeSectionKey[] = [
+  "opening",
+  "psalms",
+  "lessons",
+  "creed",
+  "prayers",
+  "collects",
+  "closing",
+];
+
+/** Compose one of the 1962 book's fixed short offices from vendored lines. */
+export function composeBcp1962FixedOffice(
+  office: "noonday" | "compline",
+  date: CalendarDate,
+): Bcp1962ComposedOffice {
+  const source =
+    office === "noonday" ? getBcp1962MidDayOffice() : getBcp1962Compline();
+  const officeName =
+    office === "noonday" ? "Prayers at Mid-day" : "The Order for Compline";
+  const nodes: Bcp1962OfficeNode[] = source.lines.map((entry) => {
+    if (entry.kind === "rubric" || entry.kind === "heading") {
+      return { kind: entry.kind, text: entry.text };
+    }
+    return { kind: "text", text: entry.text, speaker: entry.speaker };
+  });
+  return {
+    edition: "1962",
+    office,
+    officeName,
+    date,
+    sections: [{ key: "closing", nodes }],
+    notes: [],
+  };
+}
+
+export function composeBcp1962Noonday(
+  date: CalendarDate,
+): Bcp1962ComposedOffice {
+  return composeBcp1962FixedOffice("noonday", date);
+}
+
+export function composeBcp1962Compline(
+  date: CalendarDate,
+): Bcp1962ComposedOffice {
+  return composeBcp1962FixedOffice("compline", date);
+}
+
+/**
+ * Family Prayer is the 1962 book's equivalent of the 1979 daily devotions.
+ * The book prints a Morning and an Evening form; the noonday and compline
+ * tabs use the nearer of the two.
+ */
+export function composeBcp1962FamilyPrayer(
+  tab: Bcp1962OfficeId,
+  date: CalendarDate,
+): Bcp1962ComposedOffice {
+  const form = tab === "morning" || tab === "noonday" ? "morning" : "evening";
+  const nodes: Bcp1962OfficeNode[] = getBcp1962FamilyPrayer(form).map(
+    (entry) => {
+      if (entry.kind === "rubric" || entry.kind === "heading") {
+        return { kind: entry.kind, text: entry.text };
+      }
+      return { kind: "text", text: entry.text, speaker: entry.speaker };
+    },
+  );
+  return {
+    edition: "1962",
+    office: tab,
+    officeName: `Family Prayers, ${form === "morning" ? "Morning" : "Evening"}`,
+    date,
+    sections: [{ key: "closing", nodes }],
+    notes: [],
   };
 }

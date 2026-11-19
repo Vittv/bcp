@@ -344,17 +344,75 @@ export function resolveBcp1962Observance(
   };
 }
 
+const ORDINALS = [
+  "",
+  "First",
+  "Second",
+  "Third",
+  "Fourth",
+  "Fifth",
+  "Sixth",
+  "Seventh",
+  "Eighth",
+  "Ninth",
+  "Tenth",
+  "Eleventh",
+  "Twelfth",
+  "Thirteenth",
+  "Fourteenth",
+  "Fifteenth",
+  "Sixteenth",
+  "Seventeenth",
+  "Eighteenth",
+  "Nineteenth",
+  "Twentieth",
+  "Twenty-first",
+  "Twenty-second",
+  "Twenty-third",
+  "Twenty-fourth",
+  "Twenty-fifth",
+  "Twenty-sixth",
+];
+
+/**
+ * Status-bar label for the 1962 cycle: its Year I/II count and the appointed
+ * Sunday or week, following the book's own ecclesiastical-year sections.
+ */
 export function bcp1962CycleLabel(date: CalendarDate): string | null {
   const obs = resolveBcp1962Observance(date);
-  if (obs.season === "trinity") {
-    if (obs.dayKey === "trinity-sunday") return "Trinity Sunday";
-    const sunday = toDays(date) - weekday(date);
-    const trinity = toDays(bcp1962MoveableDays(obs.ecclesiasticalYear).trinity);
-    const n = (sunday - trinity) / 7;
-    if (n >= 1) return `Sunday after Trinity ${n}`;
+  const year = obs.year === 1 ? "Year I" : "Year II";
+  const numbered = /^(advent|epiphany|lent|easter|trinity)-(\d+)$/.exec(
+    obs.sectionId,
+  );
+  let count: string | null = null;
+  if (numbered) {
+    const season = numbered[1];
+    const n = Number(numbered[2]);
+    const ordinal = ORDINALS[n] ?? String(n);
+    const after: Record<string, string> = {
+      advent: "Sunday in Advent",
+      epiphany: "Sunday after Epiphany",
+      lent: "Sunday in Lent",
+      easter: "Sunday after Easter",
+      trinity: "Sunday after Trinity",
+    };
+    count = `${ordinal} ${after[season] ?? "Sunday"}`;
+  } else {
+    const named: Record<string, string> = {
+      christmastide: "Christmastide",
+      "after-christmas-2": "Second Sunday after Christmas",
+      epiphany: "Epiphany",
+      septuagesima: "Septuagesima",
+      sexagesima: "Sexagesima",
+      quinquagesima: "Quinquagesima",
+      "holy-week": "Holy Week",
+      "easter-week": "Easter Week",
+      "ascension-sunday": "Sunday after Ascension",
+      whitsunday: "Whitsunday",
+      trinity: "Trinity Sunday",
+      "before-advent": "Sunday next before Advent",
+    };
+    count = named[obs.sectionId] ?? null;
   }
-  if (obs.season === "before-advent" && obs.dayKey === "sunday") {
-    return "Sunday next before Advent";
-  }
-  return null;
+  return count ? `${year} · ${count}` : year;
 }

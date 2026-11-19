@@ -42,8 +42,10 @@ export const OFFICE_LABEL_1662: Partial<Record<TabId, string>> = {
 };
 
 export const OFFICE_LABEL_1962: Partial<Record<TabId, string>> = {
-  morning: "Matins",
-  evening: "Evensong",
+  morning: "Morning",
+  noonday: "Mid-day",
+  evening: "Evening",
+  compline: "Compline",
   litany: "The Litany",
 };
 
@@ -69,8 +71,16 @@ export function officeForHour1962(hour: number): TabId {
   return "evening";
 }
 
+// the 1962 book has Morning and Evening Prayer, Prayers at Mid-day, Compline
+// and the Litany, with no 1979-only devotions
 export function is1962OfficeTab(tab: TabId): boolean {
-  return tab === "morning" || tab === "evening" || tab === "litany";
+  return (
+    tab === "morning" ||
+    tab === "noonday" ||
+    tab === "evening" ||
+    tab === "compline" ||
+    tab === "litany"
+  );
 }
 
 // sidebar observance detail: the days until the next fixed feast ("today" on
