@@ -339,8 +339,6 @@ export const LESSER_FEAST_BIOS: Record<string, string> = {
     "Elie Naud, known in English as Elias Neau, was a French Huguenot who settled in New York after being freed from slavery. He became a merchant and catechist, opened a school for enslaved Africans, and worked for their education and baptism despite opposition.",
   "kassiani-poet-and-hymnographer-865":
     "Kassiani was a ninth-century Byzantine poet, hymnographer, and abbess. She founded a convent in Constantinople and wrote liturgical hymns, including the well-known Hymn of Kassiani sung during Holy Week in the Eastern churches.",
-  "nativity-of-the-blessed-virgin-mary":
-    "This feast celebrates the birth of Mary, the mother of Jesus. The Gospels do not record her birth, but early Christian tradition, drawing on the Protoevangelium of James, honors it as the beginning of the story of salvation.",
   "constance-thecla-ruth-frances-charles-parsons-and-louis-schuyler-martyrs":
     "The Martyrs of Memphis were Sisters Constance, Thecla, Ruth, and Frances of the Community of St Mary, together with the priests Charles Parsons and Louis Schuyler. They stayed in Memphis during the yellow fever epidemic of 1878 to nurse the sick, and all six died of the disease.",
   "alexander-crummell-priest":

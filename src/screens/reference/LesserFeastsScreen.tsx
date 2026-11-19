@@ -6,25 +6,18 @@ import {
   useMemo,
 } from "react";
 import { Pressable, Text, View } from "react-native";
-import { useSubheading } from "../../components/office/contentHeadings";
+import { FeastCard } from "../../components/office/FeastCard";
 import { useEdition } from "../../context/EditionContext";
 import { usePalette } from "../../context/PaletteContext";
 import {
   type FeastIdentity,
-  feastMonthDayLabel,
   feastMonthDayShortLabel,
+  feastNameForTradition,
   lesserFeastBySlugForTradition,
   lesserFeastForTraditionDate,
   searchLesserFeastsForTradition,
   upcomingLesserFeastForTradition,
 } from "../../lib/calendar/feastsByTradition";
-import { LESSER_FEAST_BIOS } from "../../lib/calendar/lesserFeastBios";
-import { LESSER_FEASTS_URL } from "../../lib/calendar/lesserFeasts";
-import {
-  LESSER_FEAST_WIKI,
-  wikipediaArticleUrl,
-  wikipediaSearchUrl,
-} from "../../lib/calendar/lesserFeastWiki";
 import { traditionForEdition } from "../../lib/calendar/tradition";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
@@ -61,7 +54,7 @@ export function LesserFeastsScreen({
     return (
       <View style={styles.container}>
         <DetailPage compact>
-          <LesserFeastCard feast={selected} tradition={tradition} />
+          <FeastCard feast={selected} tradition={tradition} />
         </DetailPage>
       </View>
     );
@@ -71,11 +64,7 @@ export function LesserFeastsScreen({
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
       detail={
-        <LesserFeastCard
-          feast={selected}
-          tradition={tradition}
-          key={selected.slug}
-        />
+        <FeastCard feast={selected} tradition={tradition} key={selected.slug} />
       }
       detailOpen
     />
@@ -104,7 +93,9 @@ export function LesserFeastsBar({ leading }: { leading?: ReactNode }) {
       <View style={styles.barLeft}>
         {leading}
         <PickerButton
-          label={feast?.name ?? "Lesser feast"}
+          label={
+            feast ? feastNameForTradition(feast, tradition) : "Lesser feast"
+          }
           meta={
             feast ? feastMonthDayShortLabel(feast.month, feast.day) : undefined
           }
@@ -137,11 +128,13 @@ export function LesserFeastsBar({ leading }: { leading?: ReactNode }) {
 // active state changed, instead of rebuilding the whole list every move
 const LesserFeastRow = memo(function LesserFeastRow({
   hit,
+  name,
   active,
   selected,
   onSelect,
 }: {
   hit: FeastIdentity;
+  name: string;
   active: boolean;
   selected: string | null;
   onSelect: (slug: string | null) => void;
@@ -160,7 +153,7 @@ const LesserFeastRow = memo(function LesserFeastRow({
             ellipsizeMode="tail"
             style={[styles.saintTitle, a && styles.rowTextActive]}
           >
-            {hit.name}
+            {name}
           </Text>
           <Text style={[styles.saintDate, a && styles.rowTextActive]}>
             {feastMonthDayShortLabel(hit.month, hit.day)}
@@ -207,6 +200,7 @@ export const LesserFeastIndex = memo(function LesserFeastIndex({
         <LesserFeastRow
           key={hit.slug}
           hit={hit}
+          name={feastNameForTradition(hit, tradition)}
           active={i === cursor}
           selected={selected}
           onSelect={onSelect}
@@ -215,96 +209,3 @@ export const LesserFeastIndex = memo(function LesserFeastIndex({
     </View>
   );
 });
-
-// the detail card carries only what the app may reproduce: the name, the
-// date, the trial marker, any original biography, and links out to a
-// wikipedia article and the official book
-export function LesserFeastCard({
-  feast,
-  tradition,
-}: {
-  feast: FeastIdentity;
-  tradition: "tec" | "coe" | "acc";
-}) {
-  const styles = useThemedStyles(styleDef);
-  const subheading = useSubheading();
-  const bio = tradition === "tec" ? LESSER_FEAST_BIOS[feast.slug] : undefined;
-  const wikiLinks =
-    tradition === "tec" ? (LESSER_FEAST_WIKI[feast.slug] ?? []) : [];
-  const date = feastMonthDayLabel(feast.month, feast.day);
-  const calendar =
-    tradition === "tec"
-      ? "TEC · Lesser Feasts and Fasts 2024"
-      : tradition === "coe"
-        ? "CoE · 1662 daily calendar"
-        : "ACC · 1962 Canadian calendar";
-  return (
-    <View>
-      <Text style={[subheading, styles.lesserFeastTitle]}>{feast.name}</Text>
-      <Text style={styles.detailSubtitle}>
-        {calendar}
-        {"\n"}
-        {date}
-        {feast.trial ? " · Trial use" : ""}
-      </Text>
-      {bio ? (
-        <Text style={styles.lesserBio}>{bio}</Text>
-      ) : (
-        <Text style={styles.lesserBio}>{`Commemorated on ${date}.`}</Text>
-      )}
-      {wikiLinks.length > 0 ? (
-        wikiLinks.map((link) => (
-          <Pressable
-            key={link.title}
-            style={({ hovered }) => [
-              styles.lesserLinkRow,
-              hovered && styles.rowHover,
-            ]}
-            onPress={() =>
-              window.open(
-                wikipediaArticleUrl(link.title),
-                "_blank",
-                "noreferrer",
-              )
-            }
-            accessibilityRole="link"
-            accessibilityLabel={`Read ${link.label ?? link.title} on Wikipedia`}
-          >
-            <Text style={styles.lesserLink}>
-              {`${link.label ?? link.title} on Wikipedia ›`}
-            </Text>
-          </Pressable>
-        ))
-      ) : (
-        <Pressable
-          style={({ hovered }) => [
-            styles.lesserLinkRow,
-            hovered && styles.rowHover,
-          ]}
-          onPress={() =>
-            window.open(wikipediaSearchUrl(feast.name), "_blank", "noreferrer")
-          }
-          accessibilityRole="link"
-          accessibilityLabel={`Search Wikipedia for ${feast.name}`}
-        >
-          <Text style={styles.lesserLink}>{"Search Wikipedia ›"}</Text>
-        </Pressable>
-      )}
-      {tradition === "tec" ? (
-        <Pressable
-          style={({ hovered }) => [
-            styles.lesserLinkRow,
-            hovered && styles.rowHover,
-          ]}
-          onPress={() => window.open(LESSER_FEASTS_URL, "_blank", "noreferrer")}
-          accessibilityRole="link"
-          accessibilityLabel="Open the official Lesser Feasts and Fasts 2024 PDF"
-        >
-          <Text style={styles.lesserLink}>
-            {"Lesser Feasts and Fasts 2024, official PDF ›"}
-          </Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}

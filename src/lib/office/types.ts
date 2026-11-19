@@ -107,6 +107,8 @@ export type ComposedNode =
       passage: CollectPassage;
       // the feast the collect belongs to, for linking its title
       slug?: string;
+      // why this collect was appointed, shown as a rubric in the office
+      appointment?: string;
     }
   | { kind: "fixed-collect"; text: string; title?: string };
 

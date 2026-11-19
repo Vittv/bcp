@@ -7,6 +7,7 @@ import {
 } from "react";
 import { Pressable, Text } from "react-native";
 import { useNavigation } from "../../context/NavigationContext";
+import { feastBySlug } from "../../lib/calendar/feastsByTradition";
 import { sanctoraleBySlug } from "../../lib/calendar/sanctorale";
 import { CHROME_FONT, HEADING_FONT } from "../../lib/fonts";
 import {
@@ -15,6 +16,7 @@ import {
 } from "../../lib/theme/themedStyles";
 import { useReference } from "../../screens/reference/shared";
 import { AppModal } from "../shell/AppModal";
+import { FeastCard } from "./FeastCard";
 import { SanctoraleCard } from "./SanctoraleCard";
 
 // tapping a saint mention anywhere in an office opens a reusable modal
@@ -81,7 +83,23 @@ export function SaintPopoverProvider({ children }: { children: ReactNode }) {
             </Pressable>
           }
         >
-          <SanctoraleCard slug={slug} showTitle={false} showLiturgy={false} />
+          {(() => {
+            const feast = feastBySlug(slug);
+            return feast ? (
+              <FeastCard
+                feast={feast}
+                tradition="tec"
+                showTitle={false}
+                showLiturgy={false}
+              />
+            ) : (
+              <SanctoraleCard
+                slug={slug}
+                showTitle={false}
+                showLiturgy={false}
+              />
+            );
+          })()}
         </AppModal>
       ) : null}
     </SaintPopoverContext.Provider>

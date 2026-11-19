@@ -2,7 +2,6 @@ import { Pressable, Text, View } from "react-native";
 import type { FeastIdentity } from "../../lib/calendar/feastsByTradition";
 import { feastMonthDayLabel } from "../../lib/calendar/feastsByTradition";
 import { wikipediaSearchUrl } from "../../lib/calendar/lesserFeastWiki";
-import type { CalendarTradition } from "../../lib/calendar/tradition";
 import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../../lib/fonts";
 import {
   defineThemedStyles,
@@ -10,21 +9,9 @@ import {
 } from "../../lib/theme/themedStyles";
 import { useSubheading } from "./contentHeadings";
 
-const CALENDARS: Record<CalendarTradition, string> = {
-  tec: "TEC · 1979 Book of Common Prayer",
-  coe: "CoE · 1662 Book of Common Prayer",
-  acc: "ACC · 1962 Canadian Book of Common Prayer",
-};
-
 // the older churches' holy days carry a name and a printed date but no vendored
 // propers, so their cards stay to what the witness actually supplies.
-export function HolyDayCard({
-  feast,
-  tradition,
-}: {
-  feast: FeastIdentity;
-  tradition: CalendarTradition;
-}) {
+export function HolyDayCard({ feast }: { feast: FeastIdentity }) {
   const styles = useThemedStyles(styleDef);
   const subheading = useSubheading();
   const date = feastMonthDayLabel(feast.month, feast.day);
@@ -32,12 +19,12 @@ export function HolyDayCard({
     <View>
       <Text style={[subheading, styles.title]}>{feast.name}</Text>
       <Text style={styles.subtitle}>
-        {CALENDARS[tradition]}
+        {feast.calendar}
         {"\n"}
         {date}
       </Text>
       <Text style={styles.body}>
-        {`Commemorated on ${date} in the ${CALENDARS[tradition]} calendar.`}
+        {`Commemorated on ${date} in the ${feast.calendar} calendar.`}
       </Text>
       <Pressable
         style={({ hovered }) => [styles.linkRow, hovered && styles.rowHover]}

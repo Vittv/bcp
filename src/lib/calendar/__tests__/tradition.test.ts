@@ -3,16 +3,20 @@ import { calendarFor, calendarForEdition } from "../calendarProvider";
 import {
   allFeasts,
   canonicalFeastSlug,
+  FEAST_REGISTRY,
   feastMonthDayLabel,
+  feastNameForTradition,
   feastsByCanonical,
   feastsForDate,
   firstLesserFeastForTradition,
   holyDayBySlugForTradition,
   lesserFeastBySlugForTradition,
   lesserFeastForTraditionDate,
+  lesserFeastsForTradition,
   searchLesserFeastsForTradition,
 } from "../feastsByTradition";
 import { dayInfo } from "../observances";
+import { sanctoraleBySlug } from "../sanctorale";
 import { traditionForEdition } from "../tradition";
 import type { CalendarDate } from "../types";
 
@@ -40,11 +44,11 @@ describe("feasts per church", () => {
   it("gives each tradition its own fixed feast table", () => {
     expect(allFeasts("tec").length).toBe(284);
     expect(allFeasts("coe").length).toBeGreaterThan(80);
-    expect(allFeasts("acc").length).toBe(155);
+    expect(allFeasts("acc").length).toBe(154);
     for (const tradition of ["tec", "coe", "acc"] as const) {
-      expect(allFeasts(tradition).every((f) => f.tradition === tradition)).toBe(
-        true,
-      );
+      expect(
+        allFeasts(tradition).every((f) => f.calendars.includes(tradition)),
+      ).toBe(true);
     }
   });
 
@@ -97,6 +101,79 @@ describe("feasts per church", () => {
     expect(canonicalFeastSlug("Visit: of ye. Bl. Virg. Marie.")).toBe(
       "visitation",
     );
+  });
+});
+
+describe("shared feast metadata", () => {
+  it("carries every observing church on a shared feast", () => {
+    const registryEntries = FEAST_REGISTRY.filter(
+      (f) => f.canonical === "st-andrew" && f.month === 11 && f.day === 30,
+    );
+    expect(registryEntries).toHaveLength(1);
+    expect(registryEntries[0].observations).toHaveLength(3);
+    const andrew = allFeasts("tec").find(
+      (f) => f.canonical === "st-andrew" && f.month === 11 && f.day === 30,
+    );
+    if (!andrew) throw new Error("missing Saint Andrew");
+    expect(andrew.calendars).toEqual(["tec", "coe", "acc"]);
+    expect(andrew.calendar).toContain("The Episcopal Church");
+    expect(andrew.calendar).toContain("Church of England");
+    expect(andrew.calendar).toContain("Anglican Church of Canada");
+    // the shared slug is the one the 1979 page uses, so every church can
+    // open the same TEC holy-day card for this feast
+    expect(sanctoraleBySlug(andrew.slug)?.title).toBe(
+      "Saint Andrew the Apostle",
+    );
+    // the same single entry is visible from every church's table
+    for (const tradition of ["tec", "coe", "acc"] as const) {
+      expect(allFeasts(tradition).some((f) => f.slug === andrew.slug)).toBe(
+        true,
+      );
+    }
+  });
+
+  it("merges Edmund of East Anglia into one conditional page", () => {
+    const entries = FEAST_REGISTRY.filter((f) => f.slug === "edmund-king-870");
+    expect(entries).toHaveLength(1);
+    expect(entries[0].observations).toHaveLength(3);
+    const printed: Record<string, string> = {
+      tec: "Edmund, King, 870",
+      coe: "Edmund K. & M.",
+      acc: "Edmund, King of East Anglia, Martyr 870",
+    };
+    for (const tradition of ["tec", "coe", "acc"] as const) {
+      const feasts = lesserFeastsForTradition(tradition).filter(
+        (f) => f.slug === "edmund-king-870",
+      );
+      expect(feasts).toHaveLength(1);
+      expect(feastNameForTradition(feasts[0], tradition)).toBe(
+        printed[tradition],
+      );
+      expect(
+        searchLesserFeastsForTradition("edmund", tradition).some(
+          (f) => f.slug === "edmund-king-870",
+        ),
+      ).toBe(true);
+    }
+    expect(
+      canonicalFeastSlug("Edmund James Peck, Missionary to the Eskimo, 1924"),
+    ).toBeUndefined();
+    expect(
+      searchLesserFeastsForTradition("Edmund K. & M.", "coe").map(
+        (f) => f.slug,
+      ),
+    ).toContain("edmund-king-870");
+  });
+
+  it("keeps differing dates as separate entries", () => {
+    const visitationTec = feastsByCanonical("visitation", "tec").find(
+      (f) => !f.slug.startsWith("eve-"),
+    );
+    const visitationAcc = feastsByCanonical("visitation", "acc")[0];
+    expect([visitationTec?.month, visitationTec?.day]).toEqual([5, 31]);
+    expect([visitationAcc?.month, visitationAcc?.day]).toEqual([7, 2]);
+    expect(visitationTec?.calendar).toContain("The Episcopal Church");
+    expect(visitationAcc?.calendar).toContain("Anglican Church of Canada");
   });
 });
 
@@ -169,11 +246,11 @@ describe("lesser feast reference data per church", () => {
   });
 
   it("indexes each church's own lesser feasts", () => {
-    expect(searchLesserFeastsForTradition("", "tec").length).toBe(247);
+    expect(searchLesserFeastsForTradition("", "tec").length).toBe(246);
     expect(searchLesserFeastsForTradition("", "coe").length).toBeGreaterThan(
       50,
     );
-    expect(searchLesserFeastsForTradition("", "acc").length).toBe(108);
+    expect(searchLesserFeastsForTradition("", "acc").length).toBe(117);
     expect(firstLesserFeastForTradition("coe").name).toContain("Lucian");
   });
 

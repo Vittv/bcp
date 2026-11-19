@@ -1,0 +1,732 @@
+{
+ "meta": {
+  "edition": "1962",
+  "title": "1962 Canadian BCP, Eucharistic propers (Epistle and Gospel citations)",
+  "status": "curated-from-witness",
+  "sources": [
+   {
+    "role": "primary witness",
+    "ref": "The Book of Common Prayer (1962, Canada), Collects, Epistles, and Gospels, printed pages 94 to 330",
+    "url": "https://www.anglican.ca/wp-content/uploads/bcp.pdf",
+    "note": "Epistle and Gospel citations extracted from printed proper headings; text itself is not reproduced here."
+   }
+  ],
+  "caveats": [
+   "Citations are Eucharistic propers, not Daily Office lessons.",
+   "Names follow the printed proper headings, which differ from the fixed-calendar commemoration names.",
+   "A few propers carry only one of the two citations where the PDF text layer split the heading."
+  ]
+ },
+ "propers": [
+  {
+   "name": "THE FIRST SUNDAY IN ADVENT BEING THE FOURTH SUNDAY BEFORE CHRISTMAS DAY",
+   "epistle": "Romans 13. 8.",
+   "gospel": null
+  },
+  {
+   "name": "FIRST SUNDAY IN ADVENT",
+   "epistle": null,
+   "gospel": "St Matthew 21. 1."
+  },
+  {
+   "name": "THE SECOND SUNDAY IN ADVENT",
+   "epistle": "Romans 15. 4.",
+   "gospel": "St Luke 21. 25."
+  },
+  {
+   "name": "THE THIRD SUNDAY IN ADVENT",
+   "epistle": "1 Corinthians 4. 1.",
+   "gospel": "St Matthew 11. 2."
+  },
+  {
+   "name": "ADVENT EMBER DAYS",
+   "epistle": "Micah 4. 1.",
+   "gospel": "St Luke 1. 26."
+  },
+  {
+   "name": "THE FOURTH SUNDAY IN ADVENT",
+   "epistle": "Philippians 4. 4.",
+   "gospel": null
+  },
+  {
+   "name": "FOUTH SUNDAY IN ADVENT",
+   "epistle": null,
+   "gospel": "St John 1. 19."
+  },
+  {
+   "name": "CHRISTMAS DAY",
+   "epistle": "Hebrews 1. 1.",
+   "gospel": "St John 1. 1."
+  },
+  {
+   "name": "SAINT STEVEN THE MARTYR",
+   "epistle": "Acts 55.",
+   "gospel": "St Matthew 23. 34."
+  },
+  {
+   "name": "SAINT JOHN THE EVANGELIST",
+   "epistle": "1 St John 1. 1.",
+   "gospel": "St John 21. 19."
+  },
+  {
+   "name": "THE INNOCENTS",
+   "epistle": "Revelation 14. 1.",
+   "gospel": "St Matthew 2. 13."
+  },
+  {
+   "name": "THE SUNDAY AFTER CHRISTMAS DAY",
+   "epistle": "Galatians 4. 1.",
+   "gospel": "St Matthew 1. 18."
+  },
+  {
+   "name": "THE OCTAVE DAY OF CHRISTMAS",
+   "epistle": "Isaiah 9. 2.",
+   "gospel": "St Luke 2. 15."
+  },
+  {
+   "name": "THE EPIPHANY OF OUR LORD OR THE MANIFESTATION OF CHRIST TO THE GENTILES",
+   "epistle": "Ephesians 3. 1.",
+   "gospel": null
+  },
+  {
+   "name": "THE EPIPHANY OF OUR LORD",
+   "epistle": null,
+   "gospel": "St Matthew 2. 1."
+  },
+  {
+   "name": "IN THE EPIPHANY OCTAVE",
+   "epistle": "Isaiah 42. 1.",
+   "gospel": "St Mark 1. 1."
+  },
+  {
+   "name": "OF THE C HURCH O VERSEAS .",
+   "epistle": "Romans 10. 8.",
+   "gospel": null
+  },
+  {
+   "name": "THE FIRST SUNDAY AFTER THE EPIPHANY",
+   "epistle": "Romans 12. 11.",
+   "gospel": "St Luke 2. 41."
+  },
+  {
+   "name": "THE SECOND SUNDAY AFTER THE EPIPHANY",
+   "epistle": "Romans 12. 6.",
+   "gospel": null
+  },
+  {
+   "name": "SECOND SUNDAY AFTER EPIPHANY",
+   "epistle": null,
+   "gospel": "St John 2. 1."
+  },
+  {
+   "name": "THE THIRD SUNDAY AFTER THE EPIPHANY",
+   "epistle": "Romans 12. 16.",
+   "gospel": null
+  },
+  {
+   "name": "THIRD SUNDAY AFTER EPIPHANY",
+   "epistle": null,
+   "gospel": "St Matthew 8. 1."
+  },
+  {
+   "name": "THE FOURTH SUNDAY AFTER THE EPIPHANY",
+   "epistle": "Romans 13. 1.",
+   "gospel": null
+  },
+  {
+   "name": "FOURTH SUNDAY AFTER EPIPHANY",
+   "epistle": null,
+   "gospel": "St Mark 4. 35."
+  },
+  {
+   "name": "THE FIFTH SUNDAY AFTER THE EPIPHANY",
+   "epistle": "Colossians 3. 12.",
+   "gospel": null
+  },
+  {
+   "name": "FIFTH SUNDAY AFTER EPIPHANY",
+   "epistle": null,
+   "gospel": "St Matthew 13. 24."
+  },
+  {
+   "name": "THE SIXTH SUNDAY AFTER THE EPIPHANY",
+   "epistle": "1 St John 3. 1.",
+   "gospel": null
+  },
+  {
+   "name": "SIXTH SUNDAY AFTER EPIPHANY",
+   "epistle": null,
+   "gospel": "St Matthew 24. 23."
+  },
+  {
+   "name": "SEPTUAGESIMA SUNDAY",
+   "epistle": "1 Corinthians 9. 24.",
+   "gospel": "St Matthew 20. 1."
+  },
+  {
+   "name": "THE SUNDAY CALLED SEXAGESIMA",
+   "epistle": "2 Corinthians 11. 21.",
+   "gospel": null
+  },
+  {
+   "name": "SEXAGESIMA SUNDAY",
+   "epistle": null,
+   "gospel": "St Luke 8. 4."
+  },
+  {
+   "name": "THE SUNDAY CALLED QUINQUAGESIMA BEING THE FIFTIETH DAY BEFORE EASTER",
+   "epistle": "1 Corinthians 13. 1.",
+   "gospel": null
+  },
+  {
+   "name": "QUINQUAGESIMA SUNDAY",
+   "epistle": null,
+   "gospel": "St Luke 18. 31."
+  },
+  {
+   "name": "ASH WEDNESDAY",
+   "epistle": "St James 4. 6.",
+   "gospel": "St Matthew 6. 16."
+  },
+  {
+   "name": "THE FIRST SUNDAY IN LENT",
+   "epistle": "2 Corinthians 6. 1.",
+   "gospel": "St Matthew 4. 1."
+  },
+  {
+   "name": "THE LENTEN EMBER DAYS BEING THE WEDNESDAY FRIDAY AND SATURDAY AFTER THE FRIST SUNDAY IN LENT",
+   "epistle": "1 Thessalonians 1. 1.",
+   "gospel": null
+  },
+  {
+   "name": "LENTEN EMBER DAYS",
+   "epistle": null,
+   "gospel": "St Mark 1. 32."
+  },
+  {
+   "name": "SECOND SUNDAY IN LENT",
+   "epistle": "1 Thessalonians 4. 1.",
+   "gospel": "St Matthew 15. 231."
+  },
+  {
+   "name": "THE THIRD SUNDAY IN LENT",
+   "epistle": "Ephesians 5. 1.",
+   "gospel": "St Luke 11. 14."
+  },
+  {
+   "name": "THE FOURTH SUNDAY IN LENT",
+   "epistle": "Galatians 4. 26.",
+   "gospel": "St John 6. 5."
+  },
+  {
+   "name": "THE FIFTH SUNDAY IN LENT COMMONLY CALLED PASSION SUNDAY",
+   "epistle": "HEBREWS 9. 11.",
+   "gospel": null
+  },
+  {
+   "name": "FIFTH SUNDAY IN LENT",
+   "epistle": null,
+   "gospel": "St Matthew 20. 20."
+  },
+  {
+   "name": "THE SUNDAY NEXT BEFORE EASTER COMMONLY CALLED PALM SUNDAY",
+   "epistle": "Philippians 2. 5.",
+   "gospel": null
+  },
+  {
+   "name": "T HE P ASSION OF OUR L ORD J ESUS C HRIST A CCORDING TO S T M ATTHEW",
+   "epistle": null,
+   "gospel": "St Matthew 27. 1."
+  },
+  {
+   "name": "MONDAY IN HOLY WEEK",
+   "epistle": "Isaiah 63. 7.",
+   "gospel": null
+  },
+  {
+   "name": "THE BEGINNING OF THE PASSION OF OUR LORD J ESUS CHRIST ACCORDING TO ST M ARK",
+   "epistle": null,
+   "gospel": "St Mark 14. 1."
+  },
+  {
+   "name": "TUESDAY IN HOLY WEEK",
+   "epistle": "Isaiah 50. 5.",
+   "gospel": null
+  },
+  {
+   "name": "THE CONTINUATION OF THE PASSION OF OUR LORD J ESUS CHRIST ACCORDING TO ST M ARK",
+   "epistle": null,
+   "gospel": "St Mark 15. 1."
+  },
+  {
+   "name": "WEDNESDAY IN HOLY WEEK",
+   "epistle": "Hebrews 9. 15.",
+   "gospel": null
+  },
+  {
+   "name": "THE BEGINNING OF THE PASSION OF OUR LORD J ESUS CHRIST ACCORDING TO ST LUKE",
+   "epistle": null,
+   "gospel": "St Luke 22. 1."
+  },
+  {
+   "name": "THURSDAY IN HOLY WEEK COMMONLY CALLED MAUNDY THURSDAY",
+   "epistle": "1 Corinthians 11. 23.",
+   "gospel": null
+  },
+  {
+   "name": "THE CONTINUATION OF THE PASSION OF OUR LORD J ESUS CHRIST ACCORDING TO ST LUKE",
+   "epistle": null,
+   "gospel": "St Luke 23. 1."
+  },
+  {
+   "name": "GOOD FRIDAY",
+   "epistle": "Hebrews 10. 1.",
+   "gospel": null
+  },
+  {
+   "name": "THE PASSION OF OUR LORD J ESUS CHRIST ACCORDING TO ST J OHN",
+   "epistle": null,
+   "gospel": "St John 18. 33."
+  },
+  {
+   "name": "EA STER EVEN EASTER EVEN OR HOLY SATURDAY",
+   "epistle": "1 St Peter 3. 17.",
+   "gospel": null
+  },
+  {
+   "name": "EASTER EVEN",
+   "epistle": null,
+   "gospel": "St Matthew 27. 57."
+  },
+  {
+   "name": "EASTER DAY",
+   "epistle": "Colossians 3. 1.",
+   "gospel": "St John 20. 1."
+  },
+  {
+   "name": "MONDAY IN EASTER WEEK",
+   "epistle": "Acts 10. 34",
+   "gospel": "St Luke 24. 13."
+  },
+  {
+   "name": "TUESDAY IN EASTER WEEK",
+   "epistle": "Acts 13. 26.",
+   "gospel": "St Luke 24. 36."
+  },
+  {
+   "name": "THE OCTAVE DAY OF EASTER BEING THE SUNDAY AFTER EASTER DAY",
+   "epistle": "1 St John 5. 4.",
+   "gospel": null
+  },
+  {
+   "name": "THE OCTAVE DAYOF EASTER",
+   "epistle": null,
+   "gospel": "St John 20. 19."
+  },
+  {
+   "name": "SECOND SUNDAY AFTER EASTER",
+   "epistle": "1 St Peter 2. 19.",
+   "gospel": "St John 10. 11."
+  },
+  {
+   "name": "THE THIRD SUNDAY AFTER EASTER",
+   "epistle": "1 St Peter 2. 11.",
+   "gospel": "St John 16. 16."
+  },
+  {
+   "name": "FOURTH SUNDAY AFTER EASTER",
+   "epistle": "St James 1. 17.",
+   "gospel": "St John 16. 5."
+  },
+  {
+   "name": "THE FIFTH SUNDAY AFTER EASTER COMMONLY CALLED ROGATION SUNDAY",
+   "epistle": "St James 1. 22.",
+   "gospel": null
+  },
+  {
+   "name": "ROGATION SUNDAY",
+   "epistle": null,
+   "gospel": "St John 16. 23."
+  },
+  {
+   "name": "THE ROGATION DAYS BEING THE THREE DAYS BEFORE ASCENSION DAY",
+   "epistle": "1 Timothy 2. 1.",
+   "gospel": "St Luke 11. 1."
+  },
+  {
+   "name": "THE F RUITS OF THE EARTH AND THE LA BOURS OF M EN .",
+   "epistle": "Genesis 1. 26.",
+   "gospel": null
+  },
+  {
+   "name": "ROGATION DAYS",
+   "epistle": null,
+   "gospel": "St Mark 4. 26."
+  },
+  {
+   "name": "THE ASCENSION DAY BEING THE FORTIETH DAY AFTER EASTER SOMETIMES CALLED HOLY THURSDAY",
+   "epistle": "Acts 1. 1.",
+   "gospel": null
+  },
+  {
+   "name": "ASCENSION DAY",
+   "epistle": null,
+   "gospel": "St Mark 16. 14."
+  },
+  {
+   "name": "SUNDAY AFTER ASCENSION DAY",
+   "epistle": "1 St Peter 4. 7.",
+   "gospel": "St John 15. 26."
+  },
+  {
+   "name": "WHITSUNDAY",
+   "epistle": "Acts 2. 1.",
+   "gospel": "St John 14. 15."
+  },
+  {
+   "name": "MONDAY AFTER PENTECOST",
+   "epistle": "Acts 10. 34.",
+   "gospel": "St John 3. 16."
+  },
+  {
+   "name": "TUESDAY AFTER PENTECOST",
+   "epistle": "Acts 8. 14.",
+   "gospel": "St John 10. 1."
+  },
+  {
+   "name": "EMBER DAYS",
+   "epistle": "Romans 12. 3.",
+   "gospel": "St Luke 10. 2."
+  },
+  {
+   "name": "TRINITY SUNDAY",
+   "epistle": "Revelation 4. 1.",
+   "gospel": "St John 3. 1."
+  },
+  {
+   "name": "THE SECOND SUNDAY AFTER PENTECOST COMMONLY CALLED THE FIRST SUNDAY AFTER TRINITY",
+   "epistle": "1 St John 4. 7.",
+   "gospel": null
+  },
+  {
+   "name": "FIRST SUNDAY AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St Luke 16. 19."
+  },
+  {
+   "name": "SECOND SUNDAY AFTER TRINITY",
+   "epistle": "1 St John 3. 13.",
+   "gospel": "St Luke 14. 15."
+  },
+  {
+   "name": "THE THIRD SUNDAY AFTER TRINITY",
+   "epistle": "1 St Peter 5. 5.",
+   "gospel": "St Luke 15. 1."
+  },
+  {
+   "name": "THE FOURTH SUNDAY AFTER TRINITY",
+   "epistle": "Romans 8. 18.",
+   "gospel": "St Luke 6. 36."
+  },
+  {
+   "name": "FIFTH SUNDAY AFTER TRINITY",
+   "epistle": "1 St Peter 3. 8.",
+   "gospel": "St Luke 5. 1."
+  },
+  {
+   "name": "THE SIXTH SUNDAY AFTER TRINITY",
+   "epistle": "Romans 6. 3.",
+   "gospel": "St Luke 6. 27."
+  },
+  {
+   "name": "THE SEVENTH SUNDAY AFTER TRINITY",
+   "epistle": "Romans 6. 17.",
+   "gospel": "St Mark 8. 1."
+  },
+  {
+   "name": "EIGHTH SUNDAY AFTER TRINITY",
+   "epistle": "Romans 8. 12.",
+   "gospel": "St Matthew 7. 15."
+  },
+  {
+   "name": "THE NINTH SUNDAY AFTER TRINITY",
+   "epistle": "1 Corinthians 10. 1.",
+   "gospel": "St Luke 16. 1."
+  },
+  {
+   "name": "THE TENTH SUNDAY AFTER TRINITY",
+   "epistle": "1 Corinthians 12. 1.",
+   "gospel": null
+  },
+  {
+   "name": "TENTH AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St Luke 19. 41."
+  },
+  {
+   "name": "THE ELEVENTH SUNDAY AFTER TRINITY",
+   "epistle": "1 Corinthians 15. 1.",
+   "gospel": null
+  },
+  {
+   "name": "ELEVENTH AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St Luke 18. 9."
+  },
+  {
+   "name": "THE TWELFTH SUNDAY AFTER TRINITY",
+   "epistle": "2 Corinthians 3. 4.",
+   "gospel": null
+  },
+  {
+   "name": "TWELFTH AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St Mark 7. 31."
+  },
+  {
+   "name": "THE THIRTEENTH SUNDAY AFTER TRINITY",
+   "epistle": "Galatians 5. 16.",
+   "gospel": null
+  },
+  {
+   "name": "THIRTEENTH AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St Luke 10. 25."
+  },
+  {
+   "name": "THE FOURTEENTH SUNDAY AFTER TRINITY",
+   "epistle": "Galatians 5. 25.",
+   "gospel": null
+  },
+  {
+   "name": "FOURTEEN TH AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St Luke 17. 11."
+  },
+  {
+   "name": "FIFTEENTH AFTER TRINITY",
+   "epistle": "Galatians 6. 11.",
+   "gospel": "St Matthew 6. 24."
+  },
+  {
+   "name": "THE SIXTEENTH SUNDAY AFTER TRINITY",
+   "epistle": "Ephesians 3. 13.",
+   "gospel": null
+  },
+  {
+   "name": "SIXTEENTH AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St Luke 7. 11."
+  },
+  {
+   "name": "THE SEVENTEENTH SUNDAY AFTER TRINITY",
+   "epistle": "Ephesians 4. 1.",
+   "gospel": "St Luke 14. 1."
+  },
+  {
+   "name": "AUTUMN EMBER DAYS",
+   "epistle": "Thessalonians 3. 6.",
+   "gospel": "St Luke 6. 31."
+  },
+  {
+   "name": "THE EIGHTEENTH SUNDAY AFTER TRINITY",
+   "epistle": "1 Corinthians 1. 4.",
+   "gospel": null
+  },
+  {
+   "name": "EIGHTEENTH AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St Mark 12. 28."
+  },
+  {
+   "name": "THE NINETEENTH SUNDAY AFTER TRINITY",
+   "epistle": "Ephesians 4. 17.",
+   "gospel": null
+  },
+  {
+   "name": "NINETEENTH AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St Matthew 9. 1."
+  },
+  {
+   "name": "TWENTIETH AFTER TRINITY",
+   "epistle": "Ephesians 5. 15.",
+   "gospel": "St Matthew 22. 1."
+  },
+  {
+   "name": "THE TWENTY -FIRST SUNDAY AFTER TRINITY",
+   "epistle": "Ephesians 6. 10.",
+   "gospel": null
+  },
+  {
+   "name": "TWENTY -FIRST AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St John 4. 46."
+  },
+  {
+   "name": "THE TWENTY-SECOND SUNDAY AFTER TRINITY",
+   "epistle": "Philippians 1. 3.",
+   "gospel": "St Matthew 18. 21."
+  },
+  {
+   "name": "THE TWENTY -THIRD SUNDAY AFTER TRINITY",
+   "epistle": "Philippians 3. 17.",
+   "gospel": "St Matthew 22. 15."
+  },
+  {
+   "name": "THE TWENTY-FOURTH SUNDAY AFTER TRINITY",
+   "epistle": "Colossians 1. 3.",
+   "gospel": null
+  },
+  {
+   "name": "TWENTY -FOURTH AFTER TRINITY",
+   "epistle": null,
+   "gospel": "St Matthew 9. 18."
+  },
+  {
+   "name": "THE SUNDAY NEXT BEFORE ADVENT",
+   "epistle": "Jeremiah 23. 5.",
+   "gospel": "St John 1. 35."
+  },
+  {
+   "name": "SAINT ANDREW THE APOSTLE",
+   "epistle": "Romans 10. 8.",
+   "gospel": "St Matthew 4. 18."
+  },
+  {
+   "name": "SAINT THOMAS THE APOSTLE",
+   "epistle": "Ephesians 2. 19.",
+   "gospel": "St John 20. 24."
+  },
+  {
+   "name": "THE CONVERSION OF SAINT PAUL",
+   "epistle": "Acts 21. 40.",
+   "gospel": "St Luke 21. 10."
+  },
+  {
+   "name": "THE PRESENTATION OF CHRIST IN THE TEMPLE COMMONLY CALLED THE PURIFICATION OF SAINT MARY THE VIRGIN",
+   "epistle": "Malachi 3. 1.",
+   "gospel": null
+  },
+  {
+   "name": "PURIFICATION OF SAINT MARY",
+   "epistle": null,
+   "gospel": "St Luke 2. 22."
+  },
+  {
+   "name": "SAINT MATTHIAS THE APOSTLE",
+   "epistle": "Acts 1. 15.",
+   "gospel": "St John 15. 1."
+  },
+  {
+   "name": "THE ANNUNCIATION OF THE BLESSED VIRGIN MARY",
+   "epistle": "Isaiah 7. 10.",
+   "gospel": "St Luke 1. 26."
+  },
+  {
+   "name": "SAINT MARK THE EVANGELIST",
+   "epistle": "Ephesians 4. 11.",
+   "gospel": "St Mark 13. 1."
+  },
+  {
+   "name": "SAINT PHILIP AND SAINT JAMES",
+   "epistle": "St James 1. 1.",
+   "gospel": "St John 14. 1."
+  },
+  {
+   "name": "SAINT BARNABAS THE APOSTLE",
+   "epistle": "Acts 11. 22.",
+   "gospel": "St John 15. 12."
+  },
+  {
+   "name": "THE NATIVITY OF SAINT JOHN THE BAPTIST",
+   "epistle": "Isaiah 40. 1.",
+   "gospel": null
+  },
+  {
+   "name": "SAINT JOHN THE BAPTIST",
+   "epistle": "1 St Peter 2. 11.",
+   "gospel": "St Luke 1. 57."
+  },
+  {
+   "name": "SAINT PETER AND SAINT PAUL THE APOSTLES",
+   "epistle": "1 St Peter 1. 1.",
+   "gospel": null
+  },
+  {
+   "name": "SAINT PETER AND SAINT PAUL",
+   "epistle": "1 Corinthians 3. 18.",
+   "gospel": "St Matthew 16. 13."
+  },
+  {
+   "name": "SAINT MARY MAGDALENE",
+   "epistle": "Acts 13. 27.",
+   "gospel": "St John 20. 11."
+  },
+  {
+   "name": "SAINT JAMES THE APOSTLE",
+   "epistle": "Acts 11. 27.",
+   "gospel": "St Mark 10. 32."
+  },
+  {
+   "name": "TRANSFIGURATION OF OUR LORD",
+   "epistle": "2 St Peter 1. 16.",
+   "gospel": "St Matthew 17. 1."
+  },
+  {
+   "name": "SAINT BARTHOLOMEW THE APOSTLE",
+   "epistle": "Acts 1. 10.",
+   "gospel": "St Luke 22. 24."
+  },
+  {
+   "name": "SAINT MATTHEW THE APOSTLE",
+   "epistle": "2 Corinthians 4. 1.",
+   "gospel": "St Matthew 9. 9."
+  },
+  {
+   "name": "SAINT MICHAEL AND ALL ANGELS",
+   "epistle": "Revelation 12. 7.",
+   "gospel": "St Matthew 18. 1."
+  },
+  {
+   "name": "SAINT LUKE THE EVANGELIST",
+   "epistle": "2 Timothy 4. 5.",
+   "gospel": "St Luke 24. 44."
+  },
+  {
+   "name": "SAINT SIMON THE ZEALOT AND SAINT JUDE APOSTLES WITH SAINT JUDE THE BROTHER OF THE LORD",
+   "epistle": "Revelation 21. 10.",
+   "gospel": null
+  },
+  {
+   "name": "SAINT SIMON AND SAINT JUDE",
+   "epistle": "St Jude 1.",
+   "gospel": "St John 14. 21."
+  },
+  {
+   "name": "ALL SAINTS’ DAY",
+   "epistle": "Revelation 7. 9.",
+   "gospel": "St Matthew 5. 1."
+  },
+  {
+   "name": "C OMMEMORATION OF THE F AITHFUL D EPARTED .",
+   "epistle": "Wisdom 3. 1.",
+   "gospel": null
+  },
+  {
+   "name": "OCTAVE OF ALL SAINT’S DAY",
+   "epistle": null,
+   "gospel": "St John 10. 22."
+  },
+  {
+   "name": "",
+   "epistle": "Hebrews 11. 13.",
+   "gospel": null
+  },
+  {
+   "name": "DEDICATION FESTIVAL",
+   "epistle": "1 St Peter 2. 1.",
+   "gospel": "St Matthew 21. 10."
+  }
+ ]
+}

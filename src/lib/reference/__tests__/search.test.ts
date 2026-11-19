@@ -331,15 +331,15 @@ describe("searchPalette", () => {
     expect(plural.map((e) => e.label)).toEqual(psalms.map((e) => e.label));
 
     expect(palette("collects")).toHaveLength(142);
-    expect(palette("saints")).toHaveLength(37);
+    expect(palette("saints")).toHaveLength(38);
     const lesser = palette("lesser feasts");
     expect(lesser[0]).toMatchObject({
       section: "pages",
       label: "Lesser Feasts",
       run: { kind: "page", page: "lesser-feasts" },
     });
-    expect(lesser).toHaveLength(248);
-    expect(palette("commemorations")).toHaveLength(247);
+    expect(lesser).toHaveLength(247);
+    expect(palette("commemorations")).toHaveLength(246);
     expect(palette("proverbs")).toHaveLength(31);
   });
 
