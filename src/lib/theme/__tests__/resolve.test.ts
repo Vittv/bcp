@@ -138,7 +138,7 @@ describe("theme round-trip", () => {
   });
 
   it("every palette resolves the shared vocabulary without bare var() left over", () => {
-    const names = Object.keys(tokenVars(THEMES.canterbury.light));
+    const names = Object.keys(tokenVars(THEMES.winchester.light));
     for (const family of THEME_LIST) {
       for (const tokens of [family.light, family.dark]) {
         const vars = tokenVars(tokens);

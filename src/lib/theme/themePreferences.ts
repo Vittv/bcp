@@ -12,12 +12,14 @@ import {
   fontPxToScale,
 } from "../typography/sizes";
 import { clampUiScale, DEFAULT_UI_SCALE, snapUiScale } from "../uiScale";
+import { resolveStoredThemeFamily } from "./themeFamilyMigration";
 import type { ThemeId } from "./themes";
-import { DEFAULT_THEME, THEMES } from "./themes";
+import { DEFAULT_THEME } from "./themes";
 import type { ResolvedTheme, ThemeMode } from "./tokens";
 
 export const STORAGE_KEY_THEME = "bcp-theme-mode";
 export const STORAGE_KEY_THEME_FAMILY = "bcp-theme-family";
+export const STORAGE_KEY_THEME_FAMILY_MIGRATED = "bcp-theme-family-renamed";
 export const STORAGE_KEY_FONT = "bcp-font-scale";
 export const STORAGE_KEY_UI_SCALE = "bcp-ui-scale";
 export const STORAGE_KEY_INTERFACE_FONT = "bcp-font-interface";
@@ -87,19 +89,19 @@ export function persistThemeMode(mode: ThemeMode) {
 
 export function loadThemeFamily(): ThemeId {
   const storage = webStorage();
-  if (storage) {
-    const v = storage.getItem(STORAGE_KEY_THEME_FAMILY);
-    if (v && v in THEMES) {
-      // SAFETY: the `in` guard proves the stored string names a family.
-      return v as ThemeId;
-    }
-  }
-  return DEFAULT_THEME;
+  if (!storage) return DEFAULT_THEME;
+  const stored = storage.getItem(STORAGE_KEY_THEME_FAMILY);
+  const migrated = storage.getItem(STORAGE_KEY_THEME_FAMILY_MIGRATED) === "1";
+  const { id, rewrite } = resolveStoredThemeFamily(stored, migrated);
+  if (rewrite) storage.setItem(STORAGE_KEY_THEME_FAMILY, id);
+  if (!migrated) storage.setItem(STORAGE_KEY_THEME_FAMILY_MIGRATED, "1");
+  return id;
 }
 
 export function persistThemeFamily(theme: ThemeId) {
   try {
     webStorage()?.setItem(STORAGE_KEY_THEME_FAMILY, theme);
+    webStorage()?.setItem(STORAGE_KEY_THEME_FAMILY_MIGRATED, "1");
   } catch {}
 }
 

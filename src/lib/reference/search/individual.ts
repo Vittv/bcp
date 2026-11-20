@@ -6,6 +6,7 @@ import {
   sanctoraleDateLabel,
   sanctoraleNameVariants,
 } from "../../calendar/sanctorale";
+import type { CalendarEdition } from "../../calendar/types";
 import {
   canticleExists,
   canticlePassage,
@@ -14,11 +15,11 @@ import {
 import { allCollects, collectText } from "../../content/collects";
 import { parsePsalmCitation } from "../../content/psalms";
 import {
-  psalmIncipit,
-  psalmNumbers,
-  psalmPassage,
-  psalmVerseCount,
-} from "../../content/psalter";
+  editionPsalmIncipit,
+  editionPsalmNumbers,
+  editionPsalmPassage,
+  editionPsalmVerseCount,
+} from "../../content/psalmsEdition";
 import { PSALTER_DAYS, psalterDaySummary } from "../../content/psalterDays";
 import type { PsalterDay } from "../../content/types";
 import { snippet } from "./helpers";
@@ -29,13 +30,20 @@ import type { CollectHit, LesserFeastHit, PsalmHit, SaintHit } from "./types";
 // or "ps" prefix (e.g. "Psalm 20") is parsed as an exact psalm number so
 // natural phrasing navigates to that psalm rather than matching no text.
 export function searchPsalms(query: string): PsalmHit[] {
+  return searchPsalmsForEdition("1979", query);
+}
+
+export function searchPsalmsForEdition(
+  edition: CalendarEdition,
+  query: string,
+): PsalmHit[] {
   const q = query.trim().toLowerCase();
-  const numbers = psalmNumbers();
+  const numbers = editionPsalmNumbers(edition);
   if (!q) {
     return numbers.map((n) => ({
       psalm: n,
-      incipit: psalmIncipit(n) ?? "",
-      verses: psalmVerseCount(n),
+      incipit: editionPsalmIncipit(edition, n),
+      verses: editionPsalmVerseCount(edition, n),
       snippet: null,
     }));
   }
@@ -46,14 +54,14 @@ export function searchPsalms(query: string): PsalmHit[] {
       if (String(n) !== prefixNum) continue;
       hits.push({
         psalm: n,
-        incipit: psalmIncipit(n) ?? "",
-        verses: psalmVerseCount(n),
+        incipit: editionPsalmIncipit(edition, n),
+        verses: editionPsalmVerseCount(edition, n),
         snippet: null,
       });
       break;
     }
     let matched: string | null = String(n).includes(q) ? "" : null;
-    for (const verse of psalmPassage({ psalm: n })?.verses ?? []) {
+    for (const verse of editionPsalmPassage(edition, n)?.verses ?? []) {
       const s = snippet(verse.text, q);
       if (s !== null) {
         matched = s;
@@ -63,8 +71,8 @@ export function searchPsalms(query: string): PsalmHit[] {
     if (matched !== null) {
       hits.push({
         psalm: n,
-        incipit: psalmIncipit(n) ?? "",
-        verses: psalmVerseCount(n),
+        incipit: editionPsalmIncipit(edition, n),
+        verses: editionPsalmVerseCount(edition, n),
         snippet: matched || null,
       });
     }

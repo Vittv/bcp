@@ -8,7 +8,7 @@ import { tokenVars } from "../tokens";
 // components write.
 describe("tokenVars", () => {
   it("kebab-cases every scalar token into its css custom property", () => {
-    const vars = tokenVars(THEMES.canterbury.light);
+    const vars = tokenVars(THEMES.winchester.light);
     expect(vars["--bg"]).toBe("#e0dbd0");
     expect(vars["--bg-raised"]).toBe("#ece7dd");
     expect(vars["--input-bg"]).toBe("#ece7dd");
@@ -25,14 +25,14 @@ describe("tokenVars", () => {
   });
 
   it("skips the nested season map but keeps the scalar season-ring", () => {
-    const vars = tokenVars(THEMES.canterbury.light);
+    const vars = tokenVars(THEMES.winchester.light);
     expect(vars["--season"]).toBeUndefined();
     expect(vars["--season-ring"]).toBe("rgba(44, 32, 32, 0.35)");
   });
 
   it("names every scalar token, not just a sample", () => {
-    const vars = tokenVars(THEMES.canterbury.light);
-    for (const [key, value] of Object.entries(THEMES.canterbury.light)) {
+    const vars = tokenVars(THEMES.winchester.light);
+    for (const [key, value] of Object.entries(THEMES.winchester.light)) {
       if (typeof value !== "string") continue;
       const expectedName = `--${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
       expect(vars[expectedName]).toBe(value);
@@ -55,7 +55,7 @@ describe("tokenVars", () => {
 // but not another would resolve to nothing on native.
 describe("themeTokens", () => {
   it("gives every family and mode a palette with identical token keys", () => {
-    const reference = Object.keys(tokenVars(THEMES.canterbury.light)).sort();
+    const reference = Object.keys(tokenVars(THEMES.winchester.light)).sort();
     for (const family of THEME_LIST) {
       for (const tokens of [family.light, family.dark]) {
         expect(Object.keys(tokenVars(tokens)).sort()).toEqual(reference);
@@ -66,6 +66,8 @@ describe("themeTokens", () => {
   it("selects the family's variant for the resolved mode", () => {
     expect(themeTokens("canterbury", "light")).toBe(THEMES.canterbury.light);
     expect(themeTokens("canterbury", "dark")).toBe(THEMES.canterbury.dark);
+    expect(themeTokens("winchester", "light")).toBe(THEMES.winchester.light);
+    expect(themeTokens("winchester", "dark")).toBe(THEMES.winchester.dark);
     expect(themeTokens("oxford", "light")).toBe(THEMES.oxford.light);
     expect(themeTokens("oxford", "dark")).toBe(THEMES.oxford.dark);
     expect(themeTokens("vague", "light")).toBe(THEMES.vague.light);

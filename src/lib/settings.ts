@@ -42,6 +42,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
       "zoom",
       "size",
       "canterbury",
+      "winchester",
       "oxford",
       "vague",
       "salisbury",

@@ -10,9 +10,18 @@ import { PsalmText } from "../../components/office/PsalmText";
 import { MONO } from "../../components/shell/BarDropdown.styles";
 import { Chevron } from "../../components/shell/Chevron";
 import { officeBarStyles } from "../../components/shell/officeBarStyles";
+import { useEdition } from "../../context/EditionContext";
 import { usePalette } from "../../context/PaletteContext";
-import { psalmPassage } from "../../lib/content/psalter";
-import { type PsalmHit, searchPsalms } from "../../lib/reference/search";
+import type { CalendarEdition } from "../../lib/calendar/types";
+import {
+  editionPsalmNumbers,
+  editionPsalmPassage,
+  editionPsalmVerseCount,
+} from "../../lib/content/psalmsEdition";
+import {
+  type PsalmHit,
+  searchPsalmsForEdition,
+} from "../../lib/reference/search";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   DetailPage,
@@ -26,6 +35,19 @@ import {
 import { sharedStyles as styleDef } from "./styles";
 import { useIndexKeyboard } from "./useIndexKeyboard";
 
+const PSALM_EDITION_LABEL: Record<CalendarEdition, string> = {
+  "1979": "1979 BCP",
+  "1662": "1662 BCP",
+  "1962": "1962 BCP",
+};
+
+function useEditionPsalms(n: number | null) {
+  const { edition } = useEdition();
+  const numbers = useMemo(() => editionPsalmNumbers(edition), [edition]);
+  const psalm = n && numbers.includes(n) ? n : (numbers[0] ?? 1);
+  return { edition, numbers, psalm };
+}
+
 export function PsalmsScreen({
   isMobile,
   fontScale,
@@ -36,13 +58,19 @@ export function PsalmsScreen({
   onScrollProgress?: (pct: number) => void;
 }) {
   const { openPsalm } = useReference();
+  const { edition, psalm } = useEditionPsalms(openPsalm);
   const styles = useThemedStyles(styleDef);
+  const detail = (
+    <PsalmDetailBody
+      psalm={psalm}
+      edition={edition}
+      key={`p${psalm}-${edition}`}
+    />
+  );
   if (isMobile) {
     return (
       <View style={styles.container}>
-        <DetailPage compact>
-          <PsalmDetailBody psalm={openPsalm ?? 1} />
-        </DetailPage>
+        <DetailPage compact>{detail}</DetailPage>
       </View>
     );
   }
@@ -50,28 +78,30 @@ export function PsalmsScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      detail={
-        <PsalmDetailBody psalm={openPsalm ?? 1} key={`p${openPsalm ?? 1}`} />
-      }
+      detail={detail}
       detailOpen
     />
   );
 }
 
 // the psalms bar carries the sidebar-show button and, in place of the
-// old index, the current-pick chip that re-opens the floating picker,
-// with prev/next arrows clamped to 1-150 (the linear sequence the page
-// is read in)
+// old index, an edition chip and the current-pick chip that re-opens the
+// floating picker, with prev/next arrows clamped to the book's psalms
 const PSALM_COUNT = 150;
 export function PsalmsBar({ leading }: { leading?: ReactNode }) {
   const { openPsalm, setOpenPsalm } = useReference();
+  const { edition, numbers, psalm: n } = useEditionPsalms(openPsalm);
   const palette = usePalette();
   const styles = useThemedStyles(styleDef);
   const barStyles = useThemedStyles(officeBarStyles);
-  const n = openPsalm ?? 1;
-  const verses = psalmPassage({ psalm: n })?.verses.length ?? 0;
-  const atStart = n <= 1;
-  const atEnd = n >= PSALM_COUNT;
+  const verses = editionPsalmVerseCount(edition, n);
+  const last = numbers[numbers.length - 1] ?? PSALM_COUNT;
+  const atStart = n <= (numbers[0] ?? 1);
+  const atEnd = n >= last;
+  const step = (delta: number) => {
+    const i = numbers.indexOf(n);
+    setOpenPsalm(numbers[Math.min(Math.max(i + delta, 0), numbers.length - 1)]);
+  };
   return (
     <View style={[styles.bar, noSelect]}>
       <View style={styles.barLeft}>
@@ -82,7 +112,7 @@ export function PsalmsBar({ leading }: { leading?: ReactNode }) {
             barStyles.modeToggle,
             { paddingHorizontal: 7 },
           ]}
-          accessibilityLabel="1979 BCP Psalter"
+          accessibilityLabel={`${PSALM_EDITION_LABEL[edition]} Psalter`}
         >
           <Text
             style={[
@@ -90,14 +120,12 @@ export function PsalmsBar({ leading }: { leading?: ReactNode }) {
               { fontFamily: MONO, color: "var(--accent)" },
             ]}
           >
-            1979 BCP
+            {PSALM_EDITION_LABEL[edition]}
           </Text>
         </View>
         <PickerButton
           label={`Psalm ${n}`}
-          meta={`${n} / ${PSALM_COUNT} · ${verses} verse${
-            verses === 1 ? "" : "s"
-          }`}
+          meta={`${n} / ${last} · ${verses} verse${verses === 1 ? "" : "s"}`}
           onPress={() => palette.open("psalms")}
         />
       </View>
@@ -108,7 +136,7 @@ export function PsalmsBar({ leading }: { leading?: ReactNode }) {
             hovered && styles.arrowBtnHover,
             atStart && { opacity: 0.4 },
           ]}
-          onPress={() => setOpenPsalm(n - 1)}
+          onPress={() => step(-1)}
           disabled={atStart}
           accessibilityLabel="Previous psalm"
         >
@@ -120,7 +148,7 @@ export function PsalmsBar({ leading }: { leading?: ReactNode }) {
             hovered && styles.arrowBtnHover,
             atEnd && { opacity: 0.4 },
           ]}
-          onPress={() => setOpenPsalm(n + 1)}
+          onPress={() => step(1)}
           disabled={atEnd}
           accessibilityLabel="Next psalm"
         >
@@ -177,8 +205,12 @@ export function PsalmIndex({
   query: string;
   onSelect: (psalm: number) => void;
 }) {
+  const { edition } = useEdition();
   const deferredQuery = useDeferredValue(query);
-  const hits = useMemo(() => searchPsalms(deferredQuery), [deferredQuery]);
+  const hits = useMemo(
+    () => searchPsalmsForEdition(edition, deferredQuery),
+    [edition, deferredQuery],
+  );
   const onEnter = useCallback(
     (_i: number, hit: PsalmHit) => onSelect(hit.psalm),
     [onSelect],
@@ -206,10 +238,15 @@ export function PsalmIndex({
 // pane should sit still unless its psalm actually changes
 const PsalmDetailBody = memo(function PsalmDetailBody({
   psalm,
+  edition,
 }: {
   psalm: number;
+  edition: CalendarEdition;
 }) {
-  const passage = useMemo(() => psalmPassage({ psalm }), [psalm]);
+  const passage = useMemo(
+    () => editionPsalmPassage(edition, psalm),
+    [edition, psalm],
+  );
   const styles = useThemedStyles(styleDef);
   const verses = passage?.verses.length ?? 0;
   return (
