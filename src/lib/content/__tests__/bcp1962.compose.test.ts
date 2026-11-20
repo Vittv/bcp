@@ -61,6 +61,19 @@ describe("bcp1962 short offices", () => {
     expect(
       text.some((t) => t.includes("Blessed Saviour, who at this hour")),
     ).toBe(true);
+    expect(doc.title).toBe("For Missions");
+    const nodes = doc.sections[0].nodes;
+    expect(nodes[0]).toMatchObject({
+      kind: "heading",
+      text: "The Lord's Prayer",
+    });
+    expect(
+      nodes
+        .filter((n) => n.kind === "heading" && n.scripture)
+        .map((n) => ("citation" in n ? n.citation : undefined)),
+    ).toEqual(["St John 12. 32", "Acts 26. 13", "Acts 10. 9"]);
+    expect(nodes.filter((n) => n.kind === "text" && n.collect)).toHaveLength(3);
+    expect(nodes.at(-1)).toMatchObject({ kind: "rubric" });
   });
 
   it("composes Compline with the respond, hymn and blessing", () => {

@@ -104,8 +104,22 @@ function NodeView({
   const subheading = useSubheading();
   switch (node.kind) {
     case "heading":
-      if (node.text === "Suffrages" || node.text === "Confession of Sin") {
+      if (
+        node.rule ||
+        node.text === "Suffrages" ||
+        node.text === "Confession of Sin"
+      ) {
         return <Text style={sectionHeading}>{node.text}</Text>;
+      }
+      if (node.scripture) {
+        return (
+          <Text style={styles.verse}>
+            {node.text}
+            {node.citation ? (
+              <Text style={styles.rubric}> {node.citation}</Text>
+            ) : null}
+          </Text>
+        );
       }
       return <Text style={subheading}>{node.text}</Text>;
     case "rubric":
@@ -119,6 +133,9 @@ function NodeView({
         <Text
           style={[
             styles.text,
+            node.collect && styles.collectText,
+            node.lordsPrayerFirst && styles.lordsPrayerStart,
+            node.lordsPrayerLast && styles.lordsPrayerEnd,
             showSpeakers && node.speaker === "people" && styles.textPeople,
           ]}
         >
@@ -344,7 +361,9 @@ export function Bcp1962OfficeView({
       <OfficeHeader
         officeName={doc.officeName}
         date={doc.date}
+        title={doc.title}
         editionLabel={OFFICE_EDITION_LABELS["1962"]}
+        titleBelowEdition
       />
       {doc.sections.map((section) => (
         <MenuAnchor key={section.key} style={styles.section}>
@@ -487,6 +506,14 @@ const bcp1962Styles = defineThemedStyles({
   psalmBlock: { marginTop: 22, paddingLeft: 4 },
   lessonBlock: { marginBottom: 12 },
   canticleTitle: { marginBottom: 6 },
+  verse: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 17,
+    lineHeight: 28,
+    color: "var(--text)",
+    marginTop: 12,
+    marginBottom: 4,
+  },
   creedTitle: { marginTop: 0 },
   accent: officeDocumentStyles.accent,
   label: { fontFamily: SERIF_FONT, fontSize: 15, color: "var(--text)" },
@@ -499,6 +526,14 @@ const bcp1962Styles = defineThemedStyles({
   lessonRef: { ...officeDocumentStyles.lessonRef, marginBottom: 4 },
   rubric: officeDocumentStyles.rubric,
   text: { ...officeDocumentStyles.text, marginTop: 8 },
+  collectText: {
+    ...officeDocumentStyles.text,
+    fontSize: 17,
+    lineHeight: 28,
+    paddingLeft: 4,
+  },
+  lordsPrayerStart: { marginTop: 4 },
+  lordsPrayerEnd: { marginBottom: 8 },
   textPeople: officeDocumentStyles.textPeople,
   speaker: officeDocumentStyles.speaker,
   notes: officeDocumentStyles.notes,
