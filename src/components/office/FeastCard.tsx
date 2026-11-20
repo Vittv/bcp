@@ -29,11 +29,15 @@ import {
   getBcp1962PsalmPassages,
   parseBcp1962PsalmAppointment,
 } from "../../lib/content/vendor/bcp1962";
-import { useThemedStyles } from "../../lib/theme/themedStyles";
-import { useSubheading } from "./contentHeadings";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../lib/theme/themedStyles";
+import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { PsalmText } from "./PsalmText";
 import { sanctoraleCardStyles } from "./SanctoraleCard.styles";
 import { ScriptureView } from "./ScriptureView";
+import { StickyHeading } from "./StickyHeading";
 
 const BOOK_LINK: Record<CalendarTradition, { label: string; url: string }> = {
   tec: {
@@ -98,6 +102,12 @@ function WikiLinks({ name, slug }: { name: string; slug: string }) {
   );
 }
 
+// citations clear the section rule by the same small margin the lectionary
+// uses, without changing the shared card styles other surfaces rely on
+const feastStyles = defineThemedStyles({
+  citation: { marginTop: 8 },
+});
+
 // a psalm appointment resolved through the selected church's psalter. refs
 // that cannot be read stay visible as citations rather than vanishing.
 function PsalmRow({
@@ -108,6 +118,7 @@ function PsalmRow({
   tradition: CalendarTradition;
 }) {
   const styles = useThemedStyles(sanctoraleCardStyles);
+  const feast = useThemedStyles(feastStyles);
   const passages: PsalmPassage[] = [];
   if (tradition === "tec") {
     const parsed = parsePsalmCitation(ref);
@@ -122,10 +133,12 @@ function PsalmRow({
     );
   }
   if (passages.length === 0) {
-    return <Text style={styles.lessonMissing}>Psalm {ref}</Text>;
+    return (
+      <Text style={[styles.lessonMissing, feast.citation]}>Psalm {ref}</Text>
+    );
   }
   return (
-    <View style={styles.psalmBlock}>
+    <View style={[styles.psalmBlock, feast.citation]}>
       {passages.map((passage, i) => (
         <View
           // biome-ignore lint/suspicious/noArrayIndexKey: an appointment can name the same psalm twice
@@ -142,6 +155,7 @@ function PsalmRow({
 // a reading citation resolved to scripture with the reader's current settings.
 function ReadingRow({ ref }: { ref: string }) {
   const styles = useThemedStyles(sanctoraleCardStyles);
+  const feast = useThemedStyles(feastStyles);
   const { translation, apocrypha } = useTranslation();
   const [passages, setPassages] = useState<KjvPassage[]>([]);
 
@@ -158,10 +172,10 @@ function ReadingRow({ ref }: { ref: string }) {
   }, [ref, translation, apocrypha]);
 
   if (passages.length === 0) {
-    return <Text style={styles.lessonMissing}>{ref}</Text>;
+    return <Text style={[styles.lessonMissing, feast.citation]}>{ref}</Text>;
   }
   return (
-    <View style={styles.lessonRow}>
+    <View style={[styles.lessonRow, feast.citation]}>
       {passages.map((passage) => {
         const first = passage.verses[0]?.number;
         const last = passage.verses[passage.verses.length - 1]?.number;
@@ -193,6 +207,7 @@ export function FeastCard({
   showLiturgy?: boolean;
 }) {
   const styles = useThemedStyles(sanctoraleCardStyles);
+  const heading = useSectionHeading();
   const subheading = useSubheading();
   const observation = observationForTradition(feast, tradition);
   const name = observation.name;
@@ -246,11 +261,13 @@ export function FeastCard({
 
       {propers && propers.psalms.length > 0 ? (
         <View style={styles.group}>
-          <Text style={[subheading, styles.tightSubheading]}>
-            {propers.psalmSource === "course"
-              ? "Psalms (ordinary course)"
-              : "Psalms"}
-          </Text>
+          <StickyHeading sticky>
+            <Text style={heading}>
+              {propers.psalmSource === "course"
+                ? "Psalms (ordinary course)"
+                : "Psalms"}
+            </Text>
+          </StickyHeading>
           {propers.psalms.map((ref, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: an appointment can repeat a citation
             <PsalmRow key={`${ref}-${i}`} ref={ref} tradition={tradition} />
@@ -260,7 +277,9 @@ export function FeastCard({
 
       {propers && propers.readings.length > 0 ? (
         <View style={styles.group}>
-          <Text style={[subheading, styles.tightSubheading]}>Readings</Text>
+          <StickyHeading sticky>
+            <Text style={heading}>Readings</Text>
+          </StickyHeading>
           {propers.readings.map((ref, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: an appointment can repeat a citation
             <ReadingRow key={`${ref}-${i}`} ref={ref} />
