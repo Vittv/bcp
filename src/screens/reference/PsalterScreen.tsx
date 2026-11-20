@@ -3,6 +3,10 @@ import { Pressable, Text, View } from "react-native";
 import { useSectionHeading } from "../../components/office/contentHeadings";
 import { PsalmText } from "../../components/office/PsalmText";
 import { StickyHeading } from "../../components/office/StickyHeading";
+import {
+  BarDropdown,
+  type DropdownOption,
+} from "../../components/shell/BarDropdown";
 import { Chevron } from "../../components/shell/Chevron";
 import { useEdition } from "../../context/EditionContext";
 import { usePalette } from "../../context/PaletteContext";
@@ -30,6 +34,7 @@ import {
   IndexRow,
   noSelect,
   PickerButton,
+  type PsalterView,
   SplitPane,
   today,
   useReference,
@@ -38,21 +43,31 @@ import { sharedStyles as styleDef } from "./styles";
 import { useIndexKeyboard } from "./useIndexKeyboard";
 
 // the page opens on today's cycle day: the day of the month, with the 31st
-// reading day 30 and February ending at 28 or 29
-function currentDay(edition: string): number {
+// reading day 30 and February ending at 28 or 29. the 1962 weekday table keeps
+// its own 31st day, so its view selects the limit.
+function currentDay(edition: string, view: PsalterView): number {
   if (edition === "1662") {
     const d = today();
     return Math.min(Math.max(d.day, 1), 30);
   }
-  if (edition === "1962") return Math.min(Math.max(today().day, 1), 31);
+  if (edition === "1962") {
+    const limit =
+      view === "table" ? BCP1962_PSALTER_DAY_COUNT : PSALTER_DAY_COUNT;
+    return Math.min(Math.max(today().day, 1), limit);
+  }
   return psalterDayForDate(today());
 }
 
 const BCP1662_PSLATER_DAY_COUNT = 30;
 const BCP1962_PSALTER_DAY_COUNT = 31;
 
-// the 1962 book appoints the Psalter by day of the month, with two alternating
-// month sets. The picker follows its 31-day month; each day shows both sets.
+const PSALTER_VIEW_OPTIONS: readonly DropdownOption<PsalterView>[] = [
+  { id: "cycle", label: "30-day" },
+  { id: "table", label: "Weekdays" },
+];
+
+// the 1962 book's optional ordinary weekday table prints two alternating month
+// sets by day of the month, with Mattins and Evensong in each column
 type Bcp1962PsalterRow = {
   day: number;
   oddMonths: { morning: string[]; evening: string[] };
@@ -153,15 +168,21 @@ export function PsalterScreen({
   onScrollProgress?: (pct: number) => void;
 }) {
   const { edition } = useEdition();
-  const { openPsalterDay } = useReference();
-  const day = openPsalterDay ?? currentDay(edition);
+  const { openPsalterDay, psalterView } = useReference();
+  const day = openPsalterDay ?? currentDay(edition, psalterView);
   const styles = useThemedStyles(styleDef);
+  const detail = (
+    <PsalterDetailBody
+      day={day}
+      edition={edition}
+      view={psalterView}
+      key={`d${day}-${psalterView}`}
+    />
+  );
   if (isMobile) {
     return (
       <View style={styles.container}>
-        <DetailPage compact>
-          <PsalterDetailBody day={day} edition={edition} />
-        </DetailPage>
+        <DetailPage compact>{detail}</DetailPage>
       </View>
     );
   }
@@ -169,35 +190,37 @@ export function PsalterScreen({
     <SplitPane
       fontScale={fontScale}
       onScrollProgress={onScrollProgress}
-      detail={<PsalterDetailBody day={day} edition={edition} key={`d${day}`} />}
+      detail={detail}
       detailOpen
     />
   );
 }
 
 // the bar mirrors the psalms bar: the sidebar-show button and the current-day
-// chip that re-opens the floating picker, with prev/next arrows clamped 1-30
+// chip that re-opens the floating picker, with prev/next arrows clamped to the
+// active view's day count and an appointment toggle for the 1962 book
 export function PsalterBar({ leading }: { leading?: ReactNode }) {
   const { edition } = useEdition();
-  const { openPsalterDay, setOpenPsalterDay } = useReference();
+  const { openPsalterDay, setOpenPsalterDay, psalterView, setPsalterView } =
+    useReference();
   const palette = usePalette();
   const styles = useThemedStyles(styleDef);
-  const n = openPsalterDay ?? currentDay(edition);
+  const n = openPsalterDay ?? currentDay(edition, psalterView);
+  const useTable = edition === "1962" && psalterView === "table";
   const dayCount =
     edition === "1662"
       ? BCP1662_PSLATER_DAY_COUNT
-      : edition === "1962"
+      : useTable
         ? BCP1962_PSALTER_DAY_COUNT
         : PSALTER_DAY_COUNT;
-  const row =
-    edition === "1662"
+  const row = useTable
+    ? bcp1962PsalterDay(n)
+    : edition === "1662"
       ? bcp1662PsalterDay(n)
-      : edition === "1962"
-        ? bcp1962PsalterDay(n)
-        : psalterDay(n);
+      : psalterDay(n);
   let psalms = 0;
-  if (edition === "1962") {
-    // SAFETY: the 1962 branch above calls bcp1962PsalterDay, which returns this shape.
+  if (useTable) {
+    // SAFETY: the table branch above calls bcp1962PsalterDay, which returns this shape.
     const r = row as Bcp1962PsalterRow | null;
     psalms = r ? r.oddMonths.morning.length + r.oddMonths.evening.length : 0;
   } else if (row) {
@@ -220,6 +243,22 @@ export function PsalterBar({ leading }: { leading?: ReactNode }) {
         />
       </View>
       <View style={styles.barRight}>
+        {edition === "1962" ? (
+          <BarDropdown
+            value={psalterView}
+            options={PSALTER_VIEW_OPTIONS}
+            onChange={(view) => {
+              setPsalterView(view);
+              const limit =
+                view === "table"
+                  ? BCP1962_PSALTER_DAY_COUNT
+                  : PSALTER_DAY_COUNT;
+              if (n > limit) setOpenPsalterDay(limit);
+            }}
+            accessibilityLabel="Psalter appointment"
+            steadyWidth
+          />
+        ) : null}
         <Pressable
           style={({ hovered }) => [
             styles.arrowBtn,
@@ -298,14 +337,15 @@ export function PsalterIndex({
   onSelect: (n: number | null) => void;
 }) {
   const { edition } = useEdition();
+  const { psalterView } = useReference();
   const hits = useMemo(
     () =>
       edition === "1662"
         ? searchBcp1662PsalterDays(query)
-        : edition === "1962"
+        : edition === "1962" && psalterView === "table"
           ? searchBcp1962PsalterDays(query)
           : searchPsalterDays(query),
-    [edition, query],
+    [edition, query, psalterView],
   );
   const onEnter = useCallback(
     (_i: number, day: PsalterDay) =>
@@ -334,31 +374,34 @@ export function PsalterIndex({
 }
 
 // memoized: query keystrokes re-render the bar and index; the reading pane
-// should sit still unless its day actually changes
+// should sit still unless its day or appointment view changes
 const PsalterDetailBody = memo(function PsalterDetailBody({
   day,
   edition,
+  view,
 }: {
   day: number;
   edition: string;
+  view: PsalterView;
 }) {
   const is1662 = edition === "1662";
   const is1962 = edition === "1962";
+  const useTable = is1962 && view === "table";
   const dayCount = is1662
     ? BCP1662_PSLATER_DAY_COUNT
-    : is1962
+    : useTable
       ? BCP1962_PSALTER_DAY_COUNT
       : PSALTER_DAY_COUNT;
-  const row = is1662
-    ? bcp1662PsalterDay(day)
-    : is1962
-      ? bcp1962PsalterDay(day)
+  const row = useTable
+    ? bcp1962PsalterDay(day)
+    : is1662
+      ? bcp1662PsalterDay(day)
       : psalterDay(day);
   const styles = useThemedStyles(styleDef);
   if (!row) return null;
   // the 31st repeats day 30, so say so instead of silently showing it twice
   const repeats = day === dayCount && today().day > dayCount;
-  if (is1962) {
+  if (useTable) {
     // SAFETY: the 1962 branch above calls bcp1962PsalterDay, which returns this shape.
     const bcp1962Row = row as Bcp1962PsalterRow;
     return (
@@ -415,7 +458,9 @@ const PsalterDetailBody = memo(function PsalterDetailBody({
       <Text style={styles.detailSubtitle}>
         {is1662
           ? "1662 Psalter · 30 days · Morning and Evening portions"
-          : "The Psalter in 30 days · Morning and Evening portions"}
+          : is1962
+            ? "1962 Psalter · 30 days · Morning and Evening portions"
+            : "The Psalter in 30 days · Morning and Evening portions"}
       </Text>
       {repeats ? (
         <Text style={styles.canticleNote}>{"The 31st repeats day 30."}</Text>

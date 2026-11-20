@@ -22,14 +22,21 @@ import { consumePendingReferencePick } from "./pending";
 import { useIndexPicker } from "./pickers";
 import { readingLabelFor, registerScriptureStepper } from "./state.helpers";
 
+// the 1962 psalter has two appointments: its own 30-day cycle and the
+// optional odd/even ordinary weekday table
+export type PsalterView = "cycle" | "table";
+
 export type ReferenceState = {
   query: string;
   setQuery: (q: string) => void;
   openPsalm: number | null;
   setOpenPsalm: (n: number | null) => void;
-  // the open 30-day psalter cycle day (1..30); null shows today's day
+  // the open psalter cycle day (1..30, or 1..31 for the 1962 weekday table);
+  // null shows today's day
   openPsalterDay: number | null;
   setOpenPsalterDay: (n: number | null) => void;
+  psalterView: PsalterView;
+  setPsalterView: (v: PsalterView) => void;
   // base office + rite; the composed id is refOfficeId(openOffice, rite)
   openOffice: RefOfficeBase | null;
   setOpenOffice: (id: RefOfficeBase) => void;
@@ -149,6 +156,7 @@ export function ReferenceProvider({
   // hide either half with the bar's toggles
   const [saintBio, setSaintBio] = useState(true);
   const [saintLiturgy, setSaintLiturgy] = useState(true);
+  const [psalterView, setPsalterView] = useState<PsalterView>("cycle");
   const [officeDate, setOfficeDateRaw] = useState<CalendarDate>(today);
 
   // the office drop-down has no picker-page state of its own: selection is
@@ -335,6 +343,8 @@ export function ReferenceProvider({
     setOpenPsalm,
     openPsalterDay,
     setOpenPsalterDay,
+    psalterView,
+    setPsalterView,
     openOffice,
     setOpenOffice,
     officeRite,
