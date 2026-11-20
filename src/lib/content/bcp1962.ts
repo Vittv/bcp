@@ -550,7 +550,14 @@ export async function resolveBcp1962OfficeForDate(
 export type Bcp1962LitanyNode =
   | { kind: "rubric"; text: string }
   | { kind: "heading"; text: string }
-  | { kind: "text"; text: string; speaker?: "minister" | "people" | "all" };
+  | {
+      kind: "text";
+      text: string;
+      speaker?: "minister" | "people" | "all";
+      lordsPrayer?: boolean;
+      lordsPrayerFirst?: boolean;
+      lordsPrayerLast?: boolean;
+    };
 
 export type Bcp1962LitanyDoc = {
   edition: "1962";
@@ -558,6 +565,30 @@ export type Bcp1962LitanyDoc = {
   date: CalendarDate;
   nodes: Bcp1962LitanyNode[];
 };
+
+// 1979 prints the Lord's Prayer one petition per line, with the doxology on
+// its own line where the edition includes it
+function lordsPrayerNodes(text: string): Array<{
+  kind: "text";
+  text: string;
+  lordsPrayer: true;
+  lordsPrayerFirst?: boolean;
+  lordsPrayerLast?: boolean;
+}> {
+  const lines = text
+    .split(
+      /(?<=\.)\s+(?=Give us this day)|(?<=[.;])\s+(?=And lead us not)|(?<=[.;])\s+(?=For thine is the kingdom)/,
+    )
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return lines.map((line, i) => ({
+    kind: "text",
+    text: line,
+    lordsPrayer: true,
+    lordsPrayerFirst: i === 0,
+    lordsPrayerLast: i === lines.length - 1,
+  }));
+}
 
 /** compose the 1962 Litany as a standalone office of rubrics and spoken lines. */
 export function composeBcp1962Litany(date: CalendarDate): Bcp1962LitanyDoc {
@@ -582,7 +613,15 @@ export function composeBcp1962Litany(date: CalendarDate): Bcp1962LitanyDoc {
     edition: "1962",
     officeName: "The Litany",
     date,
-    nodes: ordered.map((line) => ({ ...line })),
+    nodes: ordered.flatMap((line): Bcp1962LitanyNode[] =>
+      line.kind === "text" &&
+      line.text.startsWith("Our Father who art in heaven")
+        ? lordsPrayerNodes(line.text).map((node) => ({
+            ...node,
+            speaker: undefined,
+          }))
+        : [{ ...line }],
+    ),
   };
 }
 
@@ -596,7 +635,13 @@ export type Bcp1962OfficeSectionKey =
   | "closing";
 
 export type Bcp1962OfficeNode =
-  | { kind: "heading"; text: string }
+  | {
+      kind: "heading";
+      text: string;
+      rule?: boolean;
+      scripture?: boolean;
+      citation?: string;
+    }
   | { kind: "rubric"; text: string }
   | {
       kind: "text";
@@ -606,6 +651,10 @@ export type Bcp1962OfficeNode =
       suggested?: boolean;
       citation?: string;
       seasonLabel?: string;
+      collect?: boolean;
+      lordsPrayer?: boolean;
+      lordsPrayerFirst?: boolean;
+      lordsPrayerLast?: boolean;
     }
   | {
       kind: "psalm";
@@ -763,10 +812,9 @@ export function composeBcp1962Office(
     });
   }
   openingNodes.push({ kind: "heading", text: "The Lord's Prayer" });
-  openingNodes.push({
-    kind: "text",
-    text: common.lords_prayer_opening ?? common.lords_prayer,
-  });
+  openingNodes.push(
+    ...lordsPrayerNodes(common.lords_prayer_opening ?? common.lords_prayer),
+  );
   if (officeDef?.openingVersiclesRubric) {
     openingNodes.push({
       kind: "rubric",
@@ -919,7 +967,7 @@ export function composeBcp1962Office(
     prayersNodes.push({ kind: "text", text: v.text, speaker: v.speaker });
   }
   prayersNodes.push({ kind: "heading", text: "The Lord's Prayer" });
-  prayersNodes.push({ kind: "text", text: common.lords_prayer });
+  prayersNodes.push(...lordsPrayerNodes(common.lords_prayer));
   if (officeDef?.suffragesRubric) {
     prayersNodes.push({ kind: "rubric", text: officeDef.suffragesRubric });
   }
@@ -1014,6 +1062,13 @@ export const BCP1962_OFFICE_SECTION_ORDER: Bcp1962OfficeSectionKey[] = [
 ];
 
 /** Compose one of the 1962 book's fixed short offices from vendored lines. */
+// the printed sentences carry no references; these are the book's texts
+const MIDDAY_SCRIPTURE_CITATIONS: Record<number, string> = {
+  2: "St John 12. 32",
+  4: "Acts 26. 13",
+  6: "Acts 10. 9",
+};
+
 export function composeBcp1962FixedOffice(
   office: "noonday" | "compline",
   date: CalendarDate,
@@ -1022,21 +1077,59 @@ export function composeBcp1962FixedOffice(
     office === "noonday" ? getBcp1962MidDayOffice() : getBcp1962Compline();
   const officeName =
     office === "noonday" ? "Prayers at Mid-day" : "The Order for Compline";
-  const nodes: Bcp1962OfficeNode[] = source.lines.map((entry) => {
-    if (entry.kind === "rubric" || entry.kind === "heading") {
-      return { kind: entry.kind, text: entry.text };
-    }
-    return {
-      kind: "text",
-      text: entry.text,
-      speaker: entry.speaker === "answer" ? "people" : entry.speaker,
-    };
-  });
+  const nodes: Bcp1962OfficeNode[] = source.lines.flatMap(
+    (entry, i): Bcp1962OfficeNode[] => {
+      if (office === "noonday") {
+        if (i === 0 && entry.kind === "rubric") {
+          return [];
+        }
+        if (i === 1 && entry.kind === "text") {
+          return [
+            { kind: "heading", text: "The Lord's Prayer" },
+            ...lordsPrayerNodes(entry.text),
+          ];
+        }
+        if (i === source.lines.length - 1 && entry.kind === "text") {
+          return [{ kind: "rubric", text: entry.text }];
+        }
+        if (entry.kind === "heading") {
+          return [
+            {
+              kind: "heading",
+              text: entry.text,
+              scripture: true,
+              citation: MIDDAY_SCRIPTURE_CITATIONS[i],
+            },
+          ];
+        }
+        if (entry.kind === "text") {
+          return [{ kind: "text", text: entry.text, collect: true }];
+        }
+      }
+      if (entry.kind === "rubric" || entry.kind === "heading") {
+        return [{ kind: entry.kind, text: entry.text }];
+      }
+      if (
+        entry.kind === "text" &&
+        entry.text.startsWith("Our Father who art in heaven")
+      ) {
+        return lordsPrayerNodes(entry.text);
+      }
+      return [
+        {
+          kind: "text",
+          text: entry.text,
+          speaker: entry.speaker === "answer" ? "people" : entry.speaker,
+        },
+      ];
+    },
+  );
   return {
     edition: "1962",
     office,
     officeName,
     date,
+    title: office === "noonday" ? "For Missions" : undefined,
     sections: [{ key: "closing", nodes }],
     notes: [],
   };
@@ -1064,16 +1157,21 @@ export function composeBcp1962FamilyPrayer(
   date: CalendarDate,
 ): Bcp1962ComposedOffice {
   const form = tab === "morning" || tab === "noonday" ? "morning" : "evening";
-  const nodes: Bcp1962OfficeNode[] = getBcp1962FamilyPrayer(form).map(
-    (entry) => {
+  const nodes: Bcp1962OfficeNode[] = getBcp1962FamilyPrayer(form).flatMap(
+    (entry): Bcp1962OfficeNode[] => {
       if (entry.kind === "rubric" || entry.kind === "heading") {
-        return { kind: entry.kind, text: entry.text };
+        return [{ kind: entry.kind, text: entry.text }];
       }
-      return {
-        kind: "text",
-        text: entry.text,
-        speaker: entry.speaker === "answer" ? "people" : entry.speaker,
-      };
+      if (entry.text.startsWith("Our Father who art in heaven")) {
+        return lordsPrayerNodes(entry.text);
+      }
+      return [
+        {
+          kind: "text",
+          text: entry.text,
+          speaker: entry.speaker === "answer" ? "people" : entry.speaker,
+        },
+      ];
     },
   );
   return {

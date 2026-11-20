@@ -70,6 +70,8 @@ export function Bcp1962LitanyView({
             key={i}
             style={[
               styles.text,
+              node.lordsPrayerFirst && styles.lordsPrayerStart,
+              node.lordsPrayerLast && styles.lordsPrayerEnd,
               showSpeakers && node.speaker === "people" && styles.textPeople,
             ]}
           >
@@ -84,6 +86,8 @@ export function Bcp1962LitanyView({
 
 const litanyStyles = defineThemedStyles({
   text: { ...officeDocumentStyles.text, marginTop: 4 },
+  lordsPrayerStart: { marginTop: 4 },
+  lordsPrayerEnd: { marginBottom: 8 },
   textPeople: officeDocumentStyles.textPeople,
   rubric: officeDocumentStyles.rubric,
   speaker: officeDocumentStyles.speaker,

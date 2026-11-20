@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 import type { BcpEdition } from "../../context/EditionContext";
-import { CHROME_FONT, HEADING_FONT } from "../../lib/fonts";
+import { CHROME_FONT, HEADING_FONT, SUBHEADING_FONT } from "../../lib/fonts";
 import { dayLabel } from "../../lib/office";
 import {
   defineThemedStyles,
@@ -20,19 +20,29 @@ export function OfficeHeader({
   date,
   title,
   editionLabel,
+  titleBelowEdition = false,
 }: {
   officeName: string;
   date: Parameters<typeof dayLabel>[0];
   title?: string | null;
   editionLabel: string;
+  titleBelowEdition?: boolean;
 }) {
   const styles = useThemedStyles(officeHeaderStyles);
+  const titleNode = title ? (
+    <Text
+      style={titleBelowEdition ? styles.subheadingTitle : styles.entryTitle}
+    >
+      {title}
+    </Text>
+  ) : null;
   return (
     <View style={styles.header}>
       <Text style={styles.officeName}>{officeName}</Text>
       <Text style={styles.dateLabel}>{dayLabel(date)}</Text>
-      {title ? <Text style={styles.entryTitle}>{title}</Text> : null}
+      {titleBelowEdition ? null : titleNode}
       <Text style={styles.editionLabel}>{editionLabel}</Text>
+      {titleBelowEdition ? titleNode : null}
     </View>
   );
 }
@@ -73,6 +83,14 @@ const officeHeaderStyles = defineThemedStyles({
     fontSize: 11,
     fontWeight: "500",
     color: "var(--text-secondary)",
+    marginTop: 6,
+  },
+  subheadingTitle: {
+    fontFamily: SUBHEADING_FONT,
+    fontSize: 20,
+    lineHeight: 27,
+    fontWeight: "600",
+    color: "var(--accent)",
     marginTop: 6,
   },
 });
