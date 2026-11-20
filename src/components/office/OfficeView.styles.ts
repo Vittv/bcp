@@ -10,20 +10,25 @@ export const officeViewStyles = defineThemedStyles({
     justifyContent: "space-between",
     gap: 12,
     marginTop: 18,
-    marginBottom: 8,
-    paddingBottom: 6,
+    marginBottom: 0,
+    paddingBottom: 2,
     borderBottomWidth: 1,
     borderBottomColor: "var(--border-content)",
   },
   stickyHeader: {
     position: "sticky",
-    top: -1,
+    // clear the top bar with a little air
+    top: -8,
     backgroundColor: "var(--bg)",
     zIndex: 100,
     isolation: "isolate",
   },
-  stickyBlock: {
-    paddingTop: 3,
+  stickyHeaderControl: {
+    position: "sticky",
+    top: -8,
+    backgroundColor: "var(--bg)",
+    zIndex: 100,
+    isolation: "isolate",
   },
   headingText: { ...officeDocumentStyles.headingText, flexShrink: 1 },
   controlOnlyRow: {

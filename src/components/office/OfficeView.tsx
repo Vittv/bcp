@@ -30,6 +30,7 @@ export function OfficeView({
     () => scriptureForRite(document.rite),
     [document.rite],
   );
+  const lastHeadedKey = document.sections.findLast((s) => s.heading)?.key;
 
   const controlFor = (key: ComposedSection["key"]) => {
     // full text prints the book's own menus, so the pickers would have
@@ -66,6 +67,7 @@ export function OfficeView({
           scripture={scripture}
           control={controlFor(section.key)}
           fullWidthControl={section.key === "opening"}
+          sticky={section.key !== lastHeadedKey}
         />
       ))}
       {Object.keys(customization).length > 0 ? (

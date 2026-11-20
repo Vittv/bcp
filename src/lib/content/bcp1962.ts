@@ -548,7 +548,7 @@ export async function resolveBcp1962OfficeForDate(
 }
 
 export type Bcp1962LitanyNode =
-  | { kind: "rubric"; text: string }
+  | { kind: "rubric"; text: string; choiceAnchorFor?: string }
   | { kind: "heading"; text: string }
   | {
       kind: "text";
@@ -557,6 +557,9 @@ export type Bcp1962LitanyNode =
       lordsPrayer?: boolean;
       lordsPrayerFirst?: boolean;
       lordsPrayerLast?: boolean;
+      choiceGroup?: string;
+      choiceId?: string;
+      choiceLabel?: string;
     };
 
 export type Bcp1962LitanyDoc = {
@@ -613,15 +616,38 @@ export function composeBcp1962Litany(date: CalendarDate): Bcp1962LitanyDoc {
     edition: "1962",
     officeName: "The Litany",
     date,
-    nodes: ordered.flatMap((line): Bcp1962LitanyNode[] =>
-      line.kind === "text" &&
-      line.text.startsWith("Our Father who art in heaven")
-        ? lordsPrayerNodes(line.text).map((node) => ({
-            ...node,
-            speaker: undefined,
-          }))
-        : [{ ...line }],
-    ),
+    nodes: ordered.flatMap((line): Bcp1962LitanyNode[] => {
+      if (line.kind === "text" && /^2 Corinthians \d/.test(line.text)) {
+        return [{ kind: "rubric", text: line.text }];
+      }
+      if (
+        line.kind === "rubric" &&
+        line.text.startsWith("Other prayers from this Book")
+      ) {
+        return [
+          { kind: "rubric", text: line.text, choiceAnchorFor: "litany-prayer" },
+          ...(BCP1962_OFFICE_TEXT.common.prayers ?? [])
+            .filter((p) => p.id !== "chrysostom")
+            .map((p) => ({
+              kind: "text" as const,
+              text: p.text,
+              choiceGroup: "litany-prayer",
+              choiceId: p.id,
+              choiceLabel: p.title,
+            })),
+        ];
+      }
+      if (
+        line.kind === "text" &&
+        line.text.startsWith("Our Father who art in heaven")
+      ) {
+        return lordsPrayerNodes(line.text).map((node) => ({
+          ...node,
+          speaker: undefined,
+        }));
+      }
+      return [{ ...line }];
+    }),
   };
 }
 
@@ -631,6 +657,7 @@ export type Bcp1962OfficeSectionKey =
   | "lessons"
   | "creed"
   | "prayers"
+  | "suffrages"
   | "collects"
   | "closing";
 
@@ -974,10 +1001,12 @@ export function composeBcp1962Office(
   if (officeDef?.suffragesRubric) {
     prayersNodes.push({ kind: "rubric", text: officeDef.suffragesRubric });
   }
+
+  const suffragesNodes: Bcp1962OfficeNode[] = [];
   if (common.suffrages?.length) {
-    prayersNodes.push({ kind: "heading", text: "Suffrages" });
+    suffragesNodes.push({ kind: "heading", text: "Suffrages" });
     for (const v of common.suffrages) {
-      prayersNodes.push({ kind: "text", text: v.text, speaker: v.speaker });
+      suffragesNodes.push({ kind: "text", text: v.text, speaker: v.speaker });
     }
   }
 
@@ -1034,8 +1063,9 @@ export function composeBcp1962Office(
       { key: "opening", nodes: openingNodes },
       { key: "psalms", heading: "The Psalms", nodes: psalmNodes },
       { key: "lessons", heading: "The Lessons", nodes: lessonsAndCanticles },
-      { key: "creed", heading: "The Creed", nodes: creedNodes },
+      { key: "creed", heading: "The Apostles' Creed", nodes: creedNodes },
       { key: "prayers", heading: "The Prayers", nodes: prayersNodes },
+      { key: "suffrages", nodes: suffragesNodes },
       { key: "collects", nodes: collectNodes },
       { key: "closing", nodes: closingNodes },
     ],
@@ -1120,7 +1150,7 @@ export function composeBcp1962FixedOffice(
         }
         if (i === 36 && entry.kind === "rubric") {
           return [
-            { kind: "heading", text: "The Creed", rule: true },
+            { kind: "heading", text: "The Apostles' Creed", rule: true },
             { kind: "rubric", text: entry.text },
           ];
         }
@@ -1196,7 +1226,34 @@ export function composeBcp1962FixedOffice(
           ];
         }
         if (i === source.lines.length - 1 && entry.kind === "text") {
-          return [{ kind: "rubric", text: entry.text }];
+          const prayers = [
+            ...(BCP1962_OFFICE_TEXT.common.prayers ?? [])
+              .filter((p) => p.id !== "chrysostom")
+              .map((p) => ({
+                id: p.id,
+                title: p.title,
+                text: p.text,
+              })),
+            ...getBcp1962FixedCollects("morning").map((c) => ({
+              id: c.id,
+              title: c.title,
+              text: c.text,
+            })),
+          ];
+          return [
+            {
+              kind: "rubric",
+              text: entry.text,
+              choiceAnchorFor: "midday-prayer",
+            },
+            ...prayers.map((p) => ({
+              kind: "text" as const,
+              text: p.text,
+              choiceGroup: "midday-prayer",
+              choiceId: p.id,
+              choiceLabel: p.title,
+            })),
+          ];
         }
         if (entry.kind === "heading") {
           return [

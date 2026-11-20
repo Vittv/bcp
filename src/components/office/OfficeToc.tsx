@@ -298,6 +298,9 @@ export function OfficeToc({ document }: { document: OfficeDocument }) {
   );
 }
 
+// temporarily disabled; the TOC and its setting stay in place for now
+const SECTIONS_DISABLED = true;
+
 // coarse visibility gate: desktop/wide screens with enough room for office + gutter
 export function useOfficeTocVisible(
   isDailyOffice: boolean,
@@ -305,7 +308,7 @@ export function useOfficeTocVisible(
 ): boolean {
   const viewport = useViewport();
   const { fontScale } = useTheme();
-  if (!IS_WEB || !isDailyOffice || !enabled) return false;
+  if (SECTIONS_DISABLED || !IS_WEB || !isDailyOffice || !enabled) return false;
   const contentWidth = 736 * Math.max(fontScale, 1);
   // office column plus comfortable side gutters for a TOC rail
   return viewport.width >= contentWidth + 480;

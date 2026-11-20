@@ -32,6 +32,21 @@ describe("bcp1962 litany", () => {
     expect(heading("The Grace")).toBeGreaterThan(
       heading("A Prayer of Saint Chrysostom"),
     );
+    expect(
+      doc.nodes.some(
+        (n) => n.kind === "rubric" && /^2 Corinthians \d/.test(n.text),
+      ),
+    ).toBe(true);
+    expect(
+      doc.nodes.some(
+        (n) => n.kind === "rubric" && n.choiceAnchorFor === "litany-prayer",
+      ),
+    ).toBe(true);
+    expect(
+      doc.nodes.filter(
+        (n) => n.kind === "text" && n.choiceGroup === "litany-prayer",
+      ).length,
+    ).toBeGreaterThan(0);
     const speakers = new Set(
       doc.nodes.flatMap((n) =>
         n.kind === "text" && n.speaker ? [n.speaker] : [],
@@ -73,7 +88,16 @@ describe("bcp1962 short offices", () => {
         .map((n) => ("citation" in n ? n.citation : undefined)),
     ).toEqual(["St John 12. 32", "Acts 26. 13", "Acts 10. 9"]);
     expect(nodes.filter((n) => n.kind === "text" && n.collect)).toHaveLength(3);
-    expect(nodes.at(-1)).toMatchObject({ kind: "rubric" });
+    expect(
+      nodes.some(
+        (n) => n.kind === "rubric" && n.choiceAnchorFor === "midday-prayer",
+      ),
+    ).toBe(true);
+    expect(
+      nodes.filter(
+        (n) => n.kind === "text" && n.choiceGroup === "midday-prayer",
+      ).length,
+    ).toBeGreaterThan(0);
   });
 
   it("composes Compline with the respond, hymn and blessing", () => {
@@ -114,7 +138,7 @@ describe("bcp1962 short offices", () => {
     );
     expect(nodes).toContainEqual({
       kind: "heading",
-      text: "The Creed",
+      text: "The Apostles' Creed",
       rule: true,
     });
     expect(

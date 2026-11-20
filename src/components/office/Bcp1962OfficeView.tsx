@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Text, View } from "react-native";
 import type {
   Bcp1962ComposedOffice,
@@ -22,10 +22,12 @@ import {
 import { OFFICE_EDITION_LABELS, OfficeHeader } from "./OfficeHeader";
 import { ReadingsControl } from "./OfficeView.controls";
 import { truncate } from "./OfficeView.shared";
+import { officeViewStyles } from "./OfficeView.styles";
 import { officeDocumentStyles } from "./officeDocumentStyles";
 import { PsalmText } from "./PsalmText";
 import { ScriptureText } from "./ScriptureText";
 import { ScriptureView } from "./ScriptureView";
+import { StickyHeading } from "./StickyHeading";
 
 const SPEAKERS: Record<string, string> = {
   minister: "Minister",
@@ -51,6 +53,7 @@ type ChoiceNode = Extract<Bcp1962OfficeNode, { kind: "text" }> & {
 const CHOICE_LABELS: Record<string, string> = {
   "compline-reading": "Short Lesson",
   "compline-collect": "Collect",
+  "midday-prayer": "Additional Prayers",
 };
 
 // the book allows one optional prayer or thanksgiving after the collects
@@ -106,10 +109,12 @@ function NodeView({
   node,
   showRubrics,
   showSpeakers,
+  sticky = false,
 }: {
   node: Bcp1962OfficeNode;
   showRubrics: boolean;
   showSpeakers: boolean;
+  sticky?: boolean;
 }) {
   const styles = useThemedStyles(bcp1962Styles);
   const sectionHeading = useSectionHeading();
@@ -121,7 +126,11 @@ function NodeView({
         node.text === "Suffrages" ||
         node.text === "Confession of Sin"
       ) {
-        return <Text style={sectionHeading}>{node.text}</Text>;
+        return (
+          <View style={sticky && officeViewStyles.stickyHeader}>
+            <Text style={sectionHeading}>{node.text}</Text>
+          </View>
+        );
       }
       if (node.scripture) {
         return (
@@ -225,11 +234,17 @@ function NodeView({
     case "creed":
       return (
         <View style={styles.lessonBlock}>
-          <Text style={[subheading, styles.creedTitle]}>{node.title}</Text>
           {node.rubric && showRubrics ? (
             <Text style={styles.rubric}>{node.rubric}</Text>
           ) : null}
-          <Text style={styles.text}>{node.text}</Text>
+          {node.text
+            .split(/(?=I believe in the Holy Ghost;)/)
+            .map((line, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed liturgical text
+              <Text key={i} style={styles.text}>
+                {line.trim()}
+              </Text>
+            ))}
         </View>
       );
     case "occasional":
@@ -254,6 +269,17 @@ export function Bcp1962OfficeView({
   const styles = useThemedStyles(bcp1962Styles);
   const sectionHeading = useSectionHeading();
   const subheading = useSubheading();
+  // section rules stay pinned through the appointed prayers; the Confession
+  // of Sin heading in the opening section pins on its own as well
+  const suffragesIndex = doc.sections.findIndex((s) =>
+    s.nodes.some((n) => n.kind === "heading" && n.text === "Suffrages"),
+  );
+  const isSticky = (key: string) => {
+    const index = doc.sections.findIndex((s) => s.key === key);
+    return suffragesIndex < 0 || index < suffragesIndex;
+  };
+  const nodeIsSticky = (node: Bcp1962OfficeNode) =>
+    node.kind === "heading" && node.text === "Confession of Sin";
   const [openingSelection, setOpeningSelection] = useState("suggested");
   const [choiceSelections, setChoiceSelections] = useState<
     Record<string, string>
@@ -274,6 +300,7 @@ export function Bcp1962OfficeView({
     ? "proper"
     : "none";
   const [familyCollect, setFamilyCollect] = useState(familyCollectDefault);
+  const [middayPrayer, setMiddayPrayer] = useState("none");
   const [canticleFirst, setCanticleFirst] = useState("suggested");
   const [canticleSecond, setCanticleSecond] = useState("suggested");
   const [creedOverride, setCreedOverride] = useState<
@@ -286,9 +313,14 @@ export function Bcp1962OfficeView({
           .flatMap((s) => s.nodes)
           .find((n): n is PsalmNode => n.kind === "psalm")
       : undefined;
+  const officePsalmNode =
+    doc.sections
+      .find((s) => s.key === "psalms")
+      ?.nodes.find((n): n is PsalmNode => n.kind === "psalm") ?? undefined;
+  const psalmRefs = (officePsalmNode ?? complinePsalmNode)?.refs ?? [];
   const psalmOptions: ControlOption[] = [
     { id: "suggested", label: "All psalms", group: "Suggested" },
-    ...(complinePsalmNode?.refs ?? []).map((ref) => ({
+    ...psalmRefs.map((ref) => ({
       id: ref,
       label: `Psalm ${ref}`,
       group: "Psalms",
@@ -314,6 +346,14 @@ export function Bcp1962OfficeView({
       group: "Collects",
     })),
   ];
+  const middayPrayerOptions: ControlOption[] = [
+    { id: "none", label: "None", group: "Other" },
+    ...choicesFor("midday-prayer").map((n) => ({
+      id: n.choiceId,
+      label: n.choiceLabel,
+      group: n.choiceId.startsWith("morning") ? "Collects" : "Prayers",
+    })),
+  ];
 
   const canticleNodes =
     doc.sections
@@ -325,6 +365,10 @@ export function Bcp1962OfficeView({
       ?.nodes.filter((n): n is CreedNode => n.kind === "creed") ?? [];
   const creedSuggested = creedNodes.find((n) => n.suggested)?.id ?? "apostles";
   const creedId = creedOverride ?? creedSuggested;
+  const creedTitle =
+    creedNodes.find((n) => n.id === creedId)?.title ??
+    doc.sections.find((s) => s.key === "creed")?.heading ??
+    "The Apostles' Creed";
 
   const lessonNodes =
     doc.sections
@@ -433,38 +477,63 @@ export function Bcp1962OfficeView({
       />
       {doc.sections.map((section) => (
         <MenuAnchor key={section.key} style={styles.section}>
-          {section.key === "lessons" && section.heading ? (
-            <MenuAnchor style={styles.headingRow}>
-              <Text style={[sectionHeading, styles.headingText]}>
-                {section.heading}
-              </Text>
-              <ReadingsControl
-                choices={{ lessonSlots: readingSlots }}
-                value={lessonSelection}
-                onChange={setLessonSelection}
-              />
-            </MenuAnchor>
+          {section.key === "psalms" &&
+          section.heading &&
+          psalmRefs.length > 0 ? (
+            <StickyHeading sticky={isSticky(section.key)} withControl>
+              <MenuAnchor style={styles.headingRow}>
+                <Text style={[sectionHeading, styles.headingText]}>
+                  {section.heading}
+                </Text>
+                <ChoiceMenu
+                  value={psalmSelection}
+                  options={psalmOptions}
+                  label="Psalms"
+                  accessibilityLabel="Psalms"
+                  onChange={setPsalmSelection}
+                />
+              </MenuAnchor>
+            </StickyHeading>
+          ) : section.key === "lessons" && section.heading ? (
+            <StickyHeading sticky={isSticky(section.key)} withControl>
+              <MenuAnchor style={styles.headingRow}>
+                <Text style={[sectionHeading, styles.headingText]}>
+                  {section.heading}
+                </Text>
+                <ReadingsControl
+                  choices={{ lessonSlots: readingSlots }}
+                  value={lessonSelection}
+                  onChange={setLessonSelection}
+                />
+              </MenuAnchor>
+            </StickyHeading>
           ) : section.key === "creed" && creedNodes.length > 1 ? (
-            <MenuAnchor style={styles.headingRow}>
-              <Text style={[sectionHeading, styles.headingText]}>
-                {section.heading ?? "The Creed"}
-              </Text>
-              <Segmented
-                value={creedId}
-                options={[
-                  { id: "apostles", label: "Apostles" },
-                  { id: "athanasian", label: "Athanasian" },
-                ]}
-                accessibilityLabel="Creed"
-                onChange={(id) =>
-                  setCreedOverride(
-                    id === "athanasian" ? "athanasian" : "apostles",
-                  )
-                }
-              />
-            </MenuAnchor>
+            <StickyHeading sticky={isSticky(section.key)} withControl>
+              <MenuAnchor style={styles.headingRow}>
+                <Text style={[sectionHeading, styles.headingText]}>
+                  {creedTitle}
+                </Text>
+                <Segmented
+                  value={creedId}
+                  options={[
+                    { id: "apostles", label: "Apostles" },
+                    { id: "athanasian", label: "Athanasian" },
+                  ]}
+                  accessibilityLabel="Creed"
+                  onChange={(id) =>
+                    setCreedOverride(
+                      id === "athanasian" ? "athanasian" : "apostles",
+                    )
+                  }
+                />
+              </MenuAnchor>
+            </StickyHeading>
           ) : section.heading ? (
-            <Text style={sectionHeading}>{section.heading}</Text>
+            <StickyHeading sticky={isSticky(section.key)}>
+              <Text style={sectionHeading}>
+                {section.key === "creed" ? creedTitle : section.heading}
+              </Text>
+            </StickyHeading>
           ) : null}
           {section.key === "opening" && sentenceNodes.length > 0 ? (
             <MenuAnchor style={styles.controlRow}>
@@ -492,7 +561,15 @@ export function Bcp1962OfficeView({
               }
               if (
                 node.kind === "text" &&
+                node.choiceGroup === "midday-prayer" &&
+                node.choiceId !== middayPrayer
+              ) {
+                return false;
+              }
+              if (
+                node.kind === "text" &&
                 node.choiceGroup !== undefined &&
+                node.choiceGroup !== "midday-prayer" &&
                 node.choiceId !== choiceValue(node.choiceGroup)
               ) {
                 return false;
@@ -517,111 +594,147 @@ export function Bcp1962OfficeView({
               }
               return true;
             })
-            .map((node, i) => (
-              <MenuAnchor
-                // biome-ignore lint/suspicious/noArrayIndexKey: composed office content
-                key={`${section.key}-${node.kind}-${i}`}
-              >
-                {node.kind === "canticle" && doc.office !== "compline"
-                  ? canticleControl(node.slot)
-                  : null}
-                {node.kind === "text" &&
-                node.choiceGroup === "family-collect" &&
-                node.choiceId === familyCollect &&
-                familyCollect !== "none" ? (
-                  <Text style={subheading}>{node.choiceLabel}</Text>
-                ) : null}
-                {node.kind === "text" &&
-                node.choiceGroup !== undefined &&
-                node.choiceGroup !== "family-collect" ? (
-                  <>
+            .map((node, i) => {
+              // a sticky heading has to sit directly under the tall section:
+              // a per-node anchor is only as tall as the heading and would
+              // leave position:sticky no room to pin
+              const key = `${section.key}-${node.kind}-${i}`;
+              const content = (
+                <>
+                  {node.kind === "canticle" && doc.office !== "compline"
+                    ? canticleControl(node.slot)
+                    : null}
+                  {node.kind === "text" &&
+                  node.choiceGroup === "family-collect" &&
+                  node.choiceId === familyCollect &&
+                  familyCollect !== "none" ? (
+                    <Text style={subheading}>{node.choiceLabel}</Text>
+                  ) : null}
+                  {node.kind === "text" &&
+                  node.choiceGroup === "midday-prayer" &&
+                  node.choiceId === middayPrayer &&
+                  middayPrayer !== "none" ? (
+                    <Text style={subheading}>{node.choiceLabel}</Text>
+                  ) : null}
+                  {node.kind === "text" &&
+                  node.choiceGroup !== undefined &&
+                  node.choiceGroup !== "family-collect" &&
+                  node.choiceGroup !== "midday-prayer" ? (
+                    <>
+                      <MenuAnchor style={styles.controlRow}>
+                        <ChoiceMenu
+                          value={choiceValue(node.choiceGroup)}
+                          options={choicesFor(node.choiceGroup).map((n) => ({
+                            id: n.choiceId,
+                            label: n.choiceLabel,
+                            group: "Options",
+                          }))}
+                          label={CHOICE_LABELS[node.choiceGroup] ?? "Options"}
+                          accessibilityLabel={
+                            CHOICE_LABELS[node.choiceGroup] ?? "Options"
+                          }
+                          fullWidth
+                          onChange={(id) =>
+                            setChoiceSelections((prev) => ({
+                              ...prev,
+                              [node.choiceGroup ?? ""]: id,
+                            }))
+                          }
+                        />
+                      </MenuAnchor>
+                      {node.choiceGroup !== "compline-reading" ? (
+                        <Text style={subheading}>{node.choiceLabel}</Text>
+                      ) : null}
+                    </>
+                  ) : null}
+                  {section.key === "closing" &&
+                  node.kind === "occasional" &&
+                  node.id === prayerControlId ? (
                     <MenuAnchor style={styles.controlRow}>
                       <ChoiceMenu
-                        value={choiceValue(node.choiceGroup)}
-                        options={choicesFor(node.choiceGroup).map((n) => ({
-                          id: n.choiceId,
-                          label: n.choiceLabel,
-                          group: "Options",
-                        }))}
-                        label={CHOICE_LABELS[node.choiceGroup] ?? "Options"}
-                        accessibilityLabel={
-                          CHOICE_LABELS[node.choiceGroup] ?? "Options"
-                        }
+                        value={prayerSelection}
+                        options={prayerOptions}
+                        label="Prayers and Thanksgivings"
+                        accessibilityLabel="Prayers and Thanksgivings"
                         fullWidth
-                        onChange={(id) =>
-                          setChoiceSelections((prev) => ({
-                            ...prev,
-                            [node.choiceGroup ?? ""]: id,
-                          }))
-                        }
+                        onChange={setPrayerSelection}
                       />
                     </MenuAnchor>
-                    {node.choiceGroup !== "compline-reading" ? (
-                      <Text style={subheading}>{node.choiceLabel}</Text>
-                    ) : null}
-                  </>
-                ) : null}
-                {section.key === "closing" &&
-                node.kind === "occasional" &&
-                node.id === prayerControlId ? (
-                  <MenuAnchor style={styles.controlRow}>
-                    <ChoiceMenu
-                      value={prayerSelection}
-                      options={prayerOptions}
-                      label="Prayers and Thanksgivings"
-                      accessibilityLabel="Prayers and Thanksgivings"
-                      fullWidth
-                      onChange={setPrayerSelection}
+                  ) : null}
+                  {node.kind === "psalm" &&
+                  section.key !== "psalms" &&
+                  psalmOptions.length > 1 ? (
+                    <MenuAnchor style={styles.controlRow}>
+                      <ChoiceMenu
+                        value={psalmSelection}
+                        options={psalmOptions}
+                        label="Psalms"
+                        accessibilityLabel="Psalms"
+                        fullWidth
+                        onChange={setPsalmSelection}
+                      />
+                    </MenuAnchor>
+                  ) : null}
+                  {node.kind === "text" &&
+                  node.choiceGroup === "compline-reading" ? (
+                    <ScriptureText
+                      text={node.text}
+                      citation={node.choiceLabel}
                     />
-                  </MenuAnchor>
-                ) : null}
-                {node.kind === "psalm" && psalmOptions.length > 1 ? (
-                  <MenuAnchor style={styles.controlRow}>
-                    <ChoiceMenu
-                      value={psalmSelection}
-                      options={psalmOptions}
-                      label="Psalms"
-                      accessibilityLabel="Psalms"
-                      fullWidth
-                      onChange={setPsalmSelection}
+                  ) : (
+                    <NodeView
+                      node={
+                        node.kind === "psalm" && psalmSelection !== "suggested"
+                          ? {
+                              ...node,
+                              refs: node.refs.filter(
+                                (r) => r === psalmSelection,
+                              ),
+                              passages: node.passages.filter(
+                                (p) => p.ref === psalmSelection,
+                              ),
+                            }
+                          : node
+                      }
+                      showRubrics={showRubrics}
+                      showSpeakers={showSpeakers}
+                      sticky={nodeIsSticky(node)}
                     />
-                  </MenuAnchor>
-                ) : null}
-                {node.kind === "text" &&
-                node.choiceGroup === "compline-reading" ? (
-                  <ScriptureText text={node.text} citation={node.choiceLabel} />
-                ) : (
-                  <NodeView
-                    node={
-                      node.kind === "psalm" && psalmSelection !== "suggested"
-                        ? {
-                            ...node,
-                            refs: node.refs.filter((r) => r === psalmSelection),
-                            passages: node.passages.filter(
-                              (p) => p.ref === psalmSelection,
-                            ),
-                          }
-                        : node
-                    }
-                    showRubrics={showRubrics}
-                    showSpeakers={showSpeakers}
-                  />
-                )}
-                {node.kind === "rubric" &&
-                node.choiceAnchorFor === "family-collect" ? (
-                  <MenuAnchor style={styles.controlRow}>
-                    <ChoiceMenu
-                      value={familyCollect}
-                      options={familyCollectOptions}
-                      label="Collect"
-                      accessibilityLabel="Collect"
-                      fullWidth
-                      onChange={setFamilyCollect}
-                    />
-                  </MenuAnchor>
-                ) : null}
-              </MenuAnchor>
-            ))}
+                  )}
+                  {node.kind === "rubric" &&
+                  node.choiceAnchorFor === "family-collect" ? (
+                    <MenuAnchor style={styles.controlRow}>
+                      <ChoiceMenu
+                        value={familyCollect}
+                        options={familyCollectOptions}
+                        label="Collect"
+                        accessibilityLabel="Collect"
+                        fullWidth
+                        onChange={setFamilyCollect}
+                      />
+                    </MenuAnchor>
+                  ) : null}
+                  {node.kind === "rubric" &&
+                  node.choiceAnchorFor === "midday-prayer" ? (
+                    <MenuAnchor style={styles.controlRow}>
+                      <ChoiceMenu
+                        value={middayPrayer}
+                        options={middayPrayerOptions}
+                        label="Additional Prayers"
+                        accessibilityLabel="Additional Prayers"
+                        fullWidth
+                        onChange={setMiddayPrayer}
+                      />
+                    </MenuAnchor>
+                  ) : null}
+                </>
+              );
+              return nodeIsSticky(node) ? (
+                <Fragment key={key}>{content}</Fragment>
+              ) : (
+                <MenuAnchor key={key}>{content}</MenuAnchor>
+              );
+            })}
         </MenuAnchor>
       ))}
       {doc.notes.length > 0 ? (
@@ -639,11 +752,7 @@ export function Bcp1962OfficeView({
 }
 
 const bcp1962Styles = defineThemedStyles({
-  section: {
-    ...officeDocumentStyles.section,
-    position: "relative",
-    zIndex: 2,
-  },
+  section: officeDocumentStyles.section,
   headingRow: { ...officeDocumentStyles.headingRow, position: "relative" },
   headingText: officeDocumentStyles.headingText,
   controlRow: { position: "relative", marginTop: 8, marginBottom: 12 },
@@ -665,7 +774,6 @@ const bcp1962Styles = defineThemedStyles({
     marginTop: 12,
     marginBottom: 4,
   },
-  creedTitle: { marginTop: 0 },
   accent: officeDocumentStyles.accent,
   label: { fontFamily: SERIF_FONT, fontSize: 15, color: "var(--text)" },
   psalmTitle: {
