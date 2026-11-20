@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Text, View } from "react-native";
 import type {
   Bcp1662ComposedOffice,
@@ -13,20 +13,24 @@ import {
 import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { ChoiceMenu, MenuAnchor, Segmented } from "./OfficeControls";
 import { OFFICE_EDITION_LABELS, OfficeHeader } from "./OfficeHeader";
+import { officeViewStyles } from "./OfficeView.styles";
 import { officeDocumentStyles } from "./officeDocumentStyles";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
+import { StickyHeading } from "./StickyHeading";
 
 function NodeView({
   node,
   showRubrics,
   showSpeakers,
   collect,
+  sticky = false,
 }: {
   node: Bcp1662OfficeNode;
   showRubrics: boolean;
   showSpeakers: boolean;
   collect?: boolean;
+  sticky?: boolean;
 }) {
   const styles = useThemedStyles(bcp1662Styles);
   const sectionHeading = useSectionHeading();
@@ -34,7 +38,11 @@ function NodeView({
   switch (node.kind) {
     case "heading":
       if (node.text === "Suffrages" || node.text === "Confession of Sin") {
-        return <Text style={sectionHeading}>{node.text}</Text>;
+        return (
+          <View style={sticky && officeViewStyles.stickyHeader}>
+            <Text style={sectionHeading}>{node.text}</Text>
+          </View>
+        );
       }
       return <Text style={subheading}>{node.text}</Text>;
     case "rubric":
@@ -161,7 +169,14 @@ function NodeView({
           {node.rubric ? (
             <Text style={styles.rubric}>{node.rubric}</Text>
           ) : null}
-          <Text style={styles.text}>{node.text}</Text>
+          {node.text
+            .split(/(?=I believe in the Holy Ghost;)/)
+            .map((line, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed liturgical text
+              <Text key={i} style={styles.text}>
+                {line.trim()}
+              </Text>
+            ))}
         </View>
       );
     case "canticle":
@@ -190,6 +205,23 @@ export function Bcp1662OfficeView({
 }) {
   const styles = useThemedStyles(bcp1662Styles);
   const sectionHeading = useSectionHeading();
+  const suffragesIndex = doc.sections.findIndex((s) =>
+    s.nodes.some((n) => n.kind === "heading" && n.text === "Suffrages"),
+  );
+  const isSticky = (key: string) => {
+    const index = doc.sections.findIndex((s) => s.key === key);
+    return suffragesIndex < 0 || index < suffragesIndex;
+  };
+  const suffragesNodeIndex =
+    suffragesIndex >= 0
+      ? doc.sections[suffragesIndex].nodes.findIndex(
+          (n) => n.kind === "heading" && n.text === "Suffrages",
+        )
+      : -1;
+  const nodeIsSticky = (sectionIndex: number, nodeIndex: number) =>
+    suffragesIndex < 0 ||
+    sectionIndex < suffragesIndex ||
+    (sectionIndex === suffragesIndex && nodeIndex < suffragesNodeIndex);
   const sentences = BCP1662_OFFICE_TEXT.common.openingSentences ?? [];
   const suggested = sentences[0]?.text ?? "";
   const [openingSelection, setOpeningSelection] = useState<string>("suggested");
@@ -313,74 +345,86 @@ export function Bcp1662OfficeView({
         title={doc.title}
         editionLabel={OFFICE_EDITION_LABELS["1662"]}
       />
-      {doc.sections.map((section) => (
+      {doc.sections.map((section, sectionIndex) => (
         <MenuAnchor key={section.key} style={styles.section}>
-          {section.key === "psalms" && psalmRefs.length > 1 ? (
-            <MenuAnchor style={styles.headingRow}>
-              <Text style={[sectionHeading, styles.headingText]}>
-                {section.heading}
-              </Text>
-              <ChoiceMenu
-                value={psalmSelection}
-                options={[
-                  { id: "suggested", label: "All psalms", group: "Suggested" },
-                  ...psalmRefs.map((ref) => ({
-                    id: ref,
-                    label: ref,
-                    group: "Psalms",
-                  })),
-                ]}
-                label="Psalms"
-                accessibilityLabel="Psalms"
-                onChange={setPsalmSelection}
-              />
-            </MenuAnchor>
+          {section.key === "psalms" && psalmRefs.length > 0 ? (
+            <StickyHeading sticky={isSticky(section.key)} withControl>
+              <MenuAnchor style={styles.headingRow}>
+                <Text style={[sectionHeading, styles.headingText]}>
+                  {section.heading}
+                </Text>
+                <ChoiceMenu
+                  value={psalmSelection}
+                  options={[
+                    {
+                      id: "suggested",
+                      label: "All psalms",
+                      group: "Suggested",
+                    },
+                    ...psalmRefs.map((ref) => ({
+                      id: ref,
+                      label: ref,
+                      group: "Psalms",
+                    })),
+                  ]}
+                  label="Psalms"
+                  accessibilityLabel="Psalms"
+                  onChange={setPsalmSelection}
+                />
+              </MenuAnchor>
+            </StickyHeading>
           ) : section.key === "lessons" ? (
-            <MenuAnchor style={styles.headingRow}>
-              <Text style={[sectionHeading, styles.headingText]}>
-                {section.heading}
-              </Text>
-              <ChoiceMenu
-                value={lessonSelection}
-                options={[
-                  {
-                    id: "suggested",
-                    label: "OT & NT",
-                    group: "Suggested",
-                  },
-                  { id: "first", label: "OT only", group: "Lessons" },
-                  {
-                    id: "second",
-                    label: "NT only",
-                    group: "Lessons",
-                  },
-                ]}
-                label="Lessons"
-                accessibilityLabel="Lessons"
-                onChange={setLessonSelection}
-              />
-            </MenuAnchor>
+            <StickyHeading sticky={isSticky(section.key)} withControl>
+              <MenuAnchor style={styles.headingRow}>
+                <Text style={[sectionHeading, styles.headingText]}>
+                  {section.heading}
+                </Text>
+                <ChoiceMenu
+                  value={lessonSelection}
+                  options={[
+                    {
+                      id: "suggested",
+                      label: "OT & NT",
+                      group: "Suggested",
+                    },
+                    { id: "first", label: "OT only", group: "Lessons" },
+                    {
+                      id: "second",
+                      label: "NT only",
+                      group: "Lessons",
+                    },
+                  ]}
+                  label="Lessons"
+                  accessibilityLabel="Lessons"
+                  onChange={setLessonSelection}
+                />
+              </MenuAnchor>
+            </StickyHeading>
           ) : section.key === "creed" && creedNodes.length > 1 ? (
-            <MenuAnchor style={styles.headingRow}>
-              <Text style={[sectionHeading, styles.headingText]}>
-                {creedTitle}
-              </Text>
-              <Segmented
-                value={creedId}
-                options={[
-                  { id: "apostles", label: "Apostles" },
-                  { id: "athanasian", label: "Athanasian" },
-                ]}
-                accessibilityLabel="Creed"
-                onChange={(id) =>
-                  setCreedOverride(
-                    id === "athanasian" ? "athanasian" : "apostles",
-                  )
-                }
-              />
-            </MenuAnchor>
+            <StickyHeading sticky={isSticky(section.key)} withControl>
+              <MenuAnchor style={styles.headingRow}>
+                <Text style={[sectionHeading, styles.headingText]}>
+                  {creedTitle}
+                </Text>
+                <Segmented
+                  value={creedId}
+                  options={[
+                    { id: "apostles", label: "Apostles" },
+                    { id: "athanasian", label: "Athanasian" },
+                  ]}
+                  accessibilityLabel="Creed"
+                  onChange={(id) =>
+                    setCreedOverride(
+                      id === "athanasian" ? "athanasian" : "apostles",
+                    )
+                  }
+                />
+              </MenuAnchor>
+            </StickyHeading>
           ) : section.heading ? (
-            <Text style={sectionHeading}>{section.heading}</Text>
+            <StickyHeading sticky={isSticky(section.key)}>
+              <Text style={sectionHeading}>{section.heading}</Text>
+            </StickyHeading>
           ) : null}
           {section.key === "opening" && sentences.length > 0 ? (
             <MenuAnchor style={styles.controlRow}>
@@ -450,15 +494,12 @@ export function Bcp1662OfficeView({
                 i > 0 &&
                 prev?.kind === "heading" &&
                 prev.text === "The Lord's Prayer";
-              return (
-                // nodes are composed in order without stable ids
-                <MenuAnchor
-                  // biome-ignore lint/suspicious/noArrayIndexKey: composed office content
-                  key={`${section.key}-${node.kind}-${i}`}
-                  style={
-                    isLordsPrayerText ? styles.lordsPrayerBlock : undefined
-                  }
-                >
+              // a sticky heading must be a direct child of the tall section:
+              // a per-node anchor is only as tall as the heading and would
+              // leave position:sticky no room to pin
+              const key = `${section.key}-${node.kind}-${i}`;
+              const content = (
+                <>
                   {node.kind === "canticle" ? canticleControl(node.slot) : null}
                   {node.kind === "occasional" ||
                   (!occasionalShown &&
@@ -473,7 +514,20 @@ export function Bcp1662OfficeView({
                     showRubrics={showRubrics}
                     showSpeakers={showSpeakers}
                     collect={section.key === "collects"}
+                    sticky={nodeIsSticky(sectionIndex, i)}
                   />
+                </>
+              );
+              return nodeIsSticky(sectionIndex, i) ? (
+                <Fragment key={key}>{content}</Fragment>
+              ) : (
+                <MenuAnchor
+                  key={key}
+                  style={
+                    isLordsPrayerText ? styles.lordsPrayerBlock : undefined
+                  }
+                >
+                  {content}
                 </MenuAnchor>
               );
             })}
@@ -494,13 +548,7 @@ export function Bcp1662OfficeView({
 }
 
 const bcp1662Styles = defineThemedStyles({
-  section: {
-    ...officeDocumentStyles.section,
-    // RNW gives every View z-index 0, so without a positioned, raised
-    // ancestor the page paints over an open dropdown inside this section
-    position: "relative",
-    zIndex: 2,
-  },
+  section: officeDocumentStyles.section,
   block: {
     marginTop: 8,
     marginBottom: 8,

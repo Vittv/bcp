@@ -30,6 +30,7 @@ import {
 import { officeViewStyles } from "./OfficeView.styles";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
+import { StickyHeading } from "./StickyHeading";
 
 type NodeViewProps = {
   node: ComposedNode;
@@ -336,6 +337,7 @@ export function SectionView({
   scripture,
   control,
   fullWidthControl = false,
+  sticky = false,
 }: {
   section: ComposedSection;
   showRubrics: boolean;
@@ -349,6 +351,7 @@ export function SectionView({
   control?: ReactNode;
   /** a heading-less control that should span the reading column */
   fullWidthControl?: boolean;
+  sticky?: boolean;
 }) {
   const styles = useThemedStyles(officeViewStyles);
   const heading = useSectionHeading();
@@ -357,29 +360,25 @@ export function SectionView({
   return (
     <MenuAnchor nativeID={officeSectionId(section.key)} style={styles.section}>
       {section.heading ? (
-        control ? (
-          <MenuAnchor
-            style={[
-              styles.headingRow,
-              section.key !== "suffrages-a" && section.key !== "suffrages-b"
-                ? [styles.stickyHeader, styles.stickyBlock]
-                : null,
-            ]}
-          >
-            <Text style={[heading, styles.headingText]}>{section.heading}</Text>
-            {control}
-          </MenuAnchor>
-        ) : (
-          <View
-            style={[
-              section.key !== "suffrages-a" && section.key !== "suffrages-b"
-                ? [styles.stickyHeader, styles.stickyBlock]
-                : null,
-            ]}
-          >
+        <StickyHeading
+          sticky={
+            sticky &&
+            section.key !== "suffrages-a" &&
+            section.key !== "suffrages-b"
+          }
+          withControl={!!control}
+        >
+          {control ? (
+            <MenuAnchor style={styles.headingRow}>
+              <Text style={[heading, styles.headingText]}>
+                {section.heading}
+              </Text>
+              {control}
+            </MenuAnchor>
+          ) : (
             <Text style={heading}>{section.heading}</Text>
-          </View>
-        )
+          )}
+        </StickyHeading>
       ) : control ? (
         <MenuAnchor
           style={

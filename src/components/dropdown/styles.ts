@@ -7,6 +7,7 @@ import { defineThemedStyles } from "../../lib/theme/themedStyles";
 // over the menu, which React Native Web otherwise does at z-index 0.
 export const dropdownAnchorStyles = defineThemedStyles({
   raised: {
+    position: "relative",
     zIndex: 5,
   },
 });
