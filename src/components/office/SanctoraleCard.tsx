@@ -146,10 +146,7 @@ export function SanctoraleCard({
             wikiLinks.map((link) => (
               <Pressable
                 key={link.title}
-                style={({ hovered }) => [
-                  styles.linkRow,
-                  hovered && { backgroundColor: "var(--control-hover)" },
-                ]}
+                style={styles.linkRow}
                 onPress={() =>
                   window.open(
                     wikipediaArticleUrl(link.title),
@@ -160,17 +157,16 @@ export function SanctoraleCard({
                 accessibilityRole="link"
                 accessibilityLabel={`Read ${link.label ?? link.title} on Wikipedia`}
               >
-                <Text style={styles.link}>
-                  {`${link.label ?? link.title} on Wikipedia ›`}
-                </Text>
+                {({ hovered }) => (
+                  <Text style={[styles.link, hovered && styles.linkHover]}>
+                    {`${link.label ?? link.title} on Wikipedia`}
+                  </Text>
+                )}
               </Pressable>
             ))
           ) : (
             <Pressable
-              style={({ hovered }) => [
-                styles.linkRow,
-                hovered && { backgroundColor: "var(--control-hover)" },
-              ]}
+              style={styles.linkRow}
               onPress={() =>
                 window.open(
                   wikipediaSearchUrl(entry.title),
@@ -181,7 +177,11 @@ export function SanctoraleCard({
               accessibilityRole="link"
               accessibilityLabel={`Search Wikipedia for ${entry.title}`}
             >
-              <Text style={styles.link}>{"Search Wikipedia ›"}</Text>
+              {({ hovered }) => (
+                <Text style={[styles.link, hovered && styles.linkHover]}>
+                  Search Wikipedia
+                </Text>
+              )}
             </Pressable>
           )}
         </View>

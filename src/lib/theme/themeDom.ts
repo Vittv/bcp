@@ -63,6 +63,14 @@ export function applyTokens(tokens: ThemeTokens, resolved: ResolvedTheme) {
     *::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
     *::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
     ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--text); }
+    /* links read as links by default; the underline clears on hover so the
+       two states stay distinct without losing the resting affordance */
+    a[data-external-link] { text-decoration-line: underline; }
+    a[data-external-link]:hover { text-decoration-line: none; }
+    /* the Ko-fi row is inline-flex, so its text is a flex item and does not
+       inherit the anchor's decoration; give that span its own pair of rules */
+    a[data-external-link] [data-external-text] { text-decoration-line: underline; }
+    a[data-external-link]:hover [data-external-text] { text-decoration-line: none; }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     [data-picker-search]:focus-visible { outline: none; }
     /* the settings search lights up as one block: the focusing input pulls

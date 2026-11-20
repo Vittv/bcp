@@ -231,7 +231,6 @@ const web: Record<string, CSSProperties> = {
     fontFamily: CHROME_FONT,
     fontWeight: "400",
     fontSize: 13,
-    textDecorationLine: "underline",
     wordBreak: "break-all",
   },
 };

@@ -45,11 +45,12 @@ src/lib/content/vendor/dol/PROVENANCE.md.
 
 Liturgical and scriptural texts
 
-The 1979 Book of Common Prayer, the King James Version and the World English
-Bible (British Edition) are in the public domain and carry no restrictions.
-Their provenance notes are in src/lib/content/vendor/bcp, kjv and web. The
-Prayer Book is additionally licensed for reproduction by the Church Pension
-Fund; the public-domain E-text edition is the basis used here.
+The 1979 Book of Common Prayer, the King James Version (including the Apocrypha
+from the eBible.org KJVA module, courtesy of the CrossWire Bible Society) and
+the World English Bible (British Edition) are in the public domain and carry no
+restrictions. Their provenance notes are in src/lib/content/vendor/bcp, kjv,
+kjva and web. The Prayer Book is additionally licensed for reproduction by the
+Church Pension Fund; the public-domain E-text edition is the basis used here.
 
 Lesser Feasts and Fasts calendar
 
@@ -61,8 +62,26 @@ reproduced; the book's biographies, collects, psalms, lessons and prefaces are
 not. The source, the omissions and the copyright notice are recorded in the
 provenance note beside the file.
 
+1662 Book of Common Prayer
+
+The 1662 content is drawn from public-domain historical sources: 1669 and 1770
+printings held by the Internet Archive for the lectionary and psalm tables, and
+public-domain Church of England texts checked against a 1762 Baskerville
+facsimile for the offices. Readable online transcriptions served only as
+cross-checks. Provenance and verification notes are in
+src/lib/content/vendor/bcp1662/PROVENANCE.md.
+
+1962 Book of Common Prayer (Canada)
+
+Text is based on the Book of Common Prayer (1962) of the General Synod of the
+Anglican Church of Canada, which the ACC has confirmed is in the public domain.
+This project is independent and is not endorsed by the Anglican Church of
+Canada. For the official publication, visit www.anglican.ca/texts. Provenance
+is in src/lib/content/vendor/bcp1962/PROVENANCE.md.
+
 Fonts
 
-Crimson Pro, EB Garamond, Libron, Playfair Display, JetBrains Mono and Inter
-Tight ship under the SIL Open Font License 1.1. The license texts are in
-assets/fonts/LICENSES/, and sources and roles are in assets/fonts/FONTS.md.
+Crimson Pro, EB Garamond, Libron, Newsreader, Playfair Display, JetBrains Mono
+and Inter Tight ship under the SIL Open Font License 1.1. Each family's
+copyright notice and the full license ship in licenses/fonts/ alongside this
+notice; sources and roles are in assets/fonts/FONTS.md.

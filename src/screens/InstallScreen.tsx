@@ -220,7 +220,6 @@ const styleDef = defineThemedStyles({
     fontWeight: "400",
     fontSize: 15,
     color: "var(--accent)",
-    textDecorationLine: "underline",
     marginBottom: 8,
   },
   inlineLink: {
@@ -228,7 +227,6 @@ const styleDef = defineThemedStyles({
     fontWeight: "400",
     fontSize: 15,
     color: "var(--accent)",
-    textDecorationLine: "underline",
   },
   noteText: {
     fontFamily: CHROME_FONT,

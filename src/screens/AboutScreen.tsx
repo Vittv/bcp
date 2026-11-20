@@ -27,7 +27,6 @@ export function AboutScreen() {
       fontWeight: "400",
       fontSize: 15,
       color: v("var(--accent)"),
-      textDecorationLine: "underline",
       marginBottom: 8,
     },
     donateLink: {
@@ -49,9 +48,16 @@ export function AboutScreen() {
       <View style={styles.section}>
         <Text style={styles.label}>BCP</Text>
         <Text style={styles.body}>
-          A reader for the Daily Office of the Book of Common Prayer (1979, The
-          Episcopal Church): Morning Prayer, Noonday Prayer, Evening Prayer, and
-          Compline, composed for any date by a local liturgical calendar engine.
+          A reader for the Daily Office of the Book of Common Prayer in three
+          editions: 1979 (The Episcopal Church), 1662 (Church of England), and
+          1962 (Anglican Church of Canada). Morning and Evening Prayer and the
+          shorter offices appointed by each book are composed for any date by a
+          local liturgical calendar engine.
+        </Text>
+        <Text style={styles.body}>
+          Alongside the offices are the lectionary, the thirty-day psalter,
+          canticles, collects, scripture, and the feast calendars of all three
+          traditions.
         </Text>
         <Text style={styles.body}>
           The whole app runs offline: the calendar, the texts, and the desktop
@@ -98,7 +104,7 @@ export function AboutScreen() {
           Third-party notices
         </ExternalLink>
         <ExternalLink href={KO_FI_URL} style={web.donateLink}>
-          <span style={web.link}>
+          <span data-external-text="" style={web.link}>
             If BCP is useful to you, support it on Ko-fi
           </span>
           <img src={KO_FI_ICON} alt="Ko-fi" style={web.donateIcon} />
