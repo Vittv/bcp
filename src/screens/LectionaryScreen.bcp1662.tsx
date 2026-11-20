@@ -4,6 +4,7 @@ import { Platform, ScrollView, Text, View } from "react-native";
 import { useSectionHeading } from "../components/office/contentHeadings";
 import { PsalmText } from "../components/office/PsalmText";
 import { ScriptureView } from "../components/office/ScriptureView";
+import { StickyHeading } from "../components/office/StickyHeading";
 import { useTranslation } from "../context/TranslationContext";
 import type { CalendarDate } from "../lib/calendar/types";
 import {
@@ -76,15 +77,13 @@ function PsalmsBlock({ refs }: { refs: string[] }) {
 }
 
 function OfficeBlock({ office }: { office: Bcp1662ResolvedOffice }) {
-  const styles = useThemedStyles(lectionaryStyles);
   const heading = useSectionHeading();
   const psalms = office.psalms?.map(String) ?? office.monthlyPsalms ?? [];
   return (
     <View>
-      <Text style={heading}>{OFFICE_LABEL[office.office]}</Text>
-      {office.name ? (
-        <Text style={styles.entryTitle}>{office.name}</Text>
-      ) : null}
+      <StickyHeading sticky>
+        <Text style={heading}>{OFFICE_LABEL[office.office]}</Text>
+      </StickyHeading>
       <PsalmsBlock refs={psalms} />
       {office.lessons.map((lesson, i) => (
         <LessonRow
@@ -132,12 +131,12 @@ export function Lectionary1662Screen({ date }: { date: CalendarDate }) {
       <View style={styles.header}>
         <Text style={styles.title}>Daily Readings</Text>
         <Text style={styles.dateLabel}>{dayLabel(date)}</Text>
-        {title ? <Text style={styles.entryTitle}>{title}</Text> : null}
         {composed.notes.map((note) => (
           <Text key={note} style={styles.officeNote}>
             {note}
           </Text>
         ))}
+        {title ? <Text style={styles.properTitle}>{title}</Text> : null}
       </View>
       {offices.morning ? <OfficeBlock office={offices.morning} /> : null}
       {offices.evening ? <OfficeBlock office={offices.evening} /> : null}
