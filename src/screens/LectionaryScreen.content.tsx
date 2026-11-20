@@ -4,6 +4,7 @@ import { Platform, ScrollView, Text, View } from "react-native";
 import { useSectionHeading } from "../components/office/contentHeadings";
 import { PsalmText } from "../components/office/PsalmText";
 import { ScriptureView } from "../components/office/ScriptureView";
+import { StickyHeading } from "../components/office/StickyHeading";
 import { useEdition } from "../context/EditionContext";
 import { useTranslation } from "../context/TranslationContext";
 import type { CalendarDate } from "../lib/calendar/types";
@@ -94,7 +95,9 @@ function OfficeBlock({ office }: { office: LectionaryOffice }) {
   const heading = useSectionHeading();
   return (
     <View>
-      <Text style={heading}>{office.label}</Text>
+      <StickyHeading sticky>
+        <Text style={heading}>{office.label}</Text>
+      </StickyHeading>
       <PsalmsBlock citations={office.psalms} />
       {office.lessons.map((lesson) => (
         <LessonRow key={lesson.ref} lesson={lesson} />
@@ -131,17 +134,27 @@ function Lectionary1979Screen({ date }: { date: CalendarDate }) {
       ) : day?.kind === "shared" ? (
         <>
           <View>
-            <Text style={heading}>Morning Psalms</Text>
+            <StickyHeading sticky>
+              <Text style={heading}>Morning Psalms</Text>
+            </StickyHeading>
             <PsalmsBlock citations={day.psalms.morning} />
           </View>
           <View>
-            <Text style={heading}>Readings</Text>
+            <StickyHeading sticky>
+              <Text style={heading}>Readings</Text>
+            </StickyHeading>
+            <Text style={styles.officeNote}>
+              Appointed for both offices: two lessons at Morning Prayer and one
+              at Evening Prayer.
+            </Text>
             {day.lessons.map((lesson) => (
               <LessonRow key={lesson.ref} lesson={lesson} />
             ))}
           </View>
           <View>
-            <Text style={heading}>Evening Psalms</Text>
+            <StickyHeading sticky>
+              <Text style={heading}>Evening Psalms</Text>
+            </StickyHeading>
             <PsalmsBlock citations={day.psalms.evening} />
           </View>
         </>

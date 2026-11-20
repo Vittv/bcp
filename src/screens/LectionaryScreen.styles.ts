@@ -1,4 +1,9 @@
-import { CHROME_FONT, HEADING_FONT, SERIF_ITALIC_FONT } from "../lib/fonts";
+import {
+  CHROME_FONT,
+  HEADING_FONT,
+  SERIF_ITALIC_FONT,
+  SERIF_SEMI_FONT,
+} from "../lib/fonts";
 import { defineThemedStyles } from "../lib/theme/themedStyles";
 
 export const lectionaryStyles = defineThemedStyles({
@@ -30,6 +35,16 @@ export const lectionaryStyles = defineThemedStyles({
     color: "var(--accent)",
     marginTop: 8,
   },
+  // the older lectionaries close with the proper name in serif smallcaps
+  properTitle: {
+    fontFamily: SERIF_SEMI_FONT,
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: "var(--accent)",
+    marginTop: 8,
+  },
   officeNote: {
     fontFamily: SERIF_ITALIC_FONT,
     fontSize: 13,
@@ -38,6 +53,8 @@ export const lectionaryStyles = defineThemedStyles({
     marginTop: 8,
   },
   psalmBlock: {
+    // clear the bottom rule of the heading above the citation line
+    marginTop: 8,
     marginBottom: 22,
     paddingLeft: 4,
   },
@@ -51,6 +68,8 @@ export const lectionaryStyles = defineThemedStyles({
     marginBottom: 6,
   },
   lesson: {
+    // clear the bottom rule of the heading above the citation line
+    marginTop: 8,
     marginBottom: 22,
   },
   lessonRef: {
