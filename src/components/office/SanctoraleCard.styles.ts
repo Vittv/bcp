@@ -126,5 +126,9 @@ export const sanctoraleCardStyles = defineThemedStyles({
     fontSize: 13,
     fontWeight: "600",
     color: "var(--accent)",
+    textDecorationLine: "underline",
+  },
+  linkHover: {
+    textDecorationLine: "none",
   },
 });

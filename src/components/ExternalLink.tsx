@@ -17,6 +17,7 @@ export function ExternalLink({ href, children, style }: ExternalLinkProps) {
       href,
       target: "_blank",
       rel: "noreferrer",
+      "data-external-link": "",
       style,
     },
     children,

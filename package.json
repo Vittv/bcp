@@ -1,6 +1,6 @@
 {
   "name": "bcp",
-  "description": "The Book of Common Prayer (1979, The Episcopal Church) Daily Office. Lightweight Expo + React PWA.",
+  "description": "Daily Office reader for the 1979, 1662, and 1962 Books of Common Prayer. Lightweight Expo + React PWA.",
   "license": "MIT",
   "version": "0.7.0",
   "main": "index.ts",

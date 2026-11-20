@@ -27,14 +27,18 @@ export function HolyDayCard({ feast }: { feast: FeastIdentity }) {
         {`Commemorated on ${date} in the ${feast.calendar} calendar.`}
       </Text>
       <Pressable
-        style={({ hovered }) => [styles.linkRow, hovered && styles.rowHover]}
+        style={styles.linkRow}
         onPress={() =>
           window.open(wikipediaSearchUrl(feast.name), "_blank", "noreferrer")
         }
         accessibilityRole="link"
         accessibilityLabel={`Search Wikipedia for ${feast.name}`}
       >
-        <Text style={styles.link}>{"Search Wikipedia ›"}</Text>
+        {({ hovered }) => (
+          <Text style={[styles.link, hovered && styles.linkHover]}>
+            Search Wikipedia
+          </Text>
+        )}
       </Pressable>
     </View>
   );
@@ -61,11 +65,13 @@ const styleDef = defineThemedStyles({
   linkRow: {
     paddingVertical: 8,
   },
-  rowHover: { opacity: 0.7 },
   link: {
     fontFamily: CHROME_FONT,
     fontSize: 14,
     color: "var(--accent)",
     textDecorationLine: "underline",
+  },
+  linkHover: {
+    textDecorationLine: "none",
   },
 });

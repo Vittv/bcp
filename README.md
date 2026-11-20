@@ -9,8 +9,9 @@
 </p>
 
 <p align="center">
-  bcp, a lightweight, offline-capable Daily Office reader that runs in the
-  browser and as a Tauri desktop app.
+  bcp, a lightweight, offline-capable Daily Office reader for three Book of
+  Common Prayer editions (1979, 1662, and 1962), which runs in the browser and
+  as a Tauri desktop app.
 </p>
 
 <p align="center">
@@ -19,8 +20,9 @@
 
 ## Features
 
-- Morning and Evening Prayer with the day's readings from the Daily Office lectionary
-- Psalms and the psalter, canticles, collects, and KJV scripture
+- Three prayer book editions, each with its own calendar, lectionary, psalter, and office texts
+- Morning and Evening Prayer plus the shorter offices of each edition, with the day's readings from its lectionary
+- Psalms and the 30-day psalter, canticles, collects, and KJV/KJVA scripture
 - Feasts, fasts, and sanctorale observances with commemorations
 - Scripture search, per-lesson progress, and automatic scrolling
 - Light and dark themes with a season-aware palette
@@ -106,10 +108,28 @@ The web app (Android and iPhone) never needs an update. It always runs the newes
 bcp is free and always will be, with no ads, accounts, or paywall. The
 liturgical content is in the public domain; the app code itself is MIT.
 
-The Daily Office Lectionary tables are adapted from Reuben Lillie's
-MIT-licensed [daily-office](https://github.com/reubenlillie/daily-office)
-project, corrected locally against the printed Prayer Book; the corrections
-are listed in
-[`src/lib/content/vendor/dol/PROVENANCE.md`](src/lib/content/vendor/dol/PROVENANCE.md).
+Each edition's liturgical content has its own provenance:
+
+- **1979, The Episcopal Church:** the Daily Office Lectionary tables are
+  adapted from Reuben Lillie's MIT-licensed
+  [daily-office](https://github.com/reubenlillie/daily-office) project,
+  corrected locally against the printed Prayer Book; the corrections are listed
+  in
+  [`src/lib/content/vendor/dol/PROVENANCE.md`](src/lib/content/vendor/dol/PROVENANCE.md).
+
+- **1662, Church of England:** lectionary and psalm tables come from 1669 and
+  1770 printings held by the Internet Archive, and office texts from
+  public-domain Church of England sources checked against a 1762 Baskerville
+  facsimile. Readable online transcriptions served only as cross-checks.
+  Details in
+  [`src/lib/content/vendor/bcp1662/PROVENANCE.md`](src/lib/content/vendor/bcp1662/PROVENANCE.md).
+
+- **1962, Anglican Church of Canada:** transcribed from the official
+  [Book of Common Prayer (1962)](https://www.anglican.ca/wp-content/uploads/bcp.pdf)
+  of the General Synod, which the ACC has confirmed is in the public domain.
+  This project is independent and is not endorsed by the Anglican Church of
+  Canada. Details in
+  [`src/lib/content/vendor/bcp1962/PROVENANCE.md`](src/lib/content/vendor/bcp1962/PROVENANCE.md).
+
 Third-party notices ship with the app in
 [`public/licenses/THIRD-PARTY-NOTICES.txt`](public/licenses/THIRD-PARTY-NOTICES.txt).

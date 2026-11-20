@@ -37,15 +37,15 @@ import { ScriptureView } from "./ScriptureView";
 
 const BOOK_LINK: Record<CalendarTradition, { label: string; url: string }> = {
   tec: {
-    label: "The Episcopal Church Lesser Feasts and Fasts 2024, official PDF ›",
+    label: "The Episcopal Church Lesser Feasts and Fasts 2024, official PDF",
     url: "https://www.episcopalchurch.org/resources/lesser-feasts-and-fasts-english/",
   },
   coe: {
-    label: "1662 Book of Common Prayer Calendar, official PDF ›",
+    label: "1662 Book of Common Prayer Calendar, official PDF",
     url: "https://www.churchofengland.org/sites/default/files/2026-10/bcp-the-calendar.pdf",
   },
   acc: {
-    label: "1962 Canadian Book of Common Prayer Calendar, official PDF ›",
+    label: "1962 Canadian Book of Common Prayer Calendar, official PDF",
     url: "https://www.anglican.ca/wp-content/uploads/bcp.pdf#page=9",
   },
 };
@@ -60,17 +60,18 @@ function WikiLinks({ name, slug }: { name: string; slug: string }) {
   if (article.length === 0) {
     return (
       <Pressable
-        style={({ hovered }) => [
-          styles.linkRow,
-          hovered && { backgroundColor: "var(--control-hover)" },
-        ]}
+        style={styles.linkRow}
         onPress={() =>
           window.open(wikipediaSearchUrl(name), "_blank", "noreferrer")
         }
         accessibilityRole="link"
         accessibilityLabel={`Search Wikipedia for ${name}`}
       >
-        <Text style={styles.link}>{"Search Wikipedia ›"}</Text>
+        {({ hovered }) => (
+          <Text style={[styles.link, hovered && styles.linkHover]}>
+            Search Wikipedia
+          </Text>
+        )}
       </Pressable>
     );
   }
@@ -79,19 +80,18 @@ function WikiLinks({ name, slug }: { name: string; slug: string }) {
       {article.map((link) => (
         <Pressable
           key={link.title}
-          style={({ hovered }) => [
-            styles.linkRow,
-            hovered && { backgroundColor: "var(--control-hover)" },
-          ]}
+          style={styles.linkRow}
           onPress={() =>
             window.open(wikipediaArticleUrl(link.title), "_blank", "noreferrer")
           }
           accessibilityRole="link"
           accessibilityLabel={`Read ${link.label ?? link.title} on Wikipedia`}
         >
-          <Text style={styles.link}>
-            {`${link.label ?? link.title} on Wikipedia ›`}
-          </Text>
+          {({ hovered }) => (
+            <Text style={[styles.link, hovered && styles.linkHover]}>
+              {`${link.label ?? link.title} on Wikipedia`}
+            </Text>
+          )}
         </Pressable>
       ))}
     </>
@@ -229,15 +229,16 @@ export function FeastCard({
           <WikiLinks name={name} slug={feast.slug} />
           {link ? (
             <Pressable
-              style={({ hovered }) => [
-                styles.linkRow,
-                hovered && { backgroundColor: "var(--control-hover)" },
-              ]}
+              style={styles.linkRow}
               onPress={() => window.open(link.url, "_blank", "noreferrer")}
               accessibilityRole="link"
               accessibilityLabel={link.label}
             >
-              <Text style={styles.link}>{link.label}</Text>
+              {({ hovered }) => (
+                <Text style={[styles.link, hovered && styles.linkHover]}>
+                  {link.label}
+                </Text>
+              )}
             </Pressable>
           ) : null}
         </View>
