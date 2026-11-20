@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  groupCollectHits,
   searchCollects,
   searchLesserFeasts,
   searchPalette,
@@ -102,6 +103,23 @@ describe("searchCollects", () => {
 
   test("unknown text yields no results", () => {
     expect(searchCollects("xyzzyplugh")).toHaveLength(0);
+  });
+});
+
+describe("groupCollectHits", () => {
+  test("puts hits in painted section order so pointer and cursor agree", () => {
+    const hits = [
+      { section: "church-year", title: "First" },
+      { section: "holy-days", title: "Second" },
+      { section: "church-year", title: "Third" },
+      { section: "various-occasions", title: "Fourth" },
+    ];
+    expect(groupCollectHits(hits).map((h) => h.title)).toEqual([
+      "First",
+      "Third",
+      "Second",
+      "Fourth",
+    ]);
   });
 });
 

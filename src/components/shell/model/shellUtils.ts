@@ -49,26 +49,15 @@ export const OFFICE_LABEL_1962: Partial<Record<TabId, string>> = {
   litany: "The Litany",
 };
 
-export function officeForHour(hour: number): TabId {
-  if (hour < 12) return "morning";
-  if (hour < 17) return "noonday";
-  if (hour < 21) return "evening";
-  return "compline";
-}
-
-export function officeForHour1662(hour: number): TabId {
-  if (hour < 12) return "morning";
-  return "evening";
-}
+export {
+  officeForHour,
+  officeForHour1662,
+  officeForHour1962,
+} from "./officeForHour";
 
 // the 1662 book has Matins, Evensong and the Litany, no other daily offices
 export function is1662OfficeTab(tab: TabId): boolean {
   return tab === "morning" || tab === "evening" || tab === "litany";
-}
-
-export function officeForHour1962(hour: number): TabId {
-  if (hour < 12) return "morning";
-  return "evening";
 }
 
 // the 1962 book has Morning and Evening Prayer, Prayers at Mid-day, Compline

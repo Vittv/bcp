@@ -29,6 +29,15 @@ describe("older-edition collects", () => {
     expect(hits[0].section).toBe("various-occasions");
   });
 
+  it("title-cases the printed 1962 headings without changing the other editions", () => {
+    const titles = collectsForEdition("1962").map((c) => c.title);
+    expect(titles.every((t) => t !== t.toUpperCase())).toBe(true);
+    expect(titles).toContain("The Twenty-fourth Sunday after Trinity");
+    expect(titles).toContain("Of the Church Overseas.");
+    expect(titles).toContain("The Fruits of the Earth and the Labours of Men.");
+    expect(collectsForEdition("1662")[0].title).toBe("First Sunday in Advent");
+  });
+
   it("does not leak one edition's collects into another", () => {
     expect(
       editionCollectPassage(

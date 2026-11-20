@@ -20,7 +20,11 @@ import type {
   CollectRite,
   CollectSection,
 } from "../../lib/content/types";
-import { type CollectHit, searchCollects } from "../../lib/reference/search";
+import {
+  type CollectHit,
+  groupCollectHits,
+  searchCollects,
+} from "../../lib/reference/search";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import {
   type CollectSel,
@@ -180,14 +184,14 @@ export function CollectIndex({
   const { edition } = useEdition();
   const deferredQuery = useDeferredValue(query);
   const hits = useMemo<CollectHit[]>(() => {
-    if (isOlderEdition(edition)) {
-      return searchEditionCollects(edition, deferredQuery).map((c) => ({
-        section: c.section,
-        title: c.title,
-        snippet: null,
-      }));
-    }
-    return searchCollects(deferredQuery);
+    const found = isOlderEdition(edition)
+      ? searchEditionCollects(edition, deferredQuery).map((c) => ({
+          section: c.section,
+          title: c.title,
+          snippet: null,
+        }))
+      : searchCollects(deferredQuery);
+    return groupCollectHits(found);
   }, [deferredQuery, edition]);
   const sections = useMemo(() => {
     const gs: CollectSection[] = [];

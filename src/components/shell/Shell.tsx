@@ -135,6 +135,18 @@ export function Shell() {
     return () => clearTimeout(id);
   }, []);
 
+  const {
+    showRubrics,
+    setShowRubrics,
+    showSpeakers,
+    setShowSpeakers,
+    showSections,
+    devotions,
+    setDevotions,
+    rite,
+    setRite,
+    customizationFor,
+  } = useOfficeSettings();
   const [date, setDate] = useState<CalendarDate>(today);
   // the lectionary keeps its own date, independent of the office date shown
   // on Today; stepping its prev/next/today never touches the global date
@@ -143,7 +155,7 @@ export function Shell() {
     edition === "1662"
       ? officeForHour1662(new Date().getHours())
       : edition === "1962"
-        ? officeForHour1962(new Date().getHours())
+        ? officeForHour1962(new Date().getHours(), devotions)
         : officeForHour(new Date().getHours()),
   );
   const [page, setPage] = useState<PageId>("today");
@@ -207,18 +219,6 @@ export function Shell() {
     (IS_TAURI && !IS_WINDOWS_TAURI) || IS_LINUX_CHROMIUM,
   );
 
-  const {
-    showRubrics,
-    setShowRubrics,
-    showSpeakers,
-    setShowSpeakers,
-    showSections,
-    devotions,
-    setDevotions,
-    rite,
-    setRite,
-    customizationFor,
-  } = useOfficeSettings();
   const { scrollRef, scrollPct, reportScroll, handleScroll, scrollToTop } =
     useScrollTracking();
   const hintsRef = useRef<HintHandle>(null);
@@ -361,7 +361,7 @@ export function Shell() {
       setTab(officeForHour1662(new Date().getHours()));
     }
     if (edition === "1962" && !is1962OfficeTab(tab)) {
-      setTab(officeForHour1962(new Date().getHours()));
+      setTab(officeForHour1962(new Date().getHours(), devotions));
     }
   }, [devotions, edition, setDevotions, tab]);
 
@@ -479,7 +479,7 @@ export function Shell() {
           edition === "1662"
             ? officeForHour1662(new Date().getHours())
             : edition === "1962"
-              ? officeForHour1962(new Date().getHours())
+              ? officeForHour1962(new Date().getHours(), devotions)
               : officeForHour(new Date().getHours());
         return edition === "1662"
           ? (OFFICE_LABEL_1662[currentTab] ?? OFFICE_LABEL[currentTab])
