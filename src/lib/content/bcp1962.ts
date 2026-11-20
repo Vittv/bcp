@@ -652,7 +652,6 @@ export type Bcp1962OfficeNode =
       citation?: string;
       seasonLabel?: string;
       collect?: boolean;
-      anthem?: boolean;
       choiceGroup?: string;
       choiceId?: string;
       choiceLabel?: string;
@@ -1151,7 +1150,13 @@ export function composeBcp1962FixedOffice(
           ];
         }
         if (entry.kind === "text" && entry.text.startsWith("Anthem. ")) {
-          return [{ kind: "text", text: entry.text, anthem: true }];
+          return [
+            {
+              kind: "text",
+              text: entry.text.slice("Anthem. ".length),
+              seasonLabel: "Anthem.",
+            },
+          ];
         }
         if (entry.kind === "text" && COMPLINE_READINGS[i]) {
           return [

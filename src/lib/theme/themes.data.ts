@@ -954,6 +954,103 @@ const WashingtonDark: ThemeTokens = {
   seasonRing: "#00000055",
 };
 
+// St Paul's: pale Portland stone with a warm amber, distinct from Chester's rust.
+const StPaulsLight: ThemeTokens = {
+  ...CanterburyLight,
+  bg: "#e9e6dc",
+  bgRaised: "#f2f0e8",
+  inputBg: "#f2f0e8",
+  surface: "#dbd7ca",
+  controlHover: "#d0ccbe",
+  selectedBg: "#e4e0d3",
+  keyBg: "rgba(56, 52, 38, 0.09)",
+  todayBg: "rgba(168, 118, 23, 0.16)",
+  border: "#cbc7b9",
+  borderContent: "#918d7e",
+  borderFaint: "rgba(56, 52, 38, 0.09)",
+  text: "#302d24",
+  textSecondary: "#676353",
+  onAccent: "#fbf8ee",
+  accent: "#a87617",
+  hintBg: "#a87617",
+  hintText: "#fbf8ee",
+  scrollbar: "#a39e8f",
+  panelShadow: "rgba(28, 26, 16, 0.18)",
+  season: { ...CanterburyLight.season, gold: "#c09329" },
+  seasonRing: "rgba(56, 52, 38, 0.35)",
+};
+const StPaulsDark: ThemeTokens = {
+  ...CanterburyDark,
+  bg: "#1b1a16",
+  bgRaised: "#25241e",
+  inputBg: "#1f1e19",
+  surface: "#24231d",
+  controlHover: "#2c2a23",
+  selectedBg: "#25241e",
+  todayBg: "rgba(196, 184, 120, 0.24)",
+  border: "#35332b",
+  borderContent: "#5a584d",
+  text: "#dedcd0",
+  textSecondary: "#999587",
+  onAccent: "#1d1a0d",
+  accent: "#c4b878",
+  hintBg: "#1b1a16",
+  hintText: "#c4b878",
+  scrollbar: "#5f5c52",
+  panelShadow: "rgba(16, 15, 8, 0.18)",
+  season: { ...CanterburyDark.season, gold: "#c4b878" },
+  seasonRing: "#00000055",
+};
+
+// St Patrick's: Irish green stone with a gold accent, the two colours of the
+// cathedral's seasonal dress rather than a hue-matched page.
+const StPatricksLight: ThemeTokens = {
+  ...CanterburyLight,
+  bg: "#e1e8df",
+  bgRaised: "#edf1e9",
+  inputBg: "#edf1e9",
+  surface: "#d2ddcf",
+  controlHover: "#c5d1c1",
+  selectedBg: "#dbe4d7",
+  keyBg: "rgba(40, 58, 38, 0.09)",
+  todayBg: "rgba(154, 138, 79, 0.14)",
+  border: "#c2cfbf",
+  borderContent: "#84967f",
+  borderFaint: "rgba(40, 58, 38, 0.09)",
+  text: "#243026",
+  textSecondary: "#566553",
+  onAccent: "#251d08",
+  accent: "#9a8a4f",
+  hintBg: "#9a8a4f",
+  hintText: "#fff9e8",
+  scrollbar: "#95a490",
+  panelShadow: "rgba(18, 32, 18, 0.18)",
+  season: { ...CanterburyLight.season, green: "#3a7a4c", gold: "#ab9a58" },
+  seasonRing: "rgba(40, 58, 38, 0.35)",
+};
+const StPatricksDark: ThemeTokens = {
+  ...CanterburyDark,
+  bg: "#121a15",
+  bgRaised: "#1a241d",
+  inputBg: "#161f19",
+  surface: "#1b251e",
+  controlHover: "#243027",
+  selectedBg: "#1a241d",
+  todayBg: "rgba(200, 187, 133, 0.24)",
+  border: "#29362c",
+  borderContent: "#4a5e4d",
+  text: "#d6e0d4",
+  textSecondary: "#8b9d8a",
+  onAccent: "#1a1405",
+  accent: "#c8bb85",
+  hintBg: "#121a15",
+  hintText: "#c8bb85",
+  scrollbar: "#566657",
+  panelShadow: "rgba(8, 18, 10, 0.18)",
+  season: { ...CanterburyDark.season, green: "#69b884", gold: "#c8bb85" },
+  seasonRing: "#00000055",
+};
+
 export const THEMES: Record<ThemeId, ThemeDefinition> = {
   canterbury: {
     id: "canterbury",
@@ -1015,6 +1112,18 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     light: WashingtonLight,
     dark: WashingtonDark,
   },
+  "st-pauls": {
+    id: "st-pauls",
+    label: "St Paul's",
+    light: StPaulsLight,
+    dark: StPaulsDark,
+  },
+  "st-patricks": {
+    id: "st-patricks",
+    label: "St Patrick's",
+    light: StPatricksLight,
+    dark: StPatricksDark,
+  },
 };
 
 // the order the appearance picker lists the families in.
@@ -1028,5 +1137,7 @@ export const THEME_LIST: ThemeDefinition[] = [
   THEMES.durham,
   THEMES.iona,
   THEMES.washington,
+  THEMES["st-pauls"],
+  THEMES["st-patricks"],
   THEMES.vague,
 ];
