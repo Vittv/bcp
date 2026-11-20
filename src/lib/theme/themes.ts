@@ -6,6 +6,7 @@ import type { ResolvedTheme, ThemeTokens } from "./tokens";
 // pinned mode. `mode` (light/dark/system) stays a separate axis that chooses
 // which variant of the selected family applies.
 export type ThemeId =
+  | "winchester"
   | "canterbury"
   | "oxford"
   | "salisbury"
@@ -30,7 +31,8 @@ import { THEME_LIST, THEMES } from "./themes.data";
 
 export { THEME_LIST, THEMES };
 
-export const DEFAULT_THEME: ThemeId = "canterbury";
+// first run keeps the original wine-and-parchment palette under its new name
+export const DEFAULT_THEME: ThemeId = "winchester";
 
 // the palette for a family at a resolved mode. the indirection keeps callers
 // (the context, the picker previews) off the token shape, so a family can add

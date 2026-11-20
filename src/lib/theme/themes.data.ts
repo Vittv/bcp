@@ -1,7 +1,7 @@
 import type { ThemeDefinition, ThemeId } from "./themes";
 import type { ThemeTokens } from "./tokens";
 
-const CanterburyLight: ThemeTokens = {
+const WinchesterLight: ThemeTokens = {
   bg: "#e0dbd0",
   bgRaised: "#ece7dd",
   inputBg: "#ece7dd",
@@ -51,7 +51,7 @@ const CanterburyLight: ThemeTokens = {
   seasonRing: "rgba(44, 32, 32, 0.35)",
 };
 
-const CanterburyDark: ThemeTokens = {
+const WinchesterDark: ThemeTokens = {
   bg: "#1b191a",
   bgRaised: "#262425",
   inputBg: "#1f1d1f",
@@ -96,6 +96,100 @@ const CanterburyDark: ThemeTokens = {
     black: "#3a3a3a",
   },
   seasonRing: "#00000055",
+};
+
+// Canterbury: the blue field and gold device of the Anglican Communion flag.
+// the hues follow the flag's ultramarine and gold, held below brand saturation
+// so long reading stays comfortable; the light page keeps a deeper gold accent.
+const CanterburyLight: ThemeTokens = {
+  bg: "#e2eaf6",
+  bgRaised: "#eef3fb",
+  inputBg: "#eef3fb",
+  surface: "#d5e0f1",
+  controlHover: "#c7d4e8",
+  selectedBg: "#dfe8f6",
+  keyBg: "rgba(26, 46, 86, 0.09)",
+  todayBg: "rgba(150, 124, 55, 0.2)",
+
+  border: "#bccae0",
+  borderContent: "#8493ad",
+  borderFaint: "rgba(26, 46, 86, 0.09)",
+
+  text: "#1c2840",
+  textSecondary: "#5d6a83",
+  onAccent: "#fff9e8",
+
+  accent: "#8a6414",
+
+  hintBg: "#8a6414",
+  hintText: "#fff9e8",
+
+  scrollbar: "#94a2bb",
+
+  scrim: "rgba(16, 20, 30, 0.5)",
+  shadowColor: "#000000",
+  shadowSoft: "rgba(26, 46, 86, 0.35)",
+  shadowStrong: "rgba(16, 20, 30, 0.5)",
+  panelShadow: "rgba(26, 46, 86, 0.18)",
+
+  danger: "#b5363e",
+  dangerText: "#ffffff",
+
+  season: {
+    blue: "#4a6699",
+    purple: "#7a6396",
+    white: "#b4b7bb",
+    gold: "#a89147",
+    green: "#5c7a60",
+    red: "#a05a62",
+    black: "#2f333b",
+  },
+  seasonRing: "rgba(26, 46, 86, 0.35)",
+};
+const CanterburyDark: ThemeTokens = {
+  bg: "#161a39",
+  bgRaised: "#232948",
+  inputBg: "#1d233f",
+  surface: "#242b48",
+  controlHover: "#303855",
+  selectedBg: "#2c3451",
+  keyBg: "rgba(0, 0, 0, 0.32)",
+  todayBg: "rgba(212, 179, 86, 0.2)",
+
+  border: "#3b4767",
+  borderContent: "#7280a0",
+  borderFaint: "rgba(255, 255, 255, 0.07)",
+
+  text: "#e6e9f7",
+  textSecondary: "#a3adbf",
+  onAccent: "#15182e",
+
+  accent: "#d4b356",
+
+  hintBg: "#161a39",
+  hintText: "#d4b356",
+
+  scrollbar: "#5b6680",
+
+  scrim: "rgba(0, 0, 0, 0.6)",
+  shadowColor: "#000000",
+  shadowSoft: "rgba(0, 0, 0, 0.45)",
+  shadowStrong: "rgba(0, 0, 0, 0.6)",
+  panelShadow: "rgba(10, 14, 32, 0.45)",
+
+  danger: "#cf5a63",
+  dangerText: "#ffffff",
+
+  season: {
+    blue: "#758fbb",
+    purple: "#9b8acc",
+    white: "#d9dded",
+    gold: "#d9bf72",
+    green: "#86a894",
+    red: "#c98b96",
+    black: "#3a425e",
+  },
+  seasonRing: "#00000066",
 };
 
 // Oxford: blue-grey surfaces with a saturated azure accent that stays legible
@@ -956,7 +1050,7 @@ const WashingtonDark: ThemeTokens = {
 
 // St Paul's: pale Portland stone with a warm amber, distinct from Chester's rust.
 const StPaulsLight: ThemeTokens = {
-  ...CanterburyLight,
+  ...WinchesterLight,
   bg: "#e9e6dc",
   bgRaised: "#f2f0e8",
   inputBg: "#f2f0e8",
@@ -976,11 +1070,11 @@ const StPaulsLight: ThemeTokens = {
   hintText: "#fbf8ee",
   scrollbar: "#a39e8f",
   panelShadow: "rgba(28, 26, 16, 0.18)",
-  season: { ...CanterburyLight.season, gold: "#c09329" },
+  season: { ...WinchesterLight.season, gold: "#c09329" },
   seasonRing: "rgba(56, 52, 38, 0.35)",
 };
 const StPaulsDark: ThemeTokens = {
-  ...CanterburyDark,
+  ...WinchesterDark,
   bg: "#1b1a16",
   bgRaised: "#25241e",
   inputBg: "#1f1e19",
@@ -998,14 +1092,14 @@ const StPaulsDark: ThemeTokens = {
   hintText: "#c4b878",
   scrollbar: "#5f5c52",
   panelShadow: "rgba(16, 15, 8, 0.18)",
-  season: { ...CanterburyDark.season, gold: "#c4b878" },
+  season: { ...WinchesterDark.season, gold: "#c4b878" },
   seasonRing: "#00000055",
 };
 
 // St Patrick's: Irish green stone with a gold accent, the two colours of the
 // cathedral's seasonal dress rather than a hue-matched page.
 const StPatricksLight: ThemeTokens = {
-  ...CanterburyLight,
+  ...WinchesterLight,
   bg: "#e1e8df",
   bgRaised: "#edf1e9",
   inputBg: "#edf1e9",
@@ -1025,11 +1119,11 @@ const StPatricksLight: ThemeTokens = {
   hintText: "#fff9e8",
   scrollbar: "#95a490",
   panelShadow: "rgba(18, 32, 18, 0.18)",
-  season: { ...CanterburyLight.season, green: "#3a7a4c", gold: "#ab9a58" },
+  season: { ...WinchesterLight.season, green: "#3a7a4c", gold: "#ab9a58" },
   seasonRing: "rgba(40, 58, 38, 0.35)",
 };
 const StPatricksDark: ThemeTokens = {
-  ...CanterburyDark,
+  ...WinchesterDark,
   bg: "#121a15",
   bgRaised: "#1a241d",
   inputBg: "#161f19",
@@ -1047,7 +1141,7 @@ const StPatricksDark: ThemeTokens = {
   hintText: "#c8bb85",
   scrollbar: "#566657",
   panelShadow: "rgba(8, 18, 10, 0.18)",
-  season: { ...CanterburyDark.season, green: "#69b884", gold: "#c8bb85" },
+  season: { ...WinchesterDark.season, green: "#69b884", gold: "#c8bb85" },
   seasonRing: "#00000055",
 };
 
@@ -1057,6 +1151,12 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     label: "Canterbury",
     light: CanterburyLight,
     dark: CanterburyDark,
+  },
+  winchester: {
+    id: "winchester",
+    label: "Winchester",
+    light: WinchesterLight,
+    dark: WinchesterDark,
   },
   oxford: {
     id: "oxford",
@@ -1128,6 +1228,7 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
 
 // the order the appearance picker lists the families in.
 export const THEME_LIST: ThemeDefinition[] = [
+  THEMES.winchester,
   THEMES.canterbury,
   THEMES.oxford,
   THEMES.salisbury,

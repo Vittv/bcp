@@ -2,6 +2,7 @@ export {
   searchCollects,
   searchLesserFeasts,
   searchPsalms,
+  searchPsalmsForEdition,
   searchPsalterDays,
   searchSaints,
 } from "./search/individual";
