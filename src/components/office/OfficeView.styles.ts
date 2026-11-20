@@ -15,19 +15,20 @@ export const officeViewStyles = defineThemedStyles({
     borderBottomWidth: 1,
     borderBottomColor: "var(--border-content)",
   },
+  // below the raised dropdown layer, so an open menu is not split by a pinned heading
   stickyHeader: {
     position: "sticky",
     // clear the top bar with a little air
     top: -8,
     backgroundColor: "var(--bg)",
-    zIndex: 100,
+    zIndex: 4,
     isolation: "isolate",
   },
   stickyHeaderControl: {
     position: "sticky",
     top: -8,
     backgroundColor: "var(--bg)",
-    zIndex: 100,
+    zIndex: 4,
     isolation: "isolate",
   },
   headingText: { ...officeDocumentStyles.headingText, flexShrink: 1 },

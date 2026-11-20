@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+  BCP1962_CANTICLES,
   BCP1962_DAILY,
   BCP1962_FIXED_CALENDAR,
   BCP1962_PROPER_COLLECTS,
@@ -34,6 +35,19 @@ describe("bcp1962 vendor tables", () => {
     expect(BCP1962_SELECTIONS.length).toBe(24);
     expect(BCP1962_RULES.length).toBe(17);
     expect(BCP1962_FIXED_CALENDAR.length).toBe(155);
+  });
+
+  it("keeps the Te Deum lines intact", () => {
+    const teDeum = BCP1962_CANTICLES.canticles.find(
+      (canticle) => canticle.id === "te-deum",
+    );
+    expect(teDeum?.text).toContain("Thou art the King of Glory, O Christ.");
+    expect(teDeum?.text).toContain(
+      "When thou tookest upon thee to deliver man",
+    );
+    expect(teDeum?.text).toContain(
+      "O LORD, save thy people, and bless thine heritage; Govern them, and lift them up for ever.",
+    );
   });
 });
 
