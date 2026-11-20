@@ -24,6 +24,7 @@ import { ReadingsControl } from "./OfficeView.controls";
 import { truncate } from "./OfficeView.shared";
 import { officeDocumentStyles } from "./officeDocumentStyles";
 import { PsalmText } from "./PsalmText";
+import { ScriptureText } from "./ScriptureText";
 import { ScriptureView } from "./ScriptureView";
 
 const SPEAKERS: Record<string, string> = {
@@ -35,10 +36,21 @@ const SPEAKERS: Record<string, string> = {
 };
 
 type CanticleNode = Extract<Bcp1962OfficeNode, { kind: "canticle" }>;
+type PsalmNode = Extract<Bcp1962OfficeNode, { kind: "psalm" }>;
 type CreedNode = Extract<Bcp1962OfficeNode, { kind: "creed" }>;
 type OccasionalNode = Extract<Bcp1962OfficeNode, { kind: "occasional" }>;
 type SentenceNode = Extract<Bcp1962OfficeNode, { kind: "text" }> & {
   group: string;
+};
+type ChoiceNode = Extract<Bcp1962OfficeNode, { kind: "text" }> & {
+  choiceGroup: string;
+  choiceId: string;
+  choiceLabel: string;
+};
+
+const CHOICE_LABELS: Record<string, string> = {
+  "compline-reading": "Short Lesson",
+  "compline-collect": "Collect",
 };
 
 // the book allows one optional prayer or thanksgiving after the collects
@@ -134,6 +146,9 @@ function NodeView({
           style={[
             styles.text,
             node.collect && styles.collectText,
+            node.anthem && styles.anthemText,
+            node.anthem && styles.rubric,
+            node.choiceGroup === "compline-reading" && styles.readingText,
             node.lordsPrayerFirst && styles.lordsPrayerStart,
             node.lordsPrayerLast && styles.lordsPrayerEnd,
             showSpeakers && node.speaker === "people" && styles.textPeople,
@@ -238,8 +253,13 @@ export function Bcp1962OfficeView({
 }) {
   const styles = useThemedStyles(bcp1962Styles);
   const sectionHeading = useSectionHeading();
+  const subheading = useSubheading();
   const [openingSelection, setOpeningSelection] = useState("suggested");
+  const [choiceSelections, setChoiceSelections] = useState<
+    Record<string, string>
+  >({});
   const [lessonSelection, setLessonSelection] = useState("suggested");
+  const [psalmSelection, setPsalmSelection] = useState("suggested");
   const [prayerSelection, setPrayerSelection] = useState(
     "general-thanksgiving",
   );
@@ -248,6 +268,31 @@ export function Bcp1962OfficeView({
   const [creedOverride, setCreedOverride] = useState<
     "apostles" | "athanasian" | null
   >(null);
+
+  const complinePsalmNode =
+    doc.office === "compline"
+      ? doc.sections
+          .flatMap((s) => s.nodes)
+          .find((n): n is PsalmNode => n.kind === "psalm")
+      : undefined;
+  const psalmOptions: ControlOption[] = [
+    { id: "suggested", label: "All psalms", group: "Suggested" },
+    ...(complinePsalmNode?.refs ?? []).map((ref) => ({
+      id: ref,
+      label: `Psalm ${ref}`,
+      group: "Psalms",
+    })),
+  ];
+
+  const choiceNodes = doc.sections
+    .flatMap((s) => s.nodes)
+    .filter(
+      (n): n is ChoiceNode => n.kind === "text" && n.choiceGroup !== undefined,
+    );
+  const choicesFor = (group: string) =>
+    choiceNodes.filter((n) => n.choiceGroup === group);
+  const choiceValue = (group: string) =>
+    choiceSelections[group] ?? choicesFor(group)[0]?.choiceId ?? "";
 
   const canticleNodes =
     doc.sections
@@ -424,6 +469,13 @@ export function Bcp1962OfficeView({
                   ? node.suggested === true
                   : node.text === openingSelection;
               }
+              if (
+                node.kind === "text" &&
+                node.choiceGroup !== undefined &&
+                node.choiceId !== choiceValue(node.choiceGroup)
+              ) {
+                return false;
+              }
               if (node.kind === "lesson") {
                 if (readingAll) return true;
                 return node.slot === readingSlot;
@@ -449,7 +501,37 @@ export function Bcp1962OfficeView({
                 // biome-ignore lint/suspicious/noArrayIndexKey: composed office content
                 key={`${section.key}-${node.kind}-${i}`}
               >
-                {node.kind === "canticle" ? canticleControl(node.slot) : null}
+                {node.kind === "canticle" && doc.office !== "compline"
+                  ? canticleControl(node.slot)
+                  : null}
+                {node.kind === "text" && node.choiceGroup !== undefined ? (
+                  <>
+                    <MenuAnchor style={styles.controlRow}>
+                      <ChoiceMenu
+                        value={choiceValue(node.choiceGroup)}
+                        options={choicesFor(node.choiceGroup).map((n) => ({
+                          id: n.choiceId,
+                          label: n.choiceLabel,
+                          group: "Options",
+                        }))}
+                        label={CHOICE_LABELS[node.choiceGroup] ?? "Options"}
+                        accessibilityLabel={
+                          CHOICE_LABELS[node.choiceGroup] ?? "Options"
+                        }
+                        fullWidth
+                        onChange={(id) =>
+                          setChoiceSelections((prev) => ({
+                            ...prev,
+                            [node.choiceGroup ?? ""]: id,
+                          }))
+                        }
+                      />
+                    </MenuAnchor>
+                    {node.choiceGroup !== "compline-reading" ? (
+                      <Text style={subheading}>{node.choiceLabel}</Text>
+                    ) : null}
+                  </>
+                ) : null}
                 {section.key === "closing" &&
                 node.kind === "occasional" &&
                 node.id === prayerControlId ? (
@@ -464,11 +546,38 @@ export function Bcp1962OfficeView({
                     />
                   </MenuAnchor>
                 ) : null}
-                <NodeView
-                  node={node}
-                  showRubrics={showRubrics}
-                  showSpeakers={showSpeakers}
-                />
+                {node.kind === "psalm" && psalmOptions.length > 1 ? (
+                  <MenuAnchor style={styles.controlRow}>
+                    <ChoiceMenu
+                      value={psalmSelection}
+                      options={psalmOptions}
+                      label="Psalms"
+                      accessibilityLabel="Psalms"
+                      fullWidth
+                      onChange={setPsalmSelection}
+                    />
+                  </MenuAnchor>
+                ) : null}
+                {node.kind === "text" &&
+                node.choiceGroup === "compline-reading" ? (
+                  <ScriptureText text={node.text} citation={node.choiceLabel} />
+                ) : (
+                  <NodeView
+                    node={
+                      node.kind === "psalm" && psalmSelection !== "suggested"
+                        ? {
+                            ...node,
+                            refs: node.refs.filter((r) => r === psalmSelection),
+                            passages: node.passages.filter(
+                              (p) => p.ref === psalmSelection,
+                            ),
+                          }
+                        : node
+                    }
+                    showRubrics={showRubrics}
+                    showSpeakers={showSpeakers}
+                  />
+                )}
               </MenuAnchor>
             ))}
         </MenuAnchor>
@@ -532,6 +641,8 @@ const bcp1962Styles = defineThemedStyles({
     lineHeight: 28,
     paddingLeft: 4,
   },
+  readingText: { paddingLeft: 4 },
+  anthemText: { marginTop: 8, marginBottom: 8 },
   lordsPrayerStart: { marginTop: 4 },
   lordsPrayerEnd: { marginBottom: 8 },
   textPeople: officeDocumentStyles.textPeople,

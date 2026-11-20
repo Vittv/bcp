@@ -88,6 +88,36 @@ describe("bcp1962 short offices", () => {
       true,
     );
     expect(text.some((t) => t.includes("bless and preserve us"))).toBe(true);
+    const nodes = doc.sections[0].nodes;
+    expect(
+      nodes.some((n) => n.kind === "canticle" && n.id === "nunc-dimittis"),
+    ).toBe(true);
+    expect(nodes.filter((n) => n.kind === "text" && n.collect)).toHaveLength(5);
+    expect(
+      nodes
+        .filter(
+          (n) => n.kind === "text" && n.choiceGroup === "compline-reading",
+        )
+        .map((n) => ("choiceId" in n ? n.choiceId : undefined)),
+    ).toEqual(["jeremiah", "matthew", "hebrews"]);
+    expect(
+      nodes.filter(
+        (n) => n.kind === "text" && n.choiceGroup === "compline-collect",
+      ),
+    ).toHaveLength(2);
+    expect(nodes.find((n) => n.kind === "psalm")?.kind).toBe("psalm");
+    expect(nodes.filter((n) => n.kind === "text" && n.anthem)).toHaveLength(2);
+    expect(nodes.some((n) => n.kind === "heading" && n.text === "Anthem")).toBe(
+      false,
+    );
+    expect(nodes).toContainEqual({
+      kind: "heading",
+      text: "The Creed",
+      rule: true,
+    });
+    expect(
+      nodes.some((n) => n.kind === "heading" && n.text === "The Lord's Prayer"),
+    ).toBe(true);
     expect(
       doc.sections.some((s) =>
         s.nodes.some((n) => n.kind === "text" && n.speaker === "minister"),
