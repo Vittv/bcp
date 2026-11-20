@@ -2,7 +2,7 @@
   "name": "bcp",
   "description": "Daily Office reader for the 1979, 1662, and 1962 Books of Common Prayer. Lightweight Expo + React PWA.",
   "license": "MIT",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "main": "index.ts",
   "private": true,
   "dependencies": {
