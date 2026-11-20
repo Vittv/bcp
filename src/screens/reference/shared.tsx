@@ -17,7 +17,7 @@ export {
   refOfficeId,
   today,
 } from "./shared/model";
-export type { ReferenceState } from "./shared/state";
+export type { PsalterView, ReferenceState } from "./shared/state";
 export {
   ReferenceProvider,
   useReference,
