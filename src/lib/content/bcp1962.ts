@@ -642,7 +642,7 @@ export type Bcp1962OfficeNode =
       scripture?: boolean;
       citation?: string;
     }
-  | { kind: "rubric"; text: string }
+  | { kind: "rubric"; text: string; choiceAnchorFor?: string }
   | {
       kind: "text";
       text: string;
@@ -1258,19 +1258,75 @@ export function composeBcp1962FamilyPrayer(
   date: CalendarDate,
 ): Bcp1962ComposedOffice {
   const form = tab === "morning" || tab === "noonday" ? "morning" : "evening";
-  const nodes: Bcp1962OfficeNode[] = getBcp1962FamilyPrayer(form).flatMap(
-    (entry): Bcp1962OfficeNode[] => {
+  const lines = getBcp1962FamilyPrayer(form);
+  const source = composeBcp1962ForDate(date);
+  const properCollect = findBcp1962Collect([
+    source.name,
+    bcp1962SundayCollectName(source.observance),
+  ]);
+  const collectOptions = [
+    ...(properCollect
+      ? [{ id: "proper", label: properCollect.name, text: properCollect.text }]
+      : []),
+    ...getBcp1962FixedCollects(form).map((c, i) => ({
+      id: `fixed-${i}`,
+      label: c.title,
+      text: c.text,
+    })),
+  ];
+  const nodes: Bcp1962OfficeNode[] = lines.flatMap(
+    (entry, i): Bcp1962OfficeNode[] => {
+      const allResponse =
+        entry.kind === "text" &&
+        lines[i - 1]?.kind === "rubric" &&
+        /said by all/i.test(lines[i - 1].text);
+      if (
+        entry.kind === "heading" &&
+        (entry.text === "Morning" || entry.text === "Evening")
+      ) {
+        return [];
+      }
       if (entry.kind === "rubric" || entry.kind === "heading") {
+        if (
+          entry.kind === "rubric" &&
+          entry.text.startsWith("Here may follow the Collect")
+        ) {
+          return [
+            {
+              kind: "rubric",
+              text: entry.text,
+              choiceAnchorFor: "family-collect",
+            },
+            ...collectOptions.map((c) => ({
+              kind: "text" as const,
+              text: c.text,
+              collect: true,
+              choiceGroup: "family-collect",
+              choiceId: c.id,
+              choiceLabel: c.label,
+            })),
+          ];
+        }
         return [{ kind: entry.kind, text: entry.text }];
       }
+      if (entry.kind === "text" && /^2 Corinthians \d/.test(entry.text)) {
+        return [{ kind: "rubric", text: entry.text }];
+      }
       if (entry.text.startsWith("Our Father who art in heaven")) {
-        return lordsPrayerNodes(entry.text);
+        return [
+          { kind: "heading", text: "The Lord's Prayer" },
+          ...lordsPrayerNodes(entry.text),
+        ];
       }
       return [
         {
           kind: "text",
           text: entry.text,
-          speaker: entry.speaker === "answer" ? "people" : entry.speaker,
+          speaker: allResponse
+            ? "all"
+            : entry.speaker === "answer"
+              ? "people"
+              : entry.speaker,
         },
       ];
     },

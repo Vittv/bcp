@@ -143,6 +143,11 @@ describe("bcp1962 family prayer", () => {
         s.nodes.map((n) => (n.kind === "text" ? n.text : "")),
       );
       expect(text.some((t) => t.includes("early will I seek thee"))).toBe(true);
+      const nodes = doc.sections[0].nodes;
+      expect(nodes.some((n) => n.kind === "rubric")).toBe(true);
+      expect(nodes.some((n) => n.kind === "text" && n.speaker === "all")).toBe(
+        true,
+      );
     }
   });
 
