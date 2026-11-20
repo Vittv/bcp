@@ -84,5 +84,11 @@ describe("themeTokens", () => {
     expect(themeTokens("iona", "dark")).toBe(THEMES.iona.dark);
     expect(themeTokens("washington", "light")).toBe(THEMES.washington.light);
     expect(themeTokens("washington", "dark")).toBe(THEMES.washington.dark);
+    expect(themeTokens("st-pauls", "light")).toBe(THEMES["st-pauls"].light);
+    expect(themeTokens("st-pauls", "dark")).toBe(THEMES["st-pauls"].dark);
+    expect(themeTokens("st-patricks", "light")).toBe(
+      THEMES["st-patricks"].light,
+    );
+    expect(themeTokens("st-patricks", "dark")).toBe(THEMES["st-patricks"].dark);
   });
 });

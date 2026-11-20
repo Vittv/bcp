@@ -146,8 +146,6 @@ function NodeView({
           style={[
             styles.text,
             node.collect && styles.collectText,
-            node.anthem && styles.anthemText,
-            node.anthem && styles.rubric,
             node.choiceGroup === "compline-reading" && styles.readingText,
             node.lordsPrayerFirst && styles.lordsPrayerStart,
             node.lordsPrayerLast && styles.lordsPrayerEnd,

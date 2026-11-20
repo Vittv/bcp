@@ -15,6 +15,8 @@ export type ThemeId =
   | "durham"
   | "iona"
   | "washington"
+  | "st-pauls"
+  | "st-patricks"
   | "vague";
 
 export type ThemeDefinition = {

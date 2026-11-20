@@ -106,7 +106,9 @@ describe("bcp1962 short offices", () => {
       ),
     ).toHaveLength(2);
     expect(nodes.find((n) => n.kind === "psalm")?.kind).toBe("psalm");
-    expect(nodes.filter((n) => n.kind === "text" && n.anthem)).toHaveLength(2);
+    expect(
+      nodes.filter((n) => n.kind === "text" && n.seasonLabel === "Anthem."),
+    ).toHaveLength(2);
     expect(nodes.some((n) => n.kind === "heading" && n.text === "Anthem")).toBe(
       false,
     );
