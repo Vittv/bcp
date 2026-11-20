@@ -652,6 +652,10 @@ export type Bcp1962OfficeNode =
       citation?: string;
       seasonLabel?: string;
       collect?: boolean;
+      anthem?: boolean;
+      choiceGroup?: string;
+      choiceId?: string;
+      choiceLabel?: string;
       lordsPrayer?: boolean;
       lordsPrayerFirst?: boolean;
       lordsPrayerLast?: boolean;
@@ -1062,6 +1066,18 @@ export const BCP1962_OFFICE_SECTION_ORDER: Bcp1962OfficeSectionKey[] = [
 ];
 
 /** Compose one of the 1962 book's fixed short offices from vendored lines. */
+// the Compline alternatives are printed as "Or" headings
+const COMPLINE_READINGS: Record<number, { id: string; label: string }> = {
+  11: { id: "jeremiah", label: "Jeremiah 14. 9" },
+  13: { id: "matthew", label: "St Matthew 11. 28-30" },
+  15: { id: "hebrews", label: "Hebrews 13. 20, 21" },
+};
+const COMPLINE_COLLECTS: Record<number, { id: string; label: string }> = {
+  67: { id: "protection", label: "The Collect for Protection" },
+  69: { id: "lighten", label: "Lighten our darkness" },
+};
+const COMPLINE_ADDED_PRAYERS = new Set([71, 72, 73]);
+
 // the printed sentences carry no references; these are the book's texts
 const MIDDAY_SCRIPTURE_CITATIONS: Record<number, string> = {
   2: "St John 12. 32",
@@ -1079,6 +1095,91 @@ export function composeBcp1962FixedOffice(
     office === "noonday" ? "Prayers at Mid-day" : "The Order for Compline";
   const nodes: Bcp1962OfficeNode[] = source.lines.flatMap(
     (entry, i): Bcp1962OfficeNode[] => {
+      if (office === "compline") {
+        if (
+          entry.kind === "heading" &&
+          entry.text === "Nunc Dimittis" &&
+          source.lines[i + 1]?.kind === "text"
+        ) {
+          return [
+            {
+              kind: "canticle",
+              slot: "first",
+              id: "nunc-dimittis",
+              title: "Nunc Dimittis",
+              text: source.lines[i + 1].text,
+              suggested: true,
+            },
+          ];
+        }
+        if (
+          entry.kind === "text" &&
+          source.lines[i - 1]?.kind === "heading" &&
+          source.lines[i - 1].text === "Nunc Dimittis"
+        ) {
+          return [];
+        }
+        if (i === 36 && entry.kind === "rubric") {
+          return [
+            { kind: "heading", text: "The Creed", rule: true },
+            { kind: "rubric", text: entry.text },
+          ];
+        }
+        if (i === 8 && entry.kind === "rubric") {
+          const psalms = ["4", "31:1-6", "91", "134"].flatMap((ref) => {
+            const passage = getBcp1962PsalmPassage(ref);
+            return passage ? [{ ref, passage }] : [];
+          });
+          return [
+            { kind: "rubric", text: entry.text },
+            { kind: "psalm", refs: psalms.map((p) => p.ref), passages: psalms },
+          ];
+        }
+        if ([10, 12, 14, 66, 68].includes(i) && entry.kind === "heading") {
+          return [];
+        }
+        if (entry.kind === "heading" && entry.text === "Anthem") {
+          return [];
+        }
+        if (
+          entry.kind === "text" &&
+          entry.text.startsWith("Our Father who art in heaven")
+        ) {
+          return [
+            { kind: "heading", text: "The Lord's Prayer" },
+            ...lordsPrayerNodes(entry.text),
+          ];
+        }
+        if (entry.kind === "text" && entry.text.startsWith("Anthem. ")) {
+          return [{ kind: "text", text: entry.text, anthem: true }];
+        }
+        if (entry.kind === "text" && COMPLINE_READINGS[i]) {
+          return [
+            {
+              kind: "text",
+              text: entry.text,
+              choiceGroup: "compline-reading",
+              choiceId: COMPLINE_READINGS[i].id,
+              choiceLabel: COMPLINE_READINGS[i].label,
+            },
+          ];
+        }
+        if (entry.kind === "text" && COMPLINE_COLLECTS[i]) {
+          return [
+            {
+              kind: "text",
+              text: entry.text,
+              collect: true,
+              choiceGroup: "compline-collect",
+              choiceId: COMPLINE_COLLECTS[i].id,
+              choiceLabel: COMPLINE_COLLECTS[i].label,
+            },
+          ];
+        }
+        if (entry.kind === "text" && COMPLINE_ADDED_PRAYERS.has(i)) {
+          return [{ kind: "text", text: entry.text, collect: true }];
+        }
+      }
       if (office === "noonday") {
         if (i === 0 && entry.kind === "rubric") {
           return [];

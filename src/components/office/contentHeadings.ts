@@ -1,21 +1,22 @@
-import { CHROME_FONT, SUBHEADING_FONT } from "../../lib/fonts";
+import { SERIF_SEMI_FONT, SUBHEADING_FONT } from "../../lib/fonts";
 import {
   defineThemedStyles,
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
 
 // every content section rule (PSALMS, READINGS, COLLECT OF THE DAY) across
-// the office and saints pages shares one voice: Inter Tight 11/600,
-// letterspaced, uppercase, accent red, hairline rule directly beneath.
+// the office and saints pages shares one voice: the reader's semibold serif
+// at 13, letterspaced, uppercase, accent red, hairline rule directly beneath.
 // both pages must keep step here, so they call this one hook instead of
 // spelling the rule out again. the space above outranks the subheading's, so a
 // new section breaks wider than a new block and the two ranks stay distinct
 const sectionHeadingStyles = defineThemedStyles({
   rule: {
-    fontFamily: CHROME_FONT,
-    fontSize: 11,
+    fontFamily: SERIF_SEMI_FONT,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "600",
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
     textTransform: "uppercase",
     color: "var(--accent)",
     marginBottom: 8,

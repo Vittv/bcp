@@ -65,7 +65,7 @@ export function ScriptureView({
   );
 }
 
-const scriptureStyles = defineThemedStyles({
+export const scriptureStyles = defineThemedStyles({
   block: {
     marginTop: 8,
     marginBottom: 0,
@@ -87,6 +87,12 @@ const scriptureStyles = defineThemedStyles({
   verseBody: {
     fontSize: 18,
     lineHeight: 30,
+  },
+  citation: {
+    fontFamily: SERIF_ITALIC_FONT,
+    fontSize: 15,
+    lineHeight: 25,
+    color: "var(--text-secondary)",
   },
   verseNumber: {
     fontFamily: SERIF_FONT,
