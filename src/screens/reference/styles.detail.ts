@@ -101,9 +101,16 @@ export const detailStyles = defineThemedStyles({
     color: "var(--text-secondary)",
     marginBottom: 18,
   },
+  // the month captions are table column labels, so they follow the line above
+  // closely instead of opening a new block
+  psalterMonthNote: {
+    marginTop: -14,
+  },
   // the 30-day psalter lists each portion's citations as their own labeled
   // blocks, the way the lectionary page prints its psalms
   psalterBlock: {
+    // clear the bottom rule of the heading above the citation line
+    marginTop: 8,
     marginBottom: 22,
     paddingLeft: 4,
   },

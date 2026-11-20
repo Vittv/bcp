@@ -2,6 +2,7 @@ import { memo, type ReactNode, useCallback, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSectionHeading } from "../../components/office/contentHeadings";
 import { PsalmText } from "../../components/office/PsalmText";
+import { StickyHeading } from "../../components/office/StickyHeading";
 import { Chevron } from "../../components/shell/Chevron";
 import { useEdition } from "../../context/EditionContext";
 import { usePalette } from "../../context/PaletteContext";
@@ -367,7 +368,7 @@ const PsalterDetailBody = memo(function PsalterDetailBody({
           1962 Psalter · monthly appointment tables · Morning and Evening
           portions
         </Text>
-        <Text style={styles.canticleNote}>
+        <Text style={[styles.canticleNote, styles.psalterMonthNote]}>
           Odd months: January, March, May, July, September, November
         </Text>
         <PsalterPortion
@@ -380,7 +381,7 @@ const PsalterDetailBody = memo(function PsalterDetailBody({
           citations={bcp1962Row.oddMonths.evening}
           edition={edition}
         />
-        <Text style={styles.canticleNote}>
+        <Text style={[styles.canticleNote, styles.psalterMonthNote]}>
           Even months: February, April, June, August, October, December
         </Text>
         <PsalterPortion
@@ -449,7 +450,9 @@ function PsalterPortion({
   const is1962 = edition === "1962";
   return (
     <View>
-      <Text style={heading}>{label}</Text>
+      <StickyHeading sticky>
+        <Text style={heading}>{label}</Text>
+      </StickyHeading>
       <View style={styles.psalterBlock}>
         {citations.map((citation, i) => {
           const parsed = parsePsalmCitation(citation);
