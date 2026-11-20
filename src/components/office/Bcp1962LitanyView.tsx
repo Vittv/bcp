@@ -72,7 +72,9 @@ export function Bcp1962LitanyView({
               styles.text,
               node.lordsPrayerFirst && styles.lordsPrayerStart,
               node.lordsPrayerLast && styles.lordsPrayerEnd,
-              showSpeakers && node.speaker === "people" && styles.textPeople,
+              showSpeakers &&
+                (node.speaker === "people" || node.speaker === "all") &&
+                styles.textPeople,
             ]}
           >
             {label ? <Text style={styles.speaker}>{label} </Text> : null}

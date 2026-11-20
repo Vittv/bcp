@@ -151,7 +151,9 @@ function NodeView({
             node.choiceGroup === "compline-reading" && styles.readingText,
             node.lordsPrayerFirst && styles.lordsPrayerStart,
             node.lordsPrayerLast && styles.lordsPrayerEnd,
-            showSpeakers && node.speaker === "people" && styles.textPeople,
+            showSpeakers &&
+              (node.speaker === "people" || node.speaker === "all") &&
+              styles.textPeople,
           ]}
         >
           {label ? <Text style={styles.speaker}>{label} </Text> : null}
@@ -263,6 +265,17 @@ export function Bcp1962OfficeView({
   const [prayerSelection, setPrayerSelection] = useState(
     "general-thanksgiving",
   );
+  const familyCollectDefault = doc.sections
+    .flatMap((s) => s.nodes)
+    .some(
+      (n) =>
+        n.kind === "text" &&
+        n.choiceGroup === "family-collect" &&
+        n.choiceId === "proper",
+    )
+    ? "proper"
+    : "none";
+  const [familyCollect, setFamilyCollect] = useState(familyCollectDefault);
   const [canticleFirst, setCanticleFirst] = useState("suggested");
   const [canticleSecond, setCanticleSecond] = useState("suggested");
   const [creedOverride, setCreedOverride] = useState<
@@ -292,7 +305,17 @@ export function Bcp1962OfficeView({
   const choicesFor = (group: string) =>
     choiceNodes.filter((n) => n.choiceGroup === group);
   const choiceValue = (group: string) =>
-    choiceSelections[group] ?? choicesFor(group)[0]?.choiceId ?? "";
+    group === "family-collect"
+      ? familyCollect
+      : (choiceSelections[group] ?? choicesFor(group)[0]?.choiceId ?? "");
+  const familyCollectOptions: ControlOption[] = [
+    { id: "none", label: "None", group: "Other" },
+    ...choicesFor("family-collect").map((n) => ({
+      id: n.choiceId,
+      label: n.choiceLabel,
+      group: "Collects",
+    })),
+  ];
 
   const canticleNodes =
     doc.sections
@@ -504,7 +527,15 @@ export function Bcp1962OfficeView({
                 {node.kind === "canticle" && doc.office !== "compline"
                   ? canticleControl(node.slot)
                   : null}
-                {node.kind === "text" && node.choiceGroup !== undefined ? (
+                {node.kind === "text" &&
+                node.choiceGroup === "family-collect" &&
+                node.choiceId === familyCollect &&
+                familyCollect !== "none" ? (
+                  <Text style={subheading}>{node.choiceLabel}</Text>
+                ) : null}
+                {node.kind === "text" &&
+                node.choiceGroup !== undefined &&
+                node.choiceGroup !== "family-collect" ? (
                   <>
                     <MenuAnchor style={styles.controlRow}>
                       <ChoiceMenu
@@ -578,6 +609,19 @@ export function Bcp1962OfficeView({
                     showSpeakers={showSpeakers}
                   />
                 )}
+                {node.kind === "rubric" &&
+                node.choiceAnchorFor === "family-collect" ? (
+                  <MenuAnchor style={styles.controlRow}>
+                    <ChoiceMenu
+                      value={familyCollect}
+                      options={familyCollectOptions}
+                      label="Collect"
+                      accessibilityLabel="Collect"
+                      fullWidth
+                      onChange={setFamilyCollect}
+                    />
+                  </MenuAnchor>
+                ) : null}
               </MenuAnchor>
             ))}
         </MenuAnchor>

@@ -92,31 +92,40 @@ export function OfficeTabs({
   const { width } = useViewport();
   const tabs = useMemo(
     () =>
-      edition === "1662"
+      edition === "1962" && devotions
         ? ([
-            { id: "morning", label: "Matins" },
-            { id: "litany", label: "The Litany" },
-            { id: "evening", label: "Evensong" },
+            { id: "morning", label: "Morning" },
+            { id: "evening", label: "Evening" },
           ] as const)
-        : edition === "1962"
+        : edition === "1662"
           ? ([
-              { id: "morning", label: "Morning" },
-              { id: "noonday", label: "Mid-day" },
-              { id: "evening", label: "Evening" },
-              { id: "compline", label: "Compline" },
+              { id: "morning", label: "Matins" },
               { id: "litany", label: "The Litany" },
+              { id: "evening", label: "Evensong" },
             ] as const)
-          : TABS,
-    [edition],
+          : edition === "1962"
+            ? ([
+                { id: "morning", label: "Morning" },
+                { id: "noonday", label: "Mid-day" },
+                { id: "evening", label: "Evening" },
+                { id: "compline", label: "Compline" },
+                { id: "litany", label: "The Litany" },
+              ] as const)
+            : TABS,
+    [devotions, edition],
   );
   useEffect(() => {
     if (
       (edition === "1662" && !is1662OfficeTab(active)) ||
-      (edition === "1962" && !is1962OfficeTab(active))
+      (edition === "1962" && !is1962OfficeTab(active)) ||
+      (edition === "1962" &&
+        devotions &&
+        active !== "morning" &&
+        active !== "evening")
     ) {
       onSelect("morning");
     }
-  }, [active, edition, onSelect]);
+  }, [active, devotions, edition, onSelect]);
   // the full row needs about 600px of bar, which a desktop window only has
   // from 800px with the sidebar open
   const tabsAsMenu = width < 800;
