@@ -148,9 +148,9 @@ export function SplitPane({
   // biome-ignore-end lint/a11y/noNoninteractiveTabindex: see above
 }
 
-// mobile detail wrapper: the pane scrolls the document column.
-// compact switches to the phone-width inset so opened psalms,
-// collects and offices breathe like Today does on small screens
+// detail wrapper: native scrolls its own column, web leaves scrolling to the
+// shell so sticky headings pin to the scroller that actually moves. compact
+// switches to the phone-width inset so opened pages breathe like Today
 export function DetailPage({
   children,
   compact,
@@ -159,14 +159,20 @@ export function DetailPage({
   compact?: boolean;
 }) {
   const styles = useThemedStyles(sharedStyles);
+  const column = (
+    <View style={[styles.detailPage, compact && styles.detailPageMobile]}>
+      {children}
+    </View>
+  );
+  // the shell owns the only web scroller; a nested ScrollView here would be
+  // the sticky headers' nearest scrollport and never actually scroll
+  if (IS_WEB) return column;
   return (
     <ScrollView
       style={styles.list}
       contentContainerStyle={{ alignItems: "center" }}
     >
-      <View style={[styles.detailPage, compact && styles.detailPageMobile]}>
-        {children}
-      </View>
+      {column}
     </ScrollView>
   );
 }

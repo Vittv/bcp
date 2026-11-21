@@ -31,6 +31,8 @@ export const officeBarStyles = defineThemedStyles({
     alignItems: "center",
     gap: 4,
     flexShrink: 0,
+    // static so the date sheet can anchor to the bar, not this cluster
+    position: "static",
   },
   tab: {
     paddingHorizontal: 10,

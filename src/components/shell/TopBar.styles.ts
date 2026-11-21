@@ -63,9 +63,18 @@ export const topBarStyles = defineThemedStyles({
     color: "var(--text-secondary)",
     flexShrink: 1,
   },
-  // keeps the mobile edition chip clear of the season label
+  // keeps the edition chip clear of the season label
   editionChip: {
     marginLeft: 10,
+  },
+  // once the label is gone the chip can sit close to the cross icon
+  editionChipBesideCross: {
+    marginLeft: 6,
+  },
+  // matches the sidebar picker's year: accented, not bold
+  editionYear: {
+    color: "var(--accent)",
+    fontWeight: "500",
   },
   countdown: {
     borderRadius: 4,

@@ -56,7 +56,7 @@ export function TopBar({
   windowControlStyle = "none",
 }: TopBarProps) {
   const { edition, setEdition } = useEdition();
-  const { mode, setMode, fontPx, setFontPx, tokens } = useTheme();
+  const { mode, setMode, fontPx, setFontPx, tokens, uiScale } = useTheme();
   const styles = useThemedStyles(topBarStyles);
   const v = useThemeVar();
   const { openSaint } = useSaintPopover();
@@ -74,6 +74,9 @@ export function TopBar({
   const { compact } = useViewport();
   const showHotkeyCap = useShowHotkeyCap();
   const showSearchLabel = !compact;
+  // a scaled-up mobile bar has no room for the season name; the edition chip
+  // then sits directly beside the cross icon
+  const showSeasonLabel = !isMobile || uiScale <= 1;
 
   const showingControls = IS_TAURI && !wco && windowControlStyle !== "none";
   const decoration = decorationFor(windowControlStyle);
@@ -115,35 +118,14 @@ export function TopBar({
           resizeMode="contain"
           accessibilityLabel="BCP"
         />
-        <Text
-          style={styles.seasonText}
-          numberOfLines={1}
-          dataSet={IS_TAURI ? DRAG_DATA : undefined}
-        >
-          {seasonLabel(season, edition)}
-        </Text>
-        {isMobile ? (
-          <View style={styles.editionChip}>
-            <Dropdown
-              triggerLabel={edition}
-              accessibilityLabel="Prayer book edition"
-              width={58}
-              accent
-              centered
-              // inline so the sheet stays solid whatever the class engine does
-              menuStyle={{ backgroundColor: tokens.bg }}
-            >
-              {EDITIONS.map((id) => (
-                <DropdownItem
-                  key={id}
-                  label={id}
-                  selected={id === edition}
-                  centered
-                  onPress={() => setEdition(id)}
-                />
-              ))}
-            </Dropdown>
-          </View>
+        {showSeasonLabel ? (
+          <Text
+            style={styles.seasonText}
+            numberOfLines={1}
+            dataSet={IS_TAURI ? DRAG_DATA : undefined}
+          >
+            {seasonLabel(season, edition)}
+          </Text>
         ) : null}
         {!compact && (holyDayLabel || daysUntilNext > 0) && (
           <>
@@ -177,6 +159,32 @@ export function TopBar({
             )}
           </>
         )}
+        <View
+          style={[
+            styles.editionChip,
+            !showSeasonLabel && styles.editionChipBesideCross,
+          ]}
+        >
+          <Dropdown
+            triggerLabel={edition}
+            accessibilityLabel="Prayer book edition"
+            width={58}
+            centered
+            triggerTextStyle={styles.editionYear}
+            // inline so the sheet stays solid whatever the class engine does
+            menuStyle={{ backgroundColor: tokens.bg }}
+          >
+            {EDITIONS.map((id) => (
+              <DropdownItem
+                key={id}
+                label={id}
+                selected={id === edition}
+                centered
+                onPress={() => setEdition(id)}
+              />
+            ))}
+          </Dropdown>
+        </View>
       </View>
 
       <View

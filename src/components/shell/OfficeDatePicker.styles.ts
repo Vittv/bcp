@@ -2,8 +2,9 @@ import { defineThemedStyles } from "../../lib/theme/themedStyles";
 
 export const officeDatePickerStyles = defineThemedStyles({
   wrap: {
-    // anchor the month sheet under the icon inside the office bar
-    position: "relative",
+    // react-native-web positions every View by default; stay static so the
+    // sheet anchors to the bar rather than this 26px icon box
+    position: "static",
     flexShrink: 0,
   },
   button: {
@@ -24,8 +25,9 @@ export const officeDatePickerStyles = defineThemedStyles({
     height: 30000,
     zIndex: 40,
   },
+  // the sheet anchors to the bar's right edge, like the Offices date picker
   anchor: {
     left: "auto",
-    right: 0,
+    right: 10,
   },
 });
