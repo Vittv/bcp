@@ -39,6 +39,12 @@ import { sanctoraleCardStyles } from "./SanctoraleCard.styles";
 import { ScriptureView } from "./ScriptureView";
 import { StickyHeading } from "./StickyHeading";
 
+const TEC_HOLY_DAY_LINK = {
+  label:
+    "1979 Book of Common Prayer, Calendar of the Church Year, official PDF",
+  url: "https://www.episcopalchurch.org/wp-content/uploads/2019/11/bcp_compressed.pdf",
+};
+
 const BOOK_LINK: Record<CalendarTradition, { label: string; url: string }> = {
   tec: {
     label: "The Episcopal Church Lesser Feasts and Fasts 2024, official PDF",
@@ -218,7 +224,10 @@ export function FeastCard({
     LESSER_FEAST_BIOS[feast.slug] ??
     OLDER_FEAST_BIOS[feast.slug];
   const propers = showLiturgy ? propersForFeast(feast, tradition) : null;
-  const link = BOOK_LINK[tradition];
+  const link =
+    tradition === "tec" && feast.rank !== "lesser"
+      ? TEC_HOLY_DAY_LINK
+      : BOOK_LINK[tradition];
   // lesser feasts keep the subheading voice; only holy days take the heading
   const titleStyle =
     feast.rank === "lesser"
