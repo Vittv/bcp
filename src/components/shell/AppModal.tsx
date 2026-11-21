@@ -31,6 +31,8 @@ type AppModalProps = {
   title?: ReactNode;
   /** plain-text title for the close button's accessible name, for node titles */
   titleLabel?: string;
+  /** a trailing element in the title bar, just left of the close button */
+  headerAccessory?: ReactNode;
   onClose: () => void;
   children: ReactNode;
   width?: number;
@@ -52,6 +54,7 @@ type AppModalProps = {
 export function AppModal({
   title,
   titleLabel,
+  headerAccessory,
   onClose,
   children,
   footer,
@@ -126,6 +129,7 @@ export function AppModal({
             >
               {title}
             </Text>
+            {headerAccessory}
             <Pressable
               onPress={onClose}
               style={({ hovered }) => closeBtnStyle(hovered)}

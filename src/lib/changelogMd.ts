@@ -104,6 +104,8 @@ export function parseChangelogMarkdown(markdown: string): ChangelogBlock[] {
 
   for (const line of lines) {
     const lineText = line.trim();
+    // release metadata comments feed the build, never the rendered notes
+    if (lineText.startsWith("<!--")) continue;
     if (lineText === "") {
       flushBullets();
       flushParagraph(blocks, para);
