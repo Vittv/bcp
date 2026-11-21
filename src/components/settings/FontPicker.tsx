@@ -17,7 +17,7 @@ import {
 import { type FaceDef, faceStack } from "../../lib/typography/faces";
 import { registerEsc } from "../shell/AppModal";
 import { Chevron } from "../shell/Chevron";
-import { CheckIcon, CloseIcon, MagnifierIcon } from "../shell/Icon";
+import { CheckIcon, CloseIcon } from "../shell/Icon";
 
 const IS_WEB = Platform.OS === "web";
 
@@ -127,7 +127,6 @@ export function FontPicker({
       )}
       <View style={styles.panel}>
         <View style={styles.searchField}>
-          <MagnifierIcon size={15} color={v("var(--text-secondary)")} />
           <TextInput
             autoFocus
             value={query}
@@ -418,9 +417,9 @@ const fontPickerStyles = defineThemedStyles({
     backgroundColor: "var(--bg)",
     overflow: "hidden",
   },
-  // the field mirrors the rail's search: a magnifier, the input, and a clear
-  // button when there is a query. inside the panel it goes borderless, seated
-  // by a rule under it rather than a pill around it
+  // the input starts at the same inset as the font names below; a clear button
+  // appears once there is a query. the field is borderless, seated by a rule
+  // under it rather than a pill around it
   searchField: {
     flexDirection: "row",
     alignItems: "center",
@@ -435,7 +434,8 @@ const fontPickerStyles = defineThemedStyles({
     minWidth: 0,
     fontFamily: CHROME_FONT,
     fontWeight: "500",
-    fontSize: 13,
+    // a 16px floor keeps iOS Safari from auto-zooming the page on focus
+    fontSize: 16,
     color: "var(--text)",
     padding: 0,
     userSelect: "text",
