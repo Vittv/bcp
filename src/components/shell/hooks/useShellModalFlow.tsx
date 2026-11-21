@@ -1,17 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Text } from "react-native";
-import { CHANGELOG_MARKDOWN } from "../../../lib/changelog";
+import { CHANGELOG_DATE, CHANGELOG_MARKDOWN } from "../../../lib/changelog";
 import {
   type ChangelogSource,
   readChangelogPrefs,
   writeChangelogPrefs,
 } from "../../../lib/changelogPrefs";
 import { IS_TAURI } from "../../../lib/desktop";
+import { CHROME_FONT } from "../../../lib/fonts";
 import {
   registerOpenChangelog,
   registerOpenSettingsSection,
 } from "../../../lib/modalBridge";
 import type { SettingsSectionId } from "../../../lib/settings";
+import {
+  defineThemedStyles,
+  useThemedStyles,
+} from "../../../lib/theme/themedStyles";
 import type { WindowControlStyleId } from "../../../lib/windowDecorations";
 import { SettingsScreen } from "../../../screens/SettingsScreen";
 import { ChangelogScreen } from "../../changelog/ChangelogScreen";
@@ -32,6 +37,7 @@ export function useShellModalFlow(args: {
     setWindowControlStyle,
     changelogVersionStyle,
   } = args;
+  const dateStyles = useThemedStyles(modalFlowStyles);
 
   const [modal, setModal] = useState<ModalType | null>(null);
   // a specific settings section the global palette requested (e.g. landed
@@ -188,6 +194,11 @@ export function useShellModalFlow(args: {
               </>
             }
             titleLabel={`BCP ${changelogVersion}`}
+            headerAccessory={
+              changelogSource ? undefined : (
+                <Text style={dateStyles.changelogDate}>{CHANGELOG_DATE}</Text>
+              )
+            }
             onClose={closeModal}
             width={640}
             height={640}
@@ -221,3 +232,14 @@ export function useShellModalFlow(args: {
     modalContent,
   };
 }
+
+const modalFlowStyles = defineThemedStyles({
+  changelogDate: {
+    fontFamily: CHROME_FONT,
+    fontWeight: "500",
+    fontSize: 12,
+    color: "var(--text-secondary)",
+    marginRight: 8,
+    flexShrink: 0,
+  },
+});
