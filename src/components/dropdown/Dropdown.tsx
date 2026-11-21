@@ -10,6 +10,7 @@ import {
   ScrollView,
   type StyleProp,
   Text,
+  type TextStyle,
   View,
   type ViewStyle,
 } from "react-native";
@@ -37,6 +38,7 @@ export function Dropdown({
   placement = "down",
   accent = false,
   centered = false,
+  triggerTextStyle,
   children,
   menuStyle,
 }: {
@@ -47,6 +49,7 @@ export function Dropdown({
   placement?: "down" | "up";
   accent?: boolean;
   centered?: boolean;
+  triggerTextStyle?: StyleProp<TextStyle>;
   children: ReactNode;
   /** extra style for the menu content wrapper (e.g. a wider custom menu) */
   menuStyle?: StyleProp<ViewStyle>;
@@ -107,6 +110,7 @@ export function Dropdown({
               width === "full" && styles.triggerTextFull,
               accent && styles.triggerTextAccent,
               centered && styles.triggerTextCentered,
+              triggerTextStyle,
             ]}
             numberOfLines={1}
           >
