@@ -19,6 +19,7 @@ import {
   type ResolvedWindowControlStyle,
 } from "../../lib/windowDecorations";
 import { HOTKEY_MOD, KeyCap } from "../../screens/reference/shared";
+import { Dropdown, DropdownItem } from "../dropdown";
 import { useSaintPopover } from "../office/SaintPopover";
 import { MagnifierIcon, MoonIcon, SunIcon, SystemIcon } from "./Icon";
 import {
@@ -31,7 +32,10 @@ import {
 import { CROSS_ICON, noSelect, topBarStyles } from "./TopBar.styles";
 import { WindowControls } from "./WindowControls";
 
+const EDITIONS = ["1979", "1662", "1962"] as const;
+
 type TopBarProps = {
+  isMobile: boolean;
   season: Season;
   daysUntilNext: number;
   nextSeason: string;
@@ -44,13 +48,14 @@ type TopBarProps = {
 };
 
 export function TopBar({
+  isMobile,
   season,
   daysUntilNext,
   nextSeason,
   holyDay,
   windowControlStyle = "none",
 }: TopBarProps) {
-  const { edition } = useEdition();
+  const { edition, setEdition } = useEdition();
   const { mode, setMode, fontPx, setFontPx, tokens } = useTheme();
   const styles = useThemedStyles(topBarStyles);
   const v = useThemeVar();
@@ -117,6 +122,29 @@ export function TopBar({
         >
           {seasonLabel(season, edition)}
         </Text>
+        {isMobile ? (
+          <View style={styles.editionChip}>
+            <Dropdown
+              triggerLabel={edition}
+              accessibilityLabel="Prayer book edition"
+              width={58}
+              accent
+              centered
+              // inline so the sheet stays solid whatever the class engine does
+              menuStyle={{ backgroundColor: tokens.bg }}
+            >
+              {EDITIONS.map((id) => (
+                <DropdownItem
+                  key={id}
+                  label={id}
+                  selected={id === edition}
+                  centered
+                  onPress={() => setEdition(id)}
+                />
+              ))}
+            </Dropdown>
+          </View>
+        ) : null}
         {!compact && (holyDayLabel || daysUntilNext > 0) && (
           <>
             <Text style={styles.countdownSep}>•</Text>

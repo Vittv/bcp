@@ -1,6 +1,6 @@
+import { monthPickerStyles } from "../../components/shell/MonthPicker.styles";
 import { officeBarStyles } from "../../components/shell/officeBarStyles";
 import { CHROME_FONT, HEADING_FONT } from "../../lib/fonts";
-import { FLOATING_MENU_SURFACE } from "../../lib/theme/surfaces";
 import { defineThemedStyles } from "../../lib/theme/themedStyles";
 
 export const overlayStyles = defineThemedStyles({
@@ -12,74 +12,19 @@ export const overlayStyles = defineThemedStyles({
     height: 30000,
     zIndex: 40,
   },
-  popover: {
-    ...FLOATING_MENU_SURFACE,
-    position: "absolute",
-    top: 30,
-    left: 10,
-    zIndex: 50,
-    width: 259,
-    padding: 8,
-    // raised surface: one step lighter than --bg so panels float over
-    // the page instead of reading as a hole in it
-    backgroundColor: "var(--bg-raised)",
-  },
-  popNav: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  popMonth: {
-    fontFamily: CHROME_FONT,
-    fontSize: 13,
-    fontWeight: "600",
-    color: "var(--text)",
-  },
-  popGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  popCell: {
-    width: "14.2857%",
-    aspectRatio: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 4,
-  },
-  popCellToday: {
-    borderWidth: 1,
-    borderColor: "var(--accent)",
-  },
-  popCellSelected: {},
-  popCellText: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 12,
-    color: "var(--text)",
-    fontVariant: ["tabular-nums"],
-  },
-  popCellTextSelected: {
-    color: "var(--accent)",
-    fontWeight: "700",
-  },
-  // the picker's Today shortcut, which stays available when the bar drops
-  // its own chip on narrow phones
-  popToday: {
-    marginTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: "var(--border)",
-    paddingVertical: 6,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 4,
-  },
-  popTodayText: {
-    fontFamily: CHROME_FONT,
-    fontWeight: "500",
-    fontSize: 11,
-    color: "var(--text-secondary)",
-  },
+  // the month grid is shared with the Today date button so both pickers
+  // stay visually identical
+  popover: monthPickerStyles.popover,
+  popNav: monthPickerStyles.popNav,
+  popMonth: monthPickerStyles.popMonth,
+  popGrid: monthPickerStyles.popGrid,
+  popCell: monthPickerStyles.popCell,
+  popCellToday: monthPickerStyles.popCellToday,
+  popCellSelected: monthPickerStyles.popCellSelected,
+  popCellText: monthPickerStyles.popCellText,
+  popCellTextSelected: monthPickerStyles.popCellTextSelected,
+  popToday: monthPickerStyles.popToday,
+  popTodayText: monthPickerStyles.popTodayText,
   // office picker tabs in the desktop bar, spread directly from the
   // Today page's OfficeTabs stylesheet so the two bars cannot drift
   offTabs: {

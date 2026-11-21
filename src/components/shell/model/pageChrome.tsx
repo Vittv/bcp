@@ -65,6 +65,8 @@ export type AuxRowContext = {
   rite: OfficeRite;
   setRite: (r: OfficeRite) => void;
   isMobile: boolean;
+  date: CalendarDate;
+  pickDate: (date: CalendarDate) => void;
   lectionaryDate: CalendarDate;
   stepLectionary: (delta: number) => void;
   resetLectionaryDate: () => void;
@@ -85,6 +87,8 @@ export function renderAuxRow(ctx: AuxRowContext): ReactNode {
     rite,
     setRite,
     isMobile,
+    date,
+    pickDate,
     lectionaryDate,
     stepLectionary,
     resetLectionaryDate,
@@ -117,6 +121,8 @@ export function renderAuxRow(ctx: AuxRowContext): ReactNode {
           leading={sidebarShowButton}
           active={tab}
           onSelect={handleTabChange}
+          date={date}
+          onPickDate={pickDate}
           showRubrics={showRubrics}
           onToggleRubrics={() => setShowRubrics((v) => !v)}
           showSpeakers={showSpeakers}

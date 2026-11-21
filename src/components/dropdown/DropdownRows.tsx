@@ -24,11 +24,13 @@ export function DropdownItem({
   label,
   selected,
   disabled,
+  centered,
   onPress,
 }: {
   label: string;
   selected?: boolean;
   disabled?: boolean;
+  centered?: boolean;
   onPress: () => void;
 }) {
   const styles = useThemedStyles(dropdownStyles);
@@ -37,7 +39,11 @@ export function DropdownItem({
     return (
       <View style={styles.item}>
         <Text
-          style={[styles.itemText, styles.itemTextDisabled]}
+          style={[
+            styles.itemText,
+            styles.itemTextDisabled,
+            centered && styles.itemTextCentered,
+          ]}
           numberOfLines={1}
         >
           {label}
@@ -49,6 +55,7 @@ export function DropdownItem({
     <Pressable
       style={({ hovered }) => [
         styles.item,
+        centered && styles.itemCentered,
         (hovered || selected) && styles.itemActive,
       ]}
       onPress={() => {
@@ -59,7 +66,11 @@ export function DropdownItem({
       accessibilityState={{ selected: Boolean(selected), disabled: false }}
     >
       <Text
-        style={[styles.itemText, selected && styles.itemTextActive]}
+        style={[
+          styles.itemText,
+          selected && styles.itemTextActive,
+          centered && styles.itemTextCentered,
+        ]}
         numberOfLines={1}
       >
         {label}

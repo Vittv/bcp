@@ -281,6 +281,13 @@ export function Shell() {
     goToPage(p);
   };
 
+  // the Today date chip steps the same state the n/p hotkeys do, including a
+  // history entry so Back restores the previous office day
+  const pickDate = (next: CalendarDate) => {
+    setDate(next);
+    goToPage("today", { date: next });
+  };
+
   const handleNavigateTo = useCallback(
     (target: NavigateToRef | PageId) => {
       if (typeof target === "string") {
@@ -545,6 +552,8 @@ export function Shell() {
     rite,
     setRite,
     isMobile,
+    date,
+    pickDate,
     lectionaryDate,
     stepLectionary,
     resetLectionaryDate,
@@ -607,6 +616,7 @@ export function Shell() {
                     }}
                   >
                     <TopBar
+                      isMobile={isMobile}
                       season={season}
                       daysUntilNext={daysUntilNext}
                       nextSeason={nextSeason}
@@ -850,6 +860,7 @@ export function Shell() {
               <SaintPopoverProvider>
                 <View style={styles.shell} {...swipeHandlers}>
                   <TopBar
+                    isMobile={isMobile}
                     season={season}
                     daysUntilNext={daysUntilNext}
                     nextSeason={nextSeason}
