@@ -81,7 +81,7 @@ export const baseStyles = defineThemedStyles({
   arrowBtnHover: {
     backgroundColor: "var(--control-hover)",
   },
-  // the floating picker frame (aetheryte-style search tray): a dimmed
+  // the floating picker frame (a search tray): a dimmed
   // backdrop, a centered card whose search field is pinned to the top and
   // the navigation hint row pinned to the bottom, with the result list
   // scrolling in between
@@ -141,7 +141,8 @@ export const baseStyles = defineThemedStyles({
   paletteSearch: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
-    fontSize: 15,
+    // a 16px floor keeps iOS Safari from auto-zooming the page on focus
+    fontSize: 16,
     color: "var(--text)",
     backgroundColor: "transparent",
     paddingVertical: 12,

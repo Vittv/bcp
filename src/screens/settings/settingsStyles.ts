@@ -62,12 +62,18 @@ export const settingsStyles = defineThemedStyles({
     borderColor: "var(--border)",
     backgroundColor: "var(--surface)",
   },
+  // nudge the glass left without moving the input, which already lines up
+  // with the settings rows below
+  searchIcon: {
+    marginLeft: -2,
+    marginRight: 4,
+  },
   searchInput: {
     flex: 1,
     minWidth: 0,
     fontFamily: CHROME_FONT,
     fontWeight: "500",
-    fontSize: 13,
+    fontSize: 14,
     color: "var(--text)",
     padding: 0,
     // the field is real text, so the caret can land and text can be selected

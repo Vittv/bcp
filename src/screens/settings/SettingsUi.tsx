@@ -18,7 +18,9 @@ export function SettingsSearch({
   const v = useThemeVar();
   return (
     <View style={styles.searchField} dataSet={{ settingsSearch: "" }}>
-      <MagnifierIcon size={16} color={v("var(--text-secondary)")} />
+      <View style={styles.searchIcon}>
+        <MagnifierIcon size={14} color={v("var(--text-secondary)")} />
+      </View>
       <TextInput
         value={query}
         onChangeText={onChange}
