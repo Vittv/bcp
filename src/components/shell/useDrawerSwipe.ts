@@ -84,7 +84,9 @@ export function useDrawerSwipe({
         else if (action === "close") s.onClose();
       },
       onPanResponderTerminate: () => {
+        // cancelled gestures release the drag so the drawer settles and nav presses stay live
         session.current = null;
+        state.current.onProgress?.(null);
       },
     }),
   );
@@ -150,6 +152,10 @@ export function useDrawerSwipe({
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
+      // teardown mid-drag releases the drag state before the listeners go away
+      if (tracking || drag) {
+        state.current.onProgress?.(null);
+      }
     };
   }, [web, enabled]);
 

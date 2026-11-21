@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useEdition } from "../../context/EditionContext";
+import type { CalendarDate } from "../../lib/calendar/types";
 import type { OfficeId } from "../../lib/content/types";
 import type { OfficeRite } from "../../lib/office/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
@@ -11,6 +12,7 @@ import {
   is1962OfficeTab,
   type TabId,
 } from "./model/shellUtils";
+import { OfficeDatePicker } from "./OfficeDatePicker";
 import { officeBarStyles } from "./officeBarStyles";
 
 const noSelect = {
@@ -64,6 +66,8 @@ type OfficeTabsProps = {
   leading?: ReactNode;
   active: TabId;
   onSelect: (id: TabId) => void;
+  date: CalendarDate;
+  onPickDate: (date: CalendarDate) => void;
   showRubrics: boolean;
   onToggleRubrics: () => void;
   showSpeakers: boolean;
@@ -78,6 +82,8 @@ export function OfficeTabs({
   leading,
   active,
   onSelect,
+  date,
+  onPickDate,
   showRubrics,
   onToggleRubrics,
   showSpeakers,
@@ -208,6 +214,7 @@ export function OfficeTabs({
         )}
       </View>
       <View style={[styles.togglesRight, compact && styles.groupCompact]}>
+        <OfficeDatePicker date={date} onPickDate={onPickDate} />
         <Pressable
           style={({ hovered }) => [
             styles.toggle,

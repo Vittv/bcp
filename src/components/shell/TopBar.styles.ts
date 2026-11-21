@@ -26,7 +26,10 @@ export const topBarStyles = defineThemedStyles({
     paddingLeft: 12,
     flexShrink: 0,
     backgroundColor: "var(--bg)",
-    overflow: "hidden",
+    // lift the chrome above the sidebar and drawer; modals sit higher
+    // the season text truncates on its own, so the bar needs no overflow clip
+    position: "relative",
+    zIndex: 60,
   },
   // pull the traffic lights closer to the window edge than the right controls
   barCustomLeft: {
@@ -59,6 +62,10 @@ export const topBarStyles = defineThemedStyles({
     fontSize: 12,
     color: "var(--text-secondary)",
     flexShrink: 1,
+  },
+  // keeps the mobile edition chip clear of the season label
+  editionChip: {
+    marginLeft: 10,
   },
   countdown: {
     borderRadius: 4,
@@ -113,9 +120,8 @@ export const topBarStyles = defineThemedStyles({
   pressed: {
     backgroundColor: "var(--selected-bg)",
   },
-  // the global-search trigger: a fuller descendant of aetheryte's cmd
-  // trigger, stretching the top bar's full 40px so search reads as a
-  // control of the chrome rather than a chip of the page beneath
+  // the global-search trigger stretches the top bar's full 40px so search
+  // reads as a control of the chrome rather than a chip of the page beneath
   searchTrigger: {
     flexDirection: "row",
     alignItems: "center",

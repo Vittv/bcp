@@ -35,6 +35,8 @@ export function Dropdown({
   width = "wide",
   align = "start",
   placement = "down",
+  accent = false,
+  centered = false,
   children,
   menuStyle,
 }: {
@@ -43,6 +45,8 @@ export function Dropdown({
   width?: DropdownWidth;
   align?: "start" | "end";
   placement?: "down" | "up";
+  accent?: boolean;
+  centered?: boolean;
   children: ReactNode;
   /** extra style for the menu content wrapper (e.g. a wider custom menu) */
   menuStyle?: StyleProp<ViewStyle>;
@@ -82,6 +86,7 @@ export function Dropdown({
           style={({ hovered }) => [
             styles.trigger,
             width === "full" && styles.triggerFull,
+            centered && styles.triggerCentered,
             hovered && styles.triggerHover,
           ]}
           onPress={() => setOpen((v) => !v)}
@@ -89,11 +94,19 @@ export function Dropdown({
           accessibilityState={{ expanded: open }}
           accessibilityLabel={accessibilityLabel}
         >
-          <Chevron direction={open ? "up" : "down"} size={4.5} />
+          {centered ? (
+            <View style={styles.chevronSlotCentered}>
+              <Chevron direction={open ? "up" : "down"} size={4.5} />
+            </View>
+          ) : (
+            <Chevron direction={open ? "up" : "down"} size={4.5} />
+          )}
           <Text
             style={[
               styles.triggerText,
               width === "full" && styles.triggerTextFull,
+              accent && styles.triggerTextAccent,
+              centered && styles.triggerTextCentered,
             ]}
             numberOfLines={1}
           >
