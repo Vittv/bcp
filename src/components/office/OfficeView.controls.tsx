@@ -160,21 +160,9 @@ export function SectionControl({
         />
       );
     case "psalms":
-      return (
-        <Segmented
-          value={customization.psalmCycle ?? "office"}
-          options={[
-            { id: "office", label: "Office" },
-            { id: "psalter30", label: "30-Day" },
-          ]}
-          accessibilityLabel="Psalm source"
-          onChange={(id) =>
-            setOfficeChoice(officeId, {
-              psalmCycle: id === "psalter30" ? "psalter30" : "office",
-            })
-          }
-        />
-      );
+      return choices.psalmCitations ? (
+        <PsalmPicker officeId={officeId} citations={choices.psalmCitations} />
+      ) : null;
     case "suffrages-a":
     case "suffrages-b":
       return (
@@ -195,6 +183,60 @@ export function SectionControl({
     default:
       return null;
   }
+}
+
+export function PsalmPicker({
+  officeId,
+  citations,
+}: {
+  officeId: OfficeId;
+  citations: string[];
+}) {
+  const { customizationFor, setOfficeChoice } = useOfficeSettings();
+  const customization = customizationFor(officeId);
+  if (citations.length < 2) return null;
+  const stored = customization.psalmChoice;
+  const options: ControlOption[] = [
+    { id: "all", label: `All ${citations.length} psalms`, group: "Suggested" },
+    ...citations.map((citation) => ({
+      id: citation,
+      label: `Psalm ${citation}`,
+    })),
+  ];
+  return (
+    <ChoiceMenu
+      narrow
+      value={stored && citations.includes(stored) ? stored : "all"}
+      options={options}
+      label="Psalm"
+      accessibilityLabel="Psalm"
+      onChange={(id) =>
+        setOfficeChoice(officeId, {
+          psalmChoice: id === "all" ? undefined : id,
+        })
+      }
+    />
+  );
+}
+
+export function PsalmCycleControl({ officeId }: { officeId: OfficeId }) {
+  const { customizationFor, setOfficeChoice } = useOfficeSettings();
+  const customization = customizationFor(officeId);
+  return (
+    <Segmented
+      value={customization.psalmCycle ?? "office"}
+      options={[
+        { id: "office", label: "Office" },
+        { id: "psalter30", label: "30-Day" },
+      ]}
+      accessibilityLabel="Psalm source"
+      onChange={(id) =>
+        setOfficeChoice(officeId, {
+          psalmCycle: id === "psalter30" ? "psalter30" : "office",
+        })
+      }
+    />
+  );
 }
 
 // the Readings picker: the day's full set restores the default (a missing

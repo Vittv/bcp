@@ -336,8 +336,10 @@ export function SectionView({
   fullText,
   scripture,
   control,
+  bottomControl,
   fullWidthControl = false,
   sticky = false,
+  psalmChoice,
 }: {
   section: ComposedSection;
   showRubrics: boolean;
@@ -349,14 +351,22 @@ export function SectionView({
   fullText: boolean;
   scripture: ScriptureConfig;
   control?: ReactNode;
+  bottomControl?: ReactNode;
   /** a heading-less control that should span the reading column */
   fullWidthControl?: boolean;
   sticky?: boolean;
+  psalmChoice?: string;
 }) {
   const styles = useThemedStyles(officeViewStyles);
   const heading = useSectionHeading();
-  if (section.nodes.length === 0) return null;
-  const keys = sectionKeys(section.nodes);
+  const nodes =
+    section.key === "psalms" && psalmChoice
+      ? section.nodes.filter(
+          (node) => node.kind !== "psalm" || node.citation === psalmChoice,
+        )
+      : section.nodes;
+  if (nodes.length === 0) return null;
+  const keys = sectionKeys(nodes);
   return (
     <MenuAnchor nativeID={officeSectionId(section.key)} style={styles.section}>
       {section.heading ? (
@@ -388,7 +398,10 @@ export function SectionView({
           {control}
         </MenuAnchor>
       ) : null}
-      {section.nodes.map((node, i) => (
+      {bottomControl ? (
+        <View style={styles.psalmCycleRow}>{bottomControl}</View>
+      ) : null}
+      {nodes.map((node, i) => (
         <NodeView
           key={keys[i]}
           node={node}

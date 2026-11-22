@@ -4,7 +4,7 @@ import { useOfficeSettings } from "../../context/OfficeSettingsContext";
 import type { ComposedSection, OfficeDocument } from "../../lib/office/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { ControlChip } from "./OfficeControls";
-import { SectionControl } from "./OfficeView.controls";
+import { PsalmCycleControl, SectionControl } from "./OfficeView.controls";
 import { SectionView } from "./OfficeView.render";
 import { scriptureForRite } from "./OfficeView.shared";
 import { officeViewStyles } from "./OfficeView.styles";
@@ -31,6 +31,12 @@ export function OfficeView({
     [document.rite],
   );
   const lastHeadedKey = document.sections.findLast((s) => s.heading)?.key;
+  const psalmCitations = document.choices.psalmCitations;
+  const storedPsalm = customization.psalmChoice;
+  const activePsalm =
+    storedPsalm && psalmCitations?.includes(storedPsalm)
+      ? storedPsalm
+      : undefined;
 
   const controlFor = (key: ComposedSection["key"]) => {
     // full text prints the book's own menus, so the pickers would have
@@ -66,6 +72,14 @@ export function OfficeView({
           fullText={fullText}
           scripture={scripture}
           control={controlFor(section.key)}
+          bottomControl={
+            section.key === "psalms" &&
+            psalmCitations &&
+            psalmCitations.length > 0 ? (
+              <PsalmCycleControl officeId={document.office} />
+            ) : null
+          }
+          psalmChoice={section.key === "psalms" ? activePsalm : undefined}
           fullWidthControl={section.key === "opening"}
           sticky={section.key !== lastHeadedKey}
         />

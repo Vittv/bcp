@@ -799,6 +799,13 @@ describe("composeOffice: inline choices", () => {
     expect(psalmNumbers(doc)).toEqual(expected);
   });
 
+  test("the psalm picker gets the day's citations, morning and evening only", () => {
+    const morning = composeOffice(date, "morning-rite-two");
+    expect(morning.choices.psalmCitations?.length).toBeGreaterThan(0);
+    const compline = composeOffice(date, "compline");
+    expect(compline.choices.psalmCitations).toBeUndefined();
+  });
+
   test("suffrages A and B swap, and B keeps the shared tail", () => {
     const morning = composeOffice(date, "morning-rite-two");
     expect(

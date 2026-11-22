@@ -129,6 +129,8 @@ export type OfficeChoices = {
   /** the day's reading slots for the Readings picker, in print order.
    * morning and evening only */
   lessonSlots?: LessonSlot[];
+  /** the day's appointed psalms, for the morning and evening psalm picker */
+  psalmCitations?: string[];
   menus?: OfficeMenus;
 };
 

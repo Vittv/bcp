@@ -31,6 +31,11 @@ export const officeViewStyles = defineThemedStyles({
     zIndex: 4,
     isolation: "isolate",
   },
+  psalmCycleRow: {
+    alignSelf: "flex-start",
+    marginTop: 8,
+    marginBottom: 4,
+  },
   headingText: { ...officeDocumentStyles.headingText, flexShrink: 1 },
   controlOnlyRow: {
     flexDirection: "row",
