@@ -344,6 +344,7 @@ export function Bcp1662OfficeView({
         date={doc.date}
         title={doc.title}
         editionLabel={OFFICE_EDITION_LABELS["1662"]}
+        titleBelowEdition
       />
       {doc.sections.map((section, sectionIndex) => (
         <MenuAnchor key={section.key} style={styles.section}>
