@@ -18,6 +18,7 @@ import { parsePsalmCitation } from "../../lib/content/psalms";
 import { psalmPassage } from "../../lib/content/psalter";
 import type { KjvPassage } from "../../lib/content/types";
 import { holyDayCollectTitle } from "../../lib/office/compose";
+import { openExternal } from "../../lib/openExternal";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { PsalmText } from "./PsalmText";
@@ -147,13 +148,7 @@ export function SanctoraleCard({
               <Pressable
                 key={link.title}
                 style={styles.linkRow}
-                onPress={() =>
-                  window.open(
-                    wikipediaArticleUrl(link.title),
-                    "_blank",
-                    "noreferrer",
-                  )
-                }
+                onPress={() => openExternal(wikipediaArticleUrl(link.title))}
                 accessibilityRole="link"
                 accessibilityLabel={`Read ${link.label ?? link.title} on Wikipedia`}
               >
@@ -167,13 +162,7 @@ export function SanctoraleCard({
           ) : (
             <Pressable
               style={styles.linkRow}
-              onPress={() =>
-                window.open(
-                  wikipediaSearchUrl(entry.title),
-                  "_blank",
-                  "noreferrer",
-                )
-              }
+              onPress={() => openExternal(wikipediaSearchUrl(entry.title))}
               accessibilityRole="link"
               accessibilityLabel={`Search Wikipedia for ${entry.title}`}
             >

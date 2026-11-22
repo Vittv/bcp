@@ -7,6 +7,7 @@ import {
   parseInline,
 } from "../../lib/changelogMd";
 import { CHROME_FONT } from "../../lib/fonts";
+import { openExternal } from "../../lib/openExternal";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -104,7 +105,7 @@ function Block({ block }: { block: ChangelogBlock }) {
       return (
         <View style={styles.footer}>
           <Pressable
-            onPress={() => window.open(block.href, "_blank", "noreferrer")}
+            onPress={() => openExternal(block.href)}
             style={({ hovered }) => [
               styles.footerLinkPad,
               hovered && styles.footerLinkHover,

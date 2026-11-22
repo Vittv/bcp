@@ -11,6 +11,7 @@
     "core:window:allow-close",
     "core:window:allow-set-decorations",
     "core:window:allow-set-title-bar-style",
+    "opener:default",
     "process:default",
     "updater:default"
   ]
