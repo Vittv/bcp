@@ -9,6 +9,8 @@ export type OfficeCustomization = {
   opening?: string;
   invitatory?: "venite" | "jubilate" | "pascha";
   psalmCycle?: "office" | "psalter30";
+  /** the one psalm kept in a morning or evening office; a missing key keeps all */
+  psalmChoice?: string;
   canticle1?: number | null;
   canticle2?: number | null;
   suffrages?: "a" | "b";
@@ -47,6 +49,7 @@ const CUSTOMIZATION_KEYS: readonly (keyof OfficeCustomization)[] = [
   "opening",
   "invitatory",
   "psalmCycle",
+  "psalmChoice",
   "canticle1",
   "canticle2",
   "suffrages",
@@ -142,6 +145,10 @@ export function sanitizeCustomization(raw: JsonValue): OfficeCustomization {
   }
   const psalmCycle = psalmCycleOf(raw.psalmCycle);
   if (psalmCycle) out.psalmCycle = psalmCycle;
+  // a stale psalm id degrades to the whole appointed set
+  if (typeof raw.psalmChoice === "string" && raw.psalmChoice.length > 0) {
+    out.psalmChoice = raw.psalmChoice;
+  }
   const one = canticleSlot(raw.canticle1);
   if (one !== undefined) out.canticle1 = one;
   const two = canticleSlot(raw.canticle2);

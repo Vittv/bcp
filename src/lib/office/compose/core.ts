@@ -218,6 +218,9 @@ function officeChoices(found: Office, ctx: ComposeContext): OfficeChoices {
     ],
     suffragesSuggested: isEveningOffice(ctx.officeId) ? "a" : "b",
     lessonSlots: lessonOffice ? lessonSlotsOf(ctx) : undefined,
+    psalmCitations: ctx.psalmCitations
+      ? [...new Set(ctx.psalmCitations)]
+      : undefined,
     menus: officeMenus(ctx),
   };
 }
