@@ -1,4 +1,12 @@
-import { type CSSProperties, createElement, type ReactNode } from "react";
+import {
+  type CSSProperties,
+  createElement,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
+import { Platform } from "react-native";
+import { IS_TAURI } from "../lib/desktop";
+import { openExternal } from "../lib/openExternal";
 
 type ExternalLinkProps = {
   href: string;
@@ -6,10 +14,7 @@ type ExternalLinkProps = {
   style?: CSSProperties;
 };
 
-// react-native-web renders a real anchor when a Text carries an href, and the
-// desktop shell (Tauri webview) opens it in the system browser. Rendering the
-// anchor directly keeps the external-link behavior explicit and avoids the
-// RN types that do not expose an href on Text.
+// native shells intercept the click because their webview cannot open new windows
 export function ExternalLink({ href, children, style }: ExternalLinkProps) {
   return createElement(
     "a",
@@ -19,6 +24,12 @@ export function ExternalLink({ href, children, style }: ExternalLinkProps) {
       rel: "noreferrer",
       "data-external-link": "",
       style,
+      onClick: (event: MouseEvent<HTMLAnchorElement>) => {
+        if (IS_TAURI || Platform.OS !== "web") {
+          event.preventDefault();
+          openExternal(href);
+        }
+      },
     },
     children,
   );

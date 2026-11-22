@@ -29,6 +29,7 @@ import {
   getBcp1962PsalmPassages,
   parseBcp1962PsalmAppointment,
 } from "../../lib/content/vendor/bcp1962";
+import { openExternal } from "../../lib/openExternal";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -71,9 +72,7 @@ function WikiLinks({ name, slug }: { name: string; slug: string }) {
     return (
       <Pressable
         style={styles.linkRow}
-        onPress={() =>
-          window.open(wikipediaSearchUrl(name), "_blank", "noreferrer")
-        }
+        onPress={() => openExternal(wikipediaSearchUrl(name))}
         accessibilityRole="link"
         accessibilityLabel={`Search Wikipedia for ${name}`}
       >
@@ -91,9 +90,7 @@ function WikiLinks({ name, slug }: { name: string; slug: string }) {
         <Pressable
           key={link.title}
           style={styles.linkRow}
-          onPress={() =>
-            window.open(wikipediaArticleUrl(link.title), "_blank", "noreferrer")
-          }
+          onPress={() => openExternal(wikipediaArticleUrl(link.title))}
           accessibilityRole="link"
           accessibilityLabel={`Read ${link.label ?? link.title} on Wikipedia`}
         >
@@ -254,7 +251,7 @@ export function FeastCard({
           {link ? (
             <Pressable
               style={styles.linkRow}
-              onPress={() => window.open(link.url, "_blank", "noreferrer")}
+              onPress={() => openExternal(link.url)}
               accessibilityRole="link"
               accessibilityLabel={link.label}
             >

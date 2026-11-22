@@ -3,6 +3,7 @@ import type { FeastIdentity } from "../../lib/calendar/feastsByTradition";
 import { feastMonthDayLabel } from "../../lib/calendar/feastsByTradition";
 import { wikipediaSearchUrl } from "../../lib/calendar/lesserFeastWiki";
 import { CHROME_FONT, HEADING_FONT, SERIF_FONT } from "../../lib/fonts";
+import { openExternal } from "../../lib/openExternal";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -28,9 +29,7 @@ export function HolyDayCard({ feast }: { feast: FeastIdentity }) {
       </Text>
       <Pressable
         style={styles.linkRow}
-        onPress={() =>
-          window.open(wikipediaSearchUrl(feast.name), "_blank", "noreferrer")
-        }
+        onPress={() => openExternal(wikipediaSearchUrl(feast.name))}
         accessibilityRole="link"
         accessibilityLabel={`Search Wikipedia for ${feast.name}`}
       >

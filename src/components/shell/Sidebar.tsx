@@ -9,6 +9,7 @@ import {
 
 import { type BcpEdition, useEdition } from "../../context/EditionContext";
 import { IS_STANDALONE, IS_TAURI } from "../../lib/desktop";
+import { openExternal } from "../../lib/openExternal";
 import { DISCORD_URL } from "../../lib/release";
 import { useThemedStyles, useThemeVar } from "../../lib/theme/themedStyles";
 import { useAppVersion } from "../../lib/version";
@@ -348,9 +349,7 @@ export function Sidebar({
         <ToolButton
           subtle
           footer
-          onPress={() => {
-            window.open(DISCORD_URL, "_blank", "noreferrer");
-          }}
+          onPress={() => openExternal(DISCORD_URL)}
           accessibilityLabel="Join the Discord community"
         >
           {(color) => <DiscordIcon size={14} color={color} />}
@@ -358,9 +357,7 @@ export function Sidebar({
         <ToolButton
           subtle
           footer
-          onPress={() => {
-            window.open(REPO_URL, "_blank", "noreferrer");
-          }}
+          onPress={() => openExternal(REPO_URL)}
           accessibilityLabel="Visit the repository on GitHub"
         >
           {(color) => <GithubIcon size={14} color={color} />}
