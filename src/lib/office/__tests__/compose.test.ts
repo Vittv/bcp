@@ -1046,6 +1046,41 @@ describe("composeOffice: Noonday and Compline menus", () => {
     ]);
   });
 
+  test("Noonday and Compline split the office into headed sections", () => {
+    for (const id of ["noonday", "compline"] as const) {
+      const doc = composeOffice(monday, id);
+      expect(doc.sections.map((s) => s.key)).toEqual([
+        "opening",
+        "psalms",
+        "lessons",
+        "prayers",
+      ]);
+      expect(doc.sections.map((s) => s.heading)).toEqual([
+        null,
+        "The Psalms",
+        "The Reading and Prayers",
+        "The Collect",
+      ]);
+      expect(doc.sections.map((s) => s.menu)).toEqual([
+        undefined,
+        "psalm",
+        "reading",
+        "collect",
+      ]);
+      // the big pickers now belong to the headings, not the body
+      expect(nodesOf(doc, "menu")).toHaveLength(0);
+    }
+  });
+
+  test("full text keeps Noonday in one section with no menu controls", () => {
+    const doc = composeOffice(monday, "noonday", {
+      ...DEFAULT_PREFS,
+      fullText: true,
+    });
+    expect(doc.sections.map((s) => s.key)).toEqual(["opening"]);
+    expect(doc.sections[0]?.menu).toBeUndefined();
+  });
+
   test("Noonday follows the printed suggestions", () => {
     const doc = composeOffice(monday, "noonday");
     expect(psalmCitations(doc)).toEqual(["119", "121", "126"]);

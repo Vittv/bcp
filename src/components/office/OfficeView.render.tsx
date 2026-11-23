@@ -20,7 +20,6 @@ import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { MentionedText } from "./MentionedText";
 import { ChoiceMenu, MenuAnchor } from "./OfficeControls";
 import { officeSectionId } from "./OfficeToc";
-import { MenuView } from "./OfficeView.controls";
 import {
   canticleOptions,
   type ScriptureConfig,
@@ -212,11 +211,6 @@ export function NodeView({
           {node.text}
         </Text>
       );
-    case "menu": {
-      const set = choices.menus?.[node.menu];
-      if (!set || fullText) return null;
-      return <MenuView menu={node.menu} set={set} officeId={officeId} />;
-    }
     case "text": {
       const asterisk = node.text.indexOf(" * ");
       const hasHalfVerse = asterisk !== -1;

@@ -15,17 +15,12 @@ export function StickyHeading({
   children: ReactNode;
 }) {
   const styles = useThemedStyles(officeViewStyles);
-  return (
-    <View
-      style={
-        sticky
-          ? withControl
-            ? styles.stickyHeaderControl
-            : styles.stickyHeader
-          : undefined
-      }
-    >
-      {children}
-    </View>
-  );
+  const style = sticky
+    ? withControl
+      ? styles.stickyHeaderControl
+      : styles.stickyHeader
+    : withControl
+      ? styles.controlLayer
+      : undefined;
+  return <View style={style}>{children}</View>;
 }

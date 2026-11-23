@@ -5,15 +5,9 @@ import { officeDocumentStyles } from "./officeDocumentStyles";
 export const officeViewStyles = defineThemedStyles({
   section: officeDocumentStyles.section,
   headingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    marginTop: 18,
-    marginBottom: 0,
-    paddingBottom: 2,
-    borderBottomWidth: 1,
-    borderBottomColor: "var(--border-content)",
+    ...officeDocumentStyles.headingRow,
+    // the picker's menu has to out-rank the office text that follows it
+    position: "relative",
   },
   // below the raised dropdown layer, so an open menu is not split by a pinned heading
   stickyHeader: {
@@ -30,6 +24,12 @@ export const officeViewStyles = defineThemedStyles({
     backgroundColor: "var(--bg)",
     zIndex: 4,
     isolation: "isolate",
+  },
+  // a heading holding a picker must out-rank the text that follows it, even
+  // on the last section where the heading itself is not sticky
+  controlLayer: {
+    position: "relative",
+    zIndex: 5,
   },
   psalmCycleRow: {
     alignSelf: "flex-start",
