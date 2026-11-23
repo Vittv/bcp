@@ -116,6 +116,8 @@ export type ComposedSection = {
   key: OfficeSectionKey;
   heading: string | null;
   nodes: ComposedNode[];
+  /** the printed menu whose picker sits in this section's heading row */
+  menu?: MenuKey;
 };
 
 // the choices the office offers today, so the inline controls can show the

@@ -20,12 +20,14 @@ import type {
   Office,
   OfficeItem,
   OfficeSection,
+  OfficeSectionKey,
   PsalmPassage,
 } from "../../content/types";
 import type { OfficeCustomization } from "../customization";
 import type {
   ComposedNode,
   ComposedSection,
+  MenuKey,
   OfficeChoices,
   OfficeDocument,
   OfficeMenus,
@@ -165,6 +167,10 @@ export function composeOffice(
     // when picked; B always runs because its second half is the collects,
     // prayers and closing that follow either set of versicles.
     if (section.key === "suffrages-a" && suffragesChoice(ctx) !== "a") continue;
+    if (ctx.menuRegions) {
+      sections.push(...composeMenuSections(section, ctx));
+      continue;
+    }
     const composed = composeSection(section, ctx);
     if (composed.nodes.length === 0) continue;
     if (section.key === "suffrages-a") {
@@ -580,6 +586,46 @@ function composeOpening(
 // remaining rows follow the printed order
 function officeMenus(ctx: ComposeContext): OfficeMenus | undefined {
   return buildOfficeMenus(ctx, Boolean(collectNode(ctx)));
+}
+
+// noonday and compline are composed as one printed page, then split at the
+// three menus so each part reads under its own smallcaps heading with its picker
+const MENU_SECTION: Record<
+  MenuKey,
+  { key: OfficeSectionKey; heading: string }
+> = {
+  psalm: { key: "psalms", heading: "The Psalms" },
+  reading: { key: "lessons", heading: "The Reading and Prayers" },
+  collect: { key: "prayers", heading: "The Collect" },
+};
+
+function composeMenuSections(
+  section: OfficeSection,
+  ctx: ComposeContext,
+): ComposedSection[] {
+  const nodes = composeMenuSection(section, ctx);
+  const parts: ComposedSection[] = [];
+  let current: ComposedSection = {
+    key: "opening",
+    heading: null,
+    nodes: [],
+  };
+  for (const node of nodes) {
+    if (node.kind === "menu") {
+      if (current.nodes.length) parts.push(current);
+      const meta = MENU_SECTION[node.menu];
+      current = {
+        key: meta.key,
+        heading: meta.heading,
+        menu: node.menu,
+        nodes: [],
+      };
+      continue;
+    }
+    current.nodes.push(node);
+  }
+  if (current.nodes.length) parts.push(current);
+  return parts;
 }
 
 // noonday and compline: the single section carries the whole service, and the

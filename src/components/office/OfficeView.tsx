@@ -4,7 +4,11 @@ import { useOfficeSettings } from "../../context/OfficeSettingsContext";
 import type { ComposedSection, OfficeDocument } from "../../lib/office/types";
 import { useThemedStyles } from "../../lib/theme/themedStyles";
 import { ControlChip } from "./OfficeControls";
-import { PsalmCycleControl, SectionControl } from "./OfficeView.controls";
+import {
+  MenuView,
+  PsalmCycleControl,
+  SectionControl,
+} from "./OfficeView.controls";
 import { SectionView } from "./OfficeView.render";
 import { scriptureForRite } from "./OfficeView.shared";
 import { officeViewStyles } from "./OfficeView.styles";
@@ -38,7 +42,19 @@ export function OfficeView({
       ? storedPsalm
       : undefined;
 
-  const controlFor = (key: ComposedSection["key"]) => {
+  const controlFor = (section: ComposedSection) => {
+    if (section.menu) {
+      const set = document.choices.menus?.[section.menu];
+      return set ? (
+        <MenuView
+          menu={section.menu}
+          set={set}
+          officeId={document.office}
+          heading
+        />
+      ) : null;
+    }
+    const key = section.key;
     // full text prints the book's own menus, so the pickers would have
     // nothing to act on
     if (
@@ -71,7 +87,7 @@ export function OfficeView({
           choices={document.choices}
           fullText={fullText}
           scripture={scripture}
-          control={controlFor(section.key)}
+          control={controlFor(section)}
           bottomControl={
             section.key === "psalms" &&
             psalmCitations &&

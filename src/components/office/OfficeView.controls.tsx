@@ -294,10 +294,12 @@ export function MenuView({
   menu,
   set,
   officeId,
+  heading = false,
 }: {
   menu: MenuKey;
   set: MenuChoices;
   officeId: OfficeId;
+  heading?: boolean;
 }) {
   const styles = useThemedStyles(officeViewStyles);
   const { customizationFor, setOfficeChoice } = useOfficeSettings();
@@ -305,9 +307,9 @@ export function MenuView({
   const meta = MENU_META[menu];
   const stored = customization[meta.key];
   return (
-    <MenuAnchor style={styles.menuControlRow}>
+    <MenuAnchor style={heading ? undefined : styles.menuControlRow}>
       <ChoiceMenu
-        fullWidth
+        fullWidth={!heading}
         value={stored ?? "suggested"}
         options={set.options}
         label={meta.label}
