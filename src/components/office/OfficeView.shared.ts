@@ -27,6 +27,10 @@ export function truncate(text: string, max: number): string {
   return `${text.slice(0, max - 1).trimEnd()}…`;
 }
 
+export function allPsalmsLabel(count: number): string {
+  return `All ${count} psalm${count === 1 ? "" : "s"}`;
+}
+
 export function canticleOptions(
   suggestedNumber: number | null,
   rite: "One" | "Two" | null,

@@ -13,6 +13,7 @@ import {
 import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { ChoiceMenu, MenuAnchor, Segmented } from "./OfficeControls";
 import { OFFICE_EDITION_LABELS, OfficeHeader } from "./OfficeHeader";
+import { allPsalmsLabel } from "./OfficeView.shared";
 import { officeViewStyles } from "./OfficeView.styles";
 import { officeDocumentStyles } from "./officeDocumentStyles";
 import { PsalmText } from "./PsalmText";
@@ -359,7 +360,7 @@ export function Bcp1662OfficeView({
                   options={[
                     {
                       id: "suggested",
-                      label: "All psalms",
+                      label: allPsalmsLabel(psalmRefs.length),
                       group: "Suggested",
                     },
                     ...psalmRefs.map((ref) => ({

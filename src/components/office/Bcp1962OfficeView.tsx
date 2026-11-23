@@ -21,7 +21,7 @@ import {
 } from "./OfficeControls";
 import { OFFICE_EDITION_LABELS, OfficeHeader } from "./OfficeHeader";
 import { ReadingsControl } from "./OfficeView.controls";
-import { truncate } from "./OfficeView.shared";
+import { allPsalmsLabel, truncate } from "./OfficeView.shared";
 import { officeViewStyles } from "./OfficeView.styles";
 import { officeDocumentStyles } from "./officeDocumentStyles";
 import { PsalmText } from "./PsalmText";
@@ -51,6 +51,7 @@ type ChoiceNode = Extract<Bcp1962OfficeNode, { kind: "text" }> & {
 };
 
 const CHOICE_LABELS: Record<string, string> = {
+  absolution: "Absolution",
   "compline-reading": "Short Lesson",
   "compline-collect": "Collect",
   "midday-prayer": "Additional Prayers",
@@ -319,7 +320,11 @@ export function Bcp1962OfficeView({
       ?.nodes.find((n): n is PsalmNode => n.kind === "psalm") ?? undefined;
   const psalmRefs = (officePsalmNode ?? complinePsalmNode)?.refs ?? [];
   const psalmOptions: ControlOption[] = [
-    { id: "suggested", label: "All psalms", group: "Suggested" },
+    {
+      id: "suggested",
+      label: allPsalmsLabel(psalmRefs.length),
+      group: "Suggested",
+    },
     ...psalmRefs.map((ref) => ({
       id: ref,
       label: `Psalm ${ref}`,
@@ -643,7 +648,9 @@ export function Bcp1962OfficeView({
                         />
                       </MenuAnchor>
                       {node.choiceGroup !== "compline-reading" ? (
-                        <Text style={subheading}>{node.choiceLabel}</Text>
+                        <Text style={subheading}>
+                          {node.choiceHeading ?? node.choiceLabel}
+                        </Text>
                       ) : null}
                     </>
                   ) : null}
