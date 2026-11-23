@@ -80,6 +80,7 @@ export const BASE_OFFICES: {
   },
   { id: "evening", label: "Evening", name: "Evening Prayer" },
   { id: "compline", label: "Compline", name: "Compline" },
+  { id: "litany", label: "The Litany", name: "The Great Litany" },
 ];
 
 export const BCP1662_BASE_OFFICES: {
@@ -88,8 +89,8 @@ export const BCP1662_BASE_OFFICES: {
   name: string;
 }[] = [
   { id: "morning", label: "Matins", name: "Matins" },
-  { id: "litany", label: "The Litany", name: "The Litany" },
   { id: "evening", label: "Evensong", name: "Evensong" },
+  { id: "litany", label: "The Litany", name: "The Litany" },
 ];
 
 export const BCP1962_BASE_OFFICES: typeof BCP1662_BASE_OFFICES = [

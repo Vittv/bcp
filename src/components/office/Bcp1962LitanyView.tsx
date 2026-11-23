@@ -1,9 +1,7 @@
 import { Fragment, useState } from "react";
 import { Text, View } from "react-native";
-import type {
-  Bcp1962LitanyDoc,
-  Bcp1962LitanyNode,
-} from "../../lib/content/bcp1962";
+import type { BcpEdition } from "../../context/EditionContext";
+import type { LitanyDoc, LitanyNode } from "../../lib/content/litany";
 import {
   defineThemedStyles,
   useThemedStyles,
@@ -15,27 +13,33 @@ import { officeDocumentStyles } from "./officeDocumentStyles";
 
 const SPEAKERS: Record<string, string> = {
   minister: "Minister",
+  officiant: "Officiant",
   priest: "Priest",
   people: "People",
   answer: "Answer",
   all: "All",
 };
 
-type PrayerChoiceNode = Extract<Bcp1962LitanyNode, { kind: "text" }> & {
+type PrayerChoiceNode = Extract<LitanyNode, { kind: "text" }> & {
   choiceGroup: string;
   choiceId: string;
   choiceLabel: string;
 };
 
-export function Bcp1962LitanyView({
-  doc,
-  showRubrics = true,
-  showSpeakers = true,
-}: {
-  doc: Bcp1962LitanyDoc;
+type LitanyViewProps = {
+  doc: LitanyDoc;
   showRubrics?: boolean;
   showSpeakers?: boolean;
-}) {
+};
+
+// one renderer for the 1662, 1962 and 1979 Litanies; only the masthead label
+// changes, and edition-specific choice menus appear when a composer adds them
+export function LitanyView({
+  doc,
+  edition = "1962",
+  showRubrics = true,
+  showSpeakers = true,
+}: LitanyViewProps & { edition?: BcpEdition }) {
   const styles = useThemedStyles(litanyStyles);
   const sectionHeading = useSectionHeading();
   const subheading = useSubheading();
@@ -58,7 +62,7 @@ export function Bcp1962LitanyView({
       <OfficeHeader
         officeName={doc.officeName}
         date={doc.date}
-        editionLabel={OFFICE_EDITION_LABELS["1962"]}
+        editionLabel={OFFICE_EDITION_LABELS[edition]}
       />
       {doc.nodes.map((node, i) => {
         if (node.kind === "rubric") {
@@ -132,6 +136,11 @@ export function Bcp1962LitanyView({
       })}
     </View>
   );
+}
+
+/** the 1962 Litany uses the shared renderer with its own masthead label. */
+export function Bcp1962LitanyView(props: LitanyViewProps) {
+  return <LitanyView {...props} edition="1962" />;
 }
 
 const litanyStyles = defineThemedStyles({

@@ -338,8 +338,8 @@ export function Shell() {
     hintsRef,
   });
 
-  // the Litany is a 1662-only tab with no 1979 counterpart; compose a safe
-  // 1979 office so the always-run compose below cannot throw on it
+  // the Litany has its own composer in every edition; compose a safe 1979
+  // office so the always-run compose below cannot throw on it
   const composeTab = tab === "litany" ? "morning" : tab;
   const officeId = devotions
     ? DEVOTIONS[composeTab]
@@ -360,6 +360,10 @@ export function Shell() {
   const [bcp1962TodayLoading, setBcp1962TodayLoading] = useState(false);
 
   useEffect(() => {
+    if (edition === "1979" && devotions && tab === "litany") {
+      setTab("morning");
+      return;
+    }
     if (edition !== "1662" && edition !== "1962") return;
     if (edition === "1662" && devotions) {
       setDevotions(false);

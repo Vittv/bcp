@@ -8,7 +8,10 @@ import {
   View,
 } from "react-native";
 import { Bcp1662OfficeView } from "../../components/office/Bcp1662OfficeView";
-import { Bcp1962LitanyView } from "../../components/office/Bcp1962LitanyView";
+import {
+  Bcp1962LitanyView,
+  LitanyView,
+} from "../../components/office/Bcp1962LitanyView";
 import { Bcp1962OfficeView } from "../../components/office/Bcp1962OfficeView";
 import { Segmented } from "../../components/office/OfficeControls";
 import {
@@ -30,6 +33,7 @@ import {
   composeBcp1962Noonday,
   composeBcp1962OfficeForDate,
 } from "../../lib/content/bcp1962";
+import { composeBcp1979Litany } from "../../lib/content/litany";
 import type { OfficeId } from "../../lib/content/types";
 import { composeOffice } from "../../lib/office";
 import { DEFAULT_PREFS } from "../../lib/office/types";
@@ -157,8 +161,8 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
   const { officeDate, officeRite } = useReference();
   const { showRubrics, showSpeakers, customizationFor } = useOfficeSettings();
   const [fullText, setFullText] = useState(false);
-  // the Litany is 1662-only; compose a safe 1979 id so the always-run compose
-  // below cannot throw, while the 1662 render path uses the litany doc instead
+  // the Litany has its own composer in every edition; compose a safe 1979 id
+  // so the office pickers below still get a valid id for other base offices
   // SAFETY: base is narrowed to a non-litany id, so refOfficeId returns a real
   // 1979 OfficeId; litany is mapped to morning before the call
   const officeId = refOfficeId(
@@ -167,7 +171,7 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
   ) as OfficeId;
   const customization = customizationFor(officeId);
   const document = useMemo(() => {
-    if (edition === "1662" || edition === "1962") return null;
+    if (edition !== "1979" || base === "litany") return null;
     return composeOffice(officeDate, officeId, {
       ...DEFAULT_PREFS,
       rite: officeRite,
@@ -178,6 +182,7 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     });
   }, [
     edition,
+    base,
     officeDate,
     officeId,
     officeRite,
@@ -330,6 +335,17 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     return (
       <Bcp1962OfficeView
         doc={bcp1962Doc}
+        showRubrics={showRubrics}
+        showSpeakers={showSpeakers}
+      />
+    );
+  }
+
+  if (base === "litany") {
+    return (
+      <LitanyView
+        doc={composeBcp1979Litany(officeDate)}
+        edition="1979"
         showRubrics={showRubrics}
         showSpeakers={showSpeakers}
       />

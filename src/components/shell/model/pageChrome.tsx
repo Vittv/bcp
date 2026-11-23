@@ -10,6 +10,7 @@ import {
   composeBcp1962Litany,
   composeBcp1962Noonday,
 } from "../../../lib/content/bcp1962";
+import { composeBcp1979Litany } from "../../../lib/content/litany";
 import type { OfficeDocument, OfficeRite } from "../../../lib/office/types";
 import {
   BibleBar,
@@ -40,7 +41,7 @@ import {
 } from "../../../screens/reference";
 import { TodayScreen } from "../../../screens/TodayScreen";
 import { Bcp1662OfficeView } from "../../office/Bcp1662OfficeView";
-import { Bcp1962LitanyView } from "../../office/Bcp1962LitanyView";
+import { Bcp1962LitanyView, LitanyView } from "../../office/Bcp1962LitanyView";
 import { Bcp1962OfficeView } from "../../office/Bcp1962OfficeView";
 import { OfficeTabs } from "../OfficeTabs";
 import type { PageId } from "../Sidebar";
@@ -204,6 +205,16 @@ export function renderContent(ctx: ContentContext): ReactNode {
 
   switch (page) {
     case "today":
+      if (edition === "1979" && tab === "litany") {
+        return (
+          <LitanyView
+            doc={composeBcp1979Litany(date)}
+            edition="1979"
+            showRubrics={showRubrics}
+            showSpeakers={showSpeakers}
+          />
+        );
+      }
       if (edition === "1962" && devotions) {
         return (
           <Bcp1962OfficeView

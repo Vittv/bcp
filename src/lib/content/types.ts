@@ -144,6 +144,12 @@ export type OfficeId =
 
 export type OfficeSpeaker = "officiant" | "people" | "all";
 
+// a line of the 1979 Great Litany: rubrics, section aids, and spoken text
+export type LitanyLine =
+  | { kind: "rubric"; text: string }
+  | { kind: "heading"; text: string }
+  | { kind: "text"; text: string; speaker?: OfficeSpeaker };
+
 export type OfficeItem =
   | { kind: "heading"; text: string; citation?: string }
   | { kind: "season"; text: string }

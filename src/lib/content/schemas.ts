@@ -124,6 +124,34 @@ const officeSchema = z.object({
 
 export const officesSchema = z.record(z.custom<OfficeId>(), officeSchema);
 
+const litanyLineSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("rubric"), text: z.string() }),
+  z.object({ kind: z.literal("heading"), text: z.string() }),
+  z.object({
+    kind: z.literal("text"),
+    text: z.string(),
+    speaker: officeSpeakerSchema.optional(),
+  }),
+]) satisfies z.ZodType<import("./types").LitanyLine>;
+
+export const litanySchema = z.object({
+  meta: z.object({
+    edition: z.literal("1979"),
+    title: z.string(),
+    status: z.string(),
+    sources: z.array(
+      z.object({
+        role: z.string(),
+        ref: z.string(),
+        url: z.string(),
+        note: z.string().optional(),
+      }),
+    ),
+    caveats: z.array(z.string()),
+  }),
+  lines: z.array(litanyLineSchema),
+});
+
 const psalmPartSchema = z.object({
   title: z.string().nullable().optional(),
   stanzas: z.record(z.string(), z.string()).optional(),
