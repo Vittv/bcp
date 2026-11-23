@@ -215,4 +215,16 @@ export const sidebarStyles = defineThemedStyles({
     fontSize: 11,
     color: "var(--text-secondary)",
   },
+  // same row and separator metrics as the status bar's left cluster
+  footerLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  footerBullet: {
+    fontSize: 11,
+    color: "var(--text-secondary)",
+  },
 });
