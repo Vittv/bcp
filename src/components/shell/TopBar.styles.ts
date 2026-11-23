@@ -129,15 +129,15 @@ export const topBarStyles = defineThemedStyles({
   pressed: {
     backgroundColor: "var(--selected-bg)",
   },
-  // the global-search trigger stretches the top bar's full 40px so search
-  // reads as a control of the chrome rather than a chip of the page beneath
+  // the global-search trigger matches the edition chip's height so search
+  // reads as a peer of the year chip in the chrome
   searchTrigger: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "stretch",
+    height: 22,
     gap: 6,
     paddingHorizontal: 6,
-    borderRadius: 6,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: "var(--border)",
     backgroundColor: "var(--surface)",
@@ -151,7 +151,7 @@ export const topBarStyles = defineThemedStyles({
   searchText: {
     fontFamily: CHROME_FONT,
     fontWeight: "500",
-    fontSize: 12,
+    fontSize: 13,
     color: "var(--text-secondary)",
   },
   themeBtn: {
