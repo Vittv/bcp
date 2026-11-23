@@ -42,6 +42,13 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "compline", label: "Compline" },
 ];
 
+// the Great Litany has no devotions-mode counterpart, so it joins the full
+// office bar next to Compline but drops out when devotions are on
+const TABS_1979: { id: TabId; label: string }[] = [
+  ...TABS,
+  { id: "litany", label: "The Litany" },
+];
+
 // an invisible bold twin reserves the label's widest metrics, so the visible
 // text can bold on activate without reflowing the bar
 function SteadyToggleText({ text, on }: { text: string; on: boolean }) {
@@ -106,8 +113,8 @@ export function OfficeTabs({
         : edition === "1662"
           ? ([
               { id: "morning", label: "Matins" },
-              { id: "litany", label: "The Litany" },
               { id: "evening", label: "Evensong" },
+              { id: "litany", label: "The Litany" },
             ] as const)
           : edition === "1962"
             ? ([
@@ -117,7 +124,9 @@ export function OfficeTabs({
                 { id: "compline", label: "Compline" },
                 { id: "litany", label: "The Litany" },
               ] as const)
-            : TABS,
+            : devotions
+              ? TABS
+              : TABS_1979,
     [devotions, edition],
   );
   useEffect(() => {
@@ -132,9 +141,9 @@ export function OfficeTabs({
       onSelect("morning");
     }
   }, [active, devotions, edition, onSelect]);
-  // the full row needs about 600px of bar, which a desktop window only has
-  // from 800px with the sidebar open
-  const tabsAsMenu = width < 800;
+  // the full row needs about 700px of bar, which a desktop window only has
+  // from 900px with the sidebar open
+  const tabsAsMenu = width < 900;
   // the reading toggles abbreviate first, then the bar's padding tightens
   const shortLabels = width < 640;
   const compact = width < WIDTH_COMPACT;

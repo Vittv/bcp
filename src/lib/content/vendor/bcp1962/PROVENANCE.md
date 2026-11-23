@@ -36,7 +36,7 @@ Lectionary Central, "The Table of Daily Lessons from The Book of Common Prayer C
 | lectionary-rules.json | Rule records documenting resolver intent |
 | citation-map.json | Book aliases and the Psalm 119 part rule used by the citation normalizer |
 | psalter.json | The 1962 Coverdale psalter text: 149 psalms (Psalm 58 omitted) and 2489 renumbered verses |
-| office-text/litany.json | The Litany, 123 lines: opening rubrics, invocations, deprecation, supplication, Lord's Prayer, Chrysostom prayer, Grace, and the appended Supplication |
+| office-text/litany.json | The Litany, 125 lines: opening rubrics, invocations, deprecation, supplication, Lord's Prayer, Chrysostom prayer, Grace, and the appended Supplication |
 | office-text/collects-proper.json | 107 proper collects from the Collects, Epistles, and Gospels, including votive and national occasions |
 | office-text/offices.json | Morning and Evening Prayer fixed texts: 26 seasonal opening sentences, exhortation, confession, absolution, both forms of the Lord's Prayer, opening versicles, Venite, rubrics, suffrages, the prayers after the Creed, the Apostles' and Athanasian Creeds, and the Grace |
 | office-text/canticles.json | Ten canticles: Te Deum, Benedicite, Benedictus, Jubilate (Psalm 100), Magnificat, Cantate Domino (Psalm 98), Nunc Dimittis, Deus Misereatur (Psalm 67), Cantate Domino from Isaiah 42, and Surge, Illuminare |

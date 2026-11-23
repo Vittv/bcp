@@ -1,17 +1,20 @@
 {
   "meta": {
     "edition": "1662",
-    "title": "1662 Book of Common Prayer - The Litany (best-effort, not witness-verified)",
-    "status": "draft-best-effort",
+    "title": "1662 Book of Common Prayer - The Litany (verified against the Church of England text)",
+    "status": "verified-against-official-source",
     "sources": [
       {
-        "role": "reference-text",
-        "ref": "Church of England 1662 The Litany page (cross-checked Baskerville 1762)",
-        "note": "Best-effort compilation for composition; not image-verified against a PD witness."
+        "role": "official source",
+        "ref": "Church of England, Book of Common Prayer, The Litany (current authorized presentation of the 1662 text)",
+        "url": "https://www.churchofengland.org/liturgy/book-of-common-prayer/litany",
+        "note": "Text and speaker attribution checked against this page; the 1662 Act of Uniformity manuscript and a Baskerville 1762 facsimile were used as additional witnesses."
       }
     ],
     "caveats": [
-      "Text not witness-verified; section headings are app aids, not printed rubrics."
+      "Section headings are app aids, not printed rubrics.",
+      "The royal petition uses the Church of England's current wording, not the 1662 manuscript placeholder.",
+      "Speaker attribution follows the official page's bold/italic convention for the people's part."
     ]
   },
   "lines": [
@@ -476,7 +479,7 @@
     {
       "kind": "text",
       "text": "O Lord, arise, help us, and deliver us for thy Name's sake.",
-      "speaker": "minister"
+      "speaker": "people"
     },
     {
       "kind": "text",
@@ -511,7 +514,7 @@
     {
       "kind": "text",
       "text": "Pitifully behold the sorrows of our hearts.",
-      "speaker": "people"
+      "speaker": "minister"
     },
     {
       "kind": "text",
@@ -521,7 +524,7 @@
     {
       "kind": "text",
       "text": "Favourably with mercy hear our prayers.",
-      "speaker": "people"
+      "speaker": "minister"
     },
     {
       "kind": "text",
@@ -531,7 +534,7 @@
     {
       "kind": "text",
       "text": "Both now and ever vouchsafe to hear us, O Christ.",
-      "speaker": "people"
+      "speaker": "minister"
     },
     {
       "kind": "text",

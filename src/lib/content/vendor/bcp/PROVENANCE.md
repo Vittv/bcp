@@ -95,3 +95,16 @@ and checksum in this note.
   heading "The Apostle's Creed"; the printed book reads "The Apostles'
   Creed", as do the other three daily offices, so the heading was fixed
   there.
+- litany.min.json: hand-curated from the same public-domain E-text (the Great
+  Litany, printed pages 148-157), then corrected against the Episcopal
+  Church's official online BCP at bcponline.org. The E-text marks the spoken
+  responses with `=...=`; each is split into its own `people` line, and the
+  longer petitions are marked `officiant`. Section headings are app navigation
+  aids. Four transcription typos were fixed (lightening, beseech the,
+  beesech, hallowed be they Name), along with four substantive E-text
+  divergences from the printed book: Holy Ghost in the Invocation and
+  Deprecation, no doxology in the Lord's Prayer, thy Name in the Supplication
+  collect, and the lowercase Kyrie eleison / Christe eleison. The Kyrie
+  follows the printed three-line alternation. The file carries 123 lines (8
+  rubrics, 8 headings, 107 spoken lines) and is validated against the litany
+  schema in src/lib/content/schemas.ts at import time.
