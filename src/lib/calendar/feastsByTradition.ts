@@ -23,7 +23,7 @@ export const CHURCH_CALENDARS: Record<CalendarTradition, string> = {
 export const CHURCH_CALENDAR_BOOKS: Record<CalendarTradition, string> = {
   tec: "1979 Book of Common Prayer",
   coe: "1662 Book of Common Prayer",
-  acc: "1962 Canadian Book of Common Prayer",
+  acc: "1962 Anglican Church of Canada Book of Common Prayer",
 };
 
 const ALL_TRADITIONS: readonly CalendarTradition[] = ["tec", "coe", "acc"];

@@ -56,7 +56,7 @@ const BOOK_LINK: Record<CalendarTradition, { label: string; url: string }> = {
     url: "https://www.churchofengland.org/sites/default/files/2026-10/bcp-the-calendar.pdf",
   },
   acc: {
-    label: "1962 Canadian Book of Common Prayer Calendar, official PDF",
+    label: "1962 Anglican Church of Canada BCP Calendar, official PDF",
     url: "https://www.anglican.ca/wp-content/uploads/bcp.pdf#page=9",
   },
 };

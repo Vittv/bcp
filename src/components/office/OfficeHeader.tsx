@@ -12,7 +12,7 @@ import {
 export const OFFICE_EDITION_LABELS: Record<BcpEdition, string> = {
   "1979": "1979 - The Episcopal Church BCP",
   "1662": "1662 - Church of England BCP",
-  "1962": "1962 - Canadian Book of Common Prayer",
+  "1962": "1962 - Anglican Church of Canada BCP",
 };
 
 export function OfficeHeader({
