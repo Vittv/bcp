@@ -425,6 +425,45 @@ describe("bcp1962 office composition", () => {
           n.text === "THE TWENTY-FOURTH SUNDAY AFTER TRINITY",
       ),
     ).toBe(true);
+    expect(
+      collects.some(
+        (n) =>
+          n.kind === "text" &&
+          n.text.startsWith("O Lord, we beseech thee, absolve thy people"),
+      ),
+    ).toBe(true);
+  });
+
+  it("resolves the collect for the twenty-first Sunday after Trinity", async () => {
+    const doc = await composeBcp1962OfficeForDate(at("2026-10-25"), "morning");
+    const collects =
+      doc.sections.find((s) => s.key === "collects")?.nodes ?? [];
+    expect(
+      collects.some(
+        (n) =>
+          n.kind === "text" &&
+          n.text.startsWith("Grant, we beseech thee, merciful Lord"),
+      ),
+    ).toBe(true);
+  });
+
+  it("offers the absolution and the no-priest collect in the opening", async () => {
+    const doc = await composeBcp1962OfficeForDate(at("2026-11-15"), "morning");
+    const opening = doc.sections.find((s) => s.key === "opening")?.nodes ?? [];
+    const absolution = opening.filter(
+      (n) => n.kind === "text" && n.choiceGroup === "absolution",
+    );
+    expect(absolution).toMatchObject([
+      { choiceId: "no-priest" },
+      { choiceId: "priest" },
+    ]);
+    expect(
+      absolution.some(
+        (n) =>
+          n.kind === "text" &&
+          n.text.startsWith("Grant, we beseech thee, merciful Lord"),
+      ),
+    ).toBe(true);
   });
 
   it("composes an Evening Prayer with the evening canticles", async () => {

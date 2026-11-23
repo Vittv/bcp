@@ -682,6 +682,7 @@ export type Bcp1962OfficeNode =
       choiceGroup?: string;
       choiceId?: string;
       choiceLabel?: string;
+      choiceHeading?: string;
       lordsPrayer?: boolean;
       lordsPrayerFirst?: boolean;
       lordsPrayerLast?: boolean;
@@ -826,7 +827,31 @@ export function composeBcp1962Office(
   if (common.absolution_rubric) {
     openingNodes.push({ kind: "rubric", text: common.absolution_rubric });
   }
-  openingNodes.push({ kind: "text", text: common.absolution_priest });
+  // where no priest is present the collect for Trinity 21 is read instead of
+  // the priest's absolution; the collect is the default, the absolution an option
+  const noPriestCollect = findBcp1962Collect([
+    "THE TWENTY-FIRST SUNDAY AFTER TRINITY",
+  ]);
+  if (noPriestCollect) {
+    openingNodes.push({
+      kind: "text",
+      text: noPriestCollect.text,
+      choiceGroup: "absolution",
+      choiceId: "no-priest",
+      choiceLabel: "Collect for the 21st Sunday after Trinity (no priest)",
+      choiceHeading: "The Collect for the Twenty-First Sunday after Trinity",
+    });
+    openingNodes.push({
+      kind: "text",
+      text: common.absolution_priest,
+      choiceGroup: "absolution",
+      choiceId: "priest",
+      choiceLabel: "Absolution (priest)",
+      choiceHeading: "The Absolution",
+    });
+  } else {
+    openingNodes.push({ kind: "text", text: common.absolution_priest });
+  }
   if (common.amen_rubric) {
     // the rubric directs the people's response; the response gets its own line
     openingNodes.push({

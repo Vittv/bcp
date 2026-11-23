@@ -73,10 +73,29 @@ export function AboutScreen() {
           or in the future.
         </Text>
         <Text style={styles.body}>
-          All the liturgical content it reads is in the public domain; the app's
-          own code is MIT. The Daily Office lectionary tables are adapted from
-          Reuben Lillie's MIT-licensed project, corrected locally against the
-          printed Prayer Book.
+          The app's own code is MIT, and its liturgical content is in the public
+          domain or openly licensed. Details are linked under Third-party
+          notices below.
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Content sources</Text>
+        <Text style={styles.body}>
+          1979 (The Episcopal Church): the Daily Office lectionary tables are
+          adapted from Reuben Lillie's MIT-licensed project, corrected locally
+          against the printed Prayer Book.
+        </Text>
+        <Text style={styles.body}>
+          1662 (Church of England): lectionary and psalm tables come from 1669
+          and 1770 printings, with office texts checked against a 1762
+          facsimile.
+        </Text>
+        <Text style={styles.body}>
+          1962 (Anglican Church of Canada): transcribed from the official Prayer
+          Book of the General Synod, which the ACC has confirmed is in the
+          public domain. This project is independent and is not endorsed by the
+          ACC.
         </Text>
       </View>
 

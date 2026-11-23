@@ -15,6 +15,7 @@ import {
   Segmented,
 } from "./OfficeControls";
 import {
+  allPsalmsLabel,
   INVITATORY_LABEL,
   MENU_META,
   READING_NO,
@@ -197,7 +198,7 @@ export function PsalmPicker({
   if (citations.length < 2) return null;
   const stored = customization.psalmChoice;
   const options: ControlOption[] = [
-    { id: "all", label: `All ${citations.length} psalms`, group: "Suggested" },
+    { id: "all", label: allPsalmsLabel(citations.length), group: "Suggested" },
     ...citations.map((citation) => ({
       id: citation,
       label: `Psalm ${citation}`,
