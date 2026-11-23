@@ -342,9 +342,15 @@ export function Sidebar({
         </Pressable>
       </View>
       <View style={styles.footer}>
-        <Text style={styles.footerText} numberOfLines={1}>
-          {`BCP · v${version}`}
-        </Text>
+        <View style={styles.footerLabel}>
+          <Text style={styles.footerText} numberOfLines={1}>
+            BCP
+          </Text>
+          <Text style={styles.footerBullet}>•</Text>
+          <Text style={styles.footerText} numberOfLines={1}>
+            {`v${version}`}
+          </Text>
+        </View>
         <View style={styles.toolbarSpacer} />
         <ToolButton
           subtle
