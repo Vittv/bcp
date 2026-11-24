@@ -202,12 +202,28 @@ export function NodeView({
   switch (node.kind) {
     case "heading":
       return <Text style={subheading}>{node.text}</Text>;
-    case "section-heading":
+    case "section-heading": {
+      const set = node.menu ? choices.menus?.[node.menu] : undefined;
       return (
-        <StickyHeading sticky={sticky}>
-          <Text style={sectionHeading}>{node.text}</Text>
+        <StickyHeading sticky={sticky} withControl={!!set}>
+          {set && node.menu ? (
+            <MenuAnchor style={styles.headingRow}>
+              <Text style={[sectionHeading, styles.headingText]}>
+                {node.text}
+              </Text>
+              <MenuView
+                menu={node.menu}
+                set={set}
+                officeId={officeId}
+                heading
+              />
+            </MenuAnchor>
+          ) : (
+            <Text style={sectionHeading}>{node.text}</Text>
+          )}
         </StickyHeading>
       );
+    }
     case "menu": {
       const set = choices.menus?.[node.menu];
       return set ? (

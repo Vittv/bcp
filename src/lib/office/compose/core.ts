@@ -1194,7 +1194,11 @@ function composeSuffragesB(
   let collectHeaderEmitted = false;
   const collectHeader = () => {
     if (collectHeaderEmitted) return;
-    nodes.push({ kind: "section-heading", text: "The Collect" });
+    nodes.push({
+      kind: "section-heading",
+      text: "The Collect",
+      menu: collectBlocks.length > 0 && !fullText ? "collect" : undefined,
+    });
     collectHeaderEmitted = true;
   };
   // one collect is printed by default, with a picker for the printed list;
@@ -1265,14 +1269,15 @@ function composeSuffragesB(
         flushCollectBuf(nodes, collectBuf, collectTitle);
         collectBuf = [];
         collectTitle = undefined;
-        nodes.push({ kind: "section-heading", text: "Prayers for Mission" });
+        nodes.push({
+          kind: "section-heading",
+          text: "Prayers for Mission",
+          menu: missionBlocks.length > 1 && !fullText ? "mission" : undefined,
+        });
         menu = "mission";
         firstKept = false;
         const node = convert(item, ctx.prefs);
         if (node) nodes.push(node);
-        if (missionBlocks.length > 1 && !fullText) {
-          nodes.push({ kind: "menu", menu: "mission" });
-        }
         continue;
       }
       if (text.startsWith("Before the close of the Office")) {
@@ -1331,15 +1336,6 @@ function composeSuffragesB(
       }
       const node = convert(item, ctx.prefs);
       if (node) nodes.push(node);
-      if (
-        /The Officiant then says one or more of the following Collects/i.test(
-          text,
-        ) &&
-        collectBlocks.length > 0 &&
-        !fullText
-      ) {
-        nodes.push({ kind: "menu", menu: "collect" });
-      }
       continue;
     }
     if (item.kind === "option") {

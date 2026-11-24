@@ -271,6 +271,28 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     };
   }, [edition, base, officeDate]);
 
+  // full text mode is available wherever the office prints alternatives
+  const textModeControl =
+    edition === "1979" || base === "morning" || base === "evening" ? (
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          marginBottom: 4,
+        }}
+      >
+        <Segmented
+          value={fullText ? "full" : "reading"}
+          options={[
+            { id: "reading", label: "Reading" },
+            { id: "full", label: "Full text" },
+          ]}
+          accessibilityLabel="Office text mode"
+          onChange={(id) => setFullText(id === "full")}
+        />
+      </View>
+    ) : null;
+
   if (edition === "1662") {
     if (base !== "morning" && base !== "evening" && base !== "litany") {
       return (
@@ -287,11 +309,15 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     }
     if (!bcp1662Doc) return null;
     return (
-      <Bcp1662OfficeView
-        doc={bcp1662Doc}
-        showRubrics={showRubrics}
-        showSpeakers={showSpeakers}
-      />
+      <>
+        {textModeControl}
+        <Bcp1662OfficeView
+          doc={bcp1662Doc}
+          showRubrics={showRubrics}
+          showSpeakers={showSpeakers}
+          fullText={fullText}
+        />
+      </>
     );
   }
 
@@ -333,11 +359,15 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     }
     if (!bcp1962Doc) return null;
     return (
-      <Bcp1962OfficeView
-        doc={bcp1962Doc}
-        showRubrics={showRubrics}
-        showSpeakers={showSpeakers}
-      />
+      <>
+        {textModeControl}
+        <Bcp1962OfficeView
+          doc={bcp1962Doc}
+          showRubrics={showRubrics}
+          showSpeakers={showSpeakers}
+          fullText={fullText}
+        />
+      </>
     );
   }
 
@@ -357,23 +387,7 @@ const OfficeDetailBody = memo(function OfficeDetailBody({
     <>
       {/* the reference page can print the office as the book does, with the
           whole opening menu and the canticle table rather than one pick */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "flex-end",
-          marginBottom: 4,
-        }}
-      >
-        <Segmented
-          value={fullText ? "full" : "reading"}
-          options={[
-            { id: "reading", label: "Reading" },
-            { id: "full", label: "Full text" },
-          ]}
-          accessibilityLabel="Office text mode"
-          onChange={(id) => setFullText(id === "full")}
-        />
-      </View>
+      {textModeControl}
       {/* same masthead as Today: name, date, feast line */}
       <OfficeHeader
         officeName={document.officeName}

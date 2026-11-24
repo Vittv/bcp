@@ -125,10 +125,20 @@ describe("bcp1962 short offices", () => {
         .map((n) => ("choiceId" in n ? n.choiceId : undefined)),
     ).toEqual(["jeremiah", "matthew", "hebrews"]);
     expect(
-      nodes.filter(
-        (n) => n.kind === "text" && n.choiceGroup === "compline-collect",
+      nodes
+        .filter((n) => n.kind === "text" && n.choiceGroup === "collect")
+        .map((n) => ("choiceId" in n ? n.choiceId : undefined)),
+    ).toEqual(["protection", "lighten"]);
+    expect(
+      nodes
+        .filter((n) => n.kind === "text" && n.choiceGroup === "prayer")
+        .map((n) => ("choiceId" in n ? n.choiceId : undefined)),
+    ).toEqual(["jesus", "look-down", "be-present"]);
+    expect(
+      nodes.some(
+        (n) => n.kind === "rubric" && n.choiceAnchorFor === "additional-prayer",
       ),
-    ).toHaveLength(2);
+    ).toBe(true);
     expect(nodes.find((n) => n.kind === "psalm")?.kind).toBe("psalm");
     expect(
       nodes.filter((n) => n.kind === "text" && n.seasonLabel === "Anthem."),
@@ -157,6 +167,23 @@ describe("bcp1962 short offices", () => {
         ),
       ),
     ).toBe(true);
+  });
+
+  it("gives Compline section rules with their printed pickers", () => {
+    const doc = composeBcp1962Compline(at("2026-11-18"));
+    const rules = doc.sections
+      .flatMap((s) => s.nodes)
+      .filter(
+        (n): n is Extract<typeof n, { kind: "section-heading" }> =>
+          n.kind === "section-heading",
+      );
+    expect(rules.map((n) => ({ text: n.text, menu: n.menu }))).toEqual([
+      { text: "The Psalms", menu: "psalm" },
+      { text: "The Reading", menu: "reading" },
+      { text: "The Prayers", menu: undefined },
+      { text: "The Confession", menu: undefined },
+      { text: "The Collect", menu: "collect" },
+    ]);
   });
 });
 
@@ -355,7 +382,7 @@ describe("bcp1962 office composition", () => {
     ).toBe(false);
     expect(
       opening.some(
-        (n) => n.kind === "heading" && n.text === "Confession of Sin",
+        (n) => n.kind === "section-heading" && n.text === "Confession of Sin",
       ),
     ).toBe(true);
     const sentences = opening.filter(
@@ -415,7 +442,8 @@ describe("bcp1962 office composition", () => {
       doc.sections.find((s) => s.key === "collects")?.nodes ?? [];
     expect(
       collects.some(
-        (n) => n.kind === "heading" && n.text === "The Collect of the Day",
+        (n) =>
+          n.kind === "text" && n.choiceHeading === "The Collect of the Day",
       ),
     ).toBe(true);
     expect(
@@ -432,6 +460,37 @@ describe("bcp1962 office composition", () => {
           n.text.startsWith("O Lord, we beseech thee, absolve thy people"),
       ),
     ).toBe(true);
+  });
+
+  it("marks the section rules and the collect menu", async () => {
+    const doc = await composeBcp1962OfficeForDate(at("2026-11-15"), "morning");
+    const rules = doc.sections
+      .flatMap((s) => s.nodes)
+      .filter(
+        (n): n is Extract<typeof n, { kind: "section-heading" }> =>
+          n.kind === "section-heading",
+      );
+    expect(rules.map((n) => n.text)).toEqual([
+      "Confession of Sin",
+      "The Prayers",
+      "Suffrages",
+      "The Collect",
+      "Prayers for Mission",
+    ]);
+    expect(rules.find((n) => n.text === "The Collect")?.menu).toBe("collect");
+    const collects =
+      doc.sections.find((s) => s.key === "collects")?.nodes ?? [];
+    expect(
+      collects.flatMap((n) =>
+        n.kind === "text" && n.choiceGroup === "collect"
+          ? [{ id: n.choiceId, title: n.choiceHeading }]
+          : [],
+      ),
+    ).toEqual([
+      { id: "suggested", title: "The Collect of the Day" },
+      { id: "morning-peace", title: "The Second Collect, for Peace" },
+      { id: "morning-grace", title: "The Third Collect, for Grace" },
+    ]);
   });
 
   it("resolves the collect for the twenty-first Sunday after Trinity", async () => {

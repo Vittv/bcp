@@ -2,6 +2,7 @@ import { Fragment, useState } from "react";
 import { Text, View } from "react-native";
 import type {
   Bcp1662ComposedOffice,
+  Bcp1662ComposedSection,
   Bcp1662OfficeNode,
 } from "../../lib/content/bcp1662";
 import { BCP1662_OFFICE_TEXT } from "../../lib/content/vendor/bcp1662";
@@ -11,14 +12,33 @@ import {
   useThemedStyles,
 } from "../../lib/theme/themedStyles";
 import { useSectionHeading, useSubheading } from "./contentHeadings";
-import { ChoiceMenu, MenuAnchor, Segmented } from "./OfficeControls";
+import {
+  ChoiceMenu,
+  type ControlOption,
+  MenuAnchor,
+  Segmented,
+} from "./OfficeControls";
 import { OFFICE_EDITION_LABELS, OfficeHeader } from "./OfficeHeader";
 import { allPsalmsLabel } from "./OfficeView.shared";
-import { officeViewStyles } from "./OfficeView.styles";
 import { officeDocumentStyles } from "./officeDocumentStyles";
 import { PsalmText } from "./PsalmText";
 import { ScriptureView } from "./ScriptureView";
 import { StickyHeading } from "./StickyHeading";
+
+// only these node kinds carry an option marker; the rest read as {}
+function choiceOf(node: Bcp1662OfficeNode): {
+  choiceGroup?: string;
+  choiceId?: string;
+} {
+  if (
+    node.kind === "text" ||
+    node.kind === "rubric" ||
+    node.kind === "placeholder"
+  ) {
+    return node;
+  }
+  return {};
+}
 
 function NodeView({
   node,
@@ -26,26 +46,51 @@ function NodeView({
   showSpeakers,
   collect,
   sticky = false,
+  collectOptions,
+  collectSelection,
+  onCollectChange,
+  fullText,
 }: {
   node: Bcp1662OfficeNode;
   showRubrics: boolean;
   showSpeakers: boolean;
   collect?: boolean;
   sticky?: boolean;
+  collectOptions: ControlOption[];
+  collectSelection: string;
+  onCollectChange: (id: string) => void;
+  fullText: boolean;
 }) {
   const styles = useThemedStyles(bcp1662Styles);
   const sectionHeading = useSectionHeading();
   const subheading = useSubheading();
   switch (node.kind) {
     case "heading":
-      if (node.text === "Suffrages" || node.text === "Confession of Sin") {
-        return (
-          <View style={sticky && officeViewStyles.stickyHeader}>
-            <Text style={sectionHeading}>{node.text}</Text>
-          </View>
-        );
-      }
       return <Text style={subheading}>{node.text}</Text>;
+    case "section-heading": {
+      const withPicker =
+        node.menu === "collect" && collectOptions.length > 1 && !fullText;
+      return (
+        <StickyHeading sticky={sticky} withControl={withPicker}>
+          {withPicker ? (
+            <MenuAnchor style={styles.headingRow}>
+              <Text style={[sectionHeading, styles.headingText]}>
+                {node.text}
+              </Text>
+              <ChoiceMenu
+                value={collectSelection}
+                options={collectOptions}
+                label="Collect"
+                accessibilityLabel="Collect"
+                onChange={onCollectChange}
+              />
+            </MenuAnchor>
+          ) : (
+            <Text style={sectionHeading}>{node.text}</Text>
+          )}
+        </StickyHeading>
+      );
+    }
     case "rubric":
       if (!showRubrics) return null;
       return <Text style={styles.rubric}>{node.text}</Text>;
@@ -87,6 +132,9 @@ function NodeView({
       }
       return (
         <View>
+          {node.choiceHeading && !fullText ? (
+            <Text style={subheading}>{node.choiceHeading}</Text>
+          ) : null}
           {body.split("\n").map((line, i) => (
             // fixed liturgical text
             <Text
@@ -199,30 +247,15 @@ export function Bcp1662OfficeView({
   doc,
   showRubrics = true,
   showSpeakers = true,
+  fullText = false,
 }: {
   doc: Bcp1662ComposedOffice;
   showRubrics?: boolean;
   showSpeakers?: boolean;
+  fullText?: boolean;
 }) {
   const styles = useThemedStyles(bcp1662Styles);
   const sectionHeading = useSectionHeading();
-  const suffragesIndex = doc.sections.findIndex((s) =>
-    s.nodes.some((n) => n.kind === "heading" && n.text === "Suffrages"),
-  );
-  const isSticky = (key: string) => {
-    const index = doc.sections.findIndex((s) => s.key === key);
-    return suffragesIndex < 0 || index < suffragesIndex;
-  };
-  const suffragesNodeIndex =
-    suffragesIndex >= 0
-      ? doc.sections[suffragesIndex].nodes.findIndex(
-          (n) => n.kind === "heading" && n.text === "Suffrages",
-        )
-      : -1;
-  const nodeIsSticky = (sectionIndex: number, nodeIndex: number) =>
-    suffragesIndex < 0 ||
-    sectionIndex < suffragesIndex ||
-    (sectionIndex === suffragesIndex && nodeIndex < suffragesNodeIndex);
   const sentences = BCP1662_OFFICE_TEXT.common.openingSentences ?? [];
   const suggested = sentences[0]?.text ?? "";
   const [openingSelection, setOpeningSelection] = useState<string>("suggested");
@@ -231,13 +264,14 @@ export function Bcp1662OfficeView({
     ?.nodes.find((n) => n.kind === "psalm");
   const psalmRefs = psalmNode?.kind === "psalm" ? psalmNode.refs : [];
   const [psalmSelection, setPsalmSelection] = useState<string>("suggested");
-  const [lessonSelection, setLessonSelection] = useState<string>("suggested");
+  const [lessonSelection, setLessonSelection] = useState("suggested");
   const [canticleFirst, setCanticleFirst] = useState("suggested");
   const [canticleSecond, setCanticleSecond] = useState("suggested");
   const [creedOverride, setCreedOverride] = useState<
     "apostles" | "athanasian" | null
   >(null);
   const [occasionalSelection, setOccasionalSelection] = useState("none");
+  const [collectSelection, setCollectSelection] = useState("suggested");
   const occasionalNodes =
     doc.sections
       .find((s) => s.key === "closing")
@@ -283,8 +317,6 @@ export function Bcp1662OfficeView({
       ) ?? [];
   const creedSuggested = creedNodes.find((n) => n.suggested)?.id ?? "apostles";
   const creedId = creedOverride ?? creedSuggested;
-  const creedTitle =
-    creedNodes.find((n) => n.id === creedId)?.title ?? "The Apostles' Creed";
   const canticleNodes =
     doc.sections
       .find((s) => s.key === "lessons")
@@ -338,6 +370,103 @@ export function Bcp1662OfficeView({
     ),
     { id: "all", label: "All sentences", group: "Other" },
   ];
+
+  // the collect menu prints one option instead of the whole printed list
+  const collectNodes = doc.sections
+    .flatMap((s) => s.nodes)
+    .filter(
+      (n): n is Extract<Bcp1662OfficeNode, { kind: "text" }> =>
+        n.kind === "text" && n.choiceGroup === "collect",
+    );
+  const collectOptions: ControlOption[] = collectNodes.map((n) => ({
+    id: n.choiceId ?? "",
+    label: n.choiceLabel ?? n.choiceId ?? "",
+    group: n.choiceId === "suggested" ? "Suggested" : "Appointed",
+  }));
+  const activeCollect = collectOptions.some((o) => o.id === collectSelection)
+    ? collectSelection
+    : "suggested";
+
+  type Entry = { node: Bcp1662OfficeNode; index: number };
+  // the same filter drives the document's sticky keys and what renders, so
+  // an inline rule's key stays stable when the reader picks another option
+  const visibleNodes = (section: Bcp1662ComposedSection): Entry[] =>
+    section.nodes
+      .map((node, index) => ({ node, index }))
+      .filter(({ node }) => {
+        if (fullText) return true;
+        const choice = choiceOf(node);
+        if (choice.choiceGroup === "collect") {
+          return choice.choiceId === activeCollect;
+        }
+        if (section.key === "opening" && node.kind === "text") {
+          if (!isOpeningSentence(node.text)) return true;
+          if (openingSelection === "all") return true;
+          const target =
+            openingSelection === "suggested" ? suggested : openingSelection;
+          return node.text === target;
+        }
+        if (section.key === "lessons" && node.kind === "lesson") {
+          if (lessonSelection === "suggested") return true;
+          return node.slot === lessonSelection;
+        }
+        if (node.kind === "canticle") {
+          if (
+            lessonSelection !== "suggested" &&
+            node.slot !== lessonSelection
+          ) {
+            return false;
+          }
+          const selection =
+            node.slot === "first" ? canticleFirst : canticleSecond;
+          return selection === "suggested"
+            ? node.suggested
+            : node.id === selection;
+        }
+        if (node.kind === "creed") return node.id === creedId;
+        if (node.kind === "occasional") return node.id === occasionalSelection;
+        return true;
+      });
+
+  const nodeKey = (sectionKey: string, index: number) =>
+    `node:${sectionKey}:${index}`;
+  // only the document's final header is left unsticky, across section and inline rules
+  const lastHeaderKey = (() => {
+    const keys: string[] = [];
+    for (const section of doc.sections) {
+      if (section.heading) keys.push(`section:${section.key}`);
+      for (const entry of visibleNodes(section)) {
+        if (entry.node.kind === "section-heading") {
+          keys.push(nodeKey(section.key, entry.index));
+        }
+      }
+    }
+    return keys.at(-1);
+  })();
+  const sectionIsSticky = (key: string) => `section:${key}` !== lastHeaderKey;
+  const nodeIsSticky = (key: string, index: number) =>
+    nodeKey(key, index) !== lastHeaderKey;
+  // bound each rule to its own content so one sticky heading unsticks before
+  // the next one pins; the wrapper also raises an open picker above siblings
+  const groupsFor = (sectionKey: string, entries: Entry[]) => {
+    const out: { key: string; entries: Entry[] }[] = [];
+    let current: (typeof out)[number] | undefined;
+    for (const entry of entries) {
+      if (entry.node.kind === "section-heading" || !current) {
+        current = {
+          key:
+            entry.node.kind === "section-heading"
+              ? nodeKey(sectionKey, entry.index)
+              : `group:${sectionKey}:0`,
+          entries: [],
+        };
+        out.push(current);
+      }
+      current.entries.push(entry);
+    }
+    return out;
+  };
+
   return (
     <View>
       <OfficeHeader
@@ -347,194 +476,168 @@ export function Bcp1662OfficeView({
         editionLabel={OFFICE_EDITION_LABELS["1662"]}
         titleBelowEdition
       />
-      {doc.sections.map((section, sectionIndex) => (
-        <MenuAnchor key={section.key} style={styles.section}>
-          {section.key === "psalms" && psalmRefs.length > 0 ? (
-            <StickyHeading sticky={isSticky(section.key)} withControl>
-              <MenuAnchor style={styles.headingRow}>
-                <Text style={[sectionHeading, styles.headingText]}>
-                  {section.heading}
-                </Text>
-                <ChoiceMenu
-                  value={psalmSelection}
-                  options={[
-                    {
-                      id: "suggested",
-                      label: allPsalmsLabel(psalmRefs.length),
-                      group: "Suggested",
-                    },
-                    ...psalmRefs.map((ref) => ({
-                      id: ref,
-                      label: ref,
-                      group: "Psalms",
-                    })),
-                  ]}
-                  label="Psalms"
-                  accessibilityLabel="Psalms"
-                  onChange={setPsalmSelection}
-                />
-              </MenuAnchor>
-            </StickyHeading>
-          ) : section.key === "lessons" ? (
-            <StickyHeading sticky={isSticky(section.key)} withControl>
-              <MenuAnchor style={styles.headingRow}>
-                <Text style={[sectionHeading, styles.headingText]}>
-                  {section.heading}
-                </Text>
-                <ChoiceMenu
-                  value={lessonSelection}
-                  options={[
-                    {
-                      id: "suggested",
-                      label: "OT & NT",
-                      group: "Suggested",
-                    },
-                    { id: "first", label: "OT only", group: "Lessons" },
-                    {
-                      id: "second",
-                      label: "NT only",
-                      group: "Lessons",
-                    },
-                  ]}
-                  label="Lessons"
-                  accessibilityLabel="Lessons"
-                  onChange={setLessonSelection}
-                />
-              </MenuAnchor>
-            </StickyHeading>
-          ) : section.key === "creed" && creedNodes.length > 1 ? (
-            <StickyHeading sticky={isSticky(section.key)} withControl>
-              <MenuAnchor style={styles.headingRow}>
-                <Text style={[sectionHeading, styles.headingText]}>
-                  {creedTitle}
-                </Text>
-                <Segmented
-                  value={creedId}
-                  options={[
-                    { id: "apostles", label: "Apostles" },
-                    { id: "athanasian", label: "Athanasian" },
-                  ]}
-                  accessibilityLabel="Creed"
-                  onChange={(id) =>
-                    setCreedOverride(
-                      id === "athanasian" ? "athanasian" : "apostles",
-                    )
-                  }
-                />
-              </MenuAnchor>
-            </StickyHeading>
-          ) : section.heading ? (
-            <StickyHeading sticky={isSticky(section.key)}>
-              <Text style={sectionHeading}>{section.heading}</Text>
-            </StickyHeading>
-          ) : null}
-          {section.key === "opening" && sentences.length > 0 ? (
-            <MenuAnchor style={styles.controlRow}>
-              <ChoiceMenu
-                value={openingSelection}
-                options={options}
-                label="Opening Sentence"
-                accessibilityLabel="Opening Sentence"
-                fullWidth
-                onChange={setOpeningSelection}
-              />
-            </MenuAnchor>
-          ) : null}
-          {section.nodes
-            .filter((node) => {
-              if (section.key === "opening" && node.kind === "text") {
-                if (!isOpeningSentence(node.text)) return true;
-                if (openingSelection === "all") return true;
-                const target =
-                  openingSelection === "suggested"
-                    ? suggested
-                    : openingSelection;
-                return node.text === target;
-              }
-              if (section.key === "lessons" && node.kind === "lesson") {
-                if (lessonSelection === "suggested") return true;
-                return node.slot === lessonSelection;
-              }
-              if (node.kind === "canticle") {
-                if (
-                  lessonSelection !== "suggested" &&
-                  node.slot !== lessonSelection
-                ) {
-                  return false;
+      {doc.sections.map((section) => {
+        const entries = visibleNodes(section);
+        const groups = groupsFor(section.key, entries);
+        return (
+          <MenuAnchor key={section.key} style={styles.section}>
+            {groups.map((group, gi) => (
+              <MenuAnchor
+                key={group.key}
+                style={
+                  groups[gi + 1]?.entries[0]?.node.kind === "section-heading"
+                    ? styles.beforeSectionHeading
+                    : undefined
                 }
-                const selection =
-                  node.slot === "first" ? canticleFirst : canticleSecond;
-                return selection === "suggested"
-                  ? node.suggested
-                  : node.id === selection;
-              }
-              if (node.kind === "creed") return node.id === creedId;
-              if (node.kind === "occasional") {
-                return node.id === occasionalSelection;
-              }
-              return true;
-            })
-            .map((node, i) => {
-              const renderedNode =
-                section.key === "psalms" && node.kind === "psalm"
-                  ? psalmSelection === "suggested"
-                    ? node
-                    : {
-                        ...node,
-                        refs: node.refs.filter((r) => r === psalmSelection),
-                        passages: node.passages.filter(
-                          (p) =>
-                            (p.ref.startsWith("Psalm")
-                              ? p.ref
-                              : `Psalm ${p.ref}`) === psalmSelection,
-                        ),
+              >
+                {gi === 0 && section.heading ? (
+                  <StickyHeading
+                    sticky={sectionIsSticky(section.key)}
+                    withControl
+                  >
+                    <MenuAnchor style={styles.headingRow}>
+                      <Text style={[sectionHeading, styles.headingText]}>
+                        {section.heading}
+                      </Text>
+                      {section.key === "psalms" && psalmRefs.length > 0 ? (
+                        <ChoiceMenu
+                          value={psalmSelection}
+                          options={[
+                            {
+                              id: "suggested",
+                              label: allPsalmsLabel(psalmRefs.length),
+                              group: "Suggested",
+                            },
+                            ...psalmRefs.map((ref) => ({
+                              id: ref,
+                              label: ref,
+                              group: "Psalms",
+                            })),
+                          ]}
+                          label="Psalms"
+                          accessibilityLabel="Psalms"
+                          onChange={setPsalmSelection}
+                        />
+                      ) : section.key === "lessons" ? (
+                        <ChoiceMenu
+                          value={lessonSelection}
+                          options={[
+                            {
+                              id: "suggested",
+                              label: "OT & NT",
+                              group: "Suggested",
+                            },
+                            { id: "first", label: "OT only", group: "Lessons" },
+                            {
+                              id: "second",
+                              label: "NT only",
+                              group: "Lessons",
+                            },
+                          ]}
+                          label="Lessons"
+                          accessibilityLabel="Lessons"
+                          onChange={setLessonSelection}
+                        />
+                      ) : section.key === "creed" && creedNodes.length > 1 ? (
+                        <Segmented
+                          value={creedId}
+                          options={[
+                            { id: "apostles", label: "Apostles" },
+                            { id: "athanasian", label: "Athanasian" },
+                          ]}
+                          accessibilityLabel="Creed"
+                          onChange={(id) =>
+                            setCreedOverride(
+                              id === "athanasian" ? "athanasian" : "apostles",
+                            )
+                          }
+                        />
+                      ) : null}
+                    </MenuAnchor>
+                  </StickyHeading>
+                ) : null}
+                {gi === 0 &&
+                section.key === "opening" &&
+                sentences.length > 0 ? (
+                  <MenuAnchor style={styles.controlRow}>
+                    <ChoiceMenu
+                      value={openingSelection}
+                      options={options}
+                      label="Opening Sentence"
+                      accessibilityLabel="Opening Sentence"
+                      fullWidth
+                      onChange={setOpeningSelection}
+                    />
+                  </MenuAnchor>
+                ) : null}
+                {group.entries.map(({ node, index: i }) => {
+                  const renderedNode =
+                    section.key === "psalms" && node.kind === "psalm"
+                      ? psalmSelection === "suggested"
+                        ? node
+                        : {
+                            ...node,
+                            refs: node.refs.filter((r) => r === psalmSelection),
+                            passages: node.passages.filter(
+                              (p) =>
+                                (p.ref.startsWith("Psalm")
+                                  ? p.ref
+                                  : `Psalm ${p.ref}`) === psalmSelection,
+                            ),
+                          }
+                      : node;
+                  const prev = section.nodes[i - 1];
+                  const isLordsPrayerText =
+                    node.kind === "text" &&
+                    i > 0 &&
+                    prev?.kind === "heading" &&
+                    prev.text === "The Lord's Prayer";
+                  const key = `${section.key}-${node.kind}-${i}`;
+                  const sticky = nodeIsSticky(section.key, i);
+                  const content = (
+                    <>
+                      {node.kind === "canticle"
+                        ? canticleControl(node.slot)
+                        : null}
+                      {node.kind === "occasional" ||
+                      (!occasionalShown &&
+                        occasionalNodes.length > 0 &&
+                        section.key === "closing" &&
+                        node.kind === "heading" &&
+                        node.text === "A Prayer of St. Chrysostom")
+                        ? occasionalControl()
+                        : null}
+                      <NodeView
+                        node={renderedNode}
+                        showRubrics={showRubrics}
+                        showSpeakers={showSpeakers}
+                        collect={section.key === "collects"}
+                        sticky={sticky}
+                        collectOptions={collectOptions}
+                        collectSelection={activeCollect}
+                        onCollectChange={setCollectSelection}
+                        fullText={fullText}
+                      />
+                    </>
+                  );
+                  return sticky ? (
+                    <Fragment key={key}>{content}</Fragment>
+                  ) : (
+                    <MenuAnchor
+                      key={key}
+                      style={
+                        isLordsPrayerText ? styles.lordsPrayerBlock : undefined
                       }
-                  : node;
-              const prev = section.nodes[i - 1];
-              const isLordsPrayerText =
-                node.kind === "text" &&
-                i > 0 &&
-                prev?.kind === "heading" &&
-                prev.text === "The Lord's Prayer";
-              // a sticky heading must be a direct child of the tall section:
-              // a per-node anchor is only as tall as the heading and would
-              // leave position:sticky no room to pin
-              const key = `${section.key}-${node.kind}-${i}`;
-              const content = (
-                <>
-                  {node.kind === "canticle" ? canticleControl(node.slot) : null}
-                  {node.kind === "occasional" ||
-                  (!occasionalShown &&
-                    occasionalNodes.length > 0 &&
-                    section.key === "closing" &&
-                    node.kind === "heading" &&
-                    node.text === "A Prayer of St. Chrysostom")
-                    ? occasionalControl()
-                    : null}
-                  <NodeView
-                    node={renderedNode}
-                    showRubrics={showRubrics}
-                    showSpeakers={showSpeakers}
-                    collect={section.key === "collects"}
-                    sticky={nodeIsSticky(sectionIndex, i)}
-                  />
-                </>
-              );
-              return nodeIsSticky(sectionIndex, i) ? (
-                <Fragment key={key}>{content}</Fragment>
-              ) : (
-                <MenuAnchor
-                  key={key}
-                  style={
-                    isLordsPrayerText ? styles.lordsPrayerBlock : undefined
-                  }
-                >
-                  {content}
-                </MenuAnchor>
-              );
-            })}
-        </MenuAnchor>
-      ))}
+                    >
+                      {content}
+                    </MenuAnchor>
+                  );
+                })}
+              </MenuAnchor>
+            ))}
+          </MenuAnchor>
+        );
+      })}
       {doc.notes.length > 0 ? (
         <View style={styles.notes}>
           {doc.notes.map((note, i) => (
@@ -594,7 +697,8 @@ const bcp1662Styles = defineThemedStyles({
     color: "var(--text-secondary)",
   },
   headingRow: { ...officeDocumentStyles.headingRow, position: "relative" },
-  headingText: officeDocumentStyles.headingText,
+  headingText: { ...officeDocumentStyles.headingText, flexShrink: 1 },
+  beforeSectionHeading: { marginBottom: 20 },
   controlRow: {
     position: "relative",
     marginTop: 8,

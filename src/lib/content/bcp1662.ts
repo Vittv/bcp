@@ -249,8 +249,19 @@ export type Bcp1662OfficeSectionKey =
 
 export type Bcp1662OfficeNode =
   | { kind: "heading"; text: string }
-  | { kind: "rubric"; text: string }
-  | { kind: "text"; text: string; speaker?: string }
+  // a block title promoted to the section rule; a collect rule carries the
+  // picker that selects which printed collect is shown
+  | { kind: "section-heading"; text: string; menu?: "collect" }
+  | { kind: "rubric"; text: string; choiceGroup?: string; choiceId?: string }
+  | {
+      kind: "text";
+      text: string;
+      speaker?: string;
+      choiceGroup?: string;
+      choiceId?: string;
+      choiceLabel?: string;
+      choiceHeading?: string;
+    }
   | {
       kind: "psalm";
       refs: string[];
@@ -290,7 +301,13 @@ export type Bcp1662OfficeNode =
       text: string;
       group: "Prayers" | "Thanksgivings";
     }
-  | { kind: "placeholder"; key: string; text: string };
+  | {
+      kind: "placeholder";
+      key: string;
+      text: string;
+      choiceGroup?: string;
+      choiceId?: string;
+    };
 
 export type Bcp1662ComposedSection = {
   key: Bcp1662OfficeSectionKey;
@@ -533,7 +550,7 @@ export function composeBcp1662Office(
   // the penitential opening carries one section rule over exhortation,
   // confession, and absolution; the absolution keeps its own rubric
   openingNodes.push({
-    kind: "heading",
+    kind: "section-heading",
     text: "Confession of Sin",
   });
 
@@ -578,6 +595,9 @@ export function composeBcp1662Office(
     });
   }
 
+  // the absolution ends the confession block; the Lord's Prayer and what
+  // follows belong to the prayers, so the sticky rule changes here
+  openingNodes.push({ kind: "section-heading", text: "The Prayers" });
   openingNodes.push({
     kind: "rubric",
     text:
@@ -814,7 +834,7 @@ export function composeBcp1662Office(
     text: BCP1662_OFFICE_TEXT.common.lords_prayer,
   });
   if (BCP1662_OFFICE_TEXT.common.suffrages?.length) {
-    prayersNodes.push({ kind: "heading", text: "Suffrages" });
+    prayersNodes.push({ kind: "section-heading", text: "Suffrages" });
     prayersNodes.push({
       kind: "rubric",
       text:
@@ -859,23 +879,49 @@ export function composeBcp1662Office(
   }
 
   const collectNodes: Bcp1662OfficeNode[] = [];
+  const fixedCollects = getBcp1662FixedCollects(office);
+  // the collect menu prints the one chosen alternative
+  collectNodes.push({
+    kind: "section-heading",
+    text: "The Collect",
+    menu: fixedCollects.length > 0 ? "collect" : undefined,
+  });
   if (officeDef?.collectsRubric) {
     collectNodes.push({ kind: "rubric", text: officeDef.collectsRubric });
   }
   if (collectOfDay) {
-    collectNodes.push({ kind: "heading", text: "The Collect of the Day" });
-    collectNodes.push({ kind: "rubric", text: collectOfDay.name });
-    collectNodes.push({ kind: "text", text: collectOfDay.text });
+    collectNodes.push({
+      kind: "rubric",
+      text: collectOfDay.name,
+      choiceGroup: "collect",
+      choiceId: "suggested",
+    });
+    collectNodes.push({
+      kind: "text",
+      text: collectOfDay.text,
+      choiceGroup: "collect",
+      choiceId: "suggested",
+      choiceLabel: "Collect of the Day",
+      choiceHeading: "The Collect of the Day",
+    });
   } else {
     collectNodes.push({
       kind: "placeholder",
       key: "collect-day",
       text: "Collect of the day (Sunday/holy-day proper) to be resolved from vendored propers.",
+      choiceGroup: "collect",
+      choiceId: "suggested",
     });
   }
-  for (const c of getBcp1662FixedCollects(office)) {
-    collectNodes.push({ kind: "heading", text: c.title });
-    collectNodes.push({ kind: "text", text: c.text });
+  for (const c of fixedCollects) {
+    collectNodes.push({
+      kind: "text",
+      text: c.text,
+      choiceGroup: "collect",
+      choiceId: c.id,
+      choiceLabel: c.title,
+      choiceHeading: c.title,
+    });
   }
 
   const closingNodes: Bcp1662OfficeNode[] = [];
