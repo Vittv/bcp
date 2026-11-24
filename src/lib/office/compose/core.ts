@@ -393,6 +393,12 @@ function suggestedOpeningText(
   return (specific ?? anyTime)?.texts[0];
 }
 
+// the book directs a deacon or lay person to substitute the first person
+// plural in the absolution; derive it from the printed priest form
+function deaconAbsolution(text: string): string {
+  return text.replace(/\byour\b/gi, "our").replace(/\byou\b/gi, "us");
+}
+
 // generalized section composer (opening sentences, confession, creed,
 // suffrages-a, and the single opening section of Noonday and Compline, which
 // carries the whole service):
@@ -419,6 +425,7 @@ function composeOpening(
   let collectTitle: string | undefined;
   let collectBuf: string[] = [];
   let skipAbsolution = false;
+  let absolutionNext = false;
   const items = section.items;
   let idx = 0;
   while (idx < items.length) {
@@ -524,6 +531,12 @@ function composeOpening(
         continue;
       }
       if (
+        section.key === "confession" &&
+        /Priest.*stands and says/i.test(text)
+      ) {
+        absolutionNext = true;
+      }
+      if (
         /(one or more of the following Collect|one of the following Collects?)/i.test(
           text,
         )
@@ -567,6 +580,16 @@ function composeOpening(
         const node = convert(item, ctx.prefs);
         if (node) nodes.push(node);
       }
+      idx++;
+      continue;
+    }
+    if (item.kind === "text" && absolutionNext) {
+      absolutionNext = false;
+      const useUs = (ctx.prefs.customization?.absolution ?? "us") === "us";
+      nodes.push({
+        kind: "text",
+        text: useUs ? deaconAbsolution(item.text) : item.text,
+      });
       idx++;
       continue;
     }

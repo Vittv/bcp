@@ -272,6 +272,7 @@ export function Bcp1662OfficeView({
   >(null);
   const [occasionalSelection, setOccasionalSelection] = useState("none");
   const [collectSelection, setCollectSelection] = useState("suggested");
+  const [absolutionSelection, setAbsolutionSelection] = useState("no-priest");
   const occasionalNodes =
     doc.sections
       .find((s) => s.key === "closing")
@@ -387,6 +388,24 @@ export function Bcp1662OfficeView({
     ? collectSelection
     : "suggested";
 
+  // the priest's absolution and the no-priest collect are printed alternatives
+  const absolutionNodes = doc.sections
+    .flatMap((s) => s.nodes)
+    .filter(
+      (n): n is Extract<Bcp1662OfficeNode, { kind: "text" }> =>
+        n.kind === "text" && n.choiceGroup === "absolution",
+    );
+  const absolutionOptions: ControlOption[] = absolutionNodes.map((n) => ({
+    id: n.choiceId ?? "",
+    label: n.choiceLabel ?? n.choiceId ?? "",
+    group: n.choiceId === "no-priest" ? "Suggested" : "Options",
+  }));
+  const activeAbsolution = absolutionOptions.some(
+    (o) => o.id === absolutionSelection,
+  )
+    ? absolutionSelection
+    : "no-priest";
+
   type Entry = { node: Bcp1662OfficeNode; index: number };
   // the same filter drives the document's sticky keys and what renders, so
   // an inline rule's key stays stable when the reader picks another option
@@ -398,6 +417,9 @@ export function Bcp1662OfficeView({
         const choice = choiceOf(node);
         if (choice.choiceGroup === "collect") {
           return choice.choiceId === activeCollect;
+        }
+        if (choice.choiceGroup === "absolution") {
+          return choice.choiceId === activeAbsolution;
         }
         if (section.key === "opening" && node.kind === "text") {
           if (!isOpeningSentence(node.text)) return true;
@@ -607,6 +629,20 @@ export function Bcp1662OfficeView({
                         node.text === "A Prayer of St. Chrysostom")
                         ? occasionalControl()
                         : null}
+                      {node.kind === "text" &&
+                      node.choiceGroup === "absolution" &&
+                      !fullText ? (
+                        <MenuAnchor style={styles.controlRow}>
+                          <ChoiceMenu
+                            value={activeAbsolution}
+                            options={absolutionOptions}
+                            label="Absolution"
+                            accessibilityLabel="Absolution"
+                            fullWidth
+                            onChange={setAbsolutionSelection}
+                          />
+                        </MenuAnchor>
+                      ) : null}
                       <NodeView
                         node={renderedNode}
                         showRubrics={showRubrics}

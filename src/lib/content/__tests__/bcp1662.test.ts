@@ -197,6 +197,27 @@ describe("bcp1662 composition", () => {
     ]);
   });
 
+  it("marks the no-priest collect and the absolution as alternatives", async () => {
+    const { composeBcp1662OfficeForDate } = await import("../bcp1662");
+    const date = { year: 2026, month: 11, day: 17 };
+    const doc = await composeBcp1662OfficeForDate(date, "morning");
+    const options = doc.sections
+      .flatMap((s) => s.nodes)
+      .flatMap((n) =>
+        n.kind === "text" && n.choiceGroup === "absolution"
+          ? [{ id: n.choiceId, label: n.choiceLabel }]
+          : [],
+      );
+    expect(options).toEqual([
+      {
+        id: "no-priest",
+        label: "Collect for the Twenty-first Sunday after Trinity",
+      },
+      { id: "priest", label: "The Absolution" },
+    ]);
+    expect(options[0]?.id).toBe("no-priest");
+  });
+
   it("composes the Litany as a standalone office with speakers", () => {
     const doc = composeBcp1662Litany({ year: 2026, month: 11, day: 18 });
     expect(doc.officeName).toBe("The Litany");
