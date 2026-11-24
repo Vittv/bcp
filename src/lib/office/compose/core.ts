@@ -49,6 +49,7 @@ import {
   suggestedCanticleForSlot,
 } from "./lessons";
 import {
+  blessingBlocks,
   buildOfficeMenus,
   chosenOf,
   menuRegions,
@@ -174,6 +175,7 @@ export function composeOffice(
     if (tail) {
       ctx.collectBlocks = titledCollectBlocks(tail);
       ctx.missionBlocks = missionMenuBlocks(tail);
+      ctx.blessingBlocks = blessingBlocks(tail);
     }
   }
 
@@ -616,6 +618,7 @@ const MENU_SECTION: Record<
   collect: { key: "prayers", heading: "The Collect" },
   // morning and evening keep their mission picker inline in the suffrages tail
   mission: { key: "suffrages-b", heading: "Prayers for Mission" },
+  blessing: { key: "suffrages-b", heading: "The Closing Blessing" },
 };
 
 function composeMenuSections(
@@ -1198,16 +1201,22 @@ function composeSuffragesB(
   // the collect of the day is the suggested option when the book offers one
   const collectBlocks = ctx.collectBlocks ?? [];
   const chosenCollect = chosenOf(
-    [{ id: "day" }, ...collectBlocks],
+    [{ id: "suggested" }, ...collectBlocks],
     ctx.prefs.customization?.collectMenu,
-    "day",
+    "suggested",
   );
-  // one mission prayer is printed by default, with a picker for the other two
+  // one mission prayer and one closing blessing are printed by default
   const missionBlocks = ctx.missionBlocks ?? [];
   const chosenMission = chosenOf(
     missionBlocks,
     ctx.prefs.customization?.missionMenu,
     missionBlocks[0]?.id ?? "",
+  );
+  const blessingBlockList = ctx.blessingBlocks ?? [];
+  const chosenBlessing = chosenOf(
+    blessingBlockList,
+    ctx.prefs.customization?.blessingMenu,
+    blessingBlockList[0]?.id ?? "",
   );
   for (const [idx, item] of section.items.entries()) {
     if (!inTail) {
@@ -1246,7 +1255,7 @@ function composeSuffragesB(
         flushCollectBuf(nodes, collectBuf, collectTitle);
         collectBuf = [];
         collectTitle = undefined;
-        if (collect && (fullText || chosenCollect === "day")) {
+        if (collect && (fullText || chosenCollect === "suggested")) {
           nodes.push({ kind: "heading", text: item.text });
           nodes.push(collect);
         }
@@ -1284,6 +1293,9 @@ function composeSuffragesB(
         firstKept = false;
         const node = convert(item, ctx.prefs);
         if (node) nodes.push(node);
+        if (blessingBlockList.length > 1 && !fullText) {
+          nodes.push({ kind: "menu", menu: "blessing" });
+        }
         continue;
       }
       if (menu === "thanksgiving") {
@@ -1347,6 +1359,12 @@ function composeSuffragesB(
       continue;
     }
     if (menu === "closing") {
+      if (blessingBlockList.length > 1 && !fullText) {
+        const block = blessingBlockList.find(
+          (b) => idx >= b.from && idx <= b.to,
+        );
+        if (!block || block.id !== chosenBlessing) continue;
+      }
       const node = convert(item, ctx.prefs);
       if (node) nodes.push(node);
       continue;

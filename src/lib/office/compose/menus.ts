@@ -178,6 +178,39 @@ export function titledCollectBlocks(section: OfficeSection): MenuBlock[] {
   return blocks;
 }
 
+// the closing of morning and evening prints three blessings, each a prayer
+// line followed by the people's "Amen."
+const BLESSING_RUBRIC = /may then conclude with one of the following/i;
+
+export function blessingBlocks(section: OfficeSection): MenuBlock[] {
+  const items = section.items;
+  const start = items.findIndex(
+    (item) => item.kind === "rubric" && BLESSING_RUBRIC.test(item.text),
+  );
+  if (start < 0) return [];
+  const blocks: MenuBlock[] = [];
+  let i = start + 1;
+  while (i < items.length && items[i].kind === "text") {
+    const from = i;
+    const body = items[i].text;
+    i++;
+    // the people's Amen closes this blessing and carries its citation
+    const amen = items[i];
+    if (amen && amen.kind === "text" && amen.speaker === "people") {
+      i++;
+    }
+    blocks.push({
+      from,
+      to: i - 1,
+      id: String(blocks.length + 1),
+      label: truncate(body, 32),
+      menuLabel: truncate(body, 64),
+      group: "Appointed",
+    });
+  }
+  return blocks;
+}
+
 // the three mission prayers of morning and evening are printed as text runs
 // separated by "or this"/"or the following" options, after the "Then, unless
 // the Eucharist" rubric and before the "Here may be sung" rubric
@@ -228,11 +261,31 @@ export function buildOfficeMenus(
   hasDayCollect: boolean,
 ): OfficeMenus | undefined {
   const menus: OfficeMenus = {};
+  const blessings = ctx.blessingBlocks;
+  if (blessings && blessings.length > 1) {
+    const [first, ...rest] = blessings;
+    menus.blessing = {
+      options: [
+        {
+          id: "suggested",
+          label: first.label,
+          menuLabel: first.menuLabel,
+          group: "Suggested",
+        },
+        ...rest.map((block) => ({
+          id: block.id,
+          label: block.label,
+          menuLabel: block.menuLabel,
+          group: block.group,
+        })),
+      ],
+    };
+  }
   const collects = ctx.collectBlocks;
   if (collects && collects.length > 0) {
     const options: MenuChoiceOption[] = [
       {
-        id: "day",
+        id: "suggested",
         label: "Collect of the Day",
         menuLabel: "The Collect of the Day",
         group: "Suggested",
