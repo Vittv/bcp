@@ -164,6 +164,22 @@ export function SectionControl({
       return choices.psalmCitations ? (
         <PsalmPicker officeId={officeId} citations={choices.psalmCitations} />
       ) : null;
+    case "confession":
+      return (
+        <Segmented
+          value={customization.absolution ?? "us"}
+          options={[
+            { id: "us", label: "Us" },
+            { id: "you", label: "You" },
+          ]}
+          accessibilityLabel="Absolution"
+          onChange={(id) =>
+            setOfficeChoice(officeId, {
+              absolution: id === "us" ? "us" : "you",
+            })
+          }
+        />
+      );
     case "suffrages-a":
     case "suffrages-b":
       return (

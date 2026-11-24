@@ -578,9 +578,28 @@ export function composeBcp1662Office(
       BCP1662_OFFICE_TEXT.common.absolution_rubric ??
       "The Absolution, or Remission of sins, to be pronounced by the Priest alone, standing: the people still kneeling.",
   });
+  // where no priest is present the book substitutes the collect for Trinity
+  // 21; that printed alternative is the default, as in the 1962 office
+  const noPriestCollect = getBcp1662ProperCollect(
+    "Twenty-first Sunday after Trinity",
+  );
+  if (noPriestCollect) {
+    openingNodes.push({
+      kind: "text",
+      text: noPriestCollect.text,
+      choiceGroup: "absolution",
+      choiceId: "no-priest",
+      choiceLabel: "Collect for the Twenty-first Sunday after Trinity",
+      choiceHeading: "The Collect for the Twenty-first Sunday after Trinity",
+    });
+  }
   openingNodes.push({
     kind: "text",
     text: BCP1662_OFFICE_TEXT.common.absolution_priest,
+    choiceGroup: "absolution",
+    choiceId: "priest",
+    choiceLabel: "The Absolution",
+    choiceHeading: "The Absolution",
   });
   if (BCP1662_OFFICE_TEXT.common.amen_rubric) {
     openingNodes.push({

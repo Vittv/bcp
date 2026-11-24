@@ -772,7 +772,7 @@ describe("composeOffice: preferences and other offices", () => {
       "morning-rite-two",
     );
     expect(
-      hasText(doc, "Almighty God have mercy on you, forgive you all your sins"),
+      hasText(doc, "Almighty God have mercy on us, forgive us all our sins"),
     ).toBe(false);
     // but the confession prayer itself remains
     expect(hasText(doc, "Most merciful God, we confess")).toBe(true);
@@ -789,8 +789,33 @@ describe("composeOffice: preferences and other offices", () => {
       .filter((n) => n.kind === "text" && n.speaker);
     expect(speakers.length).toBeGreaterThan(0);
     expect(
-      hasText(doc, "Almighty God have mercy on you, forgive you all your sins"),
+      hasText(doc, "Almighty God have mercy on us, forgive us all our sins"),
     ).toBe(true);
+  });
+
+  test("the absolution defaults to the deacon's us form and can be set to you", () => {
+    const date = { year: 2026, month: 11, day: 29 };
+    const us = composeOffice(date, "morning-rite-two", {
+      ...DEFAULT_PREFS,
+      personalMode: false,
+    });
+    expect(
+      hasText(us, "Almighty God have mercy on us, forgive us all our sins"),
+    ).toBe(true);
+    expect(
+      hasText(us, "Almighty God have mercy on you, forgive you all your sins"),
+    ).toBe(false);
+    const you = composeOffice(date, "evening-rite-two", {
+      ...DEFAULT_PREFS,
+      personalMode: false,
+      customization: { absolution: "you" },
+    });
+    expect(
+      hasText(you, "Almighty God have mercy on you, forgive you all your sins"),
+    ).toBe(true);
+    expect(
+      hasText(you, "Almighty God have mercy on us, forgive us all our sins"),
+    ).toBe(false);
   });
 });
 

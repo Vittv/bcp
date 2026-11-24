@@ -14,6 +14,8 @@ export type OfficeCustomization = {
   canticle1?: number | null;
   canticle2?: number | null;
   suffrages?: "a" | "b";
+  /** the absolution's person: the deacon/lay "us" form is the default */
+  absolution?: "us" | "you";
   /** the reading positions a morning or evening office keeps: sorted
    * digits ("13" keeps the First Lesson and the Gospel). a missing key
    * keeps every reading the day provides */
@@ -57,6 +59,7 @@ const CUSTOMIZATION_KEYS: readonly (keyof OfficeCustomization)[] = [
   "canticle1",
   "canticle2",
   "suffrages",
+  "absolution",
   "readings",
   "psalmMenu",
   "readingMenu",
@@ -119,6 +122,18 @@ function suffragesOf(
   }
 }
 
+function absolutionOf(
+  value: JsonValue | undefined,
+): OfficeCustomization["absolution"] {
+  switch (value) {
+    case "us":
+    case "you":
+      return value;
+    default:
+      return undefined;
+  }
+}
+
 // kept reading positions, in print order. one to three distinct digits
 // from 1 to 3, sorted
 function readingsOf(
@@ -161,6 +176,8 @@ export function sanitizeCustomization(raw: JsonValue): OfficeCustomization {
   if (two !== undefined) out.canticle2 = two;
   const suffrages = suffragesOf(raw.suffrages);
   if (suffrages) out.suffrages = suffrages;
+  const absolution = absolutionOf(raw.absolution);
+  if (absolution) out.absolution = absolution;
   const readings = readingsOf(raw.readings);
   if (readings) out.readings = readings;
   // menu ids are strings the composer checks against the printed options; a
