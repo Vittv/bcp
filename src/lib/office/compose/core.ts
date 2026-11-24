@@ -48,7 +48,13 @@ import {
   lessonSlotsOf,
   suggestedCanticleForSlot,
 } from "./lessons";
-import { buildOfficeMenus, chosenOf, menuRegions } from "./menus";
+import {
+  buildOfficeMenus,
+  chosenOf,
+  menuRegions,
+  missionMenuBlocks,
+  titledCollectBlocks,
+} from "./menus";
 import {
   type ComposeContext,
   convert,
@@ -158,6 +164,17 @@ export function composeOffice(
   // section; parse the ranges once and share them with choices and composer
   if (MENU_OFFICES.has(officeId) && found.sections.length === 1) {
     ctx.menuRegions = menuRegions(found.sections[0]);
+  }
+  // morning and evening print three mission prayers; parse them once so the
+  // picker and the composer select the same printed alternatives
+  if (isMorningOffice(officeId) || evening) {
+    const tail = found.sections.find(
+      (section) => section.key === "suffrages-b",
+    );
+    if (tail) {
+      ctx.collectBlocks = titledCollectBlocks(tail);
+      ctx.missionBlocks = missionMenuBlocks(tail);
+    }
   }
 
   const choices = officeChoices(found, ctx);
@@ -597,6 +614,8 @@ const MENU_SECTION: Record<
   psalm: { key: "psalms", heading: "The Psalms" },
   reading: { key: "lessons", heading: "The Reading and Prayers" },
   collect: { key: "prayers", heading: "The Collect" },
+  // morning and evening keep their mission picker inline in the suffrages tail
+  mission: { key: "suffrages-b", heading: "Prayers for Mission" },
 };
 
 function composeMenuSections(
@@ -1166,7 +1185,31 @@ function composeSuffragesB(
   let firstKept = false;
   let collectTitle: string | undefined;
   let collectBuf: string[] = [];
-  for (const item of section.items) {
+  const fullText = ctx.prefs.fullText === true;
+  // the printed page has no collect heading; give the tail the same smallcaps
+  // section rule Noonday and Compline use, once the versicles are past
+  let collectHeaderEmitted = false;
+  const collectHeader = () => {
+    if (collectHeaderEmitted) return;
+    nodes.push({ kind: "section-heading", text: "The Collect" });
+    collectHeaderEmitted = true;
+  };
+  // one collect is printed by default, with a picker for the printed list;
+  // the collect of the day is the suggested option when the book offers one
+  const collectBlocks = ctx.collectBlocks ?? [];
+  const chosenCollect = chosenOf(
+    [{ id: "day" }, ...collectBlocks],
+    ctx.prefs.customization?.collectMenu,
+    "day",
+  );
+  // one mission prayer is printed by default, with a picker for the other two
+  const missionBlocks = ctx.missionBlocks ?? [];
+  const chosenMission = chosenOf(
+    missionBlocks,
+    ctx.prefs.customization?.missionMenu,
+    missionBlocks[0]?.id ?? "",
+  );
+  for (const [idx, item] of section.items.entries()) {
     if (!inTail) {
       if (
         item.kind === "rubric" &&
@@ -1175,6 +1218,7 @@ function composeSuffragesB(
         )
       ) {
         inTail = true;
+        collectHeader();
       } else {
         continue;
       }
@@ -1182,6 +1226,13 @@ function composeSuffragesB(
     if (item.kind === "rubric") {
       if (menu === "thanksgiving") firstKept = false;
       const text = item.text;
+      if (
+        /The Officiant then says one or more of the following Collects/i.test(
+          text,
+        )
+      ) {
+        collectHeader();
+      }
       // block titles the book prints as rubrics: the collect slot and the
       // closing prayers rank as headings, never hidden as personal-mode rubrics
       if (PRAYER_TITLES.has(text)) {
@@ -1195,7 +1246,7 @@ function composeSuffragesB(
         flushCollectBuf(nodes, collectBuf, collectTitle);
         collectBuf = [];
         collectTitle = undefined;
-        if (collect) {
+        if (collect && (fullText || chosenCollect === "day")) {
           nodes.push({ kind: "heading", text: item.text });
           nodes.push(collect);
         }
@@ -1205,10 +1256,14 @@ function composeSuffragesB(
         flushCollectBuf(nodes, collectBuf, collectTitle);
         collectBuf = [];
         collectTitle = undefined;
+        nodes.push({ kind: "section-heading", text: "Prayers for Mission" });
         menu = "mission";
         firstKept = false;
         const node = convert(item, ctx.prefs);
         if (node) nodes.push(node);
+        if (missionBlocks.length > 1 && !fullText) {
+          nodes.push({ kind: "menu", menu: "mission" });
+        }
         continue;
       }
       if (text.startsWith("Before the close of the Office")) {
@@ -1242,7 +1297,8 @@ function composeSuffragesB(
         flushCollectBuf(nodes, collectBuf, collectTitle);
         collectBuf = [];
         collectTitle = undefined;
-        keepGroup = keepOccasionalCollect(text, weekday(ctx.date));
+        keepGroup =
+          fullText || (collectBlocks.length > 0 && chosenCollect === text);
         if (keepGroup) {
           collectTitle = text;
         }
@@ -1263,6 +1319,15 @@ function composeSuffragesB(
       }
       const node = convert(item, ctx.prefs);
       if (node) nodes.push(node);
+      if (
+        /The Officiant then says one or more of the following Collects/i.test(
+          text,
+        ) &&
+        collectBlocks.length > 0 &&
+        !fullText
+      ) {
+        nodes.push({ kind: "menu", menu: "collect" });
+      }
       continue;
     }
     if (item.kind === "option") {
@@ -1270,7 +1335,12 @@ function composeSuffragesB(
       continue;
     }
     if (menu === "mission" || menu === "thanksgiving") {
-      if (firstKept) continue;
+      if (menu === "mission" && missionBlocks.length > 1 && !fullText) {
+        const block = missionBlocks.find((b) => idx >= b.from && idx <= b.to);
+        if (!block || block.id !== chosenMission) continue;
+      } else if (firstKept) {
+        continue;
+      }
       const node = convert(item, ctx.prefs);
       if (node) nodes.push(node);
       if (item.kind === "text" && item.speaker === "people") firstKept = true;

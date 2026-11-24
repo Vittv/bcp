@@ -26,7 +26,17 @@ export function dayCollectTitle(weekdayOfDate: number): string | undefined {
   }
 }
 
-export const OCCASIONAL_COLLECTS = new Set(["A Collect for Peace"]);
+// any-day collects the printed book offers alongside the weekday one; none
+// of them may be trimmed, since each is appointed for every day
+export const OCCASIONAL_COLLECTS = new Set([
+  "A Collect for the Renewal of Life",
+  "A Collect for Peace",
+  "A Collect for Aid against Perils",
+  "A Collect for Protection",
+  "A Collect for the Presence of Christ",
+  "A Collect for Grace",
+  "A Collect for Guidance",
+]);
 
 // the closing prayers the book titles with a rubric
 export const PRAYER_TITLES = new Set([

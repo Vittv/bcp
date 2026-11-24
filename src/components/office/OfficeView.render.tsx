@@ -20,6 +20,7 @@ import { useSectionHeading, useSubheading } from "./contentHeadings";
 import { MentionedText } from "./MentionedText";
 import { ChoiceMenu, MenuAnchor } from "./OfficeControls";
 import { officeSectionId } from "./OfficeToc";
+import { MenuView } from "./OfficeView.controls";
 import {
   canticleOptions,
   type ScriptureConfig,
@@ -41,6 +42,7 @@ type NodeViewProps = {
   choices: OfficeChoices;
   fullText: boolean;
   scripture: ScriptureConfig;
+  sticky?: boolean;
 };
 
 function SpeakerLabel({ speaker }: { speaker: OfficeSpeaker }) {
@@ -192,12 +194,26 @@ export function NodeView({
   choices,
   fullText,
   scripture,
+  sticky = false,
 }: NodeViewProps) {
   const styles = useThemedStyles(officeViewStyles);
   const subheading = useSubheading();
+  const sectionHeading = useSectionHeading();
   switch (node.kind) {
     case "heading":
       return <Text style={subheading}>{node.text}</Text>;
+    case "section-heading":
+      return (
+        <StickyHeading sticky={sticky}>
+          <Text style={sectionHeading}>{node.text}</Text>
+        </StickyHeading>
+      );
+    case "menu": {
+      const set = choices.menus?.[node.menu];
+      return set ? (
+        <MenuView menu={node.menu} set={set} officeId={officeId} />
+      ) : null;
+    }
     case "rubric":
       if (!showRubrics) return null;
       return (
@@ -332,7 +348,7 @@ export function SectionView({
   control,
   bottomControl,
   fullWidthControl = false,
-  sticky = false,
+  lastHeaderKey,
   psalmChoice,
 }: {
   section: ComposedSection;
@@ -348,7 +364,8 @@ export function SectionView({
   bottomControl?: ReactNode;
   /** a heading-less control that should span the reading column */
   fullWidthControl?: boolean;
-  sticky?: boolean;
+  // stable key of the document's final header, which alone is left unsticky
+  lastHeaderKey?: string;
   psalmChoice?: string;
 }) {
   const styles = useThemedStyles(officeViewStyles);
@@ -361,53 +378,80 @@ export function SectionView({
       : section.nodes;
   if (nodes.length === 0) return null;
   const keys = sectionKeys(nodes);
+  // group nodes under each header, including the section heading in the first
+  // group, so a sticky rule unsticks when its own content leaves and the next
+  // header takes its place without stacking against it
+  const groups: { key: string; nodes: ComposedNode[]; keys: string[] }[] = [];
+  let group: (typeof groups)[number] | undefined;
+  for (const [i, node] of nodes.entries()) {
+    const key = keys[i] ?? `node-${i}`;
+    if (node.kind === "section-heading" || !group) {
+      group = { key, nodes: [], keys: [] };
+      groups.push(group);
+    }
+    group.nodes.push(node);
+    group.keys.push(key);
+  }
+  const nextStartsWithHeading = (gi: number) =>
+    groups[gi + 1]?.nodes[0]?.kind === "section-heading";
   return (
     <MenuAnchor nativeID={officeSectionId(section.key)} style={styles.section}>
-      {section.heading ? (
-        <StickyHeading
-          sticky={
-            sticky &&
-            section.key !== "suffrages-a" &&
-            section.key !== "suffrages-b"
+      {groups.map((group, gi) => (
+        <MenuAnchor
+          key={group.key}
+          style={
+            nextStartsWithHeading(gi) ? styles.beforeSectionHeading : undefined
           }
-          withControl={!!control}
         >
-          {control ? (
-            <MenuAnchor style={styles.headingRow}>
-              <Text style={[heading, styles.headingText]}>
-                {section.heading}
-              </Text>
+          {gi === 0 && section.heading ? (
+            <StickyHeading
+              sticky={`section:${section.key}` !== lastHeaderKey}
+              withControl={!!control}
+            >
+              {control ? (
+                <MenuAnchor style={styles.headingRow}>
+                  <Text style={[heading, styles.headingText]}>
+                    {section.heading}
+                  </Text>
+                  {control}
+                </MenuAnchor>
+              ) : (
+                <Text style={heading}>{section.heading}</Text>
+              )}
+            </StickyHeading>
+          ) : gi === 0 && control ? (
+            <MenuAnchor
+              style={
+                fullWidthControl
+                  ? styles.controlOnlyRowFull
+                  : styles.controlOnlyRow
+              }
+            >
               {control}
             </MenuAnchor>
-          ) : (
-            <Text style={heading}>{section.heading}</Text>
-          )}
-        </StickyHeading>
-      ) : control ? (
-        <MenuAnchor
-          style={
-            fullWidthControl ? styles.controlOnlyRowFull : styles.controlOnlyRow
-          }
-        >
-          {control}
+          ) : null}
+          {gi === 0 && bottomControl ? (
+            <View style={styles.psalmCycleRow}>{bottomControl}</View>
+          ) : null}
+          {group.nodes.map((node, ni) => (
+            <NodeView
+              key={group.keys[ni]}
+              node={node}
+              showRubrics={showRubrics}
+              showSpeakers={showSpeakers}
+              todaySlug={todaySlug}
+              officeId={officeId}
+              rite={rite}
+              choices={choices}
+              fullText={fullText}
+              scripture={scripture}
+              sticky={
+                node.kind === "section-heading" &&
+                `node:${section.key}:${group.keys[ni]}` !== lastHeaderKey
+              }
+            />
+          ))}
         </MenuAnchor>
-      ) : null}
-      {bottomControl ? (
-        <View style={styles.psalmCycleRow}>{bottomControl}</View>
-      ) : null}
-      {nodes.map((node, i) => (
-        <NodeView
-          key={keys[i]}
-          node={node}
-          showRubrics={showRubrics}
-          showSpeakers={showSpeakers}
-          todaySlug={todaySlug}
-          officeId={officeId}
-          rite={rite}
-          choices={choices}
-          fullText={fullText}
-          scripture={scripture}
-        />
       ))}
     </MenuAnchor>
   );

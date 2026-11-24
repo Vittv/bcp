@@ -55,7 +55,7 @@ export type ComposedLesson = {
 
 // one rendered unit of a composed office.
 // the printed menus noonday and compline keep inside their single section
-export type MenuKey = "psalm" | "reading" | "collect";
+export type MenuKey = "psalm" | "reading" | "collect" | "mission";
 
 export type MenuChoiceOption = {
   id: string;
@@ -75,6 +75,9 @@ export type OfficeMenus = Partial<Record<MenuKey, MenuChoices>>;
 
 export type ComposedNode =
   | { kind: "heading"; text: string; citation?: string }
+  // a block title promoted to the section rule: smallcaps, the same voice
+  // Noonday and Compline use for their printed section headings
+  | { kind: "section-heading"; text: string }
   | { kind: "rubric"; text: string }
   /** a printed menu the reader picks from; options come from choices.menus */
   | { kind: "menu"; menu: MenuKey }

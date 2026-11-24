@@ -10,7 +10,7 @@ import {
   SectionControl,
 } from "./OfficeView.controls";
 import { SectionView } from "./OfficeView.render";
-import { scriptureForRite } from "./OfficeView.shared";
+import { scriptureForRite, sectionKeys } from "./OfficeView.shared";
 import { officeViewStyles } from "./OfficeView.styles";
 
 export function OfficeView({
@@ -34,7 +34,21 @@ export function OfficeView({
     () => scriptureForRite(document.rite),
     [document.rite],
   );
-  const lastHeadedKey = document.sections.findLast((s) => s.heading)?.key;
+  // the final header in the document is the only one left unsticky. computed
+  // across section rules and inline headings, so every office follows one rule
+  const lastHeaderKey = (() => {
+    const keys: string[] = [];
+    for (const section of document.sections) {
+      if (section.heading) keys.push(`section:${section.key}`);
+      const nodeKeys = sectionKeys(section.nodes);
+      section.nodes.forEach((node, i) => {
+        if (node.kind === "section-heading") {
+          keys.push(`node:${section.key}:${nodeKeys[i]}`);
+        }
+      });
+    }
+    return keys.at(-1);
+  })();
   const psalmCitations = document.choices.psalmCitations;
   const storedPsalm = customization.psalmChoice;
   const activePsalm =
@@ -97,7 +111,7 @@ export function OfficeView({
           }
           psalmChoice={section.key === "psalms" ? activePsalm : undefined}
           fullWidthControl={section.key === "opening"}
-          sticky={section.key !== lastHeadedKey}
+          lastHeaderKey={lastHeaderKey}
         />
       ))}
       {Object.keys(customization).length > 0 ? (

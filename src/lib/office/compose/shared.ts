@@ -125,6 +125,10 @@ export type ComposeContext = {
   lessonGroup: DolEntry["lessons"] | undefined;
   prefs: OfficePrefs;
   menuRegions?: MenuRegions;
+  // the printed collect and mission alternatives of morning and evening,
+  // parsed once from the suffrages tail so pickers and composer share a source
+  collectBlocks?: MenuBlock[];
+  missionBlocks?: MenuBlock[];
 };
 
 export type PsalmBlock = {

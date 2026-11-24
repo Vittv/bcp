@@ -108,7 +108,7 @@ export function slotName(slot: LessonSlot): string {
 export const MENU_META: Record<
   MenuKey,
   {
-    key: "psalmMenu" | "readingMenu" | "collectMenu";
+    key: "psalmMenu" | "readingMenu" | "collectMenu" | "missionMenu";
     label: string;
     a11y: string;
   }
@@ -116,12 +116,19 @@ export const MENU_META: Record<
   psalm: { key: "psalmMenu", label: "Psalm", a11y: "Psalm" },
   reading: { key: "readingMenu", label: "Reading", a11y: "Reading" },
   collect: { key: "collectMenu", label: "Collect", a11y: "Collect" },
+  mission: {
+    key: "missionMenu",
+    label: "Prayers for Mission",
+    a11y: "Prayers for Mission",
+  },
 };
 
 export function nodeKey(node: ComposedNode): string {
   switch (node.kind) {
     case "heading":
       return `h:${node.text}`;
+    case "section-heading":
+      return `sh:${node.text}`;
     case "rubric":
       return `r:${node.text}`;
     case "menu":

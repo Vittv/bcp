@@ -52,6 +52,10 @@ export const officeViewStyles = defineThemedStyles({
     marginTop: 4,
     marginBottom: 2,
   },
+  // breathing room between the ending versicles and an inline section rule
+  beforeSectionHeading: {
+    marginBottom: 20,
+  },
   resetRow: {
     marginTop: 4,
     marginBottom: 24,

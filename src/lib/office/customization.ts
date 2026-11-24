@@ -23,6 +23,8 @@ export type OfficeCustomization = {
   psalmMenu?: string;
   readingMenu?: string;
   collectMenu?: string;
+  /** the mission prayer kept in a morning or evening office */
+  missionMenu?: string;
 };
 
 export type OfficeCustomizations = Partial<
@@ -57,6 +59,7 @@ const CUSTOMIZATION_KEYS: readonly (keyof OfficeCustomization)[] = [
   "psalmMenu",
   "readingMenu",
   "collectMenu",
+  "missionMenu",
 ];
 
 function isRecord(value: JsonValue): value is { [key: string]: JsonValue } {
@@ -167,6 +170,9 @@ export function sanitizeCustomization(raw: JsonValue): OfficeCustomization {
   }
   if (typeof raw.collectMenu === "string" && raw.collectMenu.length > 0) {
     out.collectMenu = raw.collectMenu;
+  }
+  if (typeof raw.missionMenu === "string" && raw.missionMenu.length > 0) {
+    out.missionMenu = raw.missionMenu;
   }
   return out;
 }
