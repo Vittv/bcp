@@ -55,7 +55,7 @@ export type ComposedLesson = {
 
 // one rendered unit of a composed office.
 // the printed menus noonday and compline keep inside their single section
-export type MenuKey = "psalm" | "reading" | "collect" | "mission";
+export type MenuKey = "psalm" | "reading" | "collect" | "mission" | "blessing";
 
 export type MenuChoiceOption = {
   id: string;

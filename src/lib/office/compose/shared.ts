@@ -129,6 +129,7 @@ export type ComposeContext = {
   // parsed once from the suffrages tail so pickers and composer share a source
   collectBlocks?: MenuBlock[];
   missionBlocks?: MenuBlock[];
+  blessingBlocks?: MenuBlock[];
 };
 
 export type PsalmBlock = {

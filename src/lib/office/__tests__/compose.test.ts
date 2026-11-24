@@ -531,7 +531,7 @@ describe("composeOffice: preferences and other offices", () => {
     );
     const options = doc.choices.menus?.collect?.options.map((o) => o.id) ?? [];
     expect(options).toEqual([
-      "day",
+      "suggested",
       "A Collect for Sundays",
       "A Collect for Fridays",
       "A Collect for Saturdays",
@@ -571,7 +571,7 @@ describe("composeOffice: preferences and other offices", () => {
       "morning-rite-two",
     );
     expect(morning.choices.menus?.collect?.options.map((o) => o.id)).toEqual([
-      "day",
+      "suggested",
       "A Collect for Sundays",
       "A Collect for Fridays",
       "A Collect for Saturdays",
@@ -601,8 +601,8 @@ describe("composeOffice: preferences and other offices", () => {
     ).toBe(true);
     expect(
       hasText(doc, "May the God of hope fill us with all joy and peace"),
-    ).toBe(true);
-    expect(hasText(doc, "Glory to God whose power, working in us")).toBe(true);
+    ).toBe(false);
+    expect(hasText(doc, "Glory to God whose power, working in us")).toBe(false);
   });
 
   test("alternative lessons are hidden unless requested", () => {
@@ -1040,10 +1040,26 @@ describe("composeOffice: Suffrages B closing menus", () => {
     expect(has("grace at this time with one accord")).toBe(true);
   });
 
-  test("all three concluding blessings are shown", () => {
+  test("the suggested concluding blessing is shown and the others are pickable", () => {
     expect(has("grace of our Lord Jesus Christ")).toBe(true);
-    expect(has("God of hope fill us")).toBe(true);
-    expect(has("working in us, can do infinitely more")).toBe(true);
+    expect(has("God of hope fill us")).toBe(false);
+    expect(has("working in us, can do infinitely more")).toBe(false);
+    expect(doc.choices.menus?.blessing?.options.map((o) => o.id)).toEqual([
+      "suggested",
+      "2",
+      "3",
+    ]);
+    const picked = composeOffice(
+      { year: 2026, month: 8, day: 21 },
+      "evening-rite-two",
+      { ...DEFAULT_PREFS, customization: { blessingMenu: "2" } },
+    );
+    expect(
+      textOf(picked).some((t) => t.includes("May the God of hope fill us")),
+    ).toBe(true);
+    expect(
+      textOf(picked).some((t) => t.includes("grace of our Lord Jesus Christ")),
+    ).toBe(false);
   });
 
   test("the suggested mission prayer is shown and the others are pickable", () => {

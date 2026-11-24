@@ -108,7 +108,12 @@ export function slotName(slot: LessonSlot): string {
 export const MENU_META: Record<
   MenuKey,
   {
-    key: "psalmMenu" | "readingMenu" | "collectMenu" | "missionMenu";
+    key:
+      | "psalmMenu"
+      | "readingMenu"
+      | "collectMenu"
+      | "missionMenu"
+      | "blessingMenu";
     label: string;
     a11y: string;
   }
@@ -120,6 +125,11 @@ export const MENU_META: Record<
     key: "missionMenu",
     label: "Prayers for Mission",
     a11y: "Prayers for Mission",
+  },
+  blessing: {
+    key: "blessingMenu",
+    label: "Closing Blessing",
+    a11y: "Closing Blessing",
   },
 };
 
