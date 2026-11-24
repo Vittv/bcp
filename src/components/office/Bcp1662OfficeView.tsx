@@ -270,7 +270,10 @@ export function Bcp1662OfficeView({
   const [creedOverride, setCreedOverride] = useState<
     "apostles" | "athanasian" | null
   >(null);
-  const [occasionalSelection, setOccasionalSelection] = useState("none");
+  // the rubric's five prayers include the General Thanksgiving, so it is the default
+  const [occasionalSelection, setOccasionalSelection] = useState(
+    "thanksgiving-general-thanksgiving",
+  );
   const [collectSelection, setCollectSelection] = useState("suggested");
   const [absolutionSelection, setAbsolutionSelection] = useState("no-priest");
   const occasionalNodes =
