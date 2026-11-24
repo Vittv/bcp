@@ -1090,9 +1090,32 @@ describe("composeOffice: Suffrages B closing menus", () => {
     ).toBe(false);
   });
 
-  test("the collect and mission blocks carry smallcaps section headings", () => {
-    const headings = sectionHeadingNodes(doc).map((n) => n.text);
-    expect(headings).toEqual(["The Collect", "Prayers for Mission"]);
+  test("the collect and mission rules carry their pickers", () => {
+    expect(
+      sectionHeadingNodes(doc).map((n) => ({ text: n.text, menu: n.menu })),
+    ).toEqual([
+      { text: "The Collect", menu: "collect" },
+      { text: "Prayers for Mission", menu: "mission" },
+    ]);
+    // the closing blessing keeps its full-width picker below the rubric
+    expect(
+      nodesOf(doc, "menu").map((n) => {
+        // SAFETY: nodesOf filters by kind, so every element is a menu node.
+        return (n as Extract<ComposedNode, { kind: "menu" }>).menu;
+      }),
+    ).toEqual(["blessing"]);
+    const full = composeOffice(
+      { year: 2026, month: 8, day: 21 },
+      "evening-rite-two",
+      { ...DEFAULT_PREFS, fullText: true },
+    );
+    expect(
+      sectionHeadingNodes(full).map((n) => ({ text: n.text, menu: n.menu })),
+    ).toEqual([
+      { text: "The Collect", menu: undefined },
+      { text: "Prayers for Mission", menu: undefined },
+    ]);
+    expect(nodesOf(full, "menu")).toHaveLength(0);
   });
 });
 

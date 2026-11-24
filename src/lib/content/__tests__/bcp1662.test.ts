@@ -165,6 +165,38 @@ describe("bcp1662 composition", () => {
     ]);
   });
 
+  it("marks the section rules and the collect menu", async () => {
+    const { composeBcp1662OfficeForDate } = await import("../bcp1662");
+    const date = { year: 2026, month: 11, day: 17 };
+    const morning = await composeBcp1662OfficeForDate(date, "morning");
+    const rules = morning.sections
+      .flatMap((s) => s.nodes)
+      .filter(
+        (n): n is Extract<typeof n, { kind: "section-heading" }> =>
+          n.kind === "section-heading",
+      );
+    expect(rules.map((n) => n.text)).toEqual([
+      "Confession of Sin",
+      "The Prayers",
+      "Suffrages",
+      "The Collect",
+    ]);
+    expect(rules.find((n) => n.text === "The Collect")?.menu).toBe("collect");
+    const collects =
+      morning.sections.find((s) => s.key === "collects")?.nodes ?? [];
+    expect(
+      collects.flatMap((n) =>
+        n.kind === "text" && n.choiceGroup === "collect"
+          ? [{ id: n.choiceId, title: n.choiceHeading }]
+          : [],
+      ),
+    ).toEqual([
+      { id: "suggested", title: "The Collect of the Day" },
+      { id: "morning-peace", title: "The Second Collect, for Peace" },
+      { id: "morning-grace", title: "The Third Collect, for Grace" },
+    ]);
+  });
+
   it("composes the Litany as a standalone office with speakers", () => {
     const doc = composeBcp1662Litany({ year: 2026, month: 11, day: 18 });
     expect(doc.officeName).toBe("The Litany");

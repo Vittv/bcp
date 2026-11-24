@@ -262,7 +262,9 @@ export function ReadingsControl({
       label: `${slotName(slot)} only`,
     })),
   );
-  if (!slots.some((slot) => slot.key === "gospel")) {
+  // the 1962 office names a gospel lesson by its corpus while keeping its
+  // "second" position, so the corpus descriptor is the reliable test
+  if (!slots.some((slot) => slot.key === "gospel" || slot.desc === "Gospel")) {
     options.push({
       id: "disabled",
       group: "One reading",

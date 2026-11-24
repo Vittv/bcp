@@ -669,7 +669,20 @@ export type Bcp1962OfficeNode =
       scripture?: boolean;
       citation?: string;
     }
-  | { kind: "rubric"; text: string; choiceAnchorFor?: string }
+  // a block title promoted to the section rule; a collect rule carries the
+  // picker that selects which printed collect is shown
+  | {
+      kind: "section-heading";
+      text: string;
+      menu?: "collect" | "mission" | "psalm" | "reading";
+    }
+  | {
+      kind: "rubric";
+      text: string;
+      choiceAnchorFor?: string;
+      choiceGroup?: string;
+      choiceId?: string;
+    }
   | {
       kind: "text";
       text: string;
@@ -723,6 +736,9 @@ export type Bcp1962OfficeNode =
       id: string;
       title: string;
       text: string;
+      choiceGroup?: string;
+      choiceId?: string;
+      choiceLabel?: string;
     };
 
 export type Bcp1962ComposedSection = {
@@ -816,7 +832,7 @@ export function composeBcp1962Office(
       suggested: i === (suggestedIndex >= 0 ? suggestedIndex : 0),
     });
   }
-  openingNodes.push({ kind: "heading", text: "Confession of Sin" });
+  openingNodes.push({ kind: "section-heading", text: "Confession of Sin" });
   if (common.exhortation) {
     openingNodes.push({ kind: "text", text: common.exhortation });
   }
@@ -860,6 +876,9 @@ export function composeBcp1962Office(
     });
     openingNodes.push({ kind: "text", text: "Amen.", speaker: "people" });
   }
+  // the absolution ends the confession block; the Lord's Prayer and what
+  // follows belong to the prayers, so the sticky rule changes here
+  openingNodes.push({ kind: "section-heading", text: "The Prayers" });
   if (officeDef?.lordsPrayerOpeningRubric) {
     openingNodes.push({
       kind: "rubric",
@@ -1029,13 +1048,20 @@ export function composeBcp1962Office(
 
   const suffragesNodes: Bcp1962OfficeNode[] = [];
   if (common.suffrages?.length) {
-    suffragesNodes.push({ kind: "heading", text: "Suffrages" });
+    suffragesNodes.push({ kind: "section-heading", text: "Suffrages" });
     for (const v of common.suffrages) {
       suffragesNodes.push({ kind: "text", text: v.text, speaker: v.speaker });
     }
   }
 
   const collectNodes: Bcp1962OfficeNode[] = [];
+  const fixedCollects = getBcp1962FixedCollects(office);
+  // the collect menu prints the one chosen alternative
+  collectNodes.push({
+    kind: "section-heading",
+    text: "The Collect",
+    menu: fixedCollects.length > 0 ? "collect" : undefined,
+  });
   if (officeDef?.collectsRubric) {
     collectNodes.push({ kind: "rubric", text: officeDef.collectsRubric });
   }
@@ -1046,13 +1072,32 @@ export function composeBcp1962Office(
     title,
   ]);
   if (collectOfDay) {
-    collectNodes.push({ kind: "heading", text: "The Collect of the Day" });
-    collectNodes.push({ kind: "rubric", text: collectOfDay.name });
-    collectNodes.push({ kind: "text", text: collectOfDay.text });
+    collectNodes.push({
+      kind: "rubric",
+      text: collectOfDay.name,
+      choiceGroup: "collect",
+      choiceId: "suggested",
+    });
+    collectNodes.push({
+      kind: "text",
+      text: collectOfDay.text,
+      collect: true,
+      choiceGroup: "collect",
+      choiceId: "suggested",
+      choiceLabel: "Collect of the Day",
+      choiceHeading: "The Collect of the Day",
+    });
   }
-  for (const c of getBcp1962FixedCollects(office)) {
-    collectNodes.push({ kind: "heading", text: c.title });
-    collectNodes.push({ kind: "text", text: c.text });
+  for (const c of fixedCollects) {
+    collectNodes.push({
+      kind: "text",
+      text: c.text,
+      collect: true,
+      choiceGroup: "collect",
+      choiceId: c.id,
+      choiceLabel: c.title,
+      choiceHeading: c.title,
+    });
   }
 
   const closingNodes: Bcp1962OfficeNode[] = [];
@@ -1064,13 +1109,36 @@ export function composeBcp1962Office(
   if (common.anthem_rubric) {
     closingNodes.push({ kind: "rubric", text: common.anthem_rubric });
   }
-  for (const p of common.prayers ?? []) {
+  // the rubric offers one of the sovereign's prayers, then the prayer for the
+  // clergy and people; the rule's picker prints only the chosen one
+  const missionPrayerIds = new Set([
+    "queen",
+    "queen-commonwealth",
+    "queen-authority",
+  ]);
+  const missionCount = (common.prayers ?? []).filter((p) =>
+    missionPrayerIds.has(p.id),
+  ).length;
+  if (missionCount > 1) {
     closingNodes.push({
+      kind: "section-heading",
+      text: "Prayers for Mission",
+      menu: "mission",
+    });
+  }
+  for (const p of common.prayers ?? []) {
+    const node: Extract<Bcp1962OfficeNode, { kind: "occasional" }> = {
       kind: "occasional",
       id: p.id,
       title: p.title,
       text: p.text,
-    });
+    };
+    if (missionPrayerIds.has(p.id)) {
+      node.choiceGroup = "mission";
+      node.choiceId = p.id;
+      node.choiceLabel = p.title;
+    }
+    closingNodes.push(node);
   }
   closingNodes.push({ kind: "heading", text: "The Grace" });
   closingNodes.push({ kind: "text", text: common.grace });
@@ -1115,6 +1183,7 @@ export const BCP1962_OFFICE_SECTION_ORDER: Bcp1962OfficeSectionKey[] = [
   "lessons",
   "creed",
   "prayers",
+  "suffrages",
   "collects",
   "closing",
 ];
@@ -1126,11 +1195,26 @@ const COMPLINE_READINGS: Record<number, { id: string; label: string }> = {
   13: { id: "matthew", label: "St Matthew 11. 28-30" },
   15: { id: "hebrews", label: "Hebrews 13. 20, 21" },
 };
-const COMPLINE_COLLECTS: Record<number, { id: string; label: string }> = {
-  67: { id: "protection", label: "The Collect for Protection" },
-  69: { id: "lighten", label: "Lighten our darkness" },
+const COMPLINE_COLLECTS: Record<
+  number,
+  { id: string; label: string; title: string }
+> = {
+  67: {
+    id: "protection",
+    label: "Protection",
+    title: "The Collect for Protection",
+  },
+  69: {
+    id: "lighten",
+    label: "Lighten",
+    title: "Lighten our darkness",
+  },
 };
-const COMPLINE_ADDED_PRAYERS = new Set([71, 72, 73]);
+const COMPLINE_ADDED_PRAYERS: Record<number, { id: string; label: string }> = {
+  71: { id: "jesus", label: "O Lord Jesus Christ" },
+  72: { id: "look-down", label: "Look down, O Lord" },
+  73: { id: "be-present", label: "Be present, O merciful God" },
+};
 
 // the printed sentences carry no references; these are the book's texts
 const MIDDAY_SCRIPTURE_CITATIONS: Record<number, string> = {
@@ -1185,8 +1269,45 @@ export function composeBcp1962FixedOffice(
             return passage ? [{ ref, passage }] : [];
           });
           return [
+            {
+              kind: "section-heading",
+              text: "The Psalms",
+              menu: "psalm",
+            },
             { kind: "rubric", text: entry.text },
             { kind: "psalm", refs: psalms.map((p) => p.ref), passages: psalms },
+          ];
+        }
+        if (i === 9 && entry.kind === "rubric") {
+          return [
+            {
+              kind: "section-heading",
+              text: "The Reading",
+              menu: "reading",
+            },
+            { kind: "rubric", text: entry.text },
+          ];
+        }
+        if (i === 38 && entry.kind === "rubric") {
+          return [
+            { kind: "section-heading", text: "The Prayers" },
+            { kind: "rubric", text: entry.text },
+          ];
+        }
+        if (i === 52 && entry.kind === "rubric") {
+          return [
+            { kind: "section-heading", text: "The Confession" },
+            { kind: "rubric", text: entry.text },
+          ];
+        }
+        if (i === 65 && entry.kind === "rubric") {
+          return [
+            {
+              kind: "section-heading",
+              text: "The Collect",
+              menu: "collect",
+            },
+            { kind: "rubric", text: entry.text },
           ];
         }
         if ([10, 12, 14, 66, 68].includes(i) && entry.kind === "heading") {
@@ -1224,20 +1345,39 @@ export function composeBcp1962FixedOffice(
             },
           ];
         }
+        if (i === 70 && entry.kind === "rubric") {
+          return [
+            {
+              kind: "rubric",
+              text: entry.text,
+              choiceAnchorFor: "additional-prayer",
+            },
+          ];
+        }
         if (entry.kind === "text" && COMPLINE_COLLECTS[i]) {
           return [
             {
               kind: "text",
               text: entry.text,
               collect: true,
-              choiceGroup: "compline-collect",
+              choiceGroup: "collect",
               choiceId: COMPLINE_COLLECTS[i].id,
               choiceLabel: COMPLINE_COLLECTS[i].label,
+              choiceHeading: COMPLINE_COLLECTS[i].title,
             },
           ];
         }
-        if (entry.kind === "text" && COMPLINE_ADDED_PRAYERS.has(i)) {
-          return [{ kind: "text", text: entry.text, collect: true }];
+        if (entry.kind === "text" && COMPLINE_ADDED_PRAYERS[i]) {
+          return [
+            {
+              kind: "text",
+              text: entry.text,
+              collect: true,
+              choiceGroup: "prayer",
+              choiceId: COMPLINE_ADDED_PRAYERS[i].id,
+              choiceLabel: COMPLINE_ADDED_PRAYERS[i].label,
+            },
+          ];
         }
       }
       if (office === "noonday") {

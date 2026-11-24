@@ -76,8 +76,9 @@ export type OfficeMenus = Partial<Record<MenuKey, MenuChoices>>;
 export type ComposedNode =
   | { kind: "heading"; text: string; citation?: string }
   // a block title promoted to the section rule: smallcaps, the same voice
-  // Noonday and Compline use for their printed section headings
-  | { kind: "section-heading"; text: string }
+  // Noonday and Compline use for their printed section headings. a menu sits
+  // in the rule's row so the picker pins with its heading
+  | { kind: "section-heading"; text: string; menu?: MenuKey }
   | { kind: "rubric"; text: string }
   /** a printed menu the reader picks from; options come from choices.menus */
   | { kind: "menu"; menu: MenuKey }
