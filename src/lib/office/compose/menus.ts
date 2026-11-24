@@ -141,6 +141,77 @@ export function menuRegions(section: OfficeSection): MenuRegions {
   return regions;
 }
 
+// morning and evening print a titled collect followed by its text and Amen.
+// "The Collect of the Day" is emitted separately from the lectionary, so its
+// rubric is skipped here and offered as the suggested picker option instead.
+export function titledCollectBlocks(section: OfficeSection): MenuBlock[] {
+  const items = section.items;
+  const start = items.findIndex(
+    (item) =>
+      item.kind === "rubric" &&
+      /one or more of the following Collects/i.test(item.text),
+  );
+  if (start < 0) return [];
+  const blocks: MenuBlock[] = [];
+  let i = start + 1;
+  while (i < items.length && items[i].kind === "rubric") {
+    const title = items[i].text;
+    if (title === "The Collect of the Day") {
+      i++;
+      continue;
+    }
+    if (!title.startsWith("A Collect for ")) break;
+    i++;
+    const from = i;
+    while (i < items.length && items[i].kind === "text") i++;
+    blocks.push({
+      from,
+      to: i - 1,
+      id: title,
+      label: title,
+      // rows show the collect's printed heading, not its opening words
+      menuLabel: title,
+      group: "Appointed",
+      title,
+    });
+  }
+  return blocks;
+}
+
+// the three mission prayers of morning and evening are printed as text runs
+// separated by "or this"/"or the following" options, after the "Then, unless
+// the Eucharist" rubric and before the "Here may be sung" rubric
+const MISSION_RUBRIC = /Then, unless the Eucharist/i;
+
+export function missionMenuBlocks(section: OfficeSection): MenuBlock[] {
+  const items = section.items;
+  const start = items.findIndex(
+    (item) => item.kind === "rubric" && MISSION_RUBRIC.test(item.text),
+  );
+  if (start < 0) return [];
+  const blocks: MenuBlock[] = [];
+  let i = start + 1;
+  while (i < items.length && items[i].kind !== "rubric") {
+    if (items[i].kind === "option") {
+      i++;
+      continue;
+    }
+    if (items[i].kind !== "text") break;
+    const from = i;
+    const body = items[i].text;
+    while (i < items.length && items[i].kind === "text") i++;
+    blocks.push({
+      from,
+      to: i - 1,
+      id: String(blocks.length + 1),
+      label: truncate(body, 32),
+      menuLabel: truncate(body, 64),
+      group: "Appointed",
+    });
+  }
+  return blocks;
+}
+
 // an override that names no printed option degrades to the fallback id
 export function chosenOf(
   blocks: readonly { id: string }[],
@@ -156,9 +227,47 @@ export function buildOfficeMenus(
   ctx: ComposeContext,
   hasDayCollect: boolean,
 ): OfficeMenus | undefined {
-  const regions = ctx.menuRegions;
-  if (!regions) return undefined;
   const menus: OfficeMenus = {};
+  const collects = ctx.collectBlocks;
+  if (collects && collects.length > 0) {
+    const options: MenuChoiceOption[] = [
+      {
+        id: "day",
+        label: "Collect of the Day",
+        menuLabel: "The Collect of the Day",
+        group: "Suggested",
+      },
+      ...collects.map((block) => ({
+        id: block.id,
+        label: block.label,
+        menuLabel: block.menuLabel,
+        group: block.group,
+      })),
+    ];
+    menus.collect = { options };
+  }
+  const blocks = ctx.missionBlocks;
+  if (blocks && blocks.length > 1) {
+    const [first, ...rest] = blocks;
+    menus.mission = {
+      options: [
+        {
+          id: "suggested",
+          label: first.label,
+          menuLabel: first.menuLabel,
+          group: "Suggested",
+        },
+        ...rest.map((block) => ({
+          id: block.id,
+          label: block.label,
+          menuLabel: block.menuLabel,
+          group: block.group,
+        })),
+      ],
+    };
+  }
+  const regions = ctx.menuRegions;
+  if (!regions) return Object.keys(menus).length ? menus : undefined;
   if (regions.psalmRubric !== undefined && regions.psalms.length > 0) {
     const options: MenuChoiceOption[] = [
       {

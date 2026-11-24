@@ -319,13 +319,7 @@ export function MenuView({
             setOfficeChoice(officeId, { [meta.key]: undefined });
             return;
           }
-          const patch =
-            menu === "psalm"
-              ? { psalmMenu: id }
-              : menu === "reading"
-                ? { readingMenu: id }
-                : { collectMenu: id };
-          setOfficeChoice(officeId, patch);
+          setOfficeChoice(officeId, { [meta.key]: id });
         }}
       />
     </MenuAnchor>

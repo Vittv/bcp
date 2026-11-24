@@ -64,6 +64,16 @@ function headingTexts(doc: OfficeDocument): string[] {
   );
 }
 
+function sectionHeadingNodes(
+  doc: OfficeDocument,
+): Extract<ComposedNode, { kind: "section-heading" }>[] {
+  // SAFETY: nodesOf filters by kind, so every element has the matching kind.
+  return nodesOf(doc, "section-heading") as Extract<
+    ComposedNode,
+    { kind: "section-heading" }
+  >[];
+}
+
 function lessonRefsOf(doc: OfficeDocument): string[] {
   return doc.sections.flatMap((s) =>
     s.nodes.flatMap((n) =>
@@ -514,21 +524,65 @@ describe("composeOffice: preferences and other offices", () => {
     ).toThrow();
   });
 
-  test("occasional collects trim to the day-appropriate ones", () => {
+  test("the collect of the day is suggested and every printed collect is pickable", () => {
     const doc = composeOffice(
       { year: 2026, month: 8, day: 14 },
       "evening-rite-two",
     );
-    const texts = textOf(doc);
-    expect(texts).toContain("A Collect for Fridays");
-    expect(texts).toContain("A Collect for Peace");
-    expect(texts).not.toContain("A Collect for Sundays");
-    expect(texts).not.toContain("A Collect for Saturdays");
-    expect(texts).not.toContain("A Collect for Aid against Perils");
-    expect(texts).not.toContain("A Collect for the Presence of Christ");
+    const options = doc.choices.menus?.collect?.options.map((o) => o.id) ?? [];
+    expect(options).toEqual([
+      "day",
+      "A Collect for Sundays",
+      "A Collect for Fridays",
+      "A Collect for Saturdays",
+      "A Collect for Peace",
+      "A Collect for Aid against Perils",
+      "A Collect for Protection",
+      "A Collect for the Presence of Christ",
+    ]);
+    // by default only the day's collect prints
+    expect(headingTexts(doc)).toContain("The Collect of the Day");
+    expect(headingTexts(doc)).not.toContain("A Collect for Peace");
+
+    const picked = composeOffice(
+      { year: 2026, month: 8, day: 14 },
+      "evening-rite-two",
+      {
+        ...DEFAULT_PREFS,
+        customization: { collectMenu: "A Collect for Peace" },
+      },
+    );
+    // SAFETY: nodesOf filters by kind, so every element is a fixed-collect
+    const pickedCollects = nodesOf(picked, "fixed-collect") as Extract<
+      ComposedNode,
+      { kind: "fixed-collect" }
+    >[];
+    expect(pickedCollects.map((n) => n.title)).toContain("A Collect for Peace");
+    expect(headingTexts(picked)).not.toContain("The Collect of the Day");
+    expect(
+      textOf(picked).some((t) =>
+        t.includes("the author of peace and lover of concord"),
+      ),
+    ).toBe(true);
+
+    // Morning Prayer offers its own printed set
+    const morning = composeOffice(
+      { year: 2026, month: 8, day: 14 },
+      "morning-rite-two",
+    );
+    expect(morning.choices.menus?.collect?.options.map((o) => o.id)).toEqual([
+      "day",
+      "A Collect for Sundays",
+      "A Collect for Fridays",
+      "A Collect for Saturdays",
+      "A Collect for the Renewal of Life",
+      "A Collect for Peace",
+      "A Collect for Grace",
+      "A Collect for Guidance",
+    ]);
   });
 
-  test("all mission prayers and both thanksgiving prayers are shown", () => {
+  test("the suggested mission prayer and both thanksgiving prayers are shown", () => {
     const doc = composeOffice(
       { year: 2026, month: 8, day: 14 },
       "evening-rite-two",
@@ -541,7 +595,7 @@ describe("composeOffice: preferences and other offices", () => {
         doc,
         "Keep watch, dear Lord, with those who work, or watch, or weep this night",
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       hasText(doc, "The grace of our Lord Jesus Christ, and the love of God"),
     ).toBe(true);
@@ -992,11 +1046,37 @@ describe("composeOffice: Suffrages B closing menus", () => {
     expect(has("working in us, can do infinitely more")).toBe(true);
   });
 
-  test("all mission prayers are shown", () => {
+  test("the suggested mission prayer is shown and the others are pickable", () => {
     expect(has("O God and Father of all, whom the whole heavens adore")).toBe(
       true,
     );
-    expect(has("Keep watch, dear Lord, with those who work")).toBe(true);
+    expect(has("Keep watch, dear Lord, with those who work")).toBe(false);
+    expect(doc.choices.menus?.mission?.options.map((o) => o.id)).toEqual([
+      "suggested",
+      "2",
+      "3",
+    ]);
+    const picked = composeOffice(
+      { year: 2026, month: 8, day: 21 },
+      "evening-rite-two",
+      {
+        ...DEFAULT_PREFS,
+        customization: { missionMenu: "2" },
+      },
+    );
+    expect(
+      textOf(picked).some((t) => t.includes("Keep watch, dear Lord")),
+    ).toBe(true);
+    expect(
+      textOf(picked).some((t) =>
+        t.includes("O God and Father of all, whom the whole heavens adore"),
+      ),
+    ).toBe(false);
+  });
+
+  test("the collect and mission blocks carry smallcaps section headings", () => {
+    const headings = sectionHeadingNodes(doc).map((n) => n.text);
+    expect(headings).toEqual(["The Collect", "Prayers for Mission"]);
   });
 });
 
