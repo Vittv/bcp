@@ -1,28 +1,35 @@
-<!-- release-date: 2026-11-21 -->
+<!-- release-date: 2026-11-24 -->
 
 ## Features
 
-- shell: add a calendar button to the Daily Office bar that opens the same month picker as the Offices page, changes the office date, and records a history step so Back restores the previous day.
-- shell: add a prayer-book edition chip to the top bar at every width, so the edition stays reachable when the sidebar is hidden.
+- office: add the 1979 Great Litany alongside the 1662 and 1962 forms, with all three texts checked against the printed books.
+- office: give 1979 Noonday and Compline their own headed sections, with pickers for the psalms, reading and collect under smallcaps rules.
+- office: add psalm, collect, mission and closing-blessing pickers to 1979 Morning and Evening Prayer; the collect and mission pickers sit in their sticky section rules.
+- office: bring the same section rules and collect picker to the 1662 and 1962 daily offices, and add a picker for the 1962 Prayers for the Queen.
+- office: add an absolution choice to Morning and Evening Prayer. 1979 offers "Us" or "You" and defaults to the deacon's "us" form; 1662 offers the priest's absolution or the Collect for the Twenty-first Sunday after Trinity and defaults to the collect.
+- office: give 1962 Compline section rules, compact "Protection" / "Lighten" collect chips and a full-width picker for the optional added prayers.
+- office: offer full text mode for the 1662 and 1962 daily offices, printing every printed alternative at once.
 
 ## Improvements
 
-- shell: hide the season label on phone-width layouts at a larger UI Scale and seat the edition chip beside the cross icon; on desktop, place the chip after the countdown.
-- shell: match the chip's year to the sidebar picker's accent weight and give its menu the same width as the button.
-- web: anchor the Daily Office month sheet to the office bar like the Offices date picker, so it opens to the right instead of hanging off the icon.
-- web: let mobile reference pages scroll through the shell scroller so sticky smallcaps rules actually pin on holy-day, lesser-feast and Psalter pages.
-- search: raise the palette and font-picker search fields to 16px so iPhone Safari stops zooming the page on focus, and drop the font picker's magnifier so its text lines up with the font names.
-- settings: match the settings search text to the rail labels and tighten its magnifier.
-- shell: lift the top bar above the sidebar and drawer so its menus paint over them.
-- changelog: show the release date in the modal header, at the right beside the version and close button.
+- lectionary: give the 1962 proper title the same accented serif voice as the office masthead.
+- 1962: name the edition after the Anglican Church of Canada in the office header, feast cards and calendar.
+- office: match the 1662 office header layout to the 1962 one.
+- shell: match the reference search trigger to the top bar chips, and use the status bar bullet in the sidebar footer.
+- office: show psalm counts in picker labels so the appointed set is clear before opening the menu.
 
 ## Fixes
 
-- shell: stop the sidebar from freezing after a cancelled drawer drag, which left navigation presses ignored until a refresh.
-- feasts: cite the 1979 Book of Common Prayer as the source for TEC holy days instead of Lesser Feasts and Fasts, which stays the source for lesser feasts.
+- content: restore the truncated collect for Aid against Perils in 1979 Evening Prayer from the printed book.
+- content: treat the note about the deacon's form in the 1979 absolution as a rubric instead of spoken text.
+- readings: stop showing "No gospel appointed today" when a Gospel lesson is appointed, and keep both lessons when the "OT & Gospel" choice is selected.
+- 1962: treat the note in Compline that points to Family Prayer as a rubric instead of spoken text.
+- 1662: default the occasional prayer to A General Thanksgiving, as the rubric directs the five following prayers to be read.
+- links: open external URLs through the native shell instead of inside the web view.
 
 ## Internal
 
-- ui: add an optional trigger text style and a centered variant to the shared dropdown, and extract the month picker into a component shared by both office bars.
+- ci: harden the Pages deployment workflow.
+- office: add a shared section-heading node kind so sticky rules and their pickers behave the same way in every edition.
 
-**Full Changelog**: https://github.com/Vittv/bcp/compare/v0.8.0...v0.8.1
+**Full Changelog**: https://github.com/Vittv/bcp/compare/v0.8.1...v0.8.2
