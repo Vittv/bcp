@@ -94,7 +94,11 @@ and checksum in this note.
   Another post-extraction correction: Rite One evening carried the E-text
   heading "The Apostle's Creed"; the printed book reads "The Apostles'
   Creed", as do the other three daily offices, so the heading was fixed
-  there.
+  there. The E-text also truncated Rite One evening's "A Collect for Aid
+  against Perils" at "from all perils"; the printed text on page 69 reads
+  "from all perils and dangers of this night; for the love of thy only Son,
+  our Savior Jesus Christ. Amen.", so the missing clause and its "Amen."
+  response were restored from bcponline.org.
 - litany.min.json: hand-curated from the same public-domain E-text (the Great
   Litany, printed pages 148-157), then corrected against the Episcopal
   Church's official online BCP at bcponline.org. The E-text marks the spoken

@@ -71,7 +71,7 @@ describe("offices", () => {
   test("per-office item counts are stable", () => {
     const counts: Record<(typeof OFFICE_IDS)[number], number> = {
       "morning-rite-one": 295,
-      "evening-rite-one": 144,
+      "evening-rite-one": 145,
       "morning-rite-two": 366,
       noonday: 69,
       owe: 71,
