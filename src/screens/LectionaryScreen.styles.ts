@@ -2,7 +2,7 @@ import {
   CHROME_FONT,
   HEADING_FONT,
   SERIF_ITALIC_FONT,
-  SERIF_SEMI_FONT,
+  SUBHEADING_FONT,
 } from "../lib/fonts";
 import { defineThemedStyles } from "../lib/theme/themedStyles";
 
@@ -35,15 +35,15 @@ export const lectionaryStyles = defineThemedStyles({
     color: "var(--accent)",
     marginTop: 8,
   },
-  // the older lectionaries close with the proper name in serif smallcaps
+  // the older lectionaries close with the proper name in the same accent
+  // voice as the office masthead's title below the edition line
   properTitle: {
-    fontFamily: SERIF_SEMI_FONT,
-    fontSize: 12,
+    fontFamily: SUBHEADING_FONT,
     fontWeight: "600",
-    letterSpacing: 1,
-    textTransform: "uppercase",
+    fontSize: 20,
+    lineHeight: 27,
     color: "var(--accent)",
-    marginTop: 8,
+    marginTop: 6,
   },
   officeNote: {
     fontFamily: SERIF_ITALIC_FONT,
